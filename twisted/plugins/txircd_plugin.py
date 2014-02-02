@@ -3,6 +3,8 @@ from twisted.plugin import IPlugin
 from twisted.python import usage
 from zope.interface import implements
 
+from txircd.ircd import IRCd
+
 class Options(usage.Options):
     # If we ever start having options, don't forget to put them here
     pass
@@ -14,7 +16,6 @@ class IRCdServiceMaker(object):
     options = Options
     
     def makeService(self, options):
-        # Return a service from here once I make one
-        pass
+        return IRCd()
 
 txircd = IRCdServiceMaker()
