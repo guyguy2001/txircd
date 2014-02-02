@@ -6,8 +6,7 @@ from zope.interface import implements
 from txircd.ircd import IRCd
 
 class Options(usage.Options):
-    # If we ever start having options, don't forget to put them here
-    pass
+    optParameters = [["config", "c", "txircd.yaml", "The configuration file to read"]]
 
 class IRCdServiceMaker(object):
     implements(IServiceMaker, IPlugin)
@@ -16,6 +15,6 @@ class IRCdServiceMaker(object):
     options = Options
     
     def makeService(self, options):
-        return IRCd()
+        return IRCd(options["config"])
 
 txircd = IRCdServiceMaker()
