@@ -31,6 +31,12 @@ class Config(object):
     
     def __setitem__(self, key, value):
         self._configData[key] = value
+    
+    def getWithDefault(self, key, defaultValue):
+        try:
+            return self._configData[key]
+        except KeyError:
+            return defaultValue
 
 class ConfigReadError(Exception):
     def __init__(self, desc):
