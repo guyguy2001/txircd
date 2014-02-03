@@ -5,5 +5,5 @@ from txircd.user import IRCUser
 class UserFactory(Factory):
     protocol = IRCUser
 
-class ServerFactory(Factory):
+class ServerListenFactory(Factory):
     protocol = IRCServer

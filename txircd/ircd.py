@@ -3,7 +3,7 @@ from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import serverFromString
 from twisted.python import log
 from txircd.config import Config
-from txircd.factory import ClientFactory
+from txircd.factory import ServerListenFactory, UserFactory
 from txircd.utils import unescapeEndpointDescription
 import logging
 
