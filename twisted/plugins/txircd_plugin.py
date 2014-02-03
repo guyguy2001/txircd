@@ -1,6 +1,6 @@
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
-from twisted.python import usage
+from twisted.python import log, usage
 from zope.interface import implements
 
 from txircd.ircd import IRCd
@@ -16,5 +16,8 @@ class IRCdServiceMaker(object):
     
     def makeService(self, options):
         return IRCd(options["config"])
+
+observer = log.PythonLoggingObserver()
+observer.start()
 
 txircd = IRCdServiceMaker()
