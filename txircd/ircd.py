@@ -1,4 +1,5 @@
 from twisted.application.service import Service
+from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import serverFromString
 from twisted.python import log
 from txircd.config import Config
@@ -32,7 +33,12 @@ class IRCd(Service):
             listenDeferred.addErrback(self._logNotBound, bindDesc)
     
     def stopService(self):
-        pass # Here, too
+        unbindDeferreds = []
+        for port in self.boundPorts.itervalues():
+            d = port.stopListening()
+            if d:
+                unbindDeferreds.append(d)
+        return DeferredList(unbindDeferreds)
     
     def _savePort(self, port, desc):
         self.boundPorts[desc] = port
