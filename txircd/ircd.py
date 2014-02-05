@@ -1,4 +1,5 @@
 from twisted.application.service import Service
+from twisted.internet import reactor
 from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import serverFromString
 from twisted.python import log
@@ -15,7 +16,7 @@ class IRCd(Service):
     def startService(self):
         for bindDesc in self.config["bind_client"]:
             try:
-                endpoint = serverFromString(unescapeEndpointDescription(bindDesc))
+                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
             except ValueError as e:
                 log.msg(str(e), logLevel=logging.ERROR)
                 continue
@@ -24,7 +25,7 @@ class IRCd(Service):
             listenDeferred.addErrback(self._logNotBound, bindDesc)
         for bindDesc in self.config["bind_server"]:
             try:
-                endpoint = serverFromString(unescapeEndpointDescription(bindDesc))
+                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
             except ValueError as e:
                 log.msg(str(e), logLevel=logging.ERROR)
                 continue
