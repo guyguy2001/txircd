@@ -1,7 +1,7 @@
 import yaml
 
 _defaults = {
-    "bind_client": [ "tcp:6667:interface={::}", "ssl:6697:interface={::}" ],
+    "bind_client": [ "tcp:6667:interface={::}" ],
     "bind_server": []
 }
 
