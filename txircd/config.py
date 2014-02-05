@@ -9,7 +9,7 @@ class Config(object):
     def __init__(self, configFileName):
         self._configData = {}
         self._readConfig(configFileName)
-        for key, val in _defaults:
+        for key, val in _defaults.iteritems():
             if key not in self._configData:
                 self._configData[key] = val
     
