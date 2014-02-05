@@ -19,7 +19,7 @@ class IRCd(Service):
             except ValueError as e:
                 log.msg(str(e), logLevel=logging.ERROR)
                 continue
-            listenDeferred = endpoint.listen(UserFactory)
+            listenDeferred = endpoint.listen(UserFactory(self))
             listenDeferred.addCallback(self._savePort, bindDesc)
             listenDeferred.addErrback(self._logNotBound, bindDesc)
         for bindDesc in self.config["bind_server"]:
@@ -28,7 +28,7 @@ class IRCd(Service):
             except ValueError as e:
                 log.msg(str(e), logLevel=logging.ERROR)
                 continue
-            listenDeferred = endpoint.listen(ServerListenFactory)
+            listenDeferred = endpoint.listen(ServerListenFactory(self))
             listenDeferred.addCallback(self._savePort, bindDesc)
             listenDeferred.addErrback(self._logNotBound, bindDesc)
     
