@@ -1,6 +1,9 @@
 import yaml
 
-_defaults = {}
+_defaults = {
+    "bind_client": [ "tcp:6667:interface={::}", "ssl:6697:interface={::}" ],
+    "bind_server": []
+}
 
 class Config(object):
     def __init__(self, configFileName):
