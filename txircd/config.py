@@ -20,8 +20,28 @@ class Config(object):
         except Exception as e:
             raise ConfigReadError (fileName, e)
         for key, val in configData.iteritems():
-            if key != "include" and key not in self._configData:
+            if key == "include":
+                continue
+            if key not in self._configData:
                 self._configData[key] = val
+            elif not isinstance(self._configData[key], basestring): # Let's try to merge them if they're lists
+                if isinstance(val, basestring):
+                    raise ConfigReadError(fileName, "The included configuration file tried to merge a non-string with a string.")
+                try: # Make sure both things we're merging are still iterable types
+                    iter(self._configData[key])
+                    iter(val)
+                except TypeError:
+                    pass # Simply don't merge them if they're not
+                else:
+                    try:
+                        self._configData[key] += val
+                    except TypeError: # They can't be merged with +=; we'll try them as dicts and then fail if they're not that
+                        try:
+                            for subkey, subval in val.iteritems():
+                                if subkey not in self._configData[key]:
+                                    self._configData[key][subkey] = subval
+                        except AttributeError, TypeError: # They weren't both dicts in this case, but were still both iterable; needs resolved by user.
+                            raise ConfigReadError(fileName, "The variable {} could not successfully be merged.".format(key))
         if "include" in configData:
             for fileName in configData["include"]:
                 self._readConfig(fileName)
