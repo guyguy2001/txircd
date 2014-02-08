@@ -18,7 +18,7 @@ class Config(object):
             with open(fileName, 'r') as configFile:
                 configData = yaml.safe_load(configFile)
         except Exception as e:
-            raise ConfigReadError (e)
+            raise ConfigReadError (fileName, e)
         for key, val in configData.iteritems():
             if key != "include" and key not in self._configData:
                 self._configData[key] = val
@@ -42,8 +42,9 @@ class Config(object):
             return defaultValue
 
 class ConfigReadError(Exception):
-    def __init__(self, desc):
+    def __init__(self, fileName, desc):
+        self.fileName = fileName
         self.desc = desc
     
     def __str__(self):
-        return "Error reading configuration file: {}".format(self.desc)
+        return "Error reading configuration file {}: {}".format(self.fileName, self.desc)
