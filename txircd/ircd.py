@@ -36,12 +36,12 @@ class IRCd(Service):
         log.msg("txircd started!", logLevel=logging.INFO)
     
     def stopService(self):
-        unbindDeferreds = []
+        stopDeferreds = []
         for port in self.boundPorts.itervalues():
             d = port.stopListening()
             if d:
-                unbindDeferreds.append(d)
-        return DeferredList(unbindDeferreds)
+                stopDeferreds.append(d)
+        return DeferredList(stopDeferreds)
     
     def _savePort(self, port, desc):
         self.boundPorts[desc] = port
