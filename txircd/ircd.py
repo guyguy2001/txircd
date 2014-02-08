@@ -14,6 +14,7 @@ class IRCd(Service):
         self.boundPorts = {}
     
     def startService(self):
+        log.msg("Binding ports...", logLevel=logging.INFO)
         for bindDesc in self.config["bind_client"]:
             try:
                 endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
@@ -32,6 +33,7 @@ class IRCd(Service):
             listenDeferred = endpoint.listen(ServerListenFactory(self))
             listenDeferred.addCallback(self._savePort, bindDesc)
             listenDeferred.addErrback(self._logNotBound, bindDesc)
+        log.msg("txircd started!", logLevel=logging.INFO)
     
     def stopService(self):
         unbindDeferreds = []
