@@ -1,3 +1,8 @@
+def _enum(**enums):
+    return type('Enum', (), enums)
+
+ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
+
 def unescapeEndpointDescription(desc):
     result = []
     escape = []
