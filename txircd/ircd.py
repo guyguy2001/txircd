@@ -57,6 +57,10 @@ class IRCd(Service):
     
     def stopService(self):
         stopDeferreds = []
+        log.msg("Unloading modules...", logLevel=logging.INFO)
+        moduleList = self.loadedModules.keys()
+        for module in moduleList:
+            self.unloadModule(moduleList, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
         log.msg("Closing data storage...", logLevel=logging.INFO)
         self.storage.close()
         log.msg("Releasing ports...", logLevel=logging.INFO)
