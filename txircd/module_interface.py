@@ -43,10 +43,14 @@ class IModuleData(Interface):
     
     def actions():
         """
-        Returns the actions this module handles.  The actions are returned as a dictionary:
-        { name => function }
+        Returns the actions this module handles.  The actions are returned as a list
+        of tuples:
+        [ (type, priority, function) ]
         The name is the name of the action as a string.
-        The function is a reference to the function which handles the action.
+        The priority is a number.  Higher priorities will be executed first.  This may
+        not be important for all actions; if you think priority doesn't matter for the
+        action you're implementing, go ahead and pass a default of 0.
+        The function is a reference to the function which handles the action in your module.
         """
     
     def userCommands():
@@ -106,7 +110,7 @@ class ModuleData(object):
         return []
     
     def actions(self):
-        return {}
+        return []
     
     def userCommands(self):
         return []

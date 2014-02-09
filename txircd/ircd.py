@@ -107,7 +107,7 @@ class IRCd(Service):
         newChannelModes = ({}, {}, {}, {})
         newChannelStatuses = {}
         newUserModes = ({}, {}, {}, {})
-        newActions = moduleData["actions"]
+        newActions = {}
         newUserCommands = {}
         newServerCommands = {}
         common = False
@@ -133,6 +133,9 @@ class IRCd(Service):
                 raise ModuleLoadError (module.name, "Returns a user mode object (+{}) that doesn't implement IMode.".format(mode[0]))
             newUserModes[mode[1]][mode[0]] = mode[2]
             common = True
+        for action in moduleData["actions"]:
+            if action[0] not in newActions:
+                newActions[action[0]] = (action[2], action[1])
         for command in moduleData["usercommands"]:
             if command[0] not in newUserCommands:
                 newUserCommands[command[0]] = []
@@ -176,10 +179,15 @@ class IRCd(Service):
             for mode, implementation in typeSet.iteritems():
                 self.userModeTypes[mode] = type
                 self.userModes[type][mode] = implementation
-        for action, function in newActions.iteritems():
+        for action, actionData in newActions.iteritems():
             if action not in self.actions:
                 self.actions[action] = []
-            self.actions[action].append(function)
+            for index, handlerData in enumerate(self.actions[action]):
+                if handlerData[1] < actionData[1]:
+                    self.actions[action].insert(index, actionData)
+                    break
+            else:
+                self.actions[action].append(actionData)
         for command, data in newUserCommands:
             if command not in self.userCommands:
                 self.userCommands[command] = [data]
@@ -210,6 +218,7 @@ class IRCd(Service):
         d = module.unload()
         if d is not None:
             unloadDeferreds.append(d)
+        
         for modeData in moduleData["channelmodes"]:
             if modeData[1] == ModeType.Status:
                 del self.channelStatuses[modeData[0]]
@@ -221,18 +230,13 @@ class IRCd(Service):
         for modeData in moduleData["usermodes"]:
             del self.userModes[modeData[1]][modeData[0]]
             del self.userModeTypes[modeData[0]]
-        for actionType, handler in moduleData["actions"]:
-            self.actions[actionType].remove(handler)
+        for actionData in moduleData["actions"]:
+            self.actions[actionData[0]].remove((actionData[2], actionData[1]))
         for commandData in moduleData["usercommands"]:
-            for index, cmdImpl in enumerate(self.userCommands[commandData[0]]):
-                if cmdImpl == (commandData[2], commandData[1]):
-                    del self.userCommands[commandData[0]][index]
-                    break
+            self.userCommands[commandData[0]].remove((commandData[2], commandData[1]))
         for commandData in moduleData["servercommands"]:
-            for index, cmdImpl in enumerate(self.serverCommands[commandData[0]]):
-                if cmdImpl == (commandData[2], commandData[1]):
-                    del self.serverCommands[commandData[0]][index]
-                    break
+            self.serverCommands[commandData[0]].remove((commandData[2], commandData[1]))
+        
         if fullUnload:
             d = module.fullUnload()
             if d is not None:
