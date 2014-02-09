@@ -6,7 +6,7 @@ from twisted.plugin import getPlugins
 from twisted.python import log
 from txircd.config import Config
 from txircd.factory import ServerListenFactory, UserFactory
-from txircd.module_interface import IModuleData
+from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import ModeType, unescapeEndpointDescription
 import logging, txircd.modules
 
@@ -104,6 +104,8 @@ class IRCd(Service):
         for mode in moduleData["channelmodes"]:
             if mode[0] in self.channelModeTypes:
                 raise ModuleLoadError (module.name, "Tries to implement channel mode +{} when that mode is already implemented.".format(mode[0]))
+            if not IMode.providedBy(mode[2]):
+                raise ModuleLoadError (module.name, "Returns a channel mode object (+{}) that doesn't implement IMode.".format(mode[0]))
             if mode[1] == ModeType.Status:
                 if mode[4] in self.channelStatusSymbols:
                     raise ModuleLoadError (module.name, "Tries to create a channel rank with symbol {} when that symbol is already in use.".format(mode[4]))
@@ -117,15 +119,21 @@ class IRCd(Service):
         for mode in moduleData["usermodes"]:
             if mode[0] in self.userModeTypes:
                 raise ModuleLoadError (module.name, "Tries to implement user mode +{} when that mode is already implemented.".format(mode[0]))
+            if not IMode.providedBy(mode[2]):
+                raise ModuleLoadError (module.name, "Returns a user mode object (+{}) that doesn't implement IMode.".format(mode[0]))
             newUserModes[mode[1]][mode[0]] = mode[2]
             common = True
         for command in moduleData["usercommands"]:
             if command[0] not in newUserCommands:
                 newUserCommands[command[0]] = []
+            if not ICommand.providedBy(command[2]):
+                raise ModuleLoadError (module.name, "Returns a user command object ({}) that doesn't implement ICommand.".format(command[0]))
             newUserCommands[command[0]].append((command[2], command[1]))
         for command in moduleData["servercommands"]:
             if command[0] not in newServerCommands:
                 newServerCommands[command[0]] = []
+            if not ICommand.providedBy(command[2]):
+                raise ModuleLoadError (module.name, "Returns a server command object ({}) that doesnt implement ICommand.".format(command[0]))
             newServerCommands[command[0]].append((command[2], command[1]))
             common = True
         if not common:
