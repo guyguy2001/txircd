@@ -232,6 +232,13 @@ class IRCd(Service):
         if unloadDeferreds:
             return DeferredList(unloadDeferreds)
     
+    def reloadModule(self, moduleName):
+        d = self.unloadModule(moduleName, False)
+        if d is None:
+            self.loadModule(moduleName)
+        else:
+            d.addCallback(lambda result: self.loadModule(moduleName))
+    
     def rehash(self):
         log.msg("Rehashing...", logLevel=logging.INFO)
         self.config.reload()
