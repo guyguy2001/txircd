@@ -8,6 +8,7 @@ class IModuleData(Interface):
         or server commands.  If the IRCd determines that the module doesn't need to be loaded
         on all servers but it actually does, it will check this value.
         """)
+    core = Attribute("Always false for custom modules.")
     
     def hookIRCd(ircd):
         """
@@ -75,6 +76,7 @@ class IModuleData(Interface):
 
 class ModuleData(object):
     requiredOnAllServers = False
+    core = False
     
     def hookIRCd(self, ircd):
         pass
