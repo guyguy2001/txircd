@@ -73,6 +73,24 @@ class IModuleData(Interface):
             providing higher numbers.
         The object is an instance of the class that implements the command.
         """
+    
+    def load():
+        """
+        Called when the module is successfully loaded.
+        """
+    
+    def unload():
+        """
+        Called when the module is being unloaded for any reason, including to be reloaded.
+        Should do basic cleanup.
+        """
+    
+    def fullUnload():
+        """
+        Called when the module is being fully unloaded with no intention to reload.
+        Should do full cleanup of any data this module uses, including unsetting of modes
+        handled by this module.
+        """
 
 class ModuleData(object):
     requiredOnAllServers = False
@@ -95,6 +113,15 @@ class ModuleData(object):
     
     def serverCommands(self):
         return []
+    
+    def load(self):
+        pass
+    
+    def unload(self):
+        pass
+    
+    def fullUnload(self):
+        pass
 
 
 class ICommand(Interface):
