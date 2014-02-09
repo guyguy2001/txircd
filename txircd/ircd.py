@@ -177,6 +177,40 @@ class IRCd(Service):
                 else:
                     self.serverCommands[command].append(data)
     
+    def unloadModule(self, moduleName, fullUnload = True):
+        if moduleName not in self.loadedModules:
+            return
+        module = self.loadedModules[moduleName]
+        moduleData = self._loadedModuleData[moduleName]
+        module.unload()
+        for modeData in moduleData["channelmodes"]:
+            if modeData[1] == ModeType.Status:
+                del self.channelStatuses[modeData[0]]
+                del self.channelStatusSymbols[modeData[4]]
+                self.channelStatusOrder.remove(modeData[0])
+            else:
+                del self.channelModes[modeData[1]][modeData[0]]
+            del self.channelModeTypes[modeData[0]]
+        for modeData in moduleData["usermodes"]:
+            del self.userModes[modeData[1]][modeData[0]]
+            del self.userModeTypes[modeData[0]]
+        for actionType, handler in moduleData["actions"]:
+            self.actions[actionType].remove(handler)
+        for commandData in moduleData["usercommands"]:
+            for index, cmdImpl in enumerate(self.userCommands[commandData[0]]):
+                if cmdImpl == (commandData[2], commandData[1]):
+                    del self.userCommands[commandData[0]][index]
+                    break
+        for commandData in moduleData["servercommands"]:
+            for index, cmdImpl in enumerate(self.serverCommands[commandData[0]]):
+                if cmdImpl == (commandData[2], commandData[1]):
+                    del self.serverCommands[commandData[0]][index]
+                    break
+        if fullUnload:
+            module.fullUnload()
+        del self.loadedModules[moduleName]
+        del self._loadedModuleData[moduleName]
+    
     def rehash(self):
         log.msg("Rehashing...", logLevel=logging.INFO)
         self.config.reload()
