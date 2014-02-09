@@ -2,7 +2,8 @@ import yaml
 
 _defaults = {
     "bind_client": [ "tcp:6667:interface={::}" ],
-    "bind_server": []
+    "bind_server": [],
+    "modules": []
 }
 
 class Config(object):
