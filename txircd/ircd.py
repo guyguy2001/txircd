@@ -71,15 +71,15 @@ class IRCd(Service):
             if module.name in self.loadedModules:
                 continue
             if module.core or module.name in self.config["modules"]:
-                self.loadModule(module)
+                self._loadModuleData(module)
     
-    def loadModuleByName(self, moduleName):
+    def loadModule(self, moduleName):
         for module in getPlugins(IModuleData, txircd.modules):
             if module.name == moduleName:
-                self.loadModule(module)
+                self._loadModuleData(module)
                 break
     
-    def loadModule(self, module):
+    def _loadModuleData(self, module):
         if not IModuleData.providedBy(module):
             raise ModuleLoadError ("???", "Module does not implement module interface")
         if not module.name:
