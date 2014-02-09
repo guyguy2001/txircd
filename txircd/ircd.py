@@ -15,7 +15,7 @@ class IRCd(Service):
         self.config = Config(configFileName)
         self.boundPorts = {}
         self.loadedModules = {}
-        self.loadedModuleData = {}
+        self._loadedModuleData = {}
         self.commonModules = set()
         self.userCommands = {}
         self.serverCommands = {}
@@ -122,7 +122,7 @@ class IRCd(Service):
             common = module.requiredOnAllServers
         
         self.loadedModules[module.name] = module
-        self.loadedModuleData = moduleData
+        self._loadedModuleData[module.name] = moduleData
         if common:
             self.commonModules.add(module.name)
         
