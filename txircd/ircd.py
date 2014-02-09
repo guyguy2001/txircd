@@ -54,6 +54,7 @@ class IRCd(Service):
     
     def stopService(self):
         stopDeferreds = []
+        log.msg("Releasing ports...", logLevel=logging.INFO)
         for port in self.boundPorts.itervalues():
             d = port.stopListening()
             if d:
