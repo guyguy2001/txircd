@@ -22,6 +22,7 @@ class IRCd(Service):
         self.channelModes = ({}, {}, {}, {})
         self.channelStatuses = {}
         self.channelStatusSymbols = {}
+        self.channelStatusOrder = []
         self.channelModeTypes = {}
         self.userModes = ({}, {}, {}, {})
         self.userModeTypes = {}
@@ -140,7 +141,13 @@ class IRCd(Service):
         for mode, data in newChannelStatuses.iteritems():
             self.channelModeTypes[mode] = ModeType.Status
             self.channelStatuses[mode] = data
-            self.channelStatusSymbols[data[4]] = mode
+            self.channelStatusSymbols[data[0]] = mode
+            for index, status in enumerate(self.channelStatusOrder):
+                if self.channelStatuses[status][1] < data[1]:
+                    self.channelStatusOrder.insert(index, mode)
+                    break
+            else:
+                self.channelStatusOrder.append(mode)
         for type, typeSet in enumerate(newUserModes):
             for mode, implementation in typeSet.iteritems():
                 self.userModeTypes[mode] = type
