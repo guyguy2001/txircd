@@ -192,11 +192,14 @@ class IRCd(Service):
                     self.serverCommands[command].append(data)
     
     def unloadModule(self, moduleName, fullUnload = True):
+        unloadDeferreds = []
         if moduleName not in self.loadedModules:
             return
         module = self.loadedModules[moduleName]
         moduleData = self._loadedModuleData[moduleName]
-        module.unload()
+        d = module.unload()
+        if d is not None:
+            unloadDeferreds.append(d)
         for modeData in moduleData["channelmodes"]:
             if modeData[1] == ModeType.Status:
                 del self.channelStatuses[modeData[0]]
@@ -221,9 +224,13 @@ class IRCd(Service):
                     del self.serverCommands[commandData[0]][index]
                     break
         if fullUnload:
-            module.fullUnload()
+            d = module.fullUnload()
+            if d is not None:
+                unloadDeferreds.append(d)
         del self.loadedModules[moduleName]
         del self._loadedModuleData[moduleName]
+        if unloadDeferreds:
+            return DeferredList(unloadDeferreds)
     
     def rehash(self):
         log.msg("Rehashing...", logLevel=logging.INFO)
