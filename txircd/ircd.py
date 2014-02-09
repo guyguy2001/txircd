@@ -8,7 +8,7 @@ from txircd.config import Config
 from txircd.factory import ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import ModeType, unescapeEndpointDescription
-import logging, txircd.modules
+import logging, shelve, txircd.modules
 
 class IRCd(Service):
     def __init__(self, configFileName):
@@ -27,8 +27,11 @@ class IRCd(Service):
         self.userModes = ({}, {}, {}, {})
         self.userModeTypes = {}
         self.actions = {}
+        self.storage = None
     
     def startService(self):
+        log.msg("Loading storage...", logLevel=logging.INFO)
+        self.storage = shelve.open("data")
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()
         log.msg("Binding ports...", logLevel=logging.INFO)
@@ -54,6 +57,8 @@ class IRCd(Service):
     
     def stopService(self):
         stopDeferreds = []
+        log.msg("Closing data storage...", logLevel=logging.INFO)
+        self.storage.close()
         log.msg("Releasing ports...", logLevel=logging.INFO)
         for port in self.boundPorts.itervalues():
             d = port.stopListening()
