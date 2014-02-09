@@ -100,7 +100,10 @@ class IRCd(Service):
             if mode[1] == ModeType.Status:
                 if mode[4] in self.channelStatusSymbols:
                     raise ModuleLoadError (module.name, "Tries to create a channel rank with symbol {} when that symbol is already in use.".format(mode[4]))
-                newChannelStatuses[mode[0]] = (mode[4], mode[3], mode[2])
+                try:
+                    newChannelStatuses[mode[0]] = (mode[4], mode[3], mode[2])
+                except IndexError:
+                    raise ModuleLoadError (module.name, "Specifies channel status mode {} without a rank or symbol".format(mode[0]))
             else:
                 newChannelModes[mode[1]][mode[0]] = mode[2]
             common = True
