@@ -166,6 +166,10 @@ class IRCd(Service):
                         break
                 else:
                     self.serverCommands[command].append(data)
+    
+    def rehash(self):
+        log.msg("Rehashing...", logLevel=logging.INFO)
+        self.config.reload()
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):

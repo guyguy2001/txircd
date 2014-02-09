@@ -1,3 +1,4 @@
+from signal import signal, SIGHUP
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
 from twisted.python import log, usage
@@ -15,7 +16,9 @@ class IRCdServiceMaker(object):
     options = Options
     
     def makeService(self, options):
-        return IRCd(options["config"])
+        ircd = IRCd(options["config"])
+        signal(SIGHUP, lambda signal, stack: ircd.rehash())
+        return ircd
 
 observer = log.PythonLoggingObserver()
 observer.start()
