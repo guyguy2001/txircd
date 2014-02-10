@@ -12,7 +12,7 @@ import logging, shelve, txircd.modules
 
 class IRCd(Service):
     def __init__(self, configFileName):
-        self.config = Config(configFileName)
+        self.config = None
         self.boundPorts = {}
         self.loadedModules = {}
         self._loadedModuleData = {}
@@ -28,8 +28,21 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
+        self.name = None
+        self.isupport_tokens = {
+            "CHANNELLEN": 64,
+            "CASEMAPPING": "rfc1459",
+            "MODES": 20,
+            "NICKLEN": 32,
+            "TOPICLEN": 328
+        }
     
     def startService(self):
+        log.msg("Loading configuration...", logLevel=logging.INFO)
+        self.config = Config(configFileName)
+        self.name = self.config["server_name"][:64]
+        if "." not in self.name:
+            raise ValueError ("Server name must look like a domain name")
         log.msg("Loading storage...", logLevel=logging.INFO)
         self.storage = shelve.open("data")
         log.msg("Loading modules...", logLevel=logging.INFO)
@@ -271,6 +284,20 @@ class IRCd(Service):
     
     def _logNotBound(self, err, desc):
         log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
+    
+    def generateISupportList(self):
+        isupport = self.isupport_tokens.copy()
+        statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
+        isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
+        isupport["PREFIX"] = "({}){}".format(self.channelStatusOrder, statusSymbolOrder)
+        isupport["STATUSMSG"] = statusSymbolOrder
+        isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
+        for name, val in self.isupport.iteritems():
+            if val:
+                isupport.append("{}={}".format(name, val))
+            else:
+                isupport.append(name)
+        
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):

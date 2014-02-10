@@ -6,6 +6,10 @@ _defaults = {
     "modules": []
 }
 
+_required = [
+    "server_name"
+]
+
 class Config(object):
     def __init__(self, configFileName):
         self._fileName = configFileName
