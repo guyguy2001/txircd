@@ -35,24 +35,7 @@ class IRCd(Service):
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()
         log.msg("Binding ports...", logLevel=logging.INFO)
-        for bindDesc in self.config["bind_client"]:
-            try:
-                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
-            except ValueError as e:
-                log.msg(str(e), logLevel=logging.ERROR)
-                continue
-            listenDeferred = endpoint.listen(UserFactory(self))
-            listenDeferred.addCallback(self._savePort, bindDesc)
-            listenDeferred.addErrback(self._logNotBound, bindDesc)
-        for bindDesc in self.config["bind_server"]:
-            try:
-                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
-            except ValueError as e:
-                log.msg(str(e), logLevel=logging.ERROR)
-                continue
-            listenDeferred = endpoint.listen(ServerListenFactory(self))
-            listenDeferred.addCallback(self._savePort, bindDesc)
-            listenDeferred.addErrback(self._logNotBound, bindDesc)
+        self._bindPorts()
         log.msg("txircd started!", logLevel=logging.INFO)
     
     def stopService(self):
@@ -64,17 +47,8 @@ class IRCd(Service):
         log.msg("Closing data storage...", logLevel=logging.INFO)
         self.storage.close()
         log.msg("Releasing ports...", logLevel=logging.INFO)
-        for port in self.boundPorts.itervalues():
-            d = port.stopListening()
-            if d:
-                stopDeferreds.append(d)
+        stopDeferreds.extend(self._unbindPorts())
         return DeferredList(stopDeferreds)
-    
-    def _savePort(self, port, desc):
-        self.boundPorts[desc] = port
-    
-    def _logNotBound(self, err, desc):
-        log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
     
     def _loadModules(self):
         for module in getPlugins(IModuleData, txircd.modules):
@@ -256,6 +230,47 @@ class IRCd(Service):
     def rehash(self):
         log.msg("Rehashing...", logLevel=logging.INFO)
         self.config.reload()
+        d = self._unbindPorts() # Unbind the ports that are bound
+        if d: # And then bind the new ones
+            DeferredList(d).addCallback(lambda result: self._bindPorts())
+        else:
+            self._bindPorts()
+        for module in self.loadedModules.itervalues(): # Tell modules about it
+            module.rehash()
+    
+    def _bindPorts(self):
+        for bindDesc in self.config["bind_client"]:
+            try:
+                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
+            except ValueError as e:
+                log.msg(str(e), logLevel=logging.ERROR)
+                continue
+            listenDeferred = endpoint.listen(UserFactory(self))
+            listenDeferred.addCallback(self._savePort, bindDesc)
+            listenDeferred.addErrback(self._logNotBound, bindDesc)
+        for bindDesc in self.config["bind_server"]:
+            try:
+                endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
+            except ValueError as e:
+                log.msg(str(e), logLevel=logging.ERROR)
+                continue
+            listenDeferred = endpoint.listen(ServerListenFactory(self))
+            listenDeferred.addCallback(self._savePort, bindDesc)
+            listenDeferred.addErrback(self._logNotBound, bindDesc)
+    
+    def _unbindPorts(self):
+        deferreds = []
+        for port in self.boundPorts.itervalues():
+            d = port.stopListening()
+            if d:
+                deferreds.append(d)
+        return deferreds
+    
+    def _savePort(self, port, desc):
+        self.boundPorts[desc] = port
+    
+    def _logNotBound(self, err, desc):
+        log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):

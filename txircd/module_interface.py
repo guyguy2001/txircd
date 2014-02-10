@@ -83,6 +83,12 @@ class IModuleData(Interface):
         Called when the module is successfully loaded.
         """
     
+    def rehash():
+        """
+        Called when the server is rehashed.  Indicates that new configuration values are loaded
+        and that any changes should be acted upon.
+        """
+    
     def unload():
         """
         Called when the module is being unloaded for any reason, including to be reloaded.
@@ -119,6 +125,9 @@ class ModuleData(object):
         return []
     
     def load(self):
+        pass
+    
+    def rehash(self):
         pass
     
     def unload(self):
