@@ -12,10 +12,14 @@ class Config(object):
         self.reload()
     
     def reload(self):
-        self._configData = self._readConfig(self._fileName)
+        newConfig = self._readConfig(self._fileName)
         for key, val in _defaults.iteritems():
-            if key not in self._configData:
-                self._configData[key] = val
+            if key not in newConfig:
+                newConfig[key] = val
+        for item in _required:
+            if item not in newConfig:
+                raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
+        self._configData = newConfig
     
     def _readConfig(self, fileName):
         configData = {}
