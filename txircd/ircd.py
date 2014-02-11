@@ -192,7 +192,7 @@ class IRCd(Service):
                 else:
                     self.userCommands[command].append(data)
         for command, data in newServerCommands:
-            if comand not in self.serverCommands:
+            if command not in self.serverCommands:
                 self.serverCommands[command] = [data]
             else:
                 for index, cmd in enumerate(self.serverCommands[command]):
