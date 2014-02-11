@@ -37,6 +37,7 @@ class IRCd(Service):
             "NICKLEN": 32,
             "TOPICLEN": 328
         }
+        self._uid = self._genUID()
     
     def startService(self):
         log.msg("Loading configuration...", logLevel=logging.INFO)
@@ -289,6 +290,24 @@ class IRCd(Service):
     def _logNotBound(self, err, desc):
         log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
     
+    def createUUID(self):
+        return self.server_id + self.uid.next()
+    
+    def _genUID(self):
+        uid = "AAAAAA"
+        while True:
+            yield uid
+            uid = self._incrementUID(uid)
+    
+    def _incrementUID(self, uid):
+        if uid == "Z": # The first character must be a letter
+            return "A" # So wrap that around
+        if uid[-1] == "9":
+            return self._incrementUID(uid[:-1]) + "A"
+        if uid[-1] == "Z":
+            return uid[:-1] + "0"
+        return uid[:-1] + chr(ord(uid[-1]) + 1)
+    
     def generateISupportList(self):
         isupport = self.isupport_tokens.copy()
         statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
@@ -301,7 +320,6 @@ class IRCd(Service):
                 isupport.append("{}={}".format(name, val))
             else:
                 isupport.append(name)
-        
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
