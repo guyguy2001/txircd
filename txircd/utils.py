@@ -1,7 +1,16 @@
+import re
+
 def _enum(**enums):
     return type('Enum', (), enums)
 
 ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
+
+ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
+def unmapIPv4(ip):
+    mapped = ipv4MappedAddr.match(ip)
+    if mapped:
+        return mapped.group(1)
+    return ip
 
 def unescapeEndpointDescription(desc):
     result = []
