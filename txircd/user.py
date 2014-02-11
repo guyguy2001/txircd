@@ -1,5 +1,8 @@
 from twisted.words.protocols import irc
+from txircd.utils import now
 from socket import gethostbyaddr, herror
+
+irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(irc.IRC):
     def __init__(self, ircd, ip):
@@ -25,7 +28,8 @@ class IRCUser(irc.IRC):
         self.cache = {}
         self.channels = []
         self.modes = {}
-        self.registered = 2
+        self.idleSince = now()
+        self._registered = 2
     
     def connectionMade(self):
         if "user_connect" in self.ircd.actions:
@@ -63,12 +67,22 @@ class IRCUser(irc.IRC):
             if not handlers:
                 return
             data = None
+            spewRegWarning = True
             for handler in handlers:
+                if handler[0].forRegisteredUsers is not None:
+                    if (handler[0].forRegisteredUsers is True and self._registered > 0) or (handler[0].forRegisteredUsers is False and self._registered == 0):
+                        continue
+                spewRegWarning = False
                 data = handler[0].parseParams()
                 if data is not None:
                     break
-            else:
-                return # All command params parsers returned None, so just quit
+            if data is None:
+                if spewRegWarning:
+                    if self._registered == 0:
+                        self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
+                    else:
+                        self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
+                return
             actionName = "commandpermission-{}".format(command)
             if actionName in self.ircd.actions:
                 permissionCount = 0
@@ -90,6 +104,8 @@ class IRCUser(irc.IRC):
                         data = newData
             for handler in handlers:
                 if handler[0].execute(self, data):
+                    if handler[0].resetsIdleTime:
+                        self.idleSince = now()
                     break # If the command executor returns True, it was handled
             else:
                 return # Don't process commandextra if it wasn't handled

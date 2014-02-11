@@ -139,6 +139,12 @@ class ModuleData(object):
 
 class ICommand(Interface):
     resetsIdleTime = Attribute("Whether this command resets the user's idle time.")
+    forRegisteredUsers = Attribute("""
+        Whether this command should be triggered for users only after they've registered.
+        True to only activate for registered users.
+        False to only activate for unregistered users.
+        None to be agnostic about the whole thing.
+        """)
     
     def parseParams(params):
         """
@@ -154,6 +160,7 @@ class ICommand(Interface):
 
 class Command(object):
     resetsIdleTime = True
+    forRegisteredUsers = True
     
     def parseParams(self, params):
         return None

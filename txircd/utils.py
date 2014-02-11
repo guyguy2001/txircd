@@ -1,9 +1,17 @@
+from datetime import datetime
 import re
 
 def _enum(**enums):
     return type('Enum', (), enums)
 
 ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
+
+def now():
+    return datetime.utcnow()
+
+def timestamp(time):
+    unixEpoch = datetime.utcfromtimestamp(0)
+    return (time - unixEpoch).total_seconds()
 
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
 def unmapIPv4(ip):
