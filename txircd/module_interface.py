@@ -149,6 +149,7 @@ class ICommand(Interface):
     def execute(user, data):
         """
         Performs the command action.
+        Returns True if successfully handled; otherwise defers to the next handler in the chain
         """
 
 class Command(object):
