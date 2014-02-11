@@ -28,6 +28,7 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
+        self.serverID = None
         self.name = None
         self.isupport_tokens = {
             "CHANNELLEN": 64,
@@ -43,6 +44,9 @@ class IRCd(Service):
         self.name = self.config["server_name"][:64]
         if "." not in self.name:
             raise ValueError ("Server name must look like a domain name")
+        self.serverID = self.config["server_id"].upper()
+        if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
+            raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
         self.storage = shelve.open("data")
         log.msg("Loading modules...", logLevel=logging.INFO)

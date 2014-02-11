@@ -7,7 +7,8 @@ _defaults = {
 }
 
 _required = [
-    "server_name"
+    "server_name",
+    "server_id"
 ]
 
 class Config(object):
