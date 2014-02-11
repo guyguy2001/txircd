@@ -29,7 +29,7 @@ class IRCUser(irc.IRC):
         self.channels = []
         self.modes = {}
         self.idleSince = now()
-        self._registered = 2
+        self._registerHolds = set(("NICK", "USER"))
     
     def connectionMade(self):
         if "user_connect" in self.ircd.actions:
@@ -70,7 +70,7 @@ class IRCUser(irc.IRC):
             spewRegWarning = True
             for handler in handlers:
                 if handler[0].forRegisteredUsers is not None:
-                    if (handler[0].forRegisteredUsers is True and self._registered > 0) or (handler[0].forRegisteredUsers is False and self._registered == 0):
+                    if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
                         continue
                 spewRegWarning = False
                 data = handler[0].parseParams()
@@ -78,7 +78,7 @@ class IRCUser(irc.IRC):
                     break
             if data is None:
                 if spewRegWarning:
-                    if self._registered == 0:
+                    if self.isRegistered() == 0:
                         self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
@@ -115,3 +115,22 @@ class IRCUser(irc.IRC):
                     action[0](self, command, data)
         else:
             self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
+    
+    def isRegistered(self):
+        return not self._registerHolds
+    
+    def register(self, holdName):
+        if holdName not in self._registerHolds:
+            return
+        self._registerHolds.remove(holdName)
+        if not self._registerHolds:
+            if "register" in self.ircd.actions:
+                for action in self.ircd.actions["register"]:
+                    if not action[0](self):
+                        self.transport.loseConnection()
+                        return
+    
+    def addRegisterHold(self, holdName):
+        if not self._registerHolds:
+            return
+        self._registerHolds.add(holdName)
