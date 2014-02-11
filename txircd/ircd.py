@@ -128,18 +128,20 @@ class IRCd(Service):
             common = True
         for action in moduleData["actions"]:
             if action[0] not in newActions:
-                newActions[action[0]] = (action[2], action[1])
+                newActions[action[0]] = [(action[2], action[1])]
+            else:
+                newActions[action[0]].append((action[2], action[1]))
         for command in moduleData["usercommands"]:
-            if command[0] not in newUserCommands:
-                newUserCommands[command[0]] = []
             if not ICommand.providedBy(command[2]):
                 raise ModuleLoadError (module.name, "Returns a user command object ({}) that doesn't implement ICommand.".format(command[0]))
+            if command[0] not in newUserCommands:
+                newUserCommands[command[0]] = []
             newUserCommands[command[0]].append((command[2], command[1]))
         for command in moduleData["servercommands"]:
-            if command[0] not in newServerCommands:
-                newServerCommands[command[0]] = []
             if not ICommand.providedBy(command[2]):
                 raise ModuleLoadError (module.name, "Returns a server command object ({}) that doesnt implement ICommand.".format(command[0]))
+            if command[0] not in newServerCommands:
+                newServerCommands[command[0]] = []
             newServerCommands[command[0]].append((command[2], command[1]))
             common = True
         if not common:
@@ -172,29 +174,30 @@ class IRCd(Service):
             for mode, implementation in typeSet.iteritems():
                 self.userModeTypes[mode] = type
                 self.userModes[type][mode] = implementation
-        for action, actionData in newActions.iteritems():
+        for action, actionList in newActions.iteritems():
             if action not in self.actions:
                 self.actions[action] = []
-            for index, handlerData in enumerate(self.actions[action]):
-                if handlerData[1] < actionData[1]:
-                    self.actions[action].insert(index, actionData)
-                    break
-            else:
-                self.actions[action].append(actionData)
-        for command, data in newUserCommands:
+            for actionData in actionList:
+                for index, handlerData in enumerate(self.actions[action]):
+                    if handlerData[1] < actionData[1]:
+                        self.actions[action].insert(index, actionData)
+                        break
+                else:
+                    self.actions[action].append(actionData)
+        for command, dataList in newUserCommands:
             if command not in self.userCommands:
-                self.userCommands[command] = [data]
-            else:
+                self.userCommands[command] = []
+            for data in dataList:
                 for index, cmd in enumerate(self.userCommands[command]):
                     if cmd[1] < data[1]:
                         self.userCommands[command].insert(index, data)
                         break
                 else:
                     self.userCommands[command].append(data)
-        for command, data in newServerCommands:
+        for command, dataList in newServerCommands:
             if command not in self.serverCommands:
-                self.serverCommands[command] = [data]
-            else:
+                self.serverCommands[command] = []
+            for data in dataList
                 for index, cmd in enumerate(self.serverCommands[command]):
                     if cmd[1] < data[1]:
                         self.serverCommands[command].insert(index, data)
