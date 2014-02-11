@@ -292,7 +292,7 @@ class IRCd(Service):
         log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
     
     def createUUID(self):
-        return self.server_id + self.uid.next()
+        return self.serverID + self._uid.next()
     
     def _genUID(self):
         uid = "AAAAAA"
