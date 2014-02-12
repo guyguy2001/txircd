@@ -70,6 +70,9 @@ class Config(object):
     def __setitem__(self, key, value):
         self._configData[key] = value
     
+    def __iter__(self):
+        return iter(self._configData)
+    
     def getWithDefault(self, key, defaultValue):
         try:
             return self._configData[key]
