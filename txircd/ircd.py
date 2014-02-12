@@ -7,7 +7,7 @@ from twisted.python import log
 from txircd.config import Config
 from txircd.factory import ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
-from txircd.utils import ModeType, unescapeEndpointDescription
+from txircd.utils import ModeType, now, unescapeEndpointDescription
 import logging, shelve, txircd.modules
 
 class IRCd(Service):
@@ -197,7 +197,7 @@ class IRCd(Service):
         for command, dataList in newServerCommands:
             if command not in self.serverCommands:
                 self.serverCommands[command] = []
-            for data in dataList
+            for data in dataList:
                 for index, cmd in enumerate(self.serverCommands[command]):
                     if cmd[1] < data[1]:
                         self.serverCommands[command].insert(index, data)
