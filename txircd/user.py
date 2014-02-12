@@ -1,5 +1,6 @@
 from twisted.words.protocols import irc
-from txircd.utils import now
+from txircd import version
+from txircd.utils import now, splitMessage
 from socket import gethostbyaddr, herror
 
 irc.ERR_ALREADYREGISTERED = "462"
@@ -129,8 +130,30 @@ class IRCUser(irc.IRC):
                     if not action[0](self):
                         self.transport.loseConnection()
                         return
+            self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.prefix()))
+            self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.config["network_name"], version))
+            self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
+            self.sendMessage(irc.RPL_MYINFO, self.config["network_name"], version, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), "".join(["".join(modes.keys()) for modes in self.ircd.channelModes]))
+            isupportList = self.ircd.generateISupportList()
+            isupportMsgList = splitMessage(" ".join(isupportList), 350)
+            for line in isupportMsgList:
+                self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
+            # TODO: send LUSERS
+            # TODO: send MOTD
+            if "welcome" in self.ircd.actions:
+                for action in self.ircd.actions["welcome"]:
+                    action[0](self)
     
     def addRegisterHold(self, holdName):
         if not self._registerHolds:
             return
         self._registerHolds.add(holdName)
+    
+    def hostmask(self):
+        return "{}!{}@{}".format(self.nick, self.ident, self.host)
+    
+    def hostmaskWithRealHost(self):
+        return "{}!{}@{}".format(self.nick, self.ident, self.realhost)
+    
+    def hostmaskWithIP(self):
+        return "{}!{}@{}".format(self.nick, self.ident, self.ip)

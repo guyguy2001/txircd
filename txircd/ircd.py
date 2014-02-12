@@ -39,8 +39,11 @@ class IRCd(Service):
             "TOPICLEN": 328
         }
         self._uid = self._genUID()
+        self.startupTime = None
     
     def startService(self):
+        log.msg("Starting up...", logLevel=logging.INFO)
+        self.startupTime = now()
         log.msg("Loading configuration...", logLevel=logging.INFO)
         self.config = Config(self._configFile)
         self.name = self.config["server_name"][:64]
@@ -324,6 +327,13 @@ class IRCd(Service):
                 isupport.append("{}={}".format(name, val))
             else:
                 isupport.append(name)
+        isupportList = []
+        for key, val in isupport.iteritems():
+            if val is None:
+                isupportList.append(key)
+            else:
+                isupportList.append("{}={}".format(key, val))
+        return isupportList
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
