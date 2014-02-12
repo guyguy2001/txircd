@@ -57,3 +57,29 @@ def unescapeEndpointDescription(desc):
     if depth != 0:
         raise ValueError ("Endpoint description not valid: mismatched opening brace")
     return "".join(result)
+
+def splitMessage(message, maxLength):
+    if len(message) < maxLength:
+        return [message]
+    msgList = []
+    while message:
+        limitedMessage = message[:maxLength]
+        if limitedMessage == message:
+            msgList.append(limitedMessage)
+            message = ""
+        elif "\n" in limitedMessage:
+            pos = limitedMessage.rfind("\n")
+            newMsg = limitedMessage[:pos]
+            if newMsg:
+                msgList.append(newMsg)
+            message = message[pos+1:] # Skip the newline
+        elif " " in limitedMessage:
+            pos = limitedMessage.rfind(" ")
+            newMsg = limitedMessage[:pos]
+            if newMsg:
+                msgList.append(newMsg)
+            message = message[pos+1:] # Skip the space
+        else:
+            msgList.append(limitedMessage)
+            message = message[maxLength:]
+    return msgList
