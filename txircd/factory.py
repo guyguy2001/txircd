@@ -11,7 +11,7 @@ class UserFactory(Factory):
     
     def buildProtocol(self, addr):
         try:
-            return protocol(self.ircd, unmapIPv4(addr.host))
+            return self.protocol(self.ircd, unmapIPv4(addr.host))
         except DenyConnection:
             return None
 
