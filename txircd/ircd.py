@@ -7,7 +7,7 @@ from twisted.python import log
 from txircd.config import Config
 from txircd.factory import ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
-from txircd.utils import ModeType, now, unescapeEndpointDescription
+from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
 import logging, shelve, txircd.modules
 
 class IRCd(Service):
@@ -40,6 +40,10 @@ class IRCd(Service):
             "TOPICLEN": 328
         }
         self._uid = self._genUID()
+        
+        self.users = {}
+        self.userNicks = CaseInsensitiveDictionary()
+        self.channels = CaseInsensitiveDictionary()
         
         self.startupTime = None
     

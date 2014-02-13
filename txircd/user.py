@@ -31,6 +31,7 @@ class IRCUser(irc.IRC):
         self.modes = {}
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
+        self.ircd.users[self.uuid] = self
     
     def connectionMade(self):
         if "user_connect" in self.ircd.actions:
@@ -130,6 +131,7 @@ class IRCUser(irc.IRC):
                     if not action[0](self):
                         self.transport.loseConnection()
                         return
+            self.ircd.userNicks[self.nick] = self.uuid
             self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.prefix()))
             self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.config["network_name"], version))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
