@@ -15,7 +15,6 @@ _required = [
 class Config(object):
     def __init__(self, configFileName):
         self._fileName = configFileName
-        self.reload()
     
     def reload(self):
         newConfig = self._readConfig(self._fileName)

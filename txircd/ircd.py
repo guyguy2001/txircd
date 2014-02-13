@@ -12,8 +12,7 @@ import logging, shelve, txircd.modules
 
 class IRCd(Service):
     def __init__(self, configFileName):
-        self.config = None
-        self._configFile = configFileName
+        self.config = Config(configFileName)
         self.boundPorts = {}
         self.loadedModules = {}
         self._loadedModuleData = {}
@@ -45,7 +44,7 @@ class IRCd(Service):
         log.msg("Starting up...", logLevel=logging.INFO)
         self.startupTime = now()
         log.msg("Loading configuration...", logLevel=logging.INFO)
-        self.config = Config(self._configFile)
+        self.config.reload()
         self.name = self.config["server_name"][:64]
         if "." not in self.name:
             raise ValueError ("Server name must look like a domain name")
