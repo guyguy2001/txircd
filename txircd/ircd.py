@@ -13,6 +13,7 @@ import logging, shelve, txircd.modules
 class IRCd(Service):
     def __init__(self, configFileName):
         self.config = Config(configFileName)
+        
         self.boundPorts = {}
         self.loadedModules = {}
         self._loadedModuleData = {}
@@ -28,6 +29,7 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
+        
         self.serverID = None
         self.name = None
         self.isupport_tokens = {
@@ -38,6 +40,7 @@ class IRCd(Service):
             "TOPICLEN": 328
         }
         self._uid = self._genUID()
+        
         self.startupTime = None
     
     def startService(self):
@@ -52,7 +55,7 @@ class IRCd(Service):
         if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
-        self.storage = shelve.open("data")
+        self.storage = shelve.open("data.db")
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()
         log.msg("Binding ports...", logLevel=logging.INFO)
