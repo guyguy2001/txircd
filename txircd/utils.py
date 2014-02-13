@@ -6,6 +6,7 @@ def _enum(**enums):
 
 ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
 
+
 def now():
     return datetime.utcnow()
 
@@ -13,12 +14,14 @@ def timestamp(time):
     unixEpoch = datetime.utcfromtimestamp(0)
     return (time - unixEpoch).total_seconds()
 
+
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
 def unmapIPv4(ip):
     mapped = ipv4MappedAddr.match(ip)
     if mapped:
         return mapped.group(1)
     return ip
+
 
 def unescapeEndpointDescription(desc):
     result = []
@@ -57,6 +60,7 @@ def unescapeEndpointDescription(desc):
     if depth != 0:
         raise ValueError ("Endpoint description not valid: mismatched opening brace")
     return "".join(result)
+
 
 def splitMessage(message, maxLength):
     if len(message) < maxLength:
