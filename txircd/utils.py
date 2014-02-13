@@ -7,6 +7,38 @@ def _enum(**enums):
 ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
 
 
+def ircLower(string):
+    return string.lower().replace("[", "{"}).replace("]", "}").replace("\\", "|")
+
+class CaseInsensitiveDictionary(MutableMapping):
+    def __init__(self):
+        self._data = {}
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def __delitem__(self, key):
+        try:
+            del self._data[ircLower(key)]
+        except KeyError:
+            raise KeyError(key)
+
+    def __getitem__(self, key):
+        try:
+            return self._data[ircLower(key)]
+        except KeyError:
+            raise KeyError(key)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __setitem__(self, key, value):
+        self._data[ircLower(key)] = value
+
+
 def now():
     return datetime.utcnow()
 
