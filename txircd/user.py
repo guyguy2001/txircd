@@ -126,6 +126,9 @@ class IRCUser(irc.IRC):
             return
         self._registerHolds.remove(holdName)
         if not self._registerHolds:
+            if self.nick in self.ircd.userNicks:
+                self._registerHolds.add("NICK")
+                return
             if "register" in self.ircd.actions:
                 for action in self.ircd.actions["register"]:
                     if not action[0](self):
