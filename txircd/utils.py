@@ -9,7 +9,7 @@ ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
 
 
 def ircLower(string):
-    return string.lower().replace("[", "{"}).replace("]", "}").replace("\\", "|")
+    return string.lower().replace("[", "{").replace("]", "}").replace("\\", "|")
 
 class CaseInsensitiveDictionary(MutableMapping):
     def __init__(self):
