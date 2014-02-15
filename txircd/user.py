@@ -118,6 +118,18 @@ class IRCUser(irc.IRC):
         else:
             self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
+    def connectionLost(self, reason):
+        if self.uuid in self.ircd.users:
+            self.disconnected("Connection reset")
+    
+    def disconnected(self, reason):
+        del self.ircd.users[self.uuid]
+        del self.ircd.userNicks[self.nick]
+        # TODO: leave all channels
+        if "quit" in self.ircd.actions:
+            for action in self.ircd.actions["quit"]:
+                action[0](self, reason)
+    
     def isRegistered(self):
         return not self._registerHolds
     
