@@ -163,7 +163,7 @@ class IRCd(Service):
         
         if "moduleload" in self.actions:
             for action in self.actions["moduleload"]:
-                action(module.name)
+                action[0](module.name)
         
         for type, typeSet in enumerate(newChannelModes):
             for mode, implementation in typeSet.iteritems():
@@ -248,6 +248,11 @@ class IRCd(Service):
                 unloadDeferreds.append(d)
         del self.loadedModules[moduleName]
         del self._loadedModuleData[moduleName]
+        
+        if "moduleunload" in self.actions:
+            for action in self.actions["moduleunload"]:
+                action[0](module.name)
+        
         if unloadDeferreds:
             return DeferredList(unloadDeferreds)
     
