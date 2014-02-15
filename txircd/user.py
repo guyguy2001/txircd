@@ -150,7 +150,7 @@ class IRCUser(irc.IRC):
                         self.transport.loseConnection()
                         return
             self.ircd.userNicks[self.nick] = self.uuid
-            self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.prefix()))
+            self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
             self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.config["network_name"], version))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
             self.sendMessage(irc.RPL_MYINFO, self.config["network_name"], version, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), "".join(["".join(modes.keys()) for modes in self.ircd.channelModes]))
