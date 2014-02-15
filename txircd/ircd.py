@@ -327,7 +327,10 @@ class IRCd(Service):
         log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
     
     def createUUID(self):
-        return self.serverID + self._uid.next()
+        newUUID = self.serverID + self._uid.next()
+        while newUUID in self.users: # It'll take over 1.5 billion connections to loop around, but we still
+            newUUID = self.serverID + self._uid.next() # want to be extra safe and avoid collisions
+        return newUUID
     
     def _genUID(self):
         uid = "AAAAAA"
