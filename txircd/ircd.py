@@ -44,6 +44,7 @@ class IRCd(Service):
         self.users = {}
         self.userNicks = CaseInsensitiveDictionary()
         self.channels = CaseInsensitiveDictionary()
+        self.servers = CaseInsensitiveDictionary()
         
         self.startupTime = None
     
