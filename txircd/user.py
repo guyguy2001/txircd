@@ -1,3 +1,4 @@
+from twisted.internet.defer import Deferred
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.utils import now, splitMessage
@@ -31,6 +32,7 @@ class IRCUser(irc.IRC):
         self.modes = {}
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
+        self.disconnectedDeferred = Deferred()
         self.ircd.users[self.uuid] = self
     
     def connectionMade(self):
@@ -121,6 +123,7 @@ class IRCUser(irc.IRC):
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
             self.disconnected("Connection reset")
+        self.disconnectedDeferred.callback(None)
     
     def disconnected(self, reason):
         del self.ircd.users[self.uuid]
