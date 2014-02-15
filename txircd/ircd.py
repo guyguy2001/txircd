@@ -84,6 +84,9 @@ class IRCd(Service):
                 continue
             if module.core or module.name in self.config["modules"]:
                 self._loadModuleData(module)
+        for moduleName in self.config["modules"]:
+            if moduleName not in self.loadedModules:
+                log.msg("The module {} failed to load.".format(moduleName), logLevel=logging.WARNING)
     
     def loadModule(self, moduleName):
         for module in getPlugins(IModuleData, txircd.modules):
