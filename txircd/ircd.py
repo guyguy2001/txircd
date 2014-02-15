@@ -69,6 +69,19 @@ class IRCd(Service):
     
     def stopService(self):
         stopDeferreds = []
+        log.msg("Disconnecting servers...", logLevel=logging.INFO)
+        serverList = self.servers.values() # Take the list of server objects
+        self.servers = {} # And then destroy the server dict to inhibit server objects generating lots of noise
+        for server in serverList:
+            stopDeferreds.append(server.disconnectDeferred)
+            # TODO: Remove users
+            server.transport.loseConnection()
+        log.msg("Disconnecting users...", logLevel=logging.INFO)
+        userList = self.users.values() # Basically do the same thing I just did with the servers
+        self.users = {}
+        for user in userList:
+            stopDeferreds.append(user.disconnectDeferred)
+            user.transport.loseConnection()
         log.msg("Unloading modules...", logLevel=logging.INFO)
         moduleList = self.loadedModules.keys()
         for module in moduleList:
