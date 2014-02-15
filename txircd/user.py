@@ -162,3 +162,55 @@ class IRCUser(irc.IRC):
     
     def hostmaskWithIP(self):
         return "{}!{}@{}".format(self.nick, self.ident, self.ip)
+    
+    def changeNick(self, newNick):
+        if newNick in self.ircd.userNicks:
+            return
+        oldNick = self.nick
+        del self.ircd.userNicks[self.nick]
+        self.nick = newNick
+        self.ircd.userNicks[self.nick] = self.uuid
+        if "changenick" in self.ircd.actions:
+            for action in self.ircd.actions["changenick"]:
+                action[0](self, oldNick)
+    
+    def changeIdent(self, newIdent):
+        oldIdent = self.ident
+        self.ident = newIdent
+        if "changeident" in self.ircd.actions:
+            for action in self.ircd.actions["changeident"]:
+                action[0](self, oldIdent)
+    
+    def changeHost(self, newHost):
+        oldHost = self.host
+        self.host = newHost
+        if "changehost" in self.ircd.actions:
+            for action in self.ircd.actions["changehost"]:
+                action[0](self, oldHost)
+    
+    def resetHost(self):
+        self.changeHost(self.realhost)
+    
+    def changeGecos(self, newGecos):
+        oldGecos = self.gecos
+        self.gecos = newGecos
+        if "changegecos" in self.ircd.actions:
+            for action in self.ircd.actions["changegecos"]:
+                action[0](self, oldGecos)
+    
+    def setMetadata(self, namespace, key, value):
+        if namespace not in self.metadata:
+            return
+        oldValue = None
+        if key in self.metadata[namespace]:
+            oldValue = self.metadata[namespace][key]
+        if value == oldValue:
+            return # Don't do any more processing, including calling the action
+        if value is None:
+            if key in self.metadata[namespace]:
+                del self.metadata[namespace][key]
+        else:
+            self.metadata[namespace][key] = value
+        if "usermetadataupdate" in self.ircd.actions:
+            for action in self.ircd.actions["usermetadataupdate"]:
+                action[0](self, namespace, key, oldValue, value)
