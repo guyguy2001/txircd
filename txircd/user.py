@@ -1,7 +1,7 @@
 from twisted.internet.defer import Deferred
 from twisted.words.protocols import irc
 from txircd import version
-from txircd.utils import now, splitMessage
+from txircd.utils import ModeType, now, splitMessage
 from socket import gethostbyaddr, herror
 
 irc.ERR_ALREADYREGISTERED = "462"
@@ -229,3 +229,85 @@ class IRCUser(irc.IRC):
         if "usermetadataupdate" in self.ircd.actions:
             for action in self.ircd.actions["usermetadataupdate"]:
                 action[0](self, namespace, key, oldValue, value)
+    
+    def setMode(self, user, modeString, params, displaySource = None):
+        adding = True
+        changing = []
+        for mode in modeString:
+            if mode == "+":
+                adding = True
+                continue
+            if mode == "-":
+                adding = False
+                continue
+            if mode not in self.ircd.userModeTypes:
+                continue
+            param = None
+            modeType = self.ircd.userModeTypes[mode]
+            if modeType in (ModeType.List, ModeType.ParamOnUnset) or (modeType == ModeType.Param and adding):
+                try:
+                    param = params.pop(0)
+                except IndexError:
+                    continue
+            paramList = [None]
+            if param:
+                if adding:
+                    paramList = self.ircd.userModes[modeType][mode].checkSet(param)
+                else:
+                    paramList = self.ircd.userModes[modeType][mode].checkUnset(param)
+            if paramList is None:
+                continue
+            del param # We use this later
+            
+            if user:
+                displaySource = user.hostmask()
+            elif not displaySource:
+                displaySource = self.ircd.name
+            
+            for param in paramList:
+                if user and "modepermission-user-{}".format(mode) in self.ircd.actions:
+                    permissionCount = 0
+                    for action in self.ircd.actions["modepermission-user-{}".format(mode)]:
+                        vote = action[0](self, user, mode, param)
+                        if vote is True:
+                            permissionCount += 1
+                        else:
+                            permissionCount -= 1
+                    if permissionCount < 0:
+                        continue
+                if adding:
+                    if modeType == ModeType.List:
+                        if mode not in self.modes:
+                            self.modes[mode] = []
+                        found = False
+                        for data in self.modes[mode]:
+                            if data[0] == param:
+                                found = True
+                                break
+                        if found:
+                            continue
+                        self.modes[mode].append((param, displaySource, now()))
+                    else:
+                        if mode not in self.modes or self.modes[mode] == param:
+                            continue
+                        self.modes[mode] = param
+                else:
+                    if mode not in self.modes:
+                        continue
+                    if modeType == ModeType.List:
+                        for index, data in enumerate(self.modes[mode]):
+                            if data[0] == param:
+                                del self.modes[mode][index]
+                                break
+                        else:
+                            continue
+                    else:
+                        if mode in self.modes:
+                            del self.modes[mode]
+                        else:
+                            continue
+                changing.append((adding, mode, param, displaySource))
+                if "modechange-user-{}".format(mode) in self.ircd.actions:
+                    for action in self.ircd.actions["modechange-user-{}".format(mode)]:
+                        action[0](self, adding, mode, param, displaySource)
+        return changing
