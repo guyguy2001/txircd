@@ -81,7 +81,7 @@ class IRCUser(irc.IRC):
                     if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
                         continue
                 spewRegWarning = False
-                data = handler[0].parseParams()
+                data = handler[0].parseParams(params)
                 if data is not None:
                     break
             if data is None:
