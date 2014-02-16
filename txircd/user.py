@@ -31,6 +31,8 @@ class IRCUser(irc.IRC):
         self.cache = {}
         self.channels = []
         self.modes = {}
+        self.connectedSince = now()
+        self.nickSince = now()
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
@@ -189,6 +191,7 @@ class IRCUser(irc.IRC):
         del self.ircd.userNicks[self.nick]
         self.nick = newNick
         self.ircd.userNicks[self.nick] = self.uuid
+        self.nickSince = now()
         if "changenick" in self.ircd.actions:
             for action in self.ircd.actions["changenick"]:
                 action[0](self, oldNick)
