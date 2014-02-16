@@ -2,6 +2,8 @@ from collections import MutableMapping
 from datetime import datetime
 import re
 
+validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$")
+
 def _enum(**enums):
     return type('Enum', (), enums)
 
