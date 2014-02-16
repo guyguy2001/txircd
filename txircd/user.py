@@ -44,7 +44,7 @@ class IRCUser(irc.IRC):
                     return
     
     def dataReceived(self, data):
-        data = data.replace("\r", "").replace("\n", "\r\n")
+        data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
         if "user_recvdata" in self.ircd.actions:
             for action in self.ircd.actions["user_recvdata"]:
                 action[0](self, data)
