@@ -165,7 +165,7 @@ class Command(object):
     def parseParams(self, params):
         return None
     
-    def execute(self, user, data):
+    def execute(self, source, data):
         pass
 
 
