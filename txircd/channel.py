@@ -60,6 +60,8 @@ class IRCChannel(object):
         adding = True
         changing = []
         for mode in modeString:
+            if len(changing) >= 20:
+                break
             if mode == "+":
                 adding = True
                 continue
@@ -96,6 +98,8 @@ class IRCChannel(object):
                 displaySource = self.ircd.name
             
             for param in paramList:
+                if len(changing) >= 20:
+                    break
                 if "modepermission-channel-{}".format(mode) in self.ircd.actions:
                     permissionCount = 0
                     for action in self.ircd.actions["modepermission-channel-{}".format(mode)]:

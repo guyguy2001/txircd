@@ -287,6 +287,8 @@ class IRCUser(irc.IRC):
         adding = True
         changing = []
         for mode in modeString:
+            if len(changing) >= 20:
+                break
             if mode == "+":
                 adding = True
                 continue
@@ -318,6 +320,8 @@ class IRCUser(irc.IRC):
                 displaySource = self.ircd.name
             
             for param in paramList:
+                if len(changing) >= 20:
+                    break
                 if user and "modepermission-user-{}".format(mode) in self.ircd.actions:
                     permissionCount = 0
                     for action in self.ircd.actions["modepermission-user-{}".format(mode)]:
