@@ -126,10 +126,10 @@ class IRCUser(irc.IRC):
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
-            self.disconnected("Connection reset")
+            self.disconnect("Connection reset")
         self.disconnectedDeferred.callback(None)
     
-    def disconnected(self, reason):
+    def disconnect(self, reason):
         del self.ircd.users[self.uuid]
         del self.ircd.userNicks[self.nick]
         channelList = copy(self.channels)
@@ -138,6 +138,7 @@ class IRCUser(irc.IRC):
         if "quit" in self.ircd.actions:
             for action in self.ircd.actions["quit"]:
                 action[0](self, reason)
+        self.transport.loseConnection()
     
     def isRegistered(self):
         return not self._registerHolds
