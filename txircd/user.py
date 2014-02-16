@@ -2,6 +2,7 @@ from twisted.internet.defer import Deferred
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.utils import ModeType, now, splitMessage
+from copy import copy
 from socket import gethostbyaddr, herror
 
 irc.ERR_ALREADYREGISTERED = "462"
@@ -128,7 +129,9 @@ class IRCUser(irc.IRC):
     def disconnected(self, reason):
         del self.ircd.users[self.uuid]
         del self.ircd.userNicks[self.nick]
-        # TODO: leave all channels
+        channelList = copy(self.channels)
+        for channel in channelList:
+            self.leave(channel)
         if "quit" in self.ircd.actions:
             for action in self.ircd.actions["quit"]:
                 action[0](self, reason)
@@ -229,6 +232,56 @@ class IRCUser(irc.IRC):
         if "usermetadataupdate" in self.ircd.actions:
             for action in self.ircd.actions["usermetadataupdate"]:
                 action[0](self, namespace, key, oldValue, value)
+    
+    def joinChannel(self, channel, override = False):
+        if not override:
+            if "joinpermission" in self.ircd.actions:
+                permissionCount = 0
+                for action in self.ircd.actions["joinpermission"]:
+                    vote = action[0](channel, self)
+                    if vote is True:
+                        permissionCount += 1
+                    elif vote is False:
+                        permissionCount -= 1
+                if permissionCount < 0:
+                    return
+        channel.users[self] = ""
+        if channel.name not in self.ircd.channels:
+            self.ircd.channels[channel.name] = channel
+            if "channelcreate" in self.ircd.actions:
+                for action in self.ircd.actions["channelcreate"]:
+                    action[0](channel)
+        self.channels.append(channel)
+        if "joinmessage" in self.ircd.actions:
+            messageUsers = channel.users.keys()
+            for action in self.ircd.actions["joinmessage"]:
+                actions[0](channel, self, messageUsers)
+                if not messageUsers:
+                    break
+        if "join" in self.ircd.actions:
+            for action in self.ircd.actions["join"]:
+                action[0](channel, self)
+    
+    def leaveChannel(self, channel):
+        if channel not in self.channels:
+            return
+        if "leave" in self.ircd.actions["leave"]:
+            for action in self.ircd.actions["leave"]:
+                action[0](channel, self)
+        self.channels.remove(channel)
+        del channel.users[self]
+        if not channel.users:
+            keepChannel = False
+            if "channeldestroyorkeep" in self.ircd.actions:
+                for action in self.ircd.actions["channeldestroyorkeep"]:
+                    if action[0](channel):
+                        keepChannel = True
+                        break
+            if not keepChannel:
+                if "channeldestory" in self.ircd.actions:
+                    for action in self.ircd.actions["channeldestroy"]:
+                        actoin[0](channel)
+                del self.ircd.channels[channel.name]
     
     def setMode(self, user, modeString, params, displaySource = None):
         adding = True
