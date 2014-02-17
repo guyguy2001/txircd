@@ -159,7 +159,6 @@ class IRCUser(irc.IRC):
                     if not action[0](self):
                         self.transport.loseConnection()
                         return
-            self.ircd.userNicks[self.nick] = self.uuid
             self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
             self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.config["network_name"], version))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
@@ -192,11 +191,12 @@ class IRCUser(irc.IRC):
         if newNick in self.ircd.userNicks:
             return
         oldNick = self.nick
-        del self.ircd.userNicks[self.nick]
+        if oldNick:
+            del self.ircd.userNicks[self.nick]
         self.nick = newNick
         self.ircd.userNicks[self.nick] = self.uuid
         self.nickSince = now()
-        if "changenick" in self.ircd.actions:
+        if oldNick and "changenick" in self.ircd.actions:
             for action in self.ircd.actions["changenick"]:
                 action[0](self, oldNick)
     
