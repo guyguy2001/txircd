@@ -173,8 +173,6 @@ class IRCUser(irc.IRC):
             isupportMsgList = splitMessage(" ".join(isupportList), 350)
             for line in isupportMsgList:
                 self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
-            self.handleCommand("LUSERS", None, [])
-            self.handleCommand("MOTD", None, [])
             if "welcome" in self.ircd.actions:
                 for action in self.ircd.actions["welcome"]:
                     action[0](self)
