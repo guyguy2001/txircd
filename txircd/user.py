@@ -150,6 +150,9 @@ class IRCUser(irc.IRC):
         if not self._registerHolds:
             if self.nick in self.ircd.userNicks:
                 self._registerHolds.add("NICK")
+            if not self.ident or not self.gecos:
+                self._registerHolds.add("USER")
+            if self._registerHolds:
                 return
             if "register" in self.ircd.actions:
                 for action in self.ircd.actions["register"]:
