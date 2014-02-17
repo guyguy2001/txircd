@@ -8,9 +8,9 @@ from socket import gethostbyaddr, herror
 irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(irc.IRC):
-    def __init__(self, ircd, ip):
+    def __init__(self, ircd, ip, uuid = None):
         self.ircd = ircd
-        self.uuid = ircd.createUUID()
+        self.uuid = ircd.createUUID() if uuid is None else uuid
         self.nick = None
         self.ident = None
         try:
