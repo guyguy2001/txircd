@@ -203,7 +203,7 @@ class IRCUser(irc.IRC):
     def changeIdent(self, newIdent):
         oldIdent = self.ident
         self.ident = newIdent
-        if "changeident" in self.ircd.actions:
+        if oldIdent and "changeident" in self.ircd.actions:
             for action in self.ircd.actions["changeident"]:
                 action[0](self, oldIdent)
     
@@ -220,7 +220,7 @@ class IRCUser(irc.IRC):
     def changeGecos(self, newGecos):
         oldGecos = self.gecos
         self.gecos = newGecos
-        if "changegecos" in self.ircd.actions:
+        if oldGecos and "changegecos" in self.ircd.actions:
             for action in self.ircd.actions["changegecos"]:
                 action[0](self, oldGecos)
     
