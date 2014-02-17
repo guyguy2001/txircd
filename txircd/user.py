@@ -196,14 +196,14 @@ class IRCUser(irc.IRC):
         self.nick = newNick
         self.ircd.userNicks[self.nick] = self.uuid
         self.nickSince = now()
-        if oldNick and "changenick" in self.ircd.actions:
+        if self.isRegistered() and "changenick" in self.ircd.actions:
             for action in self.ircd.actions["changenick"]:
                 action[0](self, oldNick)
     
     def changeIdent(self, newIdent):
         oldIdent = self.ident
         self.ident = newIdent
-        if oldIdent and "changeident" in self.ircd.actions:
+        if self.isRegistered() and "changeident" in self.ircd.actions:
             for action in self.ircd.actions["changeident"]:
                 action[0](self, oldIdent)
     
@@ -220,7 +220,7 @@ class IRCUser(irc.IRC):
     def changeGecos(self, newGecos):
         oldGecos = self.gecos
         self.gecos = newGecos
-        if oldGecos and "changegecos" in self.ircd.actions:
+        if self.isRegistered() and "changegecos" in self.ircd.actions:
             for action in self.ircd.actions["changegecos"]:
                 action[0](self, oldGecos)
     
