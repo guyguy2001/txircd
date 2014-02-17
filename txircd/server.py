@@ -1,10 +1,11 @@
 from twisted.words.protocols.irc import IRC
 
 class IRCServer(IRC):
-    def __init__(self, ircd):
+    def __init__(self, ircd, ip):
         self.ircd = ircd
         self.serverID = None
         self.name = None
+        self.ip = ip
         self.remoteServers = {}
         self.cache = {}
     
