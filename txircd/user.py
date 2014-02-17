@@ -379,4 +379,46 @@ class IRCUser(irc.IRC):
         return changing
 
 class RemoteUser(IRCUser):
-    pass
+    def sendMessage(self, command, *params, **kw):
+        if self.uuid[:3] not in self.ircd.servers:
+            raise RuntimeError ("The server for this user isn't registered in the server list!")
+        if "prefix" not in kw:
+            kw["prefix"] = self.ircd.serverID
+        elif kw["prefix"] == None:
+            del kw["prefix"]
+        to = self.nick
+        if "to" in kw:
+            to = kw["to"]
+            del kw["to"]
+        if to:
+            paramList = (to,) + params
+        else:
+            paramList = params
+        if "sendremoteusermessage" in self.ircd.actions:
+            for action in self.ircd.actions["sendremoteusermessage"]:
+                if action[0](self, command, *params, **kw):
+                    break
+    
+    def register(self, holdName):
+        pass
+    
+    def disconnect(self, reason):
+        pass
+    
+    def changeNick(self, newNick):
+        pass
+    
+    def changeIdent(self, newIdent):
+        pass
+    
+    def changeHost(self, newHost):
+        pass
+    
+    def changeGecos(self, newGecos):
+        pass
+    
+    def joinChannel(self, channel):
+        pass
+    
+    def leaveChannel(self, channel):
+        pass
