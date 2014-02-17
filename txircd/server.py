@@ -16,7 +16,7 @@ class IRCServer(IRC):
         handlers = self.ircd.serverCommands[command]
         data = None
         for handler in handlers:
-            data = handler[0].parseParams(params)
+            data = handler[0].parseParams(params, prefix)
             if data is not None:
                 break
         if data is None:

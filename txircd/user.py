@@ -81,7 +81,7 @@ class IRCUser(irc.IRC):
                     if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
                         continue
                 spewRegWarning = False
-                data = handler[0].parseParams(params)
+                data = handler[0].parseParams(params, prefix)
                 if data is not None:
                     break
             if data is None:
@@ -373,3 +373,6 @@ class IRCUser(irc.IRC):
                     for action in self.ircd.actions["modechange-user-{}".format(mode)]:
                         action[0](self, adding, mode, param, displaySource)
         return changing
+
+class RemoteUser(IRCUser):
+    pass
