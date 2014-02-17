@@ -65,10 +65,7 @@ class IRCUser(irc.IRC):
             del kw["prefix"]
         to = self.nick if self.nick else "*"
         if "to" in kw:
-            if kw["to"] is not None:
-                to = kw["to"]
-            else:
-                to = None
+            to = kw["to"]
             del kw["to"]
         if to:
             irc.IRC.sendMessage(self, command, to, *args, **kw)
