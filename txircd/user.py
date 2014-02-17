@@ -63,11 +63,17 @@ class IRCUser(irc.IRC):
             kw["prefix"] = self.ircd.name
         if kw["prefix"] is None:
             del kw["prefix"]
-        if "to" not in kw:
-            kw["to"] = self.nick if self.nick else "*"
-        if kw["to"] is None:
+        to = self.nick if self.nick else "*"
+        if "to" in kw:
+            if kw["to"] is not None:
+                to = kw["to"]
+            else:
+                to = None
             del kw["to"]
-        irc.IRC.sendMessage(self, command, *args, **kw)
+        if to:
+            irc.IRC.sendMessage(self, command, to, *args, **kw)
+        else:
+            irc.IRC.sendMessage(self, command, *args, **kw)
     
     def handleCommand(self, command, prefix, params):
         if command in self.ircd.userCommands:
