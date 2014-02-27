@@ -125,7 +125,13 @@ class IRCUser(irc.IRC):
                 for action in self.ircd.actions[actionName]:
                     action[0](self, command, data)
         else:
-            self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
+            suppressError = False
+            if "commandunknown" in self.ircd.actions:
+                for action in self.ircd.actions["commandunknown"]:
+                    if action[0](self, command, params):
+                        suppressError = True
+            if not suppressError:
+                self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
