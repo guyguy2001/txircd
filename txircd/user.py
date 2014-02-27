@@ -8,15 +8,16 @@ from socket import gethostbyaddr, herror
 irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(irc.IRC):
-    def __init__(self, ircd, ip, uuid = None):
+    def __init__(self, ircd, ip, uuid = None, host = None):
         self.ircd = ircd
         self.uuid = ircd.createUUID() if uuid is None else uuid
         self.nick = None
         self.ident = None
-        try:
-            host = gethostbyaddr(ip)[0]
-        except herror:
-            host = ip
+        if host is None:
+            try:
+                host = gethostbyaddr(ip)[0]
+            except herror:
+                host = ip
         self.host = host
         self.realhost = host
         self.ip = ip
@@ -390,7 +391,7 @@ class RemoteUser(IRCUser):
             raise RuntimeError ("The server for this user isn't registered in the server list!")
         if "prefix" not in kw:
             kw["prefix"] = self.ircd.serverID
-        elif kw["prefix"] == None:
+        elif kw["prefix"] is None:
             del kw["prefix"]
         to = self.nick
         if "to" in kw:
@@ -405,26 +406,51 @@ class RemoteUser(IRCUser):
                 if action[0](self, command, *params, **kw):
                     break
     
-    def register(self, holdName):
+    def register(self, holdName, fromRemote = False):
+        if not fromRemote:
+            return
+        if holdName not in self._registerHolds:
+            return
+        self._registerHolds.remove(holdName)
+        if not self._registerHolds:
+            if "remoteregister" in self.ircd.actions:
+                for action in self.ircd.actions["remoteregister"]:
+                    action[0](self)
+    
+    def addRegisterHold(self, holdName):
+        pass # We're just not going to allow this here.
+    
+    def disconnect(self, reason, fromRemote = False):
+        if fromRemote:
+            if self.isRegistered():
+                del self.ircd.userNicks[self.nick]
+            del self.ircd.users[self.uuid]
+            if "remotequit" in self.ircd.actions:
+                for action in self.ircd.actions["remotequit"]:
+                    if action[0](self, reason):
+                        break
+        else:
+            if "remotequitrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remotequitrequest"]:
+                    if action[0](self, reason):
+                        break
+    
+    def changeNick(self, newNick, fromRemote = False):
         pass
     
-    def disconnect(self, reason):
+    def changeIdent(self, newIdent, fromRemote = False):
         pass
     
-    def changeNick(self, newNick):
+    def changeHost(self, newHost, fromRemote = False):
         pass
     
-    def changeIdent(self, newIdent):
+    def changeGecos(self, newGecos, fromRemote = False):
         pass
     
-    def changeHost(self, newHost):
+    def joinChannel(self, channel, override = False, fromRemote = False):
         pass
     
-    def changeGecos(self, newGecos):
+    def leaveChannel(self, channel, fromRemote = False):
         pass
-    
-    def joinChannel(self, channel):
-        pass
-    
-    def leaveChannel(self, channel):
-        pass
+
+# TODO: local-only class
