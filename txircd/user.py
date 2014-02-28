@@ -299,7 +299,7 @@ class IRCUser(irc.IRC):
                         action[0](channel)
                 del self.ircd.channels[channel.name]
     
-    def setMode(self, user, modeString, params, displaySource = None):
+    def setMode(self, user, modeString, params, source = None):
         adding = True
         changing = []
         for mode in modeString:
@@ -331,9 +331,7 @@ class IRCUser(irc.IRC):
             del param # We use this later
             
             if user:
-                displaySource = user.hostmask()
-            elif not displaySource:
-                displaySource = self.ircd.name
+                source = None
             
             for param in paramList:
                 if len(changing) >= 20:
@@ -359,7 +357,7 @@ class IRCUser(irc.IRC):
                                 break
                         if found:
                             continue
-                        self.modes[mode].append((param, displaySource, now()))
+                        self.modes[mode].append((param, user, source, now()))
                     else:
                         if mode not in self.modes or self.modes[mode] == param:
                             continue
@@ -379,10 +377,13 @@ class IRCUser(irc.IRC):
                             del self.modes[mode]
                         else:
                             continue
-                changing.append((adding, mode, param, displaySource))
+                changing.append((adding, mode, param, user, source))
                 if "modechange-user-{}".format(mode) in self.ircd.actions:
                     for action in self.ircd.actions["modechange-user-{}".format(mode)]:
-                        action[0](self, adding, mode, param, displaySource)
+                        action[0](self, adding, mode, param, user, source)
+        if changing and "modechanges-user" in self.ircd.actions:
+            for action in self.ircd.actions["modechanges-user"]:
+                action[0](self, changing)
         return changing
 
 class RemoteUser(IRCUser):

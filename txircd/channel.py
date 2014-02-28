@@ -56,7 +56,7 @@ class IRCChannel(object):
             for action in self.ircd.actions["channelmetadataupdate"]:
                 action[0](self, namespace, key, value)
     
-    def setModes(self, user, modeString, params, displaySource = None):
+    def setModes(self, user, modeString, params, source = None):
         adding = True
         changing = []
         for mode in modeString:
@@ -93,9 +93,7 @@ class IRCChannel(object):
             del param
             
             if user:
-                displaySource = user.hostmask()
-            elif displaySource is None:
-                displaySource = self.ircd.name
+                source = None
             
             for param in paramList:
                 if len(changing) >= 20:
@@ -137,7 +135,7 @@ class IRCChannel(object):
                                 break
                         if found:
                             continue
-                        self.modes[mode].append((param, displaySource, now()))
+                        self.modes[mode].append((param, user, source, now()))
                     else:
                         if mode in self.modes and param == self.modes[mode]:
                             continue
@@ -164,8 +162,11 @@ class IRCChannel(object):
                         if mode not in self.modes:
                             continue
                         del self.modes[mode]
-                changing.append((adding, mode, param, displaySource))
+                changing.append((adding, mode, param, user, source))
                 if "modechange-channel-{}".format(mode) in self.ircd.actions:
                     for action in self.ircd.actions["modechange-channel-{}".format(mode)]:
-                        action[0](self, adding, mode, param, displaySource)
+                        action[0](self, adding, mode, param, user, source)
+        if changing and "modechanges-channel" in self.ircd.actions:
+            for action in self.ircd.actions["modechanges-channel"]:
+                action[0](self, changing)
         return changing
