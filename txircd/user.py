@@ -296,7 +296,7 @@ class IRCUser(irc.IRC):
             if not keepChannel:
                 if "channeldestory" in self.ircd.actions:
                     for action in self.ircd.actions["channeldestroy"]:
-                        actoin[0](channel)
+                        action[0](channel)
                 del self.ircd.channels[channel.name]
     
     def setMode(self, user, modeString, params, displaySource = None):
@@ -490,9 +490,52 @@ class RemoteUser(IRCUser):
                         break
     
     def joinChannel(self, channel, override = False, fromRemote = False):
-        pass
+        if fromRemote:
+            channel.users[self] = ""
+            if channel.name not in self.ircd.channels:
+                self.ircd.channels[channel.name] = channel
+                if "channelcreate" in self.ircd.actions:
+                    for action in self.ircd.actions["channelcreate"]:
+                        action[0](channel)
+            self.channels.append(channel)
+            if "joinmessage" in self.ircd.actions:
+                messageUsers = channel.users.keys()
+                for action in self.ircd.actions["joinmessage"]:
+                    actions[0](channel, self, messageUsers)
+                    if not messageUsers:
+                        break
+            if "remotejoin" in self.ircd.actions:
+                for action in self.ircd.actions["remotejoin"]:
+                    action[0](channel, self)
+        else:
+            if "remotejoinrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remotejoinrequest"]:
+                    if action[0](self, channel):
+                        break
     
     def leaveChannel(self, channel, fromRemote = False):
-        pass
+        if fromRemote:
+            if "remoteleave" in self.ircd.actions["remoteleave"]:
+                for action in self.ircd.actions["remoteleave"]:
+                    action[0](channel, self)
+            self.channels.remove(channel)
+            del channel.users[self]
+            if not channel.users:
+                keepChannel = False
+                if "channeldestroyorkeep" in self.ircd.actions:
+                    for action in self.ircd.actions["channeldestroyorkeep"]:
+                        if action[0](channel):
+                            keepChannel = True
+                            break
+                if not keepChannel:
+                    if "channeldestroy" in self.ircd.actoins:
+                        for action in self.ircd.actions["channeldestroy"]:
+                            action[0](channel)
+                    del self.ircd.channels[channel.name]
+        else:
+            if "remoteleaverequest" in self.ircd.actions:
+                for action in self.ircd.actoins["remoteleaverequest"]:
+                    if action[0](self, channel):
+                        break
 
 # TODO: local-only class
