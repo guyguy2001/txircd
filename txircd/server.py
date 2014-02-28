@@ -1,3 +1,4 @@
+from twisted.internet.defer import Deferred
 from twisted.words.protocols.irc import IRC
 
 class IRCServer(IRC):
@@ -8,6 +9,7 @@ class IRCServer(IRC):
         self.ip = ip
         self.remoteServers = {}
         self.cache = {}
+        self.disconnectedDeferred = Deferred()
     
     def handleCommand(self, command, prefix, params):
         if command not in self.ircd.serverCommands:
@@ -33,6 +35,13 @@ class IRCServer(IRC):
         del self.ircd.servers[self.serverID]
         del self.ircd.serverNames[self.name]
         # TODO: Disconnect remote users
+        self.disconnectedDeferred.callback(None)
+    
+    def disconnect(self, reason):
+        if "serverquit" in self.ircd.actions:
+            for action in self.ircd.actions["serverquit"]:
+                action[0](self, reason)
+        self.transport.loseConnection()
     
     def register():
         if not self.serverID:
@@ -41,3 +50,5 @@ class IRCServer(IRC):
             return
         self.ircd.servers[self.serverID] = self
         self.ircd.serverNames[self.name] = self.serverID
+
+# TODO: remote servers
