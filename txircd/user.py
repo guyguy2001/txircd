@@ -436,16 +436,58 @@ class RemoteUser(IRCUser):
                         break
     
     def changeNick(self, newNick, fromRemote = False):
-        pass
+        if fromRemote:
+            oldNick = self.nick
+            del self.ircd.userNicks[self.nick]
+            self.nick = newNick
+            self.ircd.userNicks[self.nick] = self.uuid
+            if "remotechangenick" in self.ircd.actions:
+                for action in self.ircd.actions["remotechangenick"]:
+                    action[0](self, oldNick)
+        else:
+            if "remotenickrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remotenickrequest"]:
+                    if action[0](self, newNick):
+                        break
     
     def changeIdent(self, newIdent, fromRemote = False):
-        pass
+        if fromRemote:
+            oldIdent = self.ident
+            self.ident = newIdent
+            if "remotechangeident" in self.ircd.actions:
+                for action in self.ircd.actions["remotechangeident"]:
+                    action[0](self, newIdent)
+        else:
+            if "remoteidentrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remoteidentrequest"]:
+                    if action[0](self, newIdent):
+                        break
     
     def changeHost(self, newHost, fromRemote = False):
-        pass
+        if fromRemote:
+            oldHost = self.host
+            self.host = newHost
+            if "remotechangehost" in self.ircd.actions:
+                for action in self.ircd.actions["remotechangehost"]:
+                    action[0](self, oldHost)
+        else:
+            if "remotehostrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remotehostrequest"]:
+                    if action[0](self, newHost):
+                        break
     
     def changeGecos(self, newGecos, fromRemote = False):
-        pass
+        if fromRemote:
+            oldGecos = self.gecos
+            self.gecos = newGecos
+            if "remotechangegecos" in self.ircd.actions:
+                for action in self.ircd.actions["remotechangegecos"]:
+                    action[0](self, oldGecos)
+        else:
+            if "remotegecosrequest" in self.ircd.actions:
+                for action in self.ircd.actions["remotegecosrequest"]:
+                    if action[0](self, newGecos):
+                        break
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         pass
