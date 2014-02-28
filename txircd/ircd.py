@@ -81,7 +81,7 @@ class IRCd(Service):
         userList = self.users.values() # Basically do the same thing I just did with the servers
         self.users = {}
         for user in userList:
-            stopDeferreds.append(user.disconnectDeferred)
+            stopDeferreds.append(user.disconnectedDeferred)
             user.transport.loseConnection()
         log.msg("Unloading modules...", logLevel=logging.INFO)
         moduleList = self.loadedModules.keys()
