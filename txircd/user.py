@@ -142,12 +142,12 @@ class IRCUser(irc.IRC):
     def disconnect(self, reason):
         del self.ircd.users[self.uuid]
         del self.ircd.userNicks[self.nick]
-        channelList = copy(self.channels)
-        for channel in channelList:
-            self.leave(channel)
         if "quit" in self.ircd.actions:
             for action in self.ircd.actions["quit"]:
                 action[0](self, reason)
+        channelList = copy(self.channels)
+        for channel in channelList:
+            self.leave(channel)
         self.transport.loseConnection()
     
     def isRegistered(self):
