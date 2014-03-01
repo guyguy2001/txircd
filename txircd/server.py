@@ -32,15 +32,17 @@ class IRCServer(IRC):
             return
     
     def connectionLost(self, reason):
-        del self.ircd.servers[self.serverID]
-        del self.ircd.serverNames[self.name]
-        # TODO: Disconnect remote users
+        if self.serverID in self.ircd.servers:
+            self.disconnect("Connection reset")
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason):
         if "serverquit" in self.ircd.actions:
             for action in self.ircd.actions["serverquit"]:
                 action[0](self, reason)
+        del self.ircd.servers[self.serverID]
+        del self.ircd.serverNames[self.name]
+        # TODO: Disconnect remote users
         self.transport.loseConnection()
     
     def register():
