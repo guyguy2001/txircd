@@ -8,6 +8,7 @@ class IRCServer(IRC):
         self.name = None
         self.ip = ip
         self.remoteServers = {}
+        self.nextClosest = self.ircd.serverID
         self.cache = {}
         self.disconnectedDeferred = Deferred()
     
