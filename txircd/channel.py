@@ -42,9 +42,13 @@ class IRCChannel(object):
                 action[0](self, users, servers, command, *params, **kw)
     
     def setTopic(self, topic, setter):
+        oldTopic = self.topic
         self.topic = topic
         self.topicSetter = setter
         self.topicTime = now()
+        if "topic" in self.ircd.actions:
+            for action in self.ircd.actions["topic"]:
+                action[0](self, oldTopic)
     
     def setMetadata(self, namespace, key, value = None):
         if namespace not in self.metadata:
