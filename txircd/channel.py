@@ -27,13 +27,19 @@ class IRCChannel(object):
             kw["to"] = self.name
         if kw["to"] is None:
             del kw["to"]
+        userList = self.users.keys()
+        if "skip" in kw:
+            for u in kw["skip"]:
+                userList.remove(u)
         servers = set()
         for user in self.users.iterkeys():
             if user.uuid[:3] == self.ircd.serverID:
                 user.sendMessage(command, *params, **kw)
             else:
                 servers.add(user.uuid[:3])
-        # TODO: send to the servers in the servers set
+        if "sendchannelmessage" in self.ircd.actions:
+            for action in self.ircd.actions["sendchannelmessage"]:
+                action[0](self, users, servers, command, *params, **kw)
     
     def setTopic(self, topic, setter):
         self.topic = topic
