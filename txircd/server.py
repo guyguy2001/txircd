@@ -46,8 +46,11 @@ class IRCServer(IRC):
         netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
         allUsers = self.ircd.users.values()
         for user in allUsers:
-            if user.uuid[:3] in self.remoteServers:
+            if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
                 user.disconnect(netsplitQuitMsg)
+        self._endConnection()
+    
+    def _endConnection(self):
         self.transport.loseConnection()
     
     def register():
@@ -58,4 +61,12 @@ class IRCServer(IRC):
         self.ircd.servers[self.serverID] = self
         self.ircd.serverNames[self.name] = self.serverID
 
-# TODO: remote servers
+class RemoteServer(IRCServer):
+    def sendMessage(self, command, *params, **kw):
+        target = self
+        while target.nextClosest != self.ircd.serverID:
+            target = self.ircd.servers[target.nextClosest]
+        target.sendMessage(command, *params, **kw)
+    
+    def _endConnection(self):
+        pass
