@@ -1,4 +1,6 @@
+from twisted.internet import reactor
 from twisted.internet.defer import Deferred
+from twisted.internet.task import LoopingCall
 from twisted.words.protocols.irc import IRC
 
 class IRCServer(IRC):
@@ -11,8 +13,8 @@ class IRCServer(IRC):
         self.nextClosest = self.ircd.serverID
         self.cache = {}
         self.disconnectedDeferred = Deferred()
-        # TODO: ping
-        # TODO: registration timeout
+        self._pinger = LoopingCall(self._ping)
+        self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("server_registration_timeout", 10), self._timeoutRegistration)
     
     def handleCommand(self, command, prefix, params):
         if command not in self.ircd.serverCommands:
@@ -55,6 +57,17 @@ class IRCServer(IRC):
     def _endConnection(self):
         self.transport.loseConnection()
     
+    def _timeoutRegistration(self):
+        if self.serverID and self.name:
+            self._pinger.start(self.ircd.config.getWithDefault("server_ping_frequency", 60))
+            return
+        self.disconnect("Registration timeout")
+    
+    def _ping(self):
+        if "pingserver" in self.ircd.actions:
+            for action in self.ircd.actions["pingserver"]:
+                action[0](self)
+    
     def register():
         if not self.serverID:
             return
@@ -64,6 +77,10 @@ class IRCServer(IRC):
         self.ircd.serverNames[self.name] = self.serverID
 
 class RemoteServer(IRCServer):
+    def __init__(self, ircd, ip):
+        IRCServer.__init__(self, ircd, ip)
+        self._registrationTimeoutTimer.cancel()
+    
     def sendMessage(self, command, *params, **kw):
         target = self
         while target.nextClosest != self.ircd.serverID:
