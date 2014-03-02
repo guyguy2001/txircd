@@ -1,4 +1,6 @@
+from twisted.internet import reactor
 from twisted.internet.defer import Deferred
+from twisted.internet.task import LoopingCall
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.utils import ModeType, now, splitMessage
@@ -39,8 +41,8 @@ class IRCUser(irc.IRC):
         self.disconnectedDeferred = Deferred()
         self.ircd.users[self.uuid] = self
         self.localOnly = False
-        # TODO: ping
-        # TODO: registration timeout
+        self._pinger = LoopingCall(self._ping)
+        self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
     
     def connectionMade(self):
         if "user_connect" in self.ircd.actions:
@@ -143,8 +145,13 @@ class IRCUser(irc.IRC):
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason):
+        if self._pinger.running:
+            self._pinger.stop()
+        if self._registrationTimeoutTimer.active():
+            self._registrationTimeoutTimer.cancel()
         del self.ircd.users[self.uuid]
-        del self.ircd.userNicks[self.nick]
+        if self.isRegistered():
+            del self.ircd.userNicks[self.nick]
         if "quit" in self.ircd.actions:
             for action in self.ircd.actions["quit"]:
                 action[0](self, reason)
@@ -152,6 +159,17 @@ class IRCUser(irc.IRC):
         for channel in channelList:
             self.leave(channel)
         self.transport.loseConnection()
+    
+    def _timeoutRegistration(self):
+        if self.isRegistered():
+            self._pinger.start(self.ircd.config.getWithDefault("user_ping_frequency", 60), False)
+            return
+        self.disconnect("Registration timeout")
+    
+    def _ping(self):
+        if "pinguser" in self.ircd.actions:
+            for action in self.ircd.actions["pinguser"]:
+                action[0](self)
     
     def isRegistered(self):
         return not self._registerHolds
@@ -173,9 +191,9 @@ class IRCUser(irc.IRC):
                         self.transport.loseConnection()
                         return
             self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
-            self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.config["network_name"], version))
+            self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.ircd.config["network_name"], version))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
-            self.sendMessage(irc.RPL_MYINFO, self.config["network_name"], version, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), "".join(["".join(modes.keys()) for modes in self.ircd.channelModes]))
+            self.sendMessage(irc.RPL_MYINFO, self.ircd.config["network_name"], version, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), "".join(["".join(modes.keys()) for modes in self.ircd.channelModes]))
             isupportList = self.ircd.generateISupportList()
             isupportMsgList = splitMessage(" ".join(isupportList), 350)
             for line in isupportMsgList:
@@ -390,6 +408,10 @@ class IRCUser(irc.IRC):
         return changing
 
 class RemoteUser(IRCUser):
+    def __init__(self, ircd, ip, uuid = None, host = None):
+        IRCUser.__init__(self, ircd, ip, uuid, host)
+        self._registrationTimeoutTimer.cancel()
+    
     def sendMessage(self, command, *params, **kw):
         if self.uuid[:3] not in self.ircd.servers:
             raise RuntimeError ("The server for this user isn't registered in the server list!")
@@ -551,6 +573,7 @@ class LocalUser(IRCUser):
         IRCUser.__init__(self, ircd, ip, None, host)
         self.localOnly = True
         self._sendMsgFunc = lambda self, command, *args, **kw: None
+        self._registrationTimeoutTimer.cancel()
     
     def setSendMsgFunc(self, func):
         self._sendMsgFunc = func
@@ -572,7 +595,7 @@ class LocalUser(IRCUser):
             if data is not None:
                 break
         if data is None:
-            break
+            return
         actionName = "commandmodify-{}".format(command)
         if actionName in self.ircd.actions:
             for action in self.ircd.actions[actionName]:
