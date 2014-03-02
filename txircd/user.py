@@ -38,6 +38,9 @@ class IRCUser(irc.IRC):
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
         self.ircd.users[self.uuid] = self
+        self.localOnly = False
+        # TODO: ping
+        # TODO: registration timeout
     
     def connectionMade(self):
         if "user_connect" in self.ircd.actions:
@@ -218,7 +221,7 @@ class IRCUser(irc.IRC):
     def changeHost(self, newHost):
         oldHost = self.host
         self.host = newHost
-        if "changehost" in self.ircd.actions:
+        if self.isRegistered() and "changehost" in self.ircd.actions:
             for action in self.ircd.actions["changehost"]:
                 action[0](self, oldHost)
     
@@ -261,12 +264,12 @@ class IRCUser(irc.IRC):
                         permissionCount -= 1
                 if permissionCount < 0:
                     return
-        channel.users[self] = ""
         if channel.name not in self.ircd.channels:
             self.ircd.channels[channel.name] = channel
             if "channelcreate" in self.ircd.actions:
                 for action in self.ircd.actions["channelcreate"]:
                     action[0](channel)
+        channel.users[self] = ""
         self.channels.append(channel)
         if "joinmessage" in self.ircd.actions:
             messageUsers = channel.users.keys()
@@ -492,12 +495,12 @@ class RemoteUser(IRCUser):
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         if fromRemote:
-            channel.users[self] = ""
             if channel.name not in self.ircd.channels:
                 self.ircd.channels[channel.name] = channel
                 if "channelcreate" in self.ircd.actions:
                     for action in self.ircd.actions["channelcreate"]:
                         action[0](channel)
+            channel.users[self] = ""
             self.channels.append(channel)
             if "joinmessage" in self.ircd.actions:
                 messageUsers = channel.users.keys()
@@ -539,4 +542,73 @@ class RemoteUser(IRCUser):
                     if action[0](self, channel):
                         break
 
-# TODO: local-only class
+class LocalUser(IRCUser):
+    """
+    LocalUser is a fake user created by a module, which is not
+    propagated to other servers.
+    """
+    def __init__(self, ircd, ip, host = None):
+        IRCUser.__init__(self, ircd, ip, None, host)
+        self.localOnly = True
+        self._sendMsgFunc = lambda self, command, *args, **kw: None
+    
+    def setSendMsgFunc(self, func):
+        self._sendMsgFunc = func
+    
+    def sendMessage(self, command, *args, **kw):
+        self._sendMsgFunc(self, command, *args, **kw)
+    
+    def handleCommand(self, command, prefix, params):
+        if command not in self.ircd.userCommands:
+            raise ValueError ("Command not loaded")
+        handlers = self.ircd.userCommands[command]
+        if not handlers:
+            return
+        data = None
+        for handler in handlers:
+            if handler[0].forRegisteredUsers is False:
+                continue
+            data = handler[0].parseParams(params, prefix)
+            if data is not None:
+                break
+        if data is None:
+            break
+        actionName = "commandmodify-{}".format(command)
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                newData = action[0](self, command, data)
+                if newData is not None:
+                    data = newData
+        for handler in handlers:
+            if handler[0].execute(self, data):
+                if handler[0].resetsIdleTime:
+                    self.idleSince = now()
+                break
+        else:
+            return
+        actionName = "commandextra-{}".format(command)
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                action[0](self, command, data)
+    
+    def disconnect(self, reason):
+        del self.ircd.users[self.uuid]
+        del self.ircd.userNicks[self.nick]
+        if "localquit" in self.ircd.actions:
+            for action in self.ircd.actions["localquit"]:
+                action[0](self, reason)
+        channelList = copy(self.channels)
+        for channel in channelList:
+            self.leave(channel)
+    
+    def register(self, holdName):
+        if holdName not in self._registerHolds:
+            return
+        self._registerHolds.remove(holdName)
+        if not self._registerHolds:
+            if "localregister" in self.ircd.actions:
+                for action in self.ircd.actions["localregister"]:
+                    action[0](self)
+    
+    def joinChannel(self, channel, override = False):
+        IRCUser.joinChannel(self, channel, True)

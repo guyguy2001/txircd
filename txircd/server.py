@@ -11,6 +11,8 @@ class IRCServer(IRC):
         self.nextClosest = self.ircd.serverID
         self.cache = {}
         self.disconnectedDeferred = Deferred()
+        # TODO: ping
+        # TODO: registration timeout
     
     def handleCommand(self, command, prefix, params):
         if command not in self.ircd.serverCommands:
