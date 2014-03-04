@@ -302,7 +302,7 @@ class IRCUser(irc.IRC):
     def leaveChannel(self, channel):
         if channel not in self.channels:
             return
-        if "leave" in self.ircd.actions["leave"]:
+        if "leave" in self.ircd.actions:
             for action in self.ircd.actions["leave"]:
                 action[0](channel, self)
         self.channels.remove(channel)
