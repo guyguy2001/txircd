@@ -45,22 +45,22 @@ class IRCUser(irc.IRC):
         self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
     
     def connectionMade(self):
-        if "user_connect" in self.ircd.actions:
-            for action in self.ircd.actions["user_connect"]:
+        if "userconnect" in self.ircd.actions:
+            for action in self.ircd.actions["userconnect"]:
                 if not action[0](self):
                     self.transport.loseConnection()
                     return
     
     def dataReceived(self, data):
         data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
-        if "user_recvdata" in self.ircd.actions:
-            for action in self.ircd.actions["user_recvdata"]:
+        if "userrecvdata" in self.ircd.actions:
+            for action in self.ircd.actions["userrecvdata"]:
                 action[0](self, data)
         irc.IRC.dataReceived(self, data)
     
     def sendLine(self, line):
-        if "user_senddata" in self.ircd.actions:
-            for action in self.ircd.actions["user_senddata"]:
+        if "usersenddata" in self.ircd.actions:
+            for action in self.ircd.actions["usersenddata"]:
                 action[0](self, line)
         irc.IRC.sendLine(self, line)
     
