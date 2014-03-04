@@ -3,6 +3,8 @@ from datetime import datetime
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$")
+def isValidNick(nick):
+    return validNick.match(nick)
 
 def _enum(**enums):
     return type('Enum', (), enums)
