@@ -90,7 +90,7 @@ class IRCUser(irc.IRC):
                     if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
                         continue
                 spewRegWarning = False
-                data = handler[0].parseParams(params, prefix)
+                data = handler[0].parseParams(self, params, prefix, {})
                 if data is not None:
                     break
             if data is None:
@@ -593,7 +593,7 @@ class LocalUser(IRCUser):
         for handler in handlers:
             if handler[0].forRegisteredUsers is False:
                 continue
-            data = handler[0].parseParams(params, prefix)
+            data = handler[0].parseParams(self, params, prefix, {})
             if data is not None:
                 break
         if data is None:

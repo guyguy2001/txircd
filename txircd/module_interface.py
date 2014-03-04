@@ -146,7 +146,7 @@ class ICommand(Interface):
         None to be agnostic about the whole thing.
         """)
     
-    def parseParams(params, prefix):
+    def parseParams(source, params, prefix, tags):
         """
         Parses the parameters to the command.  Returns a dictionary of data, or None if
         the parameters cannot be properly parsed.
@@ -162,7 +162,7 @@ class Command(object):
     resetsIdleTime = True
     forRegisteredUsers = True
     
-    def parseParams(self, params, prefix):
+    def parseParams(self, source, params, prefix, tags):
         return None
     
     def execute(self, source, data):
