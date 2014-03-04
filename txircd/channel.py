@@ -108,9 +108,10 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if "modepermission-channel-{}".format(mode) in self.ircd.actions:
+                actionName = "modepermission-channel-{}".format(mode)
+                if actionName in self.ircd.actions:
                     permissionCount = 0
-                    for action in self.ircd.actions["modepermission-channel-{}".format(mode)]:
+                    for action in self.ircd.actions[actionName]:
                         vote = action[0](self, user, mode, param)
                         if vote is True:
                             permissionCount += 1
@@ -173,8 +174,9 @@ class IRCChannel(object):
                             continue
                         del self.modes[mode]
                 changing.append((adding, mode, param, user, source))
-                if "modechange-channel-{}".format(mode) in self.ircd.actions:
-                    for action in self.ircd.actions["modechange-channel-{}".format(mode)]:
+                actionName = "modechange-channel-{}".format(mode)
+                if actionName in self.ircd.actions:
+                    for action in self.ircd.actions[actionName]:
                         action[0](self, adding, mode, param, user, source)
         if changing and "modechanges-channel" in self.ircd.actions:
             for action in self.ircd.actions["modechanges-channel"]:
