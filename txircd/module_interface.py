@@ -144,6 +144,7 @@ class ICommand(Interface):
         True to only activate for registered users.
         False to only activate for unregistered users.
         None to be agnostic about the whole thing.
+        This flag is ignored for servers.
         """)
     
     def parseParams(source, params, prefix, tags):
