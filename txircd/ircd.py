@@ -90,7 +90,7 @@ class IRCd(Service):
         log.msg("Unloading modules...", logLevel=logging.INFO)
         moduleList = self.loadedModules.keys()
         for module in moduleList:
-            self.unloadModule(moduleList, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
+            self.unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
         log.msg("Closing data storage...", logLevel=logging.INFO)
         self.storage.close()
         log.msg("Releasing ports...", logLevel=logging.INFO)
@@ -215,7 +215,7 @@ class IRCd(Service):
                         break
                 else:
                     self.actions[action].append(actionData)
-        for command, dataList in newUserCommands:
+        for command, dataList in newUserCommands.iteritems():
             if command not in self.userCommands:
                 self.userCommands[command] = []
             for data in dataList:
@@ -225,7 +225,7 @@ class IRCd(Service):
                         break
                 else:
                     self.userCommands[command].append(data)
-        for command, dataList in newServerCommands:
+        for command, dataList in newServerCommands.iteritems():
             if command not in self.serverCommands:
                 self.serverCommands[command] = []
             for data in dataList:
