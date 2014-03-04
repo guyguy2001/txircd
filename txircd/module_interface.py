@@ -152,7 +152,7 @@ class ICommand(Interface):
         the parameters cannot be properly parsed.
         """
     
-    def execute(user, data):
+    def execute(source, data):
         """
         Performs the command action.
         Returns True if successfully handled; otherwise defers to the next handler in the chain
