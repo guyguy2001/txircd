@@ -292,7 +292,7 @@ class IRCUser(irc.IRC):
         if "joinmessage" in self.ircd.actions:
             messageUsers = channel.users.keys()
             for action in self.ircd.actions["joinmessage"]:
-                actions[0](channel, self, messageUsers)
+                action[0](channel, self, messageUsers)
                 if not messageUsers:
                     break
         if "join" in self.ircd.actions:
