@@ -185,6 +185,7 @@ class IRCUser(irc.IRC):
                 self._registerHolds.add("USER")
             if self._registerHolds:
                 return
+            self.ircd.userNicks[self.nick] = self.uuid
             if "register" in self.ircd.actions:
                 for action in self.ircd.actions["register"]:
                     if not action[0](self):
