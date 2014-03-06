@@ -241,6 +241,8 @@ class IRCd(Service):
         if moduleName not in self.loadedModules:
             return
         module = self.loadedModules[moduleName]
+        if fullUnload and module.core:
+            raise ValueError ("The module you're trying to unload is a core module.")
         moduleData = self._loadedModuleData[moduleName]
         d = module.unload()
         if d is not None:
