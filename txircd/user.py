@@ -224,11 +224,12 @@ class IRCUser(irc.IRC):
         if oldNick:
             del self.ircd.userNicks[self.nick]
         self.nick = newNick
-        self.ircd.userNicks[self.nick] = self.uuid
         self.nickSince = now()
-        if self.isRegistered() and "changenick" in self.ircd.actions:
-            for action in self.ircd.actions["changenick"]:
-                action[0](self, oldNick)
+        if self.isRegistered():
+            self.ircd.userNicks[self.nick] = self.uuid
+            if "changenick" in self.ircd.actions:
+                for action in self.ircd.actions["changenick"]:
+                    action[0](self, oldNick)
     
     def changeIdent(self, newIdent):
         oldIdent = self.ident
