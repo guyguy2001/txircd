@@ -1,0 +1,100 @@
+from twisted.plugin import IPlugin
+from twisted.words.protocols import irc
+from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import ircLower, isValidNick
+from zope.interface import implements
+from datetime import datetime
+
+class NickCommand(ModuleData):
+    implements(IPlugin, IModuleData)
+    
+    name = "NickCommand"
+    core = True
+    
+    def hookIRCd(self, ircd):
+        self.ircd = ircd
+    
+    def userCommands(self):
+        return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
+    
+    def serverCommands(self):
+        return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
+
+class NickUserCommand(Command):
+    implements(ICommand)
+    
+    forRegisteredUsers = None
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, user, params, prefix, tags):
+        if not params or not params[0]:
+            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "NICK", ":Not enough parameters")
+            return None
+        if not isValidNick(params[0]):
+            user.sendMessage(irc.ERR_ERRONEUSNICKNAME, params[0], ":Erroneous nickname")
+            return None
+        if params[0] in self.ircd.userNicks:
+            otherUser = self.ircd.users[self.ircd.userNicks]
+            if user != otherUser:
+                user.sendMessage(irc.ERR_NICKNAMEINUSE, nick, ":Nickname is already in use")
+                return None
+        return {
+            "nick": params[0]
+        }
+    
+    def execute(self, user, data):
+        user.changeNick(data["nick"])
+        if not user.isRegistered():
+            user.register("NICK")
+        return True
+
+class NickServerCommand(Command):
+    implements(ICommand)
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, server, params, prefix, tags):
+        if len(params) != 2:
+            return None
+        if prefix not in self.ircd.users:
+            self.disconnect("Desync: User list")
+            return None
+        user = self.ircd.users[prefix]
+        try:
+            time = datetime.utcfromtimestamp(params[0])
+        except ValueError:
+            return None
+        if params[1] in self.ircd.userNicks:
+            localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
+            if localUser != user:
+                if localUser.localOnly:
+                    if "localnickcollision" in self.ircd.actions:
+                        for action in self.ircd.actions["localnickcollision"]:
+                            if action[0](user):
+                                break
+                        else:
+                            return None
+                        return {
+                            "user": user,
+                            "time": time,
+                            "nick": params[1]
+                        }
+                    return None
+                self.disconnect("Desync: User data (nicknames)")
+                return None
+        return {
+            "user": user,
+            "time": time,
+            "nick": params[1]
+        }
+    
+    def execute(self, server, data):
+        user = data["user"]
+        user.changeNick(data["nick"])
+        user.nickSince = data["time"]
+        return True
+
+cmd_nick = NickCommand()
