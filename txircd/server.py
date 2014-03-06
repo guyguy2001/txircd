@@ -33,7 +33,7 @@ class IRCServer(IRC):
             if handler[0].execute(self, data):
                 break
         else:
-            self.transport.loseConnection() # Also abort connection if we can't process a command
+            self.disconnect("Desync: Couldn't process command") # Also abort connection if we can't process a command
             return
     
     def connectionLost(self, reason):
