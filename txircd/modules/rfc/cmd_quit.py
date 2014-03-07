@@ -36,6 +36,7 @@ class UserQuit(Command):
     
     def execute(self, user, data):
         user.disconnect("Quit: {}".format(data["reason"]))
+        return True
 
 class ServerQuit(Command):
     implements(ICommand)
@@ -55,5 +56,6 @@ class ServerQuit(Command):
     
     def execute(self, server, data):
         data["user"].disconnect(data["reason"], True)
+        return True
 
 quitCommand = QuitCommand()
