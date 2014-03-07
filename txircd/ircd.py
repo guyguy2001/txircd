@@ -357,7 +357,7 @@ class IRCd(Service):
         isupport = self.isupport_tokens.copy()
         statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
         isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
-        isupport["PREFIX"] = "({}){}".format(self.channelStatusOrder, statusSymbolOrder)
+        isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
         isupport["STATUSMSG"] = statusSymbolOrder
         isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
         isupportList = []
