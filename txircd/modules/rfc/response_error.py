@@ -9,7 +9,7 @@ class ErrorResponse(ModuleData):
     core = True
     
     def actions(self):
-        return [("quit", 10, self.sendError)]
+        return [ ("quit", 10, self.sendError) ]
     
     def sendError(self, user, reason):
         user.sendMessage("ERROR", ":Closing Link: {}@{} [{}]".format(user.ident, user.host, reason), to=None, prefix=None)
