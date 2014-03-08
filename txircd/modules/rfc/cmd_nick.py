@@ -14,11 +14,20 @@ class NickCommand(ModuleData):
     def hookIRCd(self, ircd):
         self.ircd = ircd
     
+    def actions(self):
+        return [ ("changenickmessage", 1, self.sendNickMessage) ]
+    
     def userCommands(self):
         return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
     
     def serverCommands(self):
         return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
+    
+    def sendNickMessage(self, user, oldNick, userShowList):
+        prefix = "{}!{}@{}".format(oldNick, user.ident, user.host)
+        for targetUser in userShowList:
+            targetUser.sendMessage("NICK", to=user.nick, prefix=prefix)
+        del userShowList[:]
 
 class NickUserCommand(Command):
     implements(ICommand)
