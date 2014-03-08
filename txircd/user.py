@@ -152,6 +152,15 @@ class IRCUser(irc.IRC):
         del self.ircd.users[self.uuid]
         if self.isRegistered():
             del self.ircd.userNicks[self.nick]
+        if "quitmessage" in self.ircd.actions:
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = list(set(userSendList))
+            for action in self.ircd.actions["quitmessage"]:
+                action[0](self, userSendList)
+                if not userSendList:
+                    break
         if "quit" in self.ircd.actions:
             for action in self.ircd.actions["quit"]:
                 action[0](self, reason)
@@ -227,6 +236,15 @@ class IRCUser(irc.IRC):
         self.nickSince = now()
         if self.isRegistered():
             self.ircd.userNicks[self.nick] = self.uuid
+            if "changenickmessage" in self.ircd.actions:
+                userSendList = [self]
+                for channel in self.channels:
+                    userSendList.extend(channel.users.keys())
+                userSendList = list(set(userSendList))
+                for action in self.ircd.actions["changenickmessage"]:
+                    action[0](self, oldNick, userSendList)
+                    if not userSendList:
+                        break
             if "changenick" in self.ircd.actions:
                 for action in self.ircd.actions["changenick"]:
                     action[0](self, oldNick)
