@@ -157,6 +157,7 @@ class IRCUser(irc.IRC):
             for channel in self.channels:
                 userSendList.extend(channel.users.keys())
             userSendList = list(set(userSendList))
+            userSendList.remove(self)
             for action in self.ircd.actions["quitmessage"]:
                 action[0](self, userSendList)
                 if not userSendList:
