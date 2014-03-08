@@ -474,6 +474,16 @@ class RemoteUser(IRCUser):
             if self.isRegistered():
                 del self.ircd.userNicks[self.nick]
             del self.ircd.users[self.uuid]
+            if "quitmessage" in self.ircd.actions:
+                userSendList = [self]
+                for channel in self.channels:
+                    userSendList.extend(channel.users.keys())
+                userSendList = list(set(userSendList))
+                userSendList.remove(self)
+                for action in self.ircd.actions["quitmessage"]:
+                    action[0](self, userSendList)
+                    if not userSendList:
+                        break
             if "remotequit" in self.ircd.actions:
                 for action in self.ircd.actions["remotequit"]:
                     if action[0](self, reason):
@@ -490,6 +500,15 @@ class RemoteUser(IRCUser):
             del self.ircd.userNicks[self.nick]
             self.nick = newNick
             self.ircd.userNicks[self.nick] = self.uuid
+            if "changenickmessage" in self.ircd.actions:
+                userSendList = [self]
+                for channel in self.channels:
+                    userSendList.extend(channel.users.keys())
+                userSendList = list(set(userSendList))
+                for action in self.ircd.actions["changenickmessage"]:
+                    action[0](self, oldNick, userSendList)
+                    if not userSendList:
+                        break
             if "remotechangenick" in self.ircd.actions:
                 for action in self.ircd.actions["remotechangenick"]:
                     action[0](self, oldNick)
@@ -640,6 +659,16 @@ class LocalUser(IRCUser):
     def disconnect(self, reason):
         del self.ircd.users[self.uuid]
         del self.ircd.userNicks[self.nick]
+        if "quitmessage" in self.ircd.actions:
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = list(set(userSendList))
+            userSendList.remove(self)
+            for action in self.ircd.actions["quitmessage"]:
+                action[0](self, userSendList)
+                if not userSendList:
+                    break
         if "localquit" in self.ircd.actions:
             for action in self.ircd.actions["localquit"]:
                 action[0](self, reason)
