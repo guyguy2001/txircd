@@ -28,14 +28,18 @@ class UserQuit(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "QUIT", ":Not enough parameters")
-            return None
+            return {
+                "reason": None
+            }
         return {
             "reason": params[0][:self.ircd.config.getWithDefault("quit_msg_length", 255)]
         }
     
     def execute(self, user, data):
-        user.disconnect("Quit: {}".format(data["reason"]))
+        if data["reason"] is None:
+            user.disconnect("Client quit")
+        else:
+            user.disconnect("Quit: {}".format(data["reason"]))
         return True
 
 class ServerQuit(Command):
