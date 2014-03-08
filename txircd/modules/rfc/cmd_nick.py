@@ -15,19 +15,32 @@ class NickCommand(ModuleData):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("changenickmessage", 1, self.sendNickMessage) ]
+        return [ ("changenickmessage", 1, self.sendNickMessage),
+                ("remotenickrequest", 1, self.forwardNickRequest),
+                ("remotechangenick", 1, self.propagateNickChange) ]
     
     def userCommands(self):
         return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
     
     def serverCommands(self):
-        return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
+        return [ ("NICK", 1, NickServerCommand(self.ircd)),
+                ("CHGNICK", 1, ChgNickServerCommand(self.ircd)) ]
     
     def sendNickMessage(self, user, oldNick, userShowList):
         prefix = "{}!{}@{}".format(oldNick, user.ident, user.host)
         for targetUser in userShowList:
             targetUser.sendMessage("NICK", to=user.nick, prefix=prefix)
         del userShowList[:]
+    
+    def forwardNickRequest(self, user, newNick):
+        self.ircd.servers[user.uuid[:3]].sendMessage("CHGNICK", user.uuid, newNick, prefix=self.ircd.serverID)
+        return True
+    
+    def propagateNickChange(self, user, oldNick):
+        nickTS = timestamp(user.nickSince)
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID:
+                server.sendMessage("NICK", nickTS, user.nick, prefix=user.uuid)
 
 class NickUserCommand(Command):
     implements(ICommand)
@@ -102,8 +115,33 @@ class NickServerCommand(Command):
     
     def execute(self, server, data):
         user = data["user"]
-        user.changeNick(data["nick"])
+        user.changeNick(data["nick"], True)
         user.nickSince = data["time"]
+        return True
+
+class ChgNickServerCommand(Command):
+    implements(ICommand)
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, server, params, prefix, tags):
+        if len(params) != 2:
+            return None
+        if params[0] not in self.ircd.users:
+            return None
+        return {
+            "prefix": prefix,
+            "user": params[0],
+            "nick": params[1]
+        }
+    
+    def execute(self, server, data):
+        user = self.ircd.users[data["user"]]
+        if user.uuid[:3] == self.ircd.serverID:
+            user.changeNick(data["nick"])
+        else:
+            self.ircd.servers[user.uuid[:3]].sendMessage("CHGNICK", user.uuid, data["nick"], prefix=data["prefix"])
         return True
 
 cmd_nick = NickCommand()
