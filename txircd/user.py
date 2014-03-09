@@ -486,8 +486,7 @@ class RemoteUser(IRCUser):
                         break
             if "remotequit" in self.ircd.actions:
                 for action in self.ircd.actions["remotequit"]:
-                    if action[0](self, reason):
-                        break
+                    action[0](self, reason)
         else:
             if "remotequitrequest" in self.ircd.actions:
                 for action in self.ircd.actions["remotequitrequest"]:
