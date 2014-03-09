@@ -159,7 +159,7 @@ class IRCUser(irc.IRC):
             userSendList = list(set(userSendList))
             userSendList.remove(self)
             for action in self.ircd.actions["quitmessage"]:
-                action[0](self, userSendList)
+                action[0](self, reason, userSendList)
                 if not userSendList:
                     break
         if "quit" in self.ircd.actions:
@@ -665,7 +665,7 @@ class LocalUser(IRCUser):
             userSendList = list(set(userSendList))
             userSendList.remove(self)
             for action in self.ircd.actions["quitmessage"]:
-                action[0](self, userSendList)
+                action[0](self, reason, userSendList)
                 if not userSendList:
                     break
         if "localquit" in self.ircd.actions:
