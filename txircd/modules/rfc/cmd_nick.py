@@ -17,6 +17,7 @@ class NickCommand(ModuleData):
     def actions(self):
         return [ ("changenickmessage", 1, self.sendNickMessage),
                 ("remotenickrequest", 1, self.forwardNickRequest),
+                ("changenick", 1, self.broadcastNickChange),
                 ("remotechangenick", 1, self.propagateNickChange) ]
     
     def userCommands(self):
@@ -35,6 +36,12 @@ class NickCommand(ModuleData):
     def forwardNickRequest(self, user, newNick):
         self.ircd.servers[user.uuid[:3]].sendMessage("CHGNICK", user.uuid, newNick, prefix=self.ircd.serverID)
         return True
+    
+    def broadcastNickChange(self, user, oldNick):
+        nickTS = timestamp(user.nickSince)
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID:
+                server.sendMessage("NICK", nickTS, user.nick, prefix=user.uuid)
     
     def propagateNickChange(self, user, oldNick):
         nickTS = timestamp(user.nickSince)
