@@ -292,6 +292,8 @@ class IRCUser(irc.IRC):
                 action[0](self, namespace, key, oldValue, value)
     
     def joinChannel(self, channel, override = False):
+        if channel in self.channels:
+            return
         if not override:
             if "joinpermission" in self.ircd.actions:
                 permissionCount = 0
