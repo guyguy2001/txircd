@@ -167,7 +167,7 @@ class IRCUser(irc.IRC):
                 action[0](self, reason)
         channelList = copy(self.channels)
         for channel in channelList:
-            self.leave(channel)
+            self.leaveChannel(channel)
         self.transport.loseConnection()
     
     def _timeoutRegistration(self):
@@ -673,7 +673,7 @@ class LocalUser(IRCUser):
                 action[0](self, reason)
         channelList = copy(self.channels)
         for channel in channelList:
-            self.leave(channel)
+            self.leaveChannel(channel)
     
     def register(self, holdName):
         if holdName not in self._registerHolds:
