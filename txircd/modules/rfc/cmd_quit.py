@@ -62,7 +62,7 @@ class UserQuit(Command):
                 "reason": None
             }
         return {
-            "reason": params[0][:self.ircd.config.getWithDefault("quit_msg_length", 255)]
+            "reason": params[0][:self.ircd.config.getWithDefault("quit_message_length", 255)]
         }
     
     def execute(self, user, data):
