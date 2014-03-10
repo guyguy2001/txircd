@@ -156,7 +156,7 @@ class IRCUser(irc.IRC):
             userSendList = [self]
             for channel in self.channels:
                 userSendList.extend(channel.users.keys())
-            userSendList = list(set(userSendList))
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
             userSendList.remove(self)
             for action in self.ircd.actions["quitmessage"]:
                 action[0](self, reason, userSendList)
@@ -241,7 +241,7 @@ class IRCUser(irc.IRC):
                 userSendList = [self]
                 for channel in self.channels:
                     userSendList.extend(channel.users.keys())
-                userSendList = list(set(userSendList))
+                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
                 for action in self.ircd.actions["changenickmessage"]:
                     action[0](self, oldNick, userSendList)
                     if not userSendList:
@@ -311,7 +311,7 @@ class IRCUser(irc.IRC):
         channel.users[self] = ""
         self.channels.append(channel)
         if "joinmessage" in self.ircd.actions:
-            messageUsers = channel.users.keys()
+            messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
             for action in self.ircd.actions["joinmessage"]:
                 action[0](channel, self, messageUsers)
                 if not messageUsers:
@@ -478,7 +478,7 @@ class RemoteUser(IRCUser):
                 userSendList = [self]
                 for channel in self.channels:
                     userSendList.extend(channel.users.keys())
-                userSendList = list(set(userSendList))
+                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
                 userSendList.remove(self)
                 for action in self.ircd.actions["quitmessage"]:
                     action[0](self, reason, userSendList)
@@ -503,7 +503,7 @@ class RemoteUser(IRCUser):
                 userSendList = [self]
                 for channel in self.channels:
                     userSendList.extend(channel.users.keys())
-                userSendList = list(set(userSendList))
+                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
                 for action in self.ircd.actions["changenickmessage"]:
                     action[0](self, oldNick, userSendList)
                     if not userSendList:
@@ -566,7 +566,7 @@ class RemoteUser(IRCUser):
             channel.users[self] = ""
             self.channels.append(channel)
             if "joinmessage" in self.ircd.actions:
-                messageUsers = channel.users.keys()
+                messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
                 for action in self.ircd.actions["joinmessage"]:
                     action[0](channel, self, messageUsers)
                     if not messageUsers:
@@ -662,7 +662,7 @@ class LocalUser(IRCUser):
             userSendList = [self]
             for channel in self.channels:
                 userSendList.extend(channel.users.keys())
-            userSendList = list(set(userSendList))
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
             userSendList.remove(self)
             for action in self.ircd.actions["quitmessage"]:
                 action[0](self, reason, userSendList)
