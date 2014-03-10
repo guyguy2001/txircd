@@ -15,6 +15,7 @@ class QuitCommand(ModuleData, Command):
     def actions(self):
         return [ ("quitmessage", 10, self.sendQuitMessage),
                 ("remotequitrequest", 10, self.sendRQuit),
+                ("quit", 10, self.broadcastQuit),
                 ("remotequit", 10, self.propagateQuit) ]
     
     def userCommands(self):
@@ -33,6 +34,11 @@ class QuitCommand(ModuleData, Command):
     def sendRQuit(self, user, reason):
         self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", ":{}".format(reason), prefix=user.uuid)
         return True
+    
+    def broadcastQuit(self, user, reason):
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID:
+                server.sendMessage("QUIT", ":{}".format(reason), prefix=user.uuid)
     
     def propagateQuit(self, user, reason):
         fromServer = self.ircd.servers[user.uuid[:3]]
