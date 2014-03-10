@@ -32,7 +32,7 @@ class QuitCommand(ModuleData, Command):
         del sendUserList[:]
     
     def sendRQuit(self, user, reason):
-        self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", ":{}".format(reason), prefix=user.uuid)
+        self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", user.uuid, ":{}".format(reason), prefix=self.ircd.serverID)
         return True
     
     def broadcastQuit(self, user, reason):
@@ -99,13 +99,13 @@ class RemoteQuit(Command):
         self.ircd = ircd
     
     def parseParams(self, server, params, prefix, tags):
-        if prefix not in self.ircd.users:
+        if params[0] not in self.ircd.users:
             return None
-        if len(params) != 1:
+        if len(params) != 2:
             return None
         return {
-            "user": self.ircd.users[prefix],
-            "reason": params[0]
+            "user": self.ircd.users[params[0]],
+            "reason": params[1]
         }
     
     def execute(self, server, data):
