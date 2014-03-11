@@ -103,12 +103,7 @@ class NickServerCommand(Command):
             localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
             if localUser != user:
                 if localUser.localOnly:
-                    if "localnickcollision" in self.ircd.actions:
-                        for action in self.ircd.actions["localnickcollision"]:
-                            if action[0](user):
-                                break
-                        else:
-                            return None
+                    if self.ircd.runActionUntilTrue("localnickcollision"):
                         return {
                             "user": user,
                             "time": time,

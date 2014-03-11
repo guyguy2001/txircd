@@ -21,7 +21,7 @@ class PartCommand(ModuleData):
     def serverCommands(self):
         return [ ("PART", 1, ServerPart(self.ircd)) ]
     
-    def sendPartMessage(self, channel, user, reason, sendUserList):
+    def sendPartMessage(self, sendUserList, channel, user, reason):
         userHostmask = user.hostmask()
         reason = ":{}".format(reason)
         for destUser in sendUserList:
@@ -51,12 +51,8 @@ class UserPart(Command):
     def execute(self, user, data):
         channel = data["channel"]
         reason = data["reason"]
-        if "partmessage" in self.ircd.actions:
-            sendUserList = channel.users.keys()
-            for action in self.ircd.actions["partmessage"]:
-                action[0](channel, user, reason, sendUserList)
-                if not sendUserList:
-                    break
+        sendUserList = channel.users.keys()
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason)
         user.leaveChannel(channel)
         return True
 
@@ -83,12 +79,8 @@ class ServerPart(Command):
         user = data["user"]
         channel = data["channel"]
         reason = data["reason"]
-        if "partmessage" in self.ircd.actions:
-            sendUserList = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-            for action in self.ircd.actions["partmessage"]:
-                action[0](channel, user, reason, sendUserList)
-                if not sendUserList:
-                    break
+        sendUserList = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason)
         user.leaveChannel(channel, True)
         return True
 
