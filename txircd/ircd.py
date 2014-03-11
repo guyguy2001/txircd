@@ -372,6 +372,59 @@ class IRCd(Service):
             else:
                 isupportList.append("{}={}".format(key, val))
         return isupportList
+    
+    def runActionStandard(self, actionName, *params):
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                action[0](*params)
+    
+    def runActionUntilTrue(self, actionName, *params):
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                if action[0](*params):
+                    return True
+        return False
+    
+    def runActionUntilFalse(self, actionName, *params):
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                if not action[0](*params):
+                    return True
+        return False
+    
+    def runActionFlagTrue(self, actionName, *params):
+        oneIsTrue = False
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                if action[0](*params):
+                    oneIsTrue = True
+        return oneIsTrue
+    
+    def runActionFlagFalse(self, actionName, *params):
+        oneIsFalse = False
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                if not action[0](*params):
+                    oneIsFalse = True
+        return oneIsFalse
+    
+    def runActionVoting(self, actionName, *params):
+        voteCount = 0
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                vote = action[0](*params)
+                if vote is True:
+                    voteCount += 1
+                elif vote is False:
+                    voteCount -= 1
+        return voteCount
+    
+    def runActionProcessing(self, actionName, data, *params):
+        if actionName in self.ircd.actions:
+            for action in self.ircd.actions[actionName]:
+                action[0](data, *params)
+                if not data:
+                    break
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
