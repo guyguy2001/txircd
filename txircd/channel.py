@@ -37,18 +37,14 @@ class IRCChannel(object):
                 user.sendMessage(command, *params, **kw)
             else:
                 servers.add(user.uuid[:3])
-        if "sendchannelmessage" in self.ircd.actions:
-            for action in self.ircd.actions["sendchannelmessage"]:
-                action[0](self, users, servers, command, *params, **kw)
+        self.ircd.runActionStandard("sendchannelmessage", self, users, servers, command, *params, **kw)
     
     def setTopic(self, topic, setter):
         oldTopic = self.topic
         self.topic = topic
         self.topicSetter = setter
         self.topicTime = now()
-        if "topic" in self.ircd.actions:
-            for action in self.ircd.actions["topic"]:
-                action[0](self, oldTopic)
+        self.ircd.runActionStandard("topic", self, oldTopic)
     
     def setMetadata(self, namespace, key, value = None):
         if namespace not in self.metadata:
@@ -62,9 +58,7 @@ class IRCChannel(object):
             del self.metadata[namespace][key]
         else:
             self.metadata[namespace][key] = value
-        if "channelmetadataupdate" in self.ircd.actions:
-            for action in self.ircd.actions["channelmetadataupdate"]:
-                action[0](self, namespace, key, value)
+        self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value)
     
     def setModes(self, user, modeString, params, source = None):
         adding = True
@@ -108,17 +102,8 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                actionName = "modepermission-channel-{}".format(mode)
-                if actionName in self.ircd.actions:
-                    permissionCount = 0
-                    for action in self.ircd.actions[actionName]:
-                        vote = action[0](self, user, mode, param)
-                        if vote is True:
-                            permissionCount += 1
-                        elif vote is False:
-                            permissionCount -= 1
-                    if permissionCount < 0:
-                        continue
+                if self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, mode, param) < 0:
+                    continue
                 if adding:
                     if modeType == ModeType.Status:
                         try:
@@ -174,11 +159,7 @@ class IRCChannel(object):
                             continue
                         del self.modes[mode]
                 changing.append((adding, mode, param, user, source))
-                actionName = "modechange-channel-{}".format(mode)
-                if actionName in self.ircd.actions:
-                    for action in self.ircd.actions[actionName]:
-                        action[0](self, adding, mode, param, user, source)
-        if changing and "modechanges-channel" in self.ircd.actions:
-            for action in self.ircd.actions["modechanges-channel"]:
-                action[0](self, changing)
+                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, adding, mode, param, user, source)
+        if changing:
+            self.ircd.runActionStandard("modechanges-channel", self, changing)
         return changing
