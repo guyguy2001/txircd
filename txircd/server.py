@@ -42,9 +42,7 @@ class IRCServer(IRC):
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason):
-        if "serverquit" in self.ircd.actions:
-            for action in self.ircd.actions["serverquit"]:
-                action[0](self, reason)
+        self.ircd.runActionStandard("serverquit", self, reason)
         del self.ircd.servers[self.serverID]
         del self.ircd.serverNames[self.name]
         netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
@@ -64,9 +62,7 @@ class IRCServer(IRC):
         self.disconnect("Registration timeout")
     
     def _ping(self):
-        if "pingserver" in self.ircd.actions:
-            for action in self.ircd.actions["pingserver"]:
-                action[0](self)
+        self.ircd.runActionStandard("pingserver", self)
     
     def register():
         if not self.serverID:
