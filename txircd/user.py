@@ -45,23 +45,17 @@ class IRCUser(irc.IRC):
         self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
     
     def connectionMade(self):
-        if "userconnect" in self.ircd.actions:
-            for action in self.ircd.actions["userconnect"]:
-                if not action[0](self):
-                    self.transport.loseConnection()
-                    return
+        if self.ircd.runActionUntilFalse("userconnect", self):
+            self.transport.loseConnection()
+            return
     
     def dataReceived(self, data):
         data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
-        if "userrecvdata" in self.ircd.actions:
-            for action in self.ircd.actions["userrecvdata"]:
-                action[0](self, data)
+        self.ircd.runActionStandard("userrecvdata", self, data)
         irc.IRC.dataReceived(self, data)
     
     def sendLine(self, line):
-        if "usersenddata" in self.ircd.actions:
-            for action in self.ircd.actions["usersenddata"]:
-                action[0](self, line)
+        self.ircd.runActionStandard("usersenddata", self, line)
         irc.IRC.sendLine(self, line)
     
     def sendMessage(self, command, *args, **kw):
@@ -100,25 +94,9 @@ class IRCUser(irc.IRC):
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
                 return
-            actionName = "commandpermission-{}".format(command)
-            if actionName in self.ircd.actions:
-                permissionCount = 0
-                for action in self.ircd.actions[actionName]:
-                    result = action[0](self, command, data)
-                    if result is True:
-                        permissionCount += 1
-                    elif result is False:
-                        permissionCount -= 1
-                    elif result is not None:
-                        permissionCount += result
-                if permissionCount < 0:
-                    return
-            actionName = "commandmodify-{}".format(command)
-            if actionName in self.ircd.actions:
-                for action in self.ircd.actions[actionName]:
-                    newData = action[0](self, command, data)
-                    if newData is not None:
-                        data = newData
+            if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data) < 0:
+                return
+            self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
                     if handler[0].resetsIdleTime:
@@ -126,17 +104,9 @@ class IRCUser(irc.IRC):
                     break # If the command executor returns True, it was handled
             else:
                 return # Don't process commandextra if it wasn't handled
-            actionName = "commandextra-{}".format(command)
-            if actionName in self.ircd.actions:
-                for action in self.ircd.actions[actionName]:
-                    action[0](self, command, data)
+            self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data)
         else:
-            suppressError = False
-            if "commandunknown" in self.ircd.actions:
-                for action in self.ircd.actions["commandunknown"]:
-                    if action[0](self, command, params):
-                        suppressError = True
-            if not suppressError:
+            if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
     def connectionLost(self, reason):
@@ -152,19 +122,13 @@ class IRCUser(irc.IRC):
         del self.ircd.users[self.uuid]
         if self.isRegistered():
             del self.ircd.userNicks[self.nick]
-        if "quitmessage" in self.ircd.actions:
-            userSendList = [self]
-            for channel in self.channels:
-                userSendList.extend(channel.users.keys())
-            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-            userSendList.remove(self)
-            for action in self.ircd.actions["quitmessage"]:
-                action[0](self, reason, userSendList)
-                if not userSendList:
-                    break
-        if "quit" in self.ircd.actions:
-            for action in self.ircd.actions["quit"]:
-                action[0](self, reason)
+        userSendList = [self]
+        for channel in self.channels:
+            userSendList.extend(channel.users.keys())
+        userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+        userSendList.remove(self)
+        self.ircd.runActionProcessing("quitmessage", userSendList, self, reason)
+        self.ircd.runActionStandard("quit", self, reason)
         channelList = copy(self.channels)
         for channel in channelList:
             self.leaveChannel(channel)
@@ -177,9 +141,7 @@ class IRCUser(irc.IRC):
         self.disconnect("Registration timeout")
     
     def _ping(self):
-        if "pinguser" in self.ircd.actions:
-            for action in self.ircd.actions["pinguser"]:
-                action[0](self)
+        self.ircd.runActionStandard("pinguser", self)
     
     def isRegistered(self):
         return not self._registerHolds
@@ -196,11 +158,9 @@ class IRCUser(irc.IRC):
             if self._registerHolds:
                 return
             self.ircd.userNicks[self.nick] = self.uuid
-            if "register" in self.ircd.actions:
-                for action in self.ircd.actions["register"]:
-                    if not action[0](self):
-                        self.transport.loseConnection()
-                        return
+            if self.ircd.runActionUntilFalse("register", self):
+                self.transport.loseConnection()
+                return
             self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
             self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.ircd.config["network_name"], version))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
@@ -209,9 +169,7 @@ class IRCUser(irc.IRC):
             isupportMsgList = splitMessage(" ".join(isupportList), 350)
             for line in isupportMsgList:
                 self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
-            if "welcome" in self.ircd.actions:
-                for action in self.ircd.actions["welcome"]:
-                    action[0](self)
+            self.ircd.runActionStandard("welcome", self)
     
     def addRegisterHold(self, holdName):
         if not self._registerHolds:
@@ -237,32 +195,24 @@ class IRCUser(irc.IRC):
         self.nickSince = now()
         if self.isRegistered():
             self.ircd.userNicks[self.nick] = self.uuid
-            if "changenickmessage" in self.ircd.actions:
-                userSendList = [self]
-                for channel in self.channels:
-                    userSendList.extend(channel.users.keys())
-                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-                for action in self.ircd.actions["changenickmessage"]:
-                    action[0](self, oldNick, userSendList)
-                    if not userSendList:
-                        break
-            if "changenick" in self.ircd.actions:
-                for action in self.ircd.actions["changenick"]:
-                    action[0](self, oldNick)
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+            self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick)
+            self.ircd.runActionStandard("changenick", self, oldNick)
     
     def changeIdent(self, newIdent):
         oldIdent = self.ident
         self.ident = newIdent
-        if self.isRegistered() and "changeident" in self.ircd.actions:
-            for action in self.ircd.actions["changeident"]:
-                action[0](self, oldIdent)
+        if self.isRegistered():
+            self.ircd.runActionStandard("changeident", self, oldIdent)
     
     def changeHost(self, newHost):
         oldHost = self.host
         self.host = newHost
-        if self.isRegistered() and "changehost" in self.ircd.actions:
-            for action in self.ircd.actions["changehost"]:
-                action[0](self, oldHost)
+        if self.isRegistered():
+            self.ircd.runActionStandard("changehost", self, oldHost)
     
     def resetHost(self):
         self.changeHost(self.realhost)
@@ -270,9 +220,8 @@ class IRCUser(irc.IRC):
     def changeGecos(self, newGecos):
         oldGecos = self.gecos
         self.gecos = newGecos
-        if self.isRegistered() and "changegecos" in self.ircd.actions:
-            for action in self.ircd.actions["changegecos"]:
-                action[0](self, oldGecos)
+        if self.isRegistered():
+            self.ircd.runActionStandard("changegecos", self, oldGecos)
     
     def setMetadata(self, namespace, key, value):
         if namespace not in self.metadata:
@@ -287,60 +236,32 @@ class IRCUser(irc.IRC):
                 del self.metadata[namespace][key]
         else:
             self.metadata[namespace][key] = value
-        if "usermetadataupdate" in self.ircd.actions:
-            for action in self.ircd.actions["usermetadataupdate"]:
-                action[0](self, namespace, key, oldValue, value)
+        self.ircd.runActionStandard("usermetadataupdate", self, namespace, key, oldValue, value)
     
     def joinChannel(self, channel, override = False):
         if channel in self.channels:
             return
         if not override:
-            if "joinpermission" in self.ircd.actions:
-                permissionCount = 0
-                for action in self.ircd.actions["joinpermission"]:
-                    vote = action[0](channel, self)
-                    if vote is True:
-                        permissionCount += 1
-                    elif vote is False:
-                        permissionCount -= 1
-                if permissionCount < 0:
-                    return
+            if self.ircd.runActionVoting("joinpermission", channel, self) < 0:
+                return
         if channel.name not in self.ircd.channels:
             self.ircd.channels[channel.name] = channel
-            if "channelcreate" in self.ircd.actions:
-                for action in self.ircd.actions["channelcreate"]:
-                    action[0](channel)
+            self.ircd.runActionStandard("channelcreate", channel)
         channel.users[self] = ""
         self.channels.append(channel)
-        if "joinmessage" in self.ircd.actions:
-            messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-            for action in self.ircd.actions["joinmessage"]:
-                action[0](channel, self, messageUsers)
-                if not messageUsers:
-                    break
-        if "join" in self.ircd.actions:
-            for action in self.ircd.actions["join"]:
-                action[0](channel, self)
+        messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+        self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self)
+        self.ircd.runActionStandard("join", channel, self)
     
     def leaveChannel(self, channel):
         if channel not in self.channels:
             return
-        if "leave" in self.ircd.actions:
-            for action in self.ircd.actions["leave"]:
-                action[0](channel, self)
+        self.ircd.runActionStandard("leave", channel, self)
         self.channels.remove(channel)
         del channel.users[self]
         if not channel.users:
-            keepChannel = False
-            if "channeldestroyorkeep" in self.ircd.actions:
-                for action in self.ircd.actions["channeldestroyorkeep"]:
-                    if action[0](channel):
-                        keepChannel = True
-                        break
-            if not keepChannel:
-                if "channeldestory" in self.ircd.actions:
-                    for action in self.ircd.actions["channeldestroy"]:
-                        action[0](channel)
+            if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel):
+                self.ircd.runActionStandard("channeldestroy", channel)
                 del self.ircd.channels[channel.name]
     
     def setMode(self, user, modeString, params, source = None):
@@ -380,17 +301,8 @@ class IRCUser(irc.IRC):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                actionName = "modepermission-user-{}".format(mode)
-                if user and actionName in self.ircd.actions:
-                    permissionCount = 0
-                    for action in self.ircd.actions[actionName]:
-                        vote = action[0](self, user, mode, param)
-                        if vote is True:
-                            permissionCount += 1
-                        else:
-                            permissionCount -= 1
-                    if permissionCount < 0:
-                        continue
+                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, mode, param) < 0:
+                    continue
                 if adding:
                     if modeType == ModeType.List:
                         if mode not in self.modes:
@@ -423,13 +335,9 @@ class IRCUser(irc.IRC):
                         else:
                             continue
                 changing.append((adding, mode, param, user, source))
-                actionName = "modechange-user-{}".format(mode)
-                if actionName in self.ircd.actions:
-                    for action in self.ircd.actions[actionName]:
-                        action[0](self, adding, mode, param, user, source)
-        if changing and "modechanges-user" in self.ircd.actions:
-            for action in self.ircd.actions["modechanges-user"]:
-                action[0](self, changing)
+                self.ircd.runActionStandard("modechange-user-{}".format(mode), self, adding, mode, param, user, source)
+        if changing:
+            self.ircd.runActionStandard("modechanges-user", self, changing)
         return changing
 
 class RemoteUser(IRCUser):
@@ -452,10 +360,7 @@ class RemoteUser(IRCUser):
             paramList = (to,) + params
         else:
             paramList = params
-        if "sendremoteusermessage" in self.ircd.actions:
-            for action in self.ircd.actions["sendremoteusermessage"]:
-                if action[0](self, command, *params, **kw):
-                    break
+        self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *params, **kw)
     
     def register(self, holdName, fromRemote = False):
         if not fromRemote:
@@ -464,9 +369,7 @@ class RemoteUser(IRCUser):
             return
         self._registerHolds.remove(holdName)
         if not self._registerHolds:
-            if "remoteregister" in self.ircd.actions:
-                for action in self.ircd.actions["remoteregister"]:
-                    action[0](self)
+            self.ircd.runActionStandard("remoteregister", self)
     
     def addRegisterHold(self, holdName):
         pass # We're just not going to allow this here.
@@ -476,24 +379,15 @@ class RemoteUser(IRCUser):
             if self.isRegistered():
                 del self.ircd.userNicks[self.nick]
             del self.ircd.users[self.uuid]
-            if "quitmessage" in self.ircd.actions:
-                userSendList = [self]
-                for channel in self.channels:
-                    userSendList.extend(channel.users.keys())
-                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-                userSendList.remove(self)
-                for action in self.ircd.actions["quitmessage"]:
-                    action[0](self, reason, userSendList)
-                    if not userSendList:
-                        break
-            if "remotequit" in self.ircd.actions:
-                for action in self.ircd.actions["remotequit"]:
-                    action[0](self, reason)
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+            userSendList.remove(self)
+            self.ircd.runActionProcessing("quitmessage", userSendList, self, reason)
+            self.ircd.runActionStandard("remotequit", self, reason)
         else:
-            if "remotequitrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remotequitrequest"]:
-                    if action[0](self, reason):
-                        break
+            self.ircd.runActionUntilTrue("remotequitrequest", self, reason)
     
     def changeNick(self, newNick, fromRemote = False):
         if fromRemote:
@@ -501,111 +395,63 @@ class RemoteUser(IRCUser):
             del self.ircd.userNicks[self.nick]
             self.nick = newNick
             self.ircd.userNicks[self.nick] = self.uuid
-            if "changenickmessage" in self.ircd.actions:
-                userSendList = [self]
-                for channel in self.channels:
-                    userSendList.extend(channel.users.keys())
-                userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-                for action in self.ircd.actions["changenickmessage"]:
-                    action[0](self, oldNick, userSendList)
-                    if not userSendList:
-                        break
-            if "remotechangenick" in self.ircd.actions:
-                for action in self.ircd.actions["remotechangenick"]:
-                    action[0](self, oldNick)
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+            self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick)
+            self.ircd.runActionStandard("remotechangenick", self, oldNick)
         else:
-            if "remotenickrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remotenickrequest"]:
-                    if action[0](self, newNick):
-                        break
+            self.ircd.runActionUntilTrue("remotenickrequest", self, newNick)
     
     def changeIdent(self, newIdent, fromRemote = False):
         if fromRemote:
             oldIdent = self.ident
             self.ident = newIdent
-            if "remotechangeident" in self.ircd.actions:
-                for action in self.ircd.actions["remotechangeident"]:
-                    action[0](self, newIdent)
+            self.ircd.runActionStandard("remotechangeident", self, oldIdent)
         else:
-            if "remoteidentrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remoteidentrequest"]:
-                    if action[0](self, newIdent):
-                        break
+            self.ircd.runActionUntilTrue("remoteidentrequest", self, newIdent)
     
     def changeHost(self, newHost, fromRemote = False):
         if fromRemote:
             oldHost = self.host
             self.host = newHost
-            if "remotechangehost" in self.ircd.actions:
-                for action in self.ircd.actions["remotechangehost"]:
-                    action[0](self, oldHost)
+            self.ircd.runActionStandard("remotechangehost", self, oldHost)
         else:
-            if "remotehostrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remotehostrequest"]:
-                    if action[0](self, newHost):
-                        break
+            self.ircd.runActionUntilTrue("remotehostrequest", self, newHost)
     
     def changeGecos(self, newGecos, fromRemote = False):
         if fromRemote:
             oldGecos = self.gecos
             self.gecos = newGecos
-            if "remotechangegecos" in self.ircd.actions:
-                for action in self.ircd.actions["remotechangegecos"]:
-                    action[0](self, oldGecos)
+            self.ircd.runActionStandard("remotechangegecos", self, oldGecos)
         else:
-            if "remotegecosrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remotegecosrequest"]:
-                    if action[0](self, newGecos):
-                        break
+            self.ircd.runActionUntilTrue("remotegecosrequest", self, newGecos)
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         if fromRemote:
             if channel.name not in self.ircd.channels:
                 self.ircd.channels[channel.name] = channel
-                if "channelcreate" in self.ircd.actions:
-                    for action in self.ircd.actions["channelcreate"]:
-                        action[0](channel)
+                self.ircd.runActionStandard("channelcreate", channel)
             channel.users[self] = ""
             self.channels.append(channel)
-            if "joinmessage" in self.ircd.actions:
-                messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-                for action in self.ircd.actions["joinmessage"]:
-                    action[0](channel, self, messageUsers)
-                    if not messageUsers:
-                        break
-            if "remotejoin" in self.ircd.actions:
-                for action in self.ircd.actions["remotejoin"]:
-                    action[0](channel, self)
+            messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+            self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self)
+            self.ircd.runActionStandard("remotejoin", channel, self)
         else:
-            if "remotejoinrequest" in self.ircd.actions:
-                for action in self.ircd.actions["remotejoinrequest"]:
-                    if action[0](self, channel):
-                        break
+            self.ircd.runActionUntilTrue("remotejoinrequest", self, channel)
     
     def leaveChannel(self, channel, fromRemote = False):
         if fromRemote:
-            if "remoteleave" in self.ircd.actions["remoteleave"]:
-                for action in self.ircd.actions["remoteleave"]:
-                    action[0](channel, self)
+            self.ircd.runActionStandard("remoteleave", channel, self)
             self.channels.remove(channel)
             del channel.users[self]
             if not channel.users:
-                keepChannel = False
-                if "channeldestroyorkeep" in self.ircd.actions:
-                    for action in self.ircd.actions["channeldestroyorkeep"]:
-                        if action[0](channel):
-                            keepChannel = True
-                            break
-                if not keepChannel:
-                    if "channeldestroy" in self.ircd.actoins:
-                        for action in self.ircd.actions["channeldestroy"]:
-                            action[0](channel)
+                if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel):
+                    self.ircd.runActionStandard("channeldestroy", channel)
                     del self.ircd.channels[channel.name]
         else:
-            if "remoteleaverequest" in self.ircd.actions:
-                for action in self.ircd.actoins["remoteleaverequest"]:
-                    if action[0](self, channel):
-                        break
+            self.ircd.runActionUntilTrue("remoteleaverequest", self, channel)
 
 class LocalUser(IRCUser):
     """
@@ -639,12 +485,7 @@ class LocalUser(IRCUser):
                 break
         if data is None:
             return
-        actionName = "commandmodify-{}".format(command)
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
-                newData = action[0](self, command, data)
-                if newData is not None:
-                    data = newData
+        self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
         for handler in handlers:
             if handler[0].execute(self, data):
                 if handler[0].resetsIdleTime:
@@ -652,27 +493,18 @@ class LocalUser(IRCUser):
                 break
         else:
             return
-        actionName = "commandextra-{}".format(command)
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
-                action[0](self, command, data)
+        self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data)
     
     def disconnect(self, reason):
         del self.ircd.users[self.uuid]
         del self.ircd.userNicks[self.nick]
-        if "quitmessage" in self.ircd.actions:
-            userSendList = [self]
-            for channel in self.channels:
-                userSendList.extend(channel.users.keys())
-            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-            userSendList.remove(self)
-            for action in self.ircd.actions["quitmessage"]:
-                action[0](self, reason, userSendList)
-                if not userSendList:
-                    break
-        if "localquit" in self.ircd.actions:
-            for action in self.ircd.actions["localquit"]:
-                action[0](self, reason)
+        userSendList = [self]
+        for channel in self.channels:
+            userSendList.extend(channel.users.keys())
+        userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+        userSendList.remove(self)
+        self.ircd.runActionProcessing("quitmessage", userSendList, self, reason)
+        self.ircd.runActionStandard("localquit", self, reason)
         channelList = copy(self.channels)
         for channel in channelList:
             self.leaveChannel(channel)
@@ -682,9 +514,7 @@ class LocalUser(IRCUser):
             return
         self._registerHolds.remove(holdName)
         if not self._registerHolds:
-            if "localregister" in self.ircd.actions:
-                for action in self.ircd.actions["localregister"]:
-                    action[0](self)
+            self.ircd.runActionStandard("localregister", self)
     
     def joinChannel(self, channel, override = False):
         IRCUser.joinChannel(self, channel, True)

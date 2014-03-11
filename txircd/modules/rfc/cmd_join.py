@@ -26,7 +26,7 @@ class JoinCommand(ModuleData):
         return [ ("JOIN", 1, ServerJoin(self.ircd)),
                 ("RJOIN", 1, RemoteJoin(self.ircd)) ]
     
-    def sendJoinMessage(self, channel, user, messageUsers):
+    def sendJoinMessage(self, messageUsers, channel, user):
         userHostmask = user.hostmask()
         for destUser in messageUsers:
             destUser.sendMessage("JOIN", channel.name, prefix=userHostmask)
