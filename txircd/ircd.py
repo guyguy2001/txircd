@@ -369,56 +369,56 @@ class IRCd(Service):
                 isupportList.append("{}={}".format(key, val))
         return isupportList
     
-    def runActionStandard(self, actionName, *params):
+    def runActionStandard(self, actionName, *params, **kw):
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                action[0](*params)
+                action[0](*params, **kw)
     
-    def runActionUntilTrue(self, actionName, *params):
+    def runActionUntilTrue(self, actionName, *params, **kw):
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                if action[0](*params):
+                if action[0](*params, **kw):
                     return True
         return False
     
-    def runActionUntilFalse(self, actionName, *params):
+    def runActionUntilFalse(self, actionName, *params, **kw):
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                if not action[0](*params):
+                if not action[0](*params, **kw):
                     return True
         return False
     
-    def runActionFlagTrue(self, actionName, *params):
+    def runActionFlagTrue(self, actionName, *params, **kw):
         oneIsTrue = False
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                if action[0](*params):
+                if action[0](*params, **kw):
                     oneIsTrue = True
         return oneIsTrue
     
-    def runActionFlagFalse(self, actionName, *params):
+    def runActionFlagFalse(self, actionName, *params, **kw):
         oneIsFalse = False
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                if not action[0](*params):
+                if not action[0](*params, **kw):
                     oneIsFalse = True
         return oneIsFalse
     
-    def runActionVoting(self, actionName, *params):
+    def runActionVoting(self, actionName, *params, **kw):
         voteCount = 0
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                vote = action[0](*params)
+                vote = action[0](*params, **kw)
                 if vote is True:
                     voteCount += 1
                 elif vote is False:
                     voteCount -= 1
         return voteCount
     
-    def runActionProcessing(self, actionName, data, *params):
+    def runActionProcessing(self, actionName, data, *params, **kw):
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                action[0](data, *params)
+                action[0](data, *params, **kw)
                 if not data:
                     break
 
