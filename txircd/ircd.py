@@ -183,9 +183,7 @@ class IRCd(Service):
         if common:
             self.commonModules.add(module.name)
         
-        if "moduleload" in self.actions:
-            for action in self.actions["moduleload"]:
-                action[0](module.name)
+        self.runActionStandard("moduleload", module.name)
         
         for type, typeSet in enumerate(newChannelModes):
             for mode, implementation in typeSet.iteritems():
@@ -273,9 +271,7 @@ class IRCd(Service):
         del self.loadedModules[moduleName]
         del self._loadedModuleData[moduleName]
         
-        if "moduleunload" in self.actions:
-            for action in self.actions["moduleunload"]:
-                action[0](module.name)
+        self.runActionStandard("moduleunload", module.name)
         
         if unloadDeferreds:
             return DeferredList(unloadDeferreds)
@@ -374,44 +370,44 @@ class IRCd(Service):
         return isupportList
     
     def runActionStandard(self, actionName, *params):
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 action[0](*params)
     
     def runActionUntilTrue(self, actionName, *params):
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 if action[0](*params):
                     return True
         return False
     
     def runActionUntilFalse(self, actionName, *params):
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 if not action[0](*params):
                     return True
         return False
     
     def runActionFlagTrue(self, actionName, *params):
         oneIsTrue = False
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 if action[0](*params):
                     oneIsTrue = True
         return oneIsTrue
     
     def runActionFlagFalse(self, actionName, *params):
         oneIsFalse = False
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 if not action[0](*params):
                     oneIsFalse = True
         return oneIsFalse
     
     def runActionVoting(self, actionName, *params):
         voteCount = 0
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 vote = action[0](*params)
                 if vote is True:
                     voteCount += 1
@@ -420,8 +416,8 @@ class IRCd(Service):
         return voteCount
     
     def runActionProcessing(self, actionName, data, *params):
-        if actionName in self.ircd.actions:
-            for action in self.ircd.actions[actionName]:
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
                 action[0](data, *params)
                 if not data:
                     break
