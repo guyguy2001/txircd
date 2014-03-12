@@ -37,7 +37,9 @@ class IRCChannel(object):
                 user.sendMessage(command, *params, **kw)
             else:
                 servers.add(user.uuid[:3])
-        self.ircd.runActionStandard("sendchannelmessage", self, users, servers, command, *params, **kw)
+        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (users, servers), self, *params, **kw)
+        if users and servers:
+            self.ircd.runActionProcessingMultiple("sendchannelmessage", (users, servers), self, command, *params, **kw)
     
     def setTopic(self, topic, setter):
         oldTopic = self.topic

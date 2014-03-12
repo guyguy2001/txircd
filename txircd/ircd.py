@@ -421,6 +421,16 @@ class IRCd(Service):
                 action[0](data, *params, **kw)
                 if not data:
                     break
+    
+    def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                action[0](*dataList, *params, **kw)
+                for data in dataList:
+                    if data:
+                        break
+                else:
+                    break
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
