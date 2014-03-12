@@ -360,7 +360,8 @@ class RemoteUser(IRCUser):
             paramList = (to,) + params
         else:
             paramList = params
-        self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *params, **kw)
+        if not self.ircd.runActionUntilTrue("sendremoteusermessage-{}".format(command), self, *params, **kw):
+            self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *params, **kw)
     
     def register(self, holdName, fromRemote = False):
         if not fromRemote:
