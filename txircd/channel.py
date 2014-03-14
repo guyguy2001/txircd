@@ -163,5 +163,7 @@ class IRCChannel(object):
                 changing.append((adding, mode, param, user, source))
                 self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, adding, mode, param, user, source)
         if changing:
+            changingDisplay = copy(changing)
+            self.ircd.runActionProcessing("modemessage-channel", self, changingDisplay)
             self.ircd.runActionStandard("modechanges-channel", self, changing)
         return changing
