@@ -277,6 +277,8 @@ class IRCUser(irc.IRC):
                 adding = False
                 continue
             if mode not in self.ircd.userModeTypes:
+                if user:
+                    user.sendMessage(irc.ERR_UMODEUNKNOWNFLAG, mode, ":is unknown mode char to me")
                 continue
             param = None
             modeType = self.ircd.userModeTypes[mode]
