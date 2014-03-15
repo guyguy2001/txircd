@@ -68,7 +68,7 @@ class NickUserCommand(Command):
             user.sendMessage(irc.ERR_ERRONEUSNICKNAME, params[0], ":Erroneous nickname")
             return None
         if params[0] in self.ircd.userNicks:
-            otherUser = self.ircd.users[self.ircd.userNicks]
+            otherUser = self.ircd.users[self.ircd.userNicks[params[0]]]
             if user != otherUser:
                 user.sendMessage(irc.ERR_NICKNAMEINUSE, nick, ":Nickname is already in use")
                 return None
