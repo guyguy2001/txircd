@@ -423,9 +423,10 @@ class IRCd(Service):
                     break
     
     def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
+        paramList = dataList + params
         if actionName in self.actions:
             for action in self.actions[actionName]:
-                action[0](*dataList, *params, **kw)
+                action[0](*paramList, **kw)
                 for data in dataList:
                     if data:
                         break
