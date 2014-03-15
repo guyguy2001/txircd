@@ -205,12 +205,16 @@ class IRCUser(irc.IRC):
             self.ircd.runActionStandard("changenick", self, oldNick)
     
     def changeIdent(self, newIdent):
+        if newIdent == self.ident:
+            return
         oldIdent = self.ident
         self.ident = newIdent
         if self.isRegistered():
             self.ircd.runActionStandard("changeident", self, oldIdent)
     
     def changeHost(self, newHost):
+        if newHost == self.host:
+            return
         oldHost = self.host
         self.host = newHost
         if self.isRegistered():
@@ -220,6 +224,8 @@ class IRCUser(irc.IRC):
         self.changeHost(self.realhost)
     
     def changeGecos(self, newGecos):
+        if newGecos == self.gecos:
+            return
         oldGecos = self.gecos
         self.gecos = newGecos
         if self.isRegistered():
