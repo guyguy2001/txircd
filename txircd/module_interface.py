@@ -195,16 +195,15 @@ class IMode(Interface):
         extbans to just work consistently across the board without every module having to try to implement them.
         """
     
-    def showParam(user, channel):
+    def showParam(user, target):
         """
-        Affects channel parameter modes only (ModeType.ParamOnUnset or ModeType.Param).  Returns how to display the
-        mode parameter to users.
+        Affects parameter modes only (ModeType.ParamOnUnset or ModeType.Param).  Returns how to display the mode
+        parameter to users.
         """
     
-    def showListParams(user, channel):
+    def showListParams(user, target):
         """
         Affects list modes only (ModeType.List).  Sends the parameter list to the user.  Returns None.
-        For user modes, the channel parameter is None.
         """
 
 class Mode(object):
@@ -219,8 +218,8 @@ class Mode(object):
     def apply(self, actionType, *params, **kw):
         pass
     
-    def showParam(self, user, channel):
+    def showParam(self, user, target):
         return ""
     
-    def showListParams(self, user, channel):
+    def showListParams(self, user, target):
         pass
