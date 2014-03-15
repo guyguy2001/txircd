@@ -186,7 +186,9 @@ class IRCUser(irc.IRC):
         return "{}!{}@{}".format(self.nick, self.ident, self.ip)
     
     def changeNick(self, newNick):
-        if newNick in self.ircd.userNicks:
+        if newNick == self.nick:
+            return
+        if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != self.uuid:
             return
         oldNick = self.nick
         if oldNick:
