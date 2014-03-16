@@ -103,7 +103,7 @@ class ServerPing(Command):
     
     def execute(self, server, data):
         if data["dest"] == self.ircd.serverID:
-            server.sendMessage("PONG", data["dest"], data["source"])
+            server.sendMessage("PONG", data["dest"], data["source"], prefix=data["prefix"])
             return True
         self.ircd.servers[data["dest"]].sendMessage("PING", data["source"], data["dest"], prefix=data["prefix"])
         return True
