@@ -24,7 +24,7 @@ class PartCommand(ModuleData):
     def sendPartMessage(self, sendUserList, channel, user, reason):
         reason = ":{}".format(reason)
         for destUser in sendUserList:
-            destUser.sendMessage("PART", channel.name, reason, sourceuser=user)
+            destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
         del sendUserList[:]
 
 class UserPart(Command):
