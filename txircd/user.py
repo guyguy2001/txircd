@@ -59,8 +59,7 @@ class IRCUser(irc.IRC):
         irc.IRC.sendLine(self, line)
     
     def sendMessage(self, command, *args, **kw):
-        if "prefix" not in kw:
-            kw["prefix"] = self.ircd.name
+        kw["prefix"] = self._getPrefix(kw)
         if kw["prefix"] is None:
             del kw["prefix"]
         to = self.nick if self.nick else "*"
@@ -71,6 +70,18 @@ class IRCUser(irc.IRC):
             irc.IRC.sendMessage(self, command, to, *args, **kw)
         else:
             irc.IRC.sendMessage(self, command, *args, **kw)
+    
+    def _getPrefix(self, msgKeywords):
+        if "sourceuser" in msgKeywords:
+            userTransform = IRCUser.hostmask
+            if "usertransform" in msgKeywords:
+                userTransform = msgKeywords["usertransform"]
+            return userTransform(msgKeywords["sourceuser"])
+        if "sourceserver" in msgKeywords:
+            return msgKeywords["sourceserver"].name
+        if "prefix" in msgKeywords:
+            return msgKeywords["prefix"]
+        return self.ircd.name
     
     def handleCommand(self, command, prefix, params):
         if command in self.ircd.userCommands:
@@ -360,9 +371,8 @@ class RemoteUser(IRCUser):
     def sendMessage(self, command, *params, **kw):
         if self.uuid[:3] not in self.ircd.servers:
             raise RuntimeError ("The server for this user isn't registered in the server list!")
-        if "prefix" not in kw:
-            kw["prefix"] = self.ircd.serverID
-        elif kw["prefix"] is None:
+        kw["prefix"] = self._getPrefix(kw)
+        if kw["prefix"] is None:
             del kw["prefix"]
         to = self.nick
         if "to" in kw:
@@ -374,6 +384,15 @@ class RemoteUser(IRCUser):
             paramList = params
         if not self.ircd.runActionUntilTrue("sendremoteusermessage-{}".format(command), self, *params, **kw):
             self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *params, **kw)
+    
+    def _getPrefix(self, msgKeywords):
+        if "sourceuser" in msgKeywords:
+            return msgKeywords["sourceuser"].uuid
+        if "sourceserver" in msgKeywords:
+            return msgKeywords["sourceserver"].serverID
+        if "prefix" in msgKeywords:
+            return msgKeywords["prefix"]
+        return self.ircd.serverID
     
     def register(self, holdName, fromRemote = False):
         if not fromRemote:
