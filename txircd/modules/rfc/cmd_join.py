@@ -27,9 +27,8 @@ class JoinCommand(ModuleData):
                 ("RJOIN", 1, RemoteJoin(self.ircd)) ]
     
     def sendJoinMessage(self, messageUsers, channel, user):
-        userHostmask = user.hostmask()
         for destUser in messageUsers:
-            destUser.sendMessage("JOIN", channel.name, prefix=userHostmask)
+            destUser.sendMessage("JOIN", channel.name, sourceuser=user)
         del messageUsers[:]
     
     def sendRJoin(self, user, channel):

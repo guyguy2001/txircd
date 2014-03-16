@@ -26,9 +26,8 @@ class QuitCommand(ModuleData, Command):
                 ("RQUIT", 1, RemoteQuit(self.ircd)) ]
     
     def sendQuitMessage(self, sendUserList, user, reason):
-        hostmask = user.hostmask()
         for destUser in sendUserList:
-            destUser.sendMessage("QUIT", ":{}".format(reason), to=None, prefix=hostmask)
+            destUser.sendMessage("QUIT", ":{}".format(reason), to=None, sourceuser=user)
         del sendUserList[:]
     
     def sendRQuit(self, user, reason):

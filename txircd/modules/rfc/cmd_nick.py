@@ -28,9 +28,10 @@ class NickCommand(ModuleData):
                 ("CHGNICK", 1, ChgNickServerCommand(self.ircd)) ]
     
     def sendNickMessage(self, userShowList, user, oldNick):
-        prefix = "{}!{}@{}".format(oldNick, user.ident, user.host)
+        def transformUser(sayingUser):
+            return "{}!{}@{}".format(oldNick, sayingUser.idet, sayingUser.host)
         for targetUser in userShowList:
-            targetUser.sendMessage("NICK", to=user.nick, prefix=prefix)
+            targetUser.sendMessage("NICK", to=user.nick, sourceuser=user, usertransform=transformUser)
         del userShowList[:]
     
     def forwardNickRequest(self, user, newNick):

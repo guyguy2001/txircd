@@ -22,10 +22,9 @@ class PartCommand(ModuleData):
         return [ ("PART", 1, ServerPart(self.ircd)) ]
     
     def sendPartMessage(self, sendUserList, channel, user, reason):
-        userHostmask = user.hostmask()
         reason = ":{}".format(reason)
         for destUser in sendUserList:
-            destUser.sendMessage("PART", channel.name, reason, prefix=userHostmask)
+            destUser.sendMessage("PART", channel.name, reason, sourceuser=user)
         del sendUserList[:]
 
 class UserPart(Command):
