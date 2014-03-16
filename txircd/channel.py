@@ -19,10 +19,6 @@ class IRCChannel(object):
         self.cache = {}
     
     def sendMessage(self, command, *params, **kw):
-        if "prefix" not in kw:
-            kw["prefix"] = self.ircd.name
-        if kw["prefix"] is None:
-            del kw["prefix"]
         if "to" not in kw:
             kw["to"] = self.name
         if kw["to"] is None:
