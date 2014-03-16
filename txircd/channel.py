@@ -24,16 +24,20 @@ class IRCChannel(object):
         if kw["to"] is None:
             del kw["to"]
         userList = self.users.keys()
-        if "skip" in kw:
-            for u in kw["skip"]:
+        if "skipusers" in kw:
+            for u in kw["skipusers"]:
                 userList.remove(u)
         servers = set()
         for user in self.users.iterkeys():
             if user.uuid[:3] != self.ircd.serverID:
-                servers.add(user.uuid[:3])
-        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (users, servers), self, *params, **kw)
-        if users or servers:
-            self.ircd.runActionProcessingMultiple("sendchannelmessage", (users, servers), self, command, *params, **kw)
+                servers.add(self.ircd.servers[user.uuid[:3]])
+        if "skipservers" in kw:
+            for s in kw["skipservers"]:
+                servers.discard(s)
+        servers = list(servers)
+        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw)
+        if userList or servers:
+            self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw)
     
     def setTopic(self, topic, setter):
         oldTopic = self.topic
