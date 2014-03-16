@@ -29,9 +29,7 @@ class IRCChannel(object):
                 userList.remove(u)
         servers = set()
         for user in self.users.iterkeys():
-            if user.uuid[:3] == self.ircd.serverID:
-                user.sendMessage(command, *params, **kw)
-            else:
+            if user.uuid[:3] != self.ircd.serverID:
                 servers.add(user.uuid[:3])
         self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (users, servers), self, *params, **kw)
         if users or servers:
