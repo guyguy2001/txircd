@@ -369,12 +369,66 @@ class IRCd(Service):
                 isupportList.append("{}={}".format(key, val))
         return isupportList
     
+    def _getActionModes(self, actionName, *params, **kw):
+        users = []
+        channels = []
+        if "users" in kw:
+            users = kw["users"]
+            del kw["users"]
+        if "channels" in kw:
+            channels = kw["channels"]
+            del kw["channels"]
+        
+        applyModes = set()
+        for modeType in self.userModes:
+            for mode, modeClass in modeType.iteritems():
+                if actionName not in modeClass.affectedActions:
+                    continue
+                if modeClass in applyModes:
+                    continue # Don't process this check if we're already running the mode anyway
+                applyCheck = 0
+                checkAction = "modeactioncheck-user-{}-{}".format(actionName, mode)
+                if checkAction in self.actions:
+                    for action in checkAction:
+                        vote = action[0](users, *params, **kw)
+                        if vote is True:
+                            applyCheck += 1
+                        elif vote is False:
+                            applyCheck -= 1
+                if applyCheck > 0:
+                    applyModes.add(modeClass)
+        for modeType in self.channelModes:
+            for mode, modeClass in modeType.iteritems():
+                if actionName not in modeClass.affectedActions:
+                    continue
+                if modeClass in applyModes:
+                    continue
+                applyCheck = 0
+                checkAction = "modeactioncheck-channel-{}-{}".format(actionName, mode)
+                if checkAction in self.actions:
+                    for action in checkAction:
+                        vote = action[0](channels, *params, **kw)
+                        if vote is True:
+                            applyCheck += 1
+                        elif vote is False:
+                            applyCheck -= 1
+                if applyCheck > 0:
+                    applyModes.add(modeClass)
+        return applyModes
+    
     def runActionStandard(self, actionName, *params, **kw):
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            mode.apply(actionName, *params, **kw)
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 action[0](*params, **kw)
     
     def runActionUntilTrue(self, actionName, *params, **kw):
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            if mode.apply(actionName, *params, **kw):
+                return True
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 if action[0](*params, **kw):
@@ -382,6 +436,10 @@ class IRCd(Service):
         return False
     
     def runActionUntilFalse(self, actionName, *params, **kw):
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            if not mode.apply(actionName, *params, **kw):
+                return True
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 if not action[0](*params, **kw):
@@ -390,6 +448,10 @@ class IRCd(Service):
     
     def runActionFlagTrue(self, actionName, *params, **kw):
         oneIsTrue = False
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            if mode.apply(actionName, *params, **kw):
+                oneIsTrue = True
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 if action[0](*params, **kw):
@@ -398,6 +460,10 @@ class IRCd(Service):
     
     def runActionFlagFalse(self, actionName, *params, **kw):
         oneIsFalse = False
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            if not mode.apply(actionName, *params, **kw):
+                oneIsFalse = True
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 if not action[0](*params, **kw):
@@ -406,6 +472,13 @@ class IRCd(Service):
     
     def runActionVoting(self, actionName, *params, **kw):
         voteCount = 0
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            vote = mode.apply(actionName, *params, **kw)
+            if vote is True:
+                voteCount += 1
+            elif vote is False:
+                voteCount -= 1
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 vote = action[0](*params, **kw)
@@ -416,14 +489,27 @@ class IRCd(Service):
         return voteCount
     
     def runActionProcessing(self, actionName, data, *params, **kw):
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            mode.apply(actionName, data, *params, **kw)
+            if not data:
+                return
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 action[0](data, *params, **kw)
                 if not data:
-                    break
+                    return
     
     def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
         paramList = dataList + params
+        modes = self._getActionModes(actionName, *params, **kw)
+        for mode in modes:
+            mode.apply(actionName, *paramList, **kw)
+            for data in dataList:
+                if data:
+                    break
+            else:
+                return
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 action[0](*paramList, **kw)
@@ -431,7 +517,7 @@ class IRCd(Service):
                     if data:
                         break
                 else:
-                    break
+                    return
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
