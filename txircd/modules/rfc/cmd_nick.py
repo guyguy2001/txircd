@@ -93,7 +93,6 @@ class NickServerCommand(Command):
         if len(params) != 2:
             return None
         if prefix not in self.ircd.users:
-            self.disconnect("Desync: User list")
             return None
         user = self.ircd.users[prefix]
         try:
