@@ -39,6 +39,7 @@ class IRCUser(irc.IRC):
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
+        self._cmdError = None
         self.ircd.users[self.uuid] = self
         self.localOnly = False
         self._pinger = LoopingCall(self._ping)
@@ -104,6 +105,9 @@ class IRCUser(irc.IRC):
                         self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
+                elif self._cmdError:
+                    self.sendMessage(self._cmdError[0], *self._cmdError[1], **self._cmdError[2])
+                    self._cmdError = None
                 return
             if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data) < 0:
                 return
@@ -119,6 +123,9 @@ class IRCUser(irc.IRC):
         else:
             if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
+    
+    def sendCommandError(self, command, *args, **kw):
+        self._cmdError = (command, args, kw)
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
