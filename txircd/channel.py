@@ -6,6 +6,7 @@ class IRCChannel(object):
         self.name = name[:64]
         self.users = {}
         self.modes = {}
+        self.existedSince = now()
         self.topic = ""
         self.topicSetter = ""
         self.topicTime = now()
