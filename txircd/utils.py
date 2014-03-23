@@ -45,11 +45,11 @@ class CaseInsensitiveDictionary(MutableMapping):
 
 
 def now():
-    return datetime.utcnow()
+    return datetime.utcnow().replace(microsecond=0)
 
 def timestamp(time):
     unixEpoch = datetime.utcfromtimestamp(0)
-    return (time - unixEpoch).total_seconds()
+    return int((time - unixEpoch).total_seconds())
 
 
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
