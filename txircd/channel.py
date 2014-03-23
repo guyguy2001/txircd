@@ -40,11 +40,20 @@ class IRCChannel(object):
             self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw)
     
     def setTopic(self, topic, setter):
+        if setter in self.ircd.users:
+            source = self.ircd.uesrs[setter].hostmask()
+        elif setter == self.ircd.serverID:
+            source = self.ircd.name
+        elif setter in self.ircd.servers:
+            source = self.ircd.servers[setter].name
+        else:
+            return False
         oldTopic = self.topic
         self.topic = topic
-        self.topicSetter = setter
+        self.topicSetter = source
         self.topicTime = now()
-        self.ircd.runActionStandard("topic", self, oldTopic)
+        self.ircd.runActionStandard("topic", self, setter, oldTopic)
+        return True
     
     def setMetadata(self, namespace, key, value = None):
         if namespace not in self.metadata:
