@@ -3,7 +3,7 @@ from txircd.utils import ModeType, now
 class IRCChannel(object):
     def __init__(self, ircd, name):
         self.ircd = ircd
-        self.name = name
+        self.name = name[:64]
         self.users = {}
         self.modes = {}
         self.topic = ""
