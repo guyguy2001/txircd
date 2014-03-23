@@ -5,6 +5,8 @@ from txircd.utils import timestamp
 from zope.interface import implements
 from datetime import datetime
 
+irc.RPL_TOPICWHOTIME = "333"
+
 class TopicCommand(ModuleData):
     implements(IPlugin, IModuleData)
     
@@ -32,7 +34,7 @@ class TopicCommand(ModuleData):
             settingUser = self.ircd.users[setter]
             if settingUser not in channel.users:
                 settingUser.sendMessage("TOPIC", ":{}".format(channel.topic), to=channel.name, prefix=channel.topicSetter)
-        if setter == self.ircd.serverID:
+        elif setter == self.ircd.serverID:
             sourceServer = None
         else:
             sourceServer = self.ircd.servers[setter[:3]]
@@ -40,14 +42,14 @@ class TopicCommand(ModuleData):
                 sourceServer = self.ircd.servers[sourceServer.nextClosest]
         for server in self.ircd.servers.itervalues():
             if server != sourceServer and server.nextClosest == self.ircd.serverID:
-                server.sendMessage("TOPIC", channel.name, timestamp(channel.existedSince), timestamp(channel.topicTime), ":{}".format(channel.topic), prefix=setter)
+                server.sendMessage("TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=setter)
     
     def sendChannelTopic(self, channel, user):
         if not channel.topic:
             user.sendMessage(irc.RPL_NOTOPIC, channel.name, ":No topic is set")
         else:
             user.sendMessage(irc.RPL_TOPIC, channel.name, ":{}".format(channel.topic))
-            user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, timestamp(channel.topicTime))
+            user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, str(timestamp(channel.topicTime)))
 
 class UserTopic(Command):
     implements(ICommand)
@@ -76,7 +78,7 @@ class UserTopic(Command):
     
     def execute(self, user, data):
         if "topic" in data:
-            channel.setTopic(data["topic"], user.uuid)
+            data["channel"].setTopic(data["topic"], user.uuid)
         else:
             self.module.sendChannelTopic(data["channel"], user)
         return True
