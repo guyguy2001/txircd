@@ -29,7 +29,7 @@ class NickCommand(ModuleData):
     
     def sendNickMessage(self, userShowList, user, oldNick):
         def transformUser(sayingUser):
-            return "{}!{}@{}".format(oldNick, sayingUser.idet, sayingUser.host)
+            return "{}!{}@{}".format(oldNick, sayingUser.ident, sayingUser.host)
         for targetUser in userShowList:
             targetUser.sendMessage("NICK", to=user.nick, sourceuser=user, usertransform=transformUser)
         del userShowList[:]

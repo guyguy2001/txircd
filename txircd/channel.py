@@ -42,7 +42,7 @@ class IRCChannel(object):
     
     def setTopic(self, topic, setter):
         if setter in self.ircd.users:
-            source = self.ircd.uesrs[setter].hostmask()
+            source = self.ircd.users[setter].hostmask()
         elif setter == self.ircd.serverID:
             source = self.ircd.name
         elif setter in self.ircd.servers:
