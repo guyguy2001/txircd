@@ -125,7 +125,8 @@ class IRCUser(irc.IRC):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
     def sendCommandError(self, command, *args, **kw):
-        self._cmdError = (command, args, kw)
+        if not self._cmdError:
+            self._cmdError = (command, args, kw)
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
