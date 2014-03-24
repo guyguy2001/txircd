@@ -366,8 +366,11 @@ class IRCUser(irc.IRC):
                 changing.append((adding, mode, param, user, source))
                 self.ircd.runActionStandard("modechange-user-{}".format(mode), self, adding, mode, param, user, source)
         if changing:
-            changingDisplay = copy(changing)
-            self.ircd.runActionProcessing("modemessage-user", changingDisplay, self)
+            if user:
+                users = [self, user]
+            else:
+                users = [self]
+            self.ircd.runActionProcessing("modemessage-user", users, self, changing)
             self.ircd.runActionStandard("modechanges-user", self, changing)
         return changing
 

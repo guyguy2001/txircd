@@ -173,7 +173,14 @@ class IRCChannel(object):
                 changing.append((adding, mode, param, user, source))
                 self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, adding, mode, param, user, source)
         if changing:
-            changingDisplay = copy(changing)
-            self.ircd.runActionProcessing("modemessage-channel", changingDisplay, self)
+            servers = set()
+            users = []
+            for chanUser in self.users.iterkeys():
+                if chanUser.uuid[:3] == self.ircd.serverID:
+                    users.append(chanUser)
+                else:
+                    servers.add(self.ircd.servers[chanUser.uuid[:3]])
+            servers = list(servers)
+            self.ircd.runActionProcessingMultiple("modemessage-channel", (users, servers), self, changing)
             self.ircd.runActionStandard("modechanges-channel", self, changing)
         return changing
