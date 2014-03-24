@@ -119,20 +119,20 @@ class IRCChannel(object):
                 if adding:
                     if modeType == ModeType.Status:
                         try:
-                            user = self.ircd.users[self.ircd.userNicks[param]]
+                            targetUser = self.ircd.users[self.ircd.userNicks[param]]
                         except KeyError:
                             continue
-                        if user not in self.users:
+                        if targetUser not in self.users:
                             continue
-                        if mode in self.users[user]:
+                        if mode in self.users[targetUser]:
                             continue
                         statusLevel = self.ircd.channelStatuses[mode][1]
-                        for index, rank in enumerate(self.users[user]):
+                        for index, rank in enumerate(self.users[targetUser]):
                             if self.ircd.channelStatuses[rank][1] < statusLevel:
-                                self.users[user].insert(index, mode)
+                                self.users[targetUser].insert(index, mode)
                                 break
                         else:
-                            self.users[user].append(mode)
+                            self.users[targetUser].append(mode)
                     elif modeType == ModeType.List:
                         if mode not in self.modes:
                             self.modes[mode] = []
@@ -143,7 +143,7 @@ class IRCChannel(object):
                                 break
                         if found:
                             continue
-                        self.modes[mode].append((param, user, source, now()))
+                        self.modes[mode].append((param, user.hostmask() if user else source, now()))
                     else:
                         if mode in self.modes and param == self.modes[mode]:
                             continue
@@ -151,8 +151,8 @@ class IRCChannel(object):
                 else:
                     if modeType == ModeType.Status:
                         try:
-                            user = self.ircd.users[self.ircd.userNicks[user]]
-                            self.users[user].remove(mode)
+                            targetUser = self.ircd.users[self.ircd.userNicks[param]]
+                            self.users[targetUser].remove(mode)
                         except KeyError, ValueError:
                             continue
                     elif modeType == ModeType.List:
