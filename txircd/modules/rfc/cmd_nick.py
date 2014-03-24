@@ -63,10 +63,10 @@ class NickUserCommand(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "NICK", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "NICK", ":Not enough parameters")
             return None
         if not isValidNick(params[0]):
-            user.sendMessage(irc.ERR_ERRONEUSNICKNAME, params[0], ":Erroneous nickname")
+            user.sendCommandError(irc.ERR_ERRONEUSNICKNAME, params[0], ":Erroneous nickname")
             return None
         if params[0] in self.ircd.userNicks:
             otherUserID = self.ircd.userNicks[params[0]]

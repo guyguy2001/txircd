@@ -15,14 +15,14 @@ class UserCommand(Command, ModuleData):
     
     def parseParams(self, user, params, prefix, tags):
         if len(params) < 4:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "USER", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "USER", ":Not enough parameters")
             return None
         if not params[3]: # Make sure the gecos isn't an empty string
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "USER", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "USER", ":Not enough parameters")
             return None
         for char in params[0]: # Validate the ident
             if not char.isalnum() and char not in "-.[\]^_`{|}":
-                user.sendMessage(irc.ERR_NEEDMOREPARAMS, "USER", ":Your username is not valid") # The RFC is dumb.
+                user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "USER", ":Your username is not valid") # The RFC is dumb.
                 return None
         return {
             "ident": params[0],

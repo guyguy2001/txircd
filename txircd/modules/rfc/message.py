@@ -72,7 +72,7 @@ class MessageCommands(ModuleData):
                 "targetuser": self.ircd.users[self.ircd.userNicks[params[0]]],
                 "message": params[1]
             }
-        user.sendMessage(irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+        user.sendCommandError(irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
         return None
     
     def cmdExecute(self, command, user, data):
@@ -135,7 +135,7 @@ class UserPrivmsg(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if len(params) < 2:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "PRIVMSG", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "PRIVMSG", ":Not enough parameters")
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
     
@@ -150,7 +150,7 @@ class UserNotice(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if len(params) < 2:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "NOTICE", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "NOTICE", ":Not enough parameters")
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
     

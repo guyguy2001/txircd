@@ -56,10 +56,10 @@ class JoinChannel(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "JOIN", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "JOIN", ":Not enough parameters")
             return None
         if params[0][0] != "#":
-            user.sendMessage(irc.ERR_BADCHANMASK, params[0], ":Bad channel mask")
+            user.sendCommandError(irc.ERR_BADCHANMASK, params[0], ":Bad channel mask")
             return None
         channel = self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0])
         return {

@@ -60,10 +60,10 @@ class UserTopic(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params:
-            user.sendMessage(irc.ERR_NEEDMOREPARAMS, "TOPIC", ":Not enough parameters")
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "TOPIC", ":Not enough parameters")
             return None
         if params[0] not in self.ircd.channels:
-            user.sendMessage(irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+            user.sendCommandError(irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
             return None
         channel = self.ircd.channels[params[0]]
         if len(params) == 1:
