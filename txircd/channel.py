@@ -70,9 +70,19 @@ class IRCChannel(object):
             self.metadata[namespace][key] = value
         self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value)
     
-    def setModes(self, user, modeString, params, source = None):
+    def setModes(self, source, modeString, params):
         adding = True
         changing = []
+        user = None
+        if source in self.ircd.users:
+            user = self.ircd.users[source]
+            sourceName = user.hostmask()
+        elif source == self.ircd.serverID:
+            sourceName = self.ircd.name
+        elif source in self.ircd.servers:
+            sourceName = self.ircd.servers[source].name
+        else:
+            raise ValueError ("Source must be a valid user or server ID.")
         for mode in modeString:
             if len(changing) >= 20:
                 break
@@ -93,7 +103,7 @@ class IRCChannel(object):
                     param = params.pop(0)
                 except KeyError:
                     continue
-            paramList = [None]
+            paramList = [param]
             if modeType == ModeType.Status:
                 if adding:
                     paramList = self.ircd.channelStatuses[mode][2].checkSet(param)
@@ -114,7 +124,7 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, mode, param) < 0:
+                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, mode, param) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.Status:
@@ -143,7 +153,7 @@ class IRCChannel(object):
                                 break
                         if found:
                             continue
-                        self.modes[mode].append((param, user.hostmask() if user else source, now()))
+                        self.modes[mode].append((param, sourceName, now()))
                     else:
                         if mode in self.modes and param == self.modes[mode]:
                             continue
@@ -170,13 +180,13 @@ class IRCChannel(object):
                         if mode not in self.modes:
                             continue
                         del self.modes[mode]
-                changing.append((adding, mode, param, user, source))
-                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, adding, mode, param, user, source)
+                changing.append((adding, mode, param))
+                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, source, adding, mode, param)
         if changing:
             users = []
             for chanUser in self.users.iterkeys():
                 if chanUser.uuid[:3] == self.ircd.serverID:
                     users.append(chanUser)
-            self.ircd.runActionProcessing("modemessage-channel", users, self, changing)
-            self.ircd.runActionStandard("modechanges-channel", self, changing)
+            self.ircd.runActionProcessing("modemessage-channel", users, self, source, sourceName, changing)
+            self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing)
         return changing
