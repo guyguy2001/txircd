@@ -291,9 +291,19 @@ class IRCUser(irc.IRC):
                 self.ircd.runActionStandard("channeldestroy", channel)
                 del self.ircd.channels[channel.name]
     
-    def setMode(self, user, modeString, params, source = None):
+    def setMode(self, source, modeString, params):
         adding = True
         changing = []
+        user = None
+        if source in self.ircd.users:
+            user = self.ircd.users[source]
+            sourceName = user.hostmask()
+        elif source == self.ircd.serverID:
+            sourceName = self.ircd.name
+        elif source in self.ircd.servers:
+            sourceName = self.ircd.servers[source].name
+        else:
+            raise ValueError ("Source must be a valid user or server ID.")
         for mode in modeString:
             if len(changing) >= 20:
                 break
@@ -314,7 +324,7 @@ class IRCUser(irc.IRC):
                     param = params.pop(0)
                 except IndexError:
                     continue
-            paramList = [None]
+            paramList = [param]
             if param:
                 if adding:
                     paramList = self.ircd.userModes[modeType][mode].checkSet(param)
@@ -323,9 +333,6 @@ class IRCUser(irc.IRC):
             if paramList is None:
                 continue
             del param # We use this later
-            
-            if user:
-                source = None
             
             for param in paramList:
                 if len(changing) >= 20:
@@ -343,7 +350,7 @@ class IRCUser(irc.IRC):
                                 break
                         if found:
                             continue
-                        self.modes[mode].append((param, user, source, now()))
+                        self.modes[mode].append((param, sourceName, now()))
                     else:
                         if mode not in self.modes or self.modes[mode] == param:
                             continue
@@ -363,15 +370,17 @@ class IRCUser(irc.IRC):
                             del self.modes[mode]
                         else:
                             continue
-                changing.append((adding, mode, param, user, source))
-                self.ircd.runActionStandard("modechange-user-{}".format(mode), self, adding, mode, param, user, source)
+                changing.append((adding, mode, param))
+                self.ircd.runActionStandard("modechange-user-{}".format(mode), self, source, adding, mode, param)
         if changing:
-            if user:
-                users = [self, user]
-            else:
-                users = [self]
-            self.ircd.runActionProcessing("modemessage-user", users, self, changing)
-            self.ircd.runActionStandard("modechanges-user", self, changing)
+            users = []
+            if user and user.uuid[:3] == self.ircd.serverID:
+                users.append(user)
+            if self.uuid[:3] == self.ircd.serverID:
+                users.append(self)
+            if users:
+                self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, changing)
+            self.ircd.runActionStandard("modechanges-user", self, source, sourceName, changing)
         return changing
 
 class RemoteUser(IRCUser):
