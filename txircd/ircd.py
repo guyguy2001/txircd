@@ -387,7 +387,7 @@ class IRCd(Service):
                 if modeClass in applyModes:
                     continue # Don't process this check if we're already running the mode anyway
                 applyCheck = 0
-                checkAction = "modeactioncheck-user-{}-{}".format(actionName, mode)
+                checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
                 if checkAction in self.actions:
                     for action in checkAction:
                         vote = action[0](users, *params, **kw)
@@ -404,7 +404,7 @@ class IRCd(Service):
                 if modeClass in applyModes:
                     continue
                 applyCheck = 0
-                checkAction = "modeactioncheck-channel-{}-{}".format(actionName, mode)
+                checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
                 if checkAction in self.actions:
                     for action in checkAction:
                         vote = action[0](channels, *params, **kw)
