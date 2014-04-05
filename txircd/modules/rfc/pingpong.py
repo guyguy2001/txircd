@@ -55,8 +55,8 @@ class UserPing(Command):
     forRegisteredUsers = None
     
     def parseParams(self, user, params, prefix, tags):
-        if not params:
-            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "PING", ":Not enough parameters")
+        if not params
+            user.sendSingleCommandError(irc.ERR_NEEDMOREPARAMS, "PING", ":Not enough parameters")
             return None
         return {
             "data": params[0]
@@ -74,6 +74,7 @@ class UserPong(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params:
+            user.startCommandErrorBatch()
             user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "PONG", ":Not enough parameters")
             return None
         return {
