@@ -143,6 +143,10 @@ class IRCUser(irc.IRC):
     def endCommandErrorBatch(self):
         self._inCmdErrorBatch = False
     
+    def sendSingleCommandError(self, command, *args, **kw):
+        if not self._inCmdErrorBatch and not self._cmdError:
+            self._cmdError.append((command, args, kw))
+    
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
             self.disconnect("Connection reset")
