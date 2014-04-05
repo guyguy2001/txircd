@@ -102,6 +102,8 @@ class IRCChannel(object):
                 try:
                     param = params.pop(0)
                 except KeyError:
+                    if modeType == ModeType.List and user:
+                        self.channelModes[modeType][mode].showListParams(user, self)
                     continue
             paramList = [param]
             if modeType == ModeType.Status:
@@ -152,6 +154,12 @@ class IRCChannel(object):
                                 found = True
                                 break
                         if found:
+                            continue
+                        if len(param) > 250: # Set a max limit on param length
+                            continue
+                        if len(self.modes[mode]) > self.ircd.config.getWithDefault("channel_list_limit", 100):
+                            if user:
+                                user.sendMessage(irc.ERR_BANLISTFULL, self.name, param, ":Channel +{} list is full".format(mode))
                             continue
                         self.modes[mode].append((param, sourceName, now()))
                     else:
