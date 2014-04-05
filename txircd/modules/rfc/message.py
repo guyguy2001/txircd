@@ -62,17 +62,33 @@ class MessageCommands(ModuleData):
         return True
     
     def cmdParseParams(self, user, params, prefix, tags):
-        if params[0] in self.ircd.channels:
+        channels = []
+        users = []
+        user.startCommandErrorBatch()
+        for target in params[0].split(","):
+            if target in self.ircd.channels:
+                channels.append(self.ircd.channels[target])
+            elif target in self.ircd.userNicks:
+                users.append(self.ircd.users[self.ircd.userNicks[target]])
+            else:
+                user.sendCommandError(irc.ERR_NOSUCHNICK, target, ":No such nick/channel")
+        user.endCommandErrorBatch()
+        if channels and users:
             return {
-                "targetchan": self.ircd.channels[params[0]],
+                "targetchans": channels,
+                "targetusers": users,
                 "message": params[1]
             }
-        if params[0] in self.ircd.userNicks:
+        if channels:
             return {
-                "targetuser": self.ircd.users[self.ircd.userNicks[params[0]]],
+                "targetchans": channels,
                 "message": params[1]
             }
-        user.sendCommandError(irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+        if users:
+            return {
+                "targetusers": users,
+                "message": params[1]
+            }
         return None
     
     def cmdExecute(self, command, user, data):
@@ -80,15 +96,16 @@ class MessageCommands(ModuleData):
             user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
             return None
         target = None
-        if "targetuser" in data:
-            target = data["targetuser"]
-            target.sendMessage(command, ":{}".format(data["message"]), sourceuser=user)
-            return True
-        if "targetchan" in data:
-            target = data["targetchan"]
-            target.sendMessage(command, ":{}".format(data["message"]), to=target.name, sourceuser=user, skipusers=[user])
-            return True
-        return None
+        sentAMessage = None
+        if "targetusers" in data:
+            for target in data["targetusers"]:
+                target.sendMessage(command, ":{}".format(data["message"]), sourceuser=user)
+                sentAMessage = True
+        if "targetchans" in data:
+            for target in data["targetchans"]:
+                target.sendMessage(command, ":{}".format(data["message"]), to=target.name, sourceuser=user, skipusers=[user])
+                sentAMessage = True
+        return sentAMessage
     
     def serverParseParams(self, server, params, prefix, tags):
         if len(params) != 2:
@@ -135,7 +152,9 @@ class UserPrivmsg(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if len(params) < 2:
+            user.startCommandErrorBatch()
             user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "PRIVMSG", ":Not enough parameters")
+            user.endCommandErrorBatch()
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
     
@@ -150,7 +169,9 @@ class UserNotice(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if len(params) < 2:
+            user.startCommandErrorBatch()
             user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "NOTICE", ":Not enough parameters")
+            user.endCommandErrorBatch()
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
     
