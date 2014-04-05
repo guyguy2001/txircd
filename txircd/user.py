@@ -39,7 +39,8 @@ class IRCUser(irc.IRC):
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
-        self._cmdError = None
+        self._inCmdErrorBatch = False
+        self._cmdError = []
         self.ircd.users[self.uuid] = self
         self.localOnly = False
         self._pinger = LoopingCall(self._ping)
@@ -106,11 +107,18 @@ class IRCUser(irc.IRC):
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
                 elif self._cmdError:
-                    self.sendMessage(self._cmdError[0], *self._cmdError[1], **self._cmdError[2])
-                    self._cmdError = None
+                    for error in self._cmdError:
+                        self.sendMessage(error[0], *error[1], **error[2])
+                    self._cmdError = []
                 return
+            self._cmdError = []
             if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data) < 0:
+                if self._cmdError:
+                    for error in self._cmdError:
+                        self.sendMessage(error[0], *error[1], **error[2])
+                    self._cmdError = []
                 return
+            self._cmdError = None
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
@@ -124,9 +132,16 @@ class IRCUser(irc.IRC):
             if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
+    def startCommandErrorBatch(self):
+        if not self._cmdError: # Only the first batch should apply
+            self._inCmdErrorBatch = True
+        
     def sendCommandError(self, command, *args, **kw):
-        if not self._cmdError:
-            self._cmdError = (command, args, kw)
+        if self._inCmdErrorBatch:
+            self._cmdError.append((command, args, kw))
+    
+    def endCommandErrorBatch(self):
+        self._inCmdErrorBatch = False
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:
