@@ -1,0 +1,269 @@
+from twisted.plugin import IPlugin
+from twisted.words.protocols import irc
+from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import ModeType, timestamp
+from zope.interface import implements
+
+irc.RPL_CREATIONTIME = "329"
+
+class ModeCommand(ModuleData):
+    implements(IPlugin, IModuleData)
+    
+    name = "ModeCommand"
+    core = True
+    
+    def hookIRCd(self, ircd):
+        self.ircd = ircd
+    
+    def actions(self):
+        return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
+                ("modechanges-channel", 1, self.sendChannelModesToServers),
+                ("modemessage-user", 1, self.sendUserModesToUsers),
+                ("modechanges-user", 1, self.sendUserModesToServers) ]
+    
+    def userCommands(self):
+        return [ ("MODE", 1, UserMode(self.ircd)) ]
+    
+    def serverCommands(self):
+        return [ ("MODE", 1, ServerMode(self.ircd)) ]
+    
+    def getOutputModes(self, modes):
+        addInStr = None
+        modeStrList = []
+        params = []
+        modeLists = []
+        modeLen = 0
+        for modeData in modes:
+            adding, mode, param = modeData
+            paramLen = 0
+            if param is not None:
+                paramLen = len(param)
+            if modeLen + paramLen + 3 > 300: # Don't let the mode output get too long
+                modeLists.append(["".join(modeStrList)] + params)
+                addInStr = None
+                modeStrList = []
+                params = []
+                modeLen = 0
+            if adding != addInStr:
+                if adding:
+                    modeStrList.append("+")
+                else:
+                    modeStrList.append("-")
+                addInStr = adding
+                modeLen += 1
+            modeStrList.append(mode)
+            modeLen += 1
+            if param is not None:
+                params.append(param)
+                modeLen += 1 + len(param)
+        modeLists.append(["".join(modeStrList)] + params)
+        return modeLists
+    
+    def sendChannelModesToUsers(self, users, channel, source, sourceName, modes):
+        modeOuts = self.getOutputModes(modes)
+        for modeOut in modeOuts:
+            modeStr = modeOut[0]
+            params = modeOut[1:]
+            for user in users:
+                user.sendMessage("MODE", channel.name, modeStr, *params, prefix=sourceName)
+        del users[:]
+    
+    def sendChannelModesToServers(self, channel, source, sourceName, modes):
+        modeOuts = self.getOutputModes(modes)
+        
+        fromServer = self.ircd.servers[source[:3]]
+        while fromServer.nextClosest != self.ircd.serverID:
+            fromServer = self.ircd.servers[fromServer.nextClosest]
+        for modeOut in modeOuts:
+            modeStr = modeOut[0]
+            params = modeOut[1:]
+            for server in self.ircd.servers.itervalues():
+                if server.nextClosest == self.ircd.serverID and server != fromServer:
+                    server.sendMessage("MODE", channel.name, str(timestamp(channel.existedSince)), modeStr, *params, prefix=source)
+    
+    def sendUserModesToUsers(self, users, user, source, sourceName, modes):
+        modeOuts = self.getOutputModes(modes)
+        for modeOut in modeOuts:
+            modeStr = modeOut[0]
+            params = modeOut[1:]
+            for user in users:
+                user.sendMessage("MODE", channel.name, modeStr, *params, prefix=sourceName)
+        del users[:]
+    
+    def sendUserModesToServers(self, user, source, sourceName, modes):
+        modeOuts = self.getOutputModes(modes)
+        
+        fromServer = self.ircd.servers[source[:3]]
+        while fromServer.nextClosest != self.ircd.serverID:
+            fromServer = self.ircd.servers[fromServer.nextClosest]
+        for modeOut in modeOuts:
+            modeStr = modeOut[0]
+            params = modeOut[1:]
+            for server in self.ircd.servers.itervalues():
+                if server.nextClosest == self.ircd.serverID and server != fromServer:
+                    server.sendMessage("MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
+
+class UserMode(Command):
+    implements(ICommand)
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, user, params, prefix, tags):
+        if not params or not params[0]:
+            user.sendCommandError(irc.ERR_NEEDMOREPARAMS, "MODE", ":Not enough parameters")
+            return None
+        channel = None
+        if params[0] in self.ircd.channels:
+            channel = self.ircd.channels[params[0]]
+        elif params[0] in self.ircd.userNicks:
+            if self.ircd.userNicks[params[0]] != user.uuid:
+                user.sendCommandError(irc.ERR_USERSDONTMATCH, ":Can't operate on modes for other users")
+                return None
+        else:
+            user.sendCommandError(irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+            return None
+        if len(params) == 1:
+            if channel:
+                return {
+                    "channel": channel
+                }
+            return {}
+        modeStr = params[1]
+        modeParams = params[2:]
+        if channel:
+            return {
+                "channel": channel,
+                "modes": modeStr,
+                "params": modeParams
+            }
+        return {
+            "modes": modeStr,
+            "params": modeParams
+        }
+    
+    def execute(self, user, data):
+        if "modes" not in data:
+            if "channel" in data:
+                channel = data["channel"]
+                modeStrList = ["+"]
+                params = []
+                for mode, param in channel.modes.iteritems():
+                    if self.ircd.channelModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
+                        modeStrList.append(mode)
+                        if param is not None:
+                            params.append(param)
+                user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, "".join(modeStrList), *params)
+                user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
+                return True
+            modeStrList = ["+"]
+            params = []
+            for mode, param in user.modes.iteritems():
+                if self.ircd.userModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
+                    modeStrList.append(mode)
+                    if param is not None:
+                        params.append(param)
+            user.sendMessage(irc.RPL_UMODEIS, "".join(modeStrList), *params)
+            return True
+        if "channel" in data:
+            channel = data["channel"]
+            channel.setModes(user.uuid, data["modes"], data["params"])
+            return True
+        user.setModes(user.uuid, data["modes"], data["params"])
+        return True
+
+class ServerMode(Command):
+    implements(ICommand)
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, server, params, prefix, tags):
+        if len(params) < 3:
+            return None
+        if prefix not in self.ircd.users and prefix not in self.ircd.servers:
+            return None # It's safe to say other servers shouldn't be sending modes sourced from us. That's our job!
+        if params[0] not in self.ircd.users and params[0] not in self.ircd.channels:
+            return None
+        try:
+            return {
+                "source": prefix,
+                "target": params[0],
+                "timestamp": int(params[1]),
+                "modes": params[2],
+                "params": params[3:]
+            }
+        except ValueError:
+            return None
+    
+    def execute(self, server, data):
+        source = data["source"]
+        target = data["target"]
+        targTS = data["timestamp"]
+        if target in self.ircd.channels:
+            channel = self.ircd.channels[target]
+            if targTS > timestamp(channel.existedSince):
+                return True
+            if targTS < timestamp(channel.existedSince):
+                # We need to remove all of the channel's modes
+                while True: # Make a point to continue back to
+                    modeStrList = []
+                    params = []
+                    for mode, param in channel.modes.iteritems():
+                        if len(modeStrList) >= 20:
+                            break
+                        if self.ircd.channelModeTypes[mode] == ModeType.List:
+                            for paramData in param:
+                                modeStrList.append(mode)
+                                params.append(paramData[0])
+                                if len(modeStrList) >= 20:
+                                    break
+                        else:
+                            modeStrList.append(mode)
+                            if param is not None:
+                                params.append(param)
+                    for user, statusList in channel.users.iteritems():
+                        for status in statusList:
+                            if len(modeStrList) >= 20:
+                                break
+                            modeStrList.append(status)
+                            params.append(user.nick)
+                    if modeStrList:
+                        channel.setModes(source, "-{}".format("".join(modeStrList)), params)
+                    if channel.modes: # More processing is to be done
+                        continue
+                    for status in channel.users.itervalues():
+                        if status:
+                            break
+                    else:
+                        break # This one aborts the while True loop when we're done with modes
+            channel.setModes(source, data["modes"], data["params"])
+            return True
+        user = self.ircd.users[target]
+        if targTS > timestamp(user.connectedSince):
+            return True
+        if targTS < timestamp(user.connectedSince):
+            while True:
+                modeStrList = []
+                params = []
+                for mode, param in channel.modes.iteritems():
+                    if len(modeStrList) >= 20:
+                        break
+                    if self.ircd.userModeTypes[mode] == ModeType.List:
+                        for paramData in param:
+                            modeStrList.append(mode)
+                            params.append(paramData[0])
+                            if len(modeStrList) >= 20:
+                                break
+                    else:
+                        modeStrList.append(mode)
+                        if param is not None:
+                            params.append(param)
+                if modeStrList:
+                    user.setModes(source, "-{}".format("".join(modeStrList)), params)
+                if not user.modes:
+                    break
+        user.setModes(source, data["modes"], data["params"])
+        return True
+
+modeCommand = ModeCommand()
