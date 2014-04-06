@@ -92,6 +92,8 @@ class IRCUser(irc.IRC):
                 return
             data = None
             spewRegWarning = True
+            affectedUsers = []
+            affectedChannels = []
             for handler in handlers:
                 if handler[0].forRegisteredUsers is not None:
                     if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
@@ -99,6 +101,10 @@ class IRCUser(irc.IRC):
                 spewRegWarning = False
                 data = handler[0].parseParams(self, params, prefix, {})
                 if data is not None:
+                    affectedUsers = handler[0].affectedUsers(self, data)
+                    affectedChannels = handler[0].affectedChannels(self, data)
+                    if self not in affectedUsers:
+                        affectedUsers.append(self)
                     break
             if data is None:
                 if spewRegWarning:
@@ -112,14 +118,14 @@ class IRCUser(irc.IRC):
                     self._cmdError = []
                 return
             self._cmdError = []
-            if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data) < 0:
+            if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) < 0:
                 if self._cmdError:
                     for error in self._cmdError:
                         self.sendMessage(error[0], *error[1], **error[2])
                     self._cmdError = []
                 return
             self._cmdError = None
-            self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
+            self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
                     if handler[0].resetsIdleTime:
@@ -127,7 +133,7 @@ class IRCUser(irc.IRC):
                     break # If the command executor returns True, it was handled
             else:
                 return # Don't process commandextra if it wasn't handled
-            self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data)
+            self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels)
         else:
             if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")

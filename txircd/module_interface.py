@@ -153,6 +153,20 @@ class ICommand(Interface):
         the parameters cannot be properly parsed.
         """
     
+    def affectedUsers(source, data):
+        """
+        Determines which users are affected given parsed command data to determine which
+        action functions to call.
+        Returns a list of users (or an empty list for no users).
+        """
+    
+    def affectedChannels(source, data):
+        """
+        Determines which channels are affected given parsed command data to determine
+        which action functions to call.
+        Returns a list of channels (or an empty list for no channels).
+        """
+    
     def execute(source, data):
         """
         Performs the command action.
@@ -165,6 +179,12 @@ class Command(object):
     
     def parseParams(self, source, params, prefix, tags):
         return None
+    
+    def affectedUsers(source, data):
+        return []
+    
+    def affectedChannels(source, data):
+        return []
     
     def execute(self, source, data):
         pass
