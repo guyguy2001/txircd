@@ -187,7 +187,7 @@ class IMode(Interface):
         For non-parameter modes, return an empty list.
         """
     
-    def apply(actionType, *params, **kw):
+    def apply(actionType, target, *params, **kw):
         """
         Affect the mode should have.
         This is similar binding the appropriate actions directly, except that the IRCd will automatically determine
@@ -215,7 +215,7 @@ class Mode(object):
     def checkUnset(self, param):
         return [param]
     
-    def apply(self, actionType, *params, **kw):
+    def apply(self, actionType, target, *params, **kw):
         pass
     
     def showParam(self, user, target):
