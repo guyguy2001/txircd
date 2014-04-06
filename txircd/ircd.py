@@ -390,14 +390,26 @@ class IRCd(Service):
                     if checkAction in self.actions:
                         for user in users:
                             applyCheck = 0
-                            for action in checkAction:
+                            for action in self.actions[checkAction]:
                                 vote = action[0](user, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
                                     applyCheck -= 1
-                        if applyCheck > 0:
-                            applyUsers.append(user)
+                            if applyCheck > 0:
+                                applyUsers.append(user)
+                    checkGenericAction = "modeactioncheck-user-{}".format(actionName)
+                    if checkGenericAction in self.actions:
+                        for user in users:
+                            applyCheck = 0
+                            for action in self.actions[checkGenericAction]:
+                                vote = actoin[0](mode, user, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                            if applyCheck > 0:
+                                applyUsers.append(user)
                     if applyUsers:
                         userApplyModes[modeClass] = applyUsers
         channelApplyModes = {}
@@ -411,14 +423,26 @@ class IRCd(Service):
                     if checkAction in self.actions:
                         for channel in channels:
                             applyCheck = 0
-                            for action in checkAction:
+                            for action in self.actions[checkAction]:
                                 vote = action[0](channel, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
                                     applyCheck -= 1
-                        if applyCheck > 0:
-                            applyChannels.append(channel)
+                            if applyCheck > 0:
+                                applyChannels.append(channel)
+                    checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
+                    if checkGenericAction in self.actions:
+                        for channel in channels:
+                            applyCheck = 0
+                            for action in self.actions[checkGenericAction]:
+                                vote = action[0](channel, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                            if applyCheck > 0:
+                                applyChannels.append(channel)
                     if applyChannels:
                         channelApplyModes[modeClass] = applyChannels
         return userApplyModes, channelApplyModes
