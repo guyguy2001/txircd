@@ -380,45 +380,47 @@ class IRCd(Service):
             del kw["channels"]
         
         userApplyModes = {}
-        for modeType in self.userModes:
-            for mode, modeClass in modeType.iteritems():
-                if actionName not in modeClass.affectedActions:
-                    continue
-                checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
-                applyUsers = []
-                if checkAction in self.actions:
-                    for user in users:
-                        applyCheck = 0
-                        for action in checkAction:
-                            vote = action[0](user, *params, **kw)
-                            if vote is True:
-                                applyCheck += 1
-                            elif vote is False:
-                                applyCheck -= 1
-                    if applyCheck > 0:
-                        applyUsers.append(user)
-                if applyUsers:
-                    userApplyModes[modeClass] = applyUsers
+        if users:
+            for modeType in self.userModes:
+                for mode, modeClass in modeType.iteritems():
+                    if actionName not in modeClass.affectedActions:
+                        continue
+                    checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
+                    applyUsers = []
+                    if checkAction in self.actions:
+                        for user in users:
+                            applyCheck = 0
+                            for action in checkAction:
+                                vote = action[0](user, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                        if applyCheck > 0:
+                            applyUsers.append(user)
+                    if applyUsers:
+                        userApplyModes[modeClass] = applyUsers
         channelApplyModes = {}
-        for modeType in self.channelModes:
-            for mode, modeClass in modeType.iteritems():
-                if actionName not in modeClass.affectedActions:
-                    continue
-                checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
-                applyChannels = []
-                if checkAction in self.actions:
-                    for channel in channels:
-                        applyCheck = 0
-                        for action in checkAction:
-                            vote = action[0](channel, *params, **kw)
-                            if vote is True:
-                                applyCheck += 1
-                            elif vote is False:
-                                applyCheck -= 1
-                    if applyCheck > 0:
-                        applyChannels.append(channel)
-                if applyChannels:
-                    channelApplyModes[modeClass] = applyChannels
+        if channels:
+            for modeType in self.channelModes:
+                for mode, modeClass in modeType.iteritems():
+                    if actionName not in modeClass.affectedActions:
+                        continue
+                    checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
+                    applyChannels = []
+                    if checkAction in self.actions:
+                        for channel in channels:
+                            applyCheck = 0
+                            for action in checkAction:
+                                vote = action[0](channel, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                        if applyCheck > 0:
+                            applyChannels.append(channel)
+                    if applyChannels:
+                        channelApplyModes[modeClass] = applyChannels
         return userApplyModes, channelApplyModes
     
     def runActionStandard(self, actionName, *params, **kw):
