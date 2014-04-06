@@ -66,6 +66,9 @@ class JoinChannel(Command):
             "channel": channel
         }
     
+    def affectedChannels(self, user, data):
+        return [ data["channel"] ]
+    
     def execute(self, user, data):
         user.joinChannel(data["channel"])
         return True

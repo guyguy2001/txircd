@@ -158,6 +158,16 @@ class UserPrivmsg(Command):
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
     
+    def affectedUsers(self, user, data):
+        if "targetusers" in data:
+            return data["targetusers"]
+        return []
+    
+    def affectedChannels(self, user, data):
+        if "targetchans" in data:
+            return data["targetchans"]
+        return []
+    
     def execute(self, user, data):
         return self.module.cmdExecute("PRIVMSG", user, data)
 

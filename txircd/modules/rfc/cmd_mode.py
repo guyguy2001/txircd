@@ -142,6 +142,11 @@ class UserMode(Command):
             "params": modeParams
         }
     
+    def affectedChannels(self, user, data):
+        if "channel" in data:
+            return [ data["channel"] ]
+        return []
+    
     def execute(self, user, data):
         if "modes" not in data:
             if "channel" in data:

@@ -47,6 +47,9 @@ class UserPart(Command):
             "reason": reason
         }
     
+    def affectedChannels(self, user, data):
+        return [ data["channel"] ]
+    
     def execute(self, user, data):
         channel = data["channel"]
         reason = data["reason"]

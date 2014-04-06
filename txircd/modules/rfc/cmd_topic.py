@@ -76,6 +76,9 @@ class UserTopic(Command):
             "topic": topic
         }
     
+    def affectedChannels(self, user, data):
+        return [ data["channel"] ]
+    
     def execute(self, user, data):
         if "topic" in data:
             data["channel"].setTopic(data["topic"], user.uuid)
