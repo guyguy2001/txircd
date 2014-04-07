@@ -71,9 +71,12 @@ class ModeCommand(ModuleData):
     def sendChannelModesToServers(self, channel, source, sourceName, modes):
         modeOuts = self.getOutputModes(modes)
         
-        fromServer = self.ircd.servers[source[:3]]
-        while fromServer.nextClosest != self.ircd.serverID:
-            fromServer = self.ircd.servers[fromServer.nextClosest]
+        if source[:3] == self.ircd.serverID:
+            fromServer = None
+        else:
+            fromServer = self.ircd.servers[source[:3]]
+            while fromServer.nextClosest != self.ircd.serverID:
+                fromServer = self.ircd.servers[fromServer.nextClosest]
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
@@ -93,9 +96,12 @@ class ModeCommand(ModuleData):
     def sendUserModesToServers(self, user, source, sourceName, modes):
         modeOuts = self.getOutputModes(modes)
         
-        fromServer = self.ircd.servers[source[:3]]
-        while fromServer.nextClosest != self.ircd.serverID:
-            fromServer = self.ircd.servers[fromServer.nextClosest]
+        if source[:3] == self.ircd.serverID:
+            fromServer = None
+        else:
+            fromServer = self.ircd.servers[source[:3]]
+            while fromServer.nextClosest != self.ircd.serverID:
+                fromServer = self.ircd.servers[fromServer.nextClosest]
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
