@@ -180,10 +180,10 @@ class Command(object):
     def parseParams(self, source, params, prefix, tags):
         return None
     
-    def affectedUsers(source, data):
+    def affectedUsers(self, source, data):
         return []
     
-    def affectedChannels(source, data):
+    def affectedChannels(self, source, data):
         return []
     
     def execute(self, source, data):
