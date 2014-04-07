@@ -1,3 +1,4 @@
+from twisted.words.protocols import irc
 from txircd.utils import ModeType, now
 
 class IRCChannel(object):
