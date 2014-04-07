@@ -71,7 +71,7 @@ class NickUserCommand(Command):
         if params[0] in self.ircd.userNicks:
             otherUserID = self.ircd.userNicks[params[0]]
             if user.uuid != otherUserID:
-                user.sendMessage(irc.ERR_NICKNAMEINUSE, nick, ":Nickname is already in use")
+                user.sendSingleCommandError(irc.ERR_NICKNAMEINUSE, params[0], ":Nickname is already in use")
                 return None
         return {
             "nick": params[0]
