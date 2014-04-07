@@ -120,9 +120,6 @@ class IRCChannel(object):
                 continue
             del param
             
-            if user:
-                source = None
-            
             for param in paramList:
                 if len(changing) >= 20:
                     break
