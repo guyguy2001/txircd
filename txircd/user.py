@@ -143,11 +143,11 @@ class IRCUser(irc.IRC):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
     def startCommandErrorBatch(self, batchName):
-        if not self._cmdErrorBatchName: # Only the first batch should apply
+        if not self._cmdErrorBatchName or not self._cmdError: # Only the first batch should apply
             self._cmdErrorBatchName = batchName
         
     def sendCommandError(self, batchName, command, *args, **kw):
-        if batchName and self_cmdErrorBatchName == batchName:
+        if batchName and self._cmdErrorBatchName == batchName:
             self._cmdError.append((command, args, kw))
     
     def sendSingleCommandError(self, batchName, command, *args, **kw):
