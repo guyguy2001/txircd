@@ -39,7 +39,7 @@ class IRCUser(irc.IRC):
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
-        self._inCmdErrorBatch = False
+        self._cmdErrorBatchName = None
         self._cmdError = []
         self.ircd.users[self.uuid] = self
         self.localOnly = False
@@ -116,15 +116,19 @@ class IRCUser(irc.IRC):
                     for error in self._cmdError:
                         self.sendMessage(error[0], *error[1], **error[2])
                     self._cmdError = []
+                    self._cmdErrorBatchName = None
                 return
             self._cmdError = []
+            self._cmdErrorBatchName = None
             if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) < 0:
                 if self._cmdError:
                     for error in self._cmdError:
                         self.sendMessage(error[0], *error[1], **error[2])
                     self._cmdError = []
+                    self._cmdErrorBatchName = None
                 return
             self._cmdError = []
+            self._cmdErrorBatchName = None
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
@@ -138,19 +142,17 @@ class IRCUser(irc.IRC):
             if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
-    def startCommandErrorBatch(self):
-        if not self._cmdError: # Only the first batch should apply
-            self._inCmdErrorBatch = True
+    def startCommandErrorBatch(self, batchName):
+        if not self._cmdErrorBatchName: # Only the first batch should apply
+            self._cmdErrorBatchName = batchName
         
-    def sendCommandError(self, command, *args, **kw):
-        if self._inCmdErrorBatch:
+    def sendCommandError(self, batchName, command, *args, **kw):
+        if batchName and self_cmdErrorBatchName == batchName:
             self._cmdError.append((command, args, kw))
     
-    def endCommandErrorBatch(self):
-        self._inCmdErrorBatch = False
-    
-    def sendSingleCommandError(self, command, *args, **kw):
-        if not self._inCmdErrorBatch and not self._cmdError:
+    def sendSingleCommandError(self, batchName, command, *args, **kw):
+        if not self._cmdErrorBatchName:
+            self._cmdErrorBatchName = batchName
             self._cmdError.append((command, args, kw))
     
     def connectionLost(self, reason):
