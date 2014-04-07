@@ -235,7 +235,7 @@ class IRCUser(irc.IRC):
         if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != self.uuid:
             return
         oldNick = self.nick
-        if oldNick:
+        if oldNick and oldNick in self.ircd.userNicks:
             del self.ircd.userNicks[self.nick]
         self.nick = newNick
         self.nickSince = now()
