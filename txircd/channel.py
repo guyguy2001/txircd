@@ -27,7 +27,8 @@ class IRCChannel(object):
         userList = self.users.keys()
         if "skipusers" in kw:
             for u in kw["skipusers"]:
-                userList.remove(u)
+                if u in userList:
+                    userList.remove(u)
         servers = set()
         for user in self.users.iterkeys():
             if user.uuid[:3] != self.ircd.serverID:
