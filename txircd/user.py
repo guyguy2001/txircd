@@ -124,7 +124,7 @@ class IRCUser(irc.IRC):
                         self.sendMessage(error[0], *error[1], **error[2])
                     self._cmdError = []
                 return
-            self._cmdError = None
+            self._cmdError = []
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
