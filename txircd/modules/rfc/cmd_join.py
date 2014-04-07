@@ -58,19 +58,37 @@ class JoinChannel(Command):
         if not params or not params[0]:
             user.sendSingleCommandError(irc.ERR_NEEDMOREPARAMS, "JOIN", ":Not enough parameters")
             return None
-        if params[0][0] != "#":
-            user.sendSingleCommandError(irc.ERR_BADCHANMASK, params[0], ":Bad channel mask")
+        joiningChannels = params[0].split(",")
+        chanKeys = params[1].split(",") if len(params) > 1 else []
+        while len(chanKeys) < len(joiningChannels):
+            chanKeys.append("")
+        user.startCommandErrorBatch()
+        removeIndices = []
+        for index, chanName in enumerate(joiningChannels):
+            if chanName[0] != "#":
+                user.sendCommandError(irc.ERR_BADCHANMASK, chanName, ":Bad channel mask")
+                removeIndices.append(index)
+        user.endCommandErrorBatch()
+        removeIndices.sort()
+        removeIndices.reverse() # Put the indices to remove in reverse order so we don't have to finagle with them on removal
+        for index in removeIndices:
+            del joiningChannels[index]
+            del chanKeys[index]
+        if not joiningChannels:
             return None
-        channel = self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0])
+        channels = []
+        for chan in joiningChannels:
+            channels.append(self.ircd.channels[chan] if chan in self.ircd.channels else IRCChannel(self.ircd, chan))
         return {
-            "channel": channel
+            "channels": channels
         }
     
     def affectedChannels(self, user, data):
-        return [ data["channel"] ]
+        return data["channels"]
     
     def execute(self, user, data):
-        user.joinChannel(data["channel"])
+        for channel in data["channels"]:
+            user.joinChannel(channel)
         return True
 
 class ServerJoin(Command):
