@@ -369,7 +369,7 @@ class IRCd(Service):
                 isupportList.append("{}={}".format(key, val))
         return isupportList
     
-    def _getActionModes(self, actionName, *params, **kw):
+    def _getActionModes(self, actionName, kw, *params):
         users = []
         channels = []
         if "users" in kw:
@@ -403,7 +403,7 @@ class IRCd(Service):
                         for user in users:
                             applyCheck = 0
                             for action in self.actions[checkGenericAction]:
-                                vote = actoin[0](mode, user, *params, **kw)
+                                vote = action[0](mode, user, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
@@ -448,7 +448,7 @@ class IRCd(Service):
         return userApplyModes, channelApplyModes
     
     def runActionStandard(self, actionName, *params, **kw):
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 mode.apply(actionName, user, *params, **kw)
@@ -460,7 +460,7 @@ class IRCd(Service):
                 action[0](*params, **kw)
     
     def runActionUntilTrue(self, actionName, *params, **kw):
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 if mode.apply(actionName, user, *params, **kw):
@@ -476,7 +476,7 @@ class IRCd(Service):
         return False
     
     def runActionUntilFalse(self, actionName, *params, **kw):
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 if not mode.apply(actionName, user, *params, **kw):
@@ -493,7 +493,7 @@ class IRCd(Service):
     
     def runActionFlagTrue(self, actionName, *params, **kw):
         oneIsTrue = False
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 if mode.apply(actionName, user, *params, **kw):
@@ -510,7 +510,7 @@ class IRCd(Service):
     
     def runActionFlagFalse(self, actionName, *params, **kw):
         oneIsFalse = False
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 if not mode.apply(actionName, user, *params, **kw):
@@ -527,7 +527,7 @@ class IRCd(Service):
     
     def runActionVoting(self, actionName, *params, **kw):
         voteCount = 0
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 vote = mode.apply(actionName, user, *params, **kw)
@@ -552,7 +552,7 @@ class IRCd(Service):
         return voteCount
     
     def runActionProcessing(self, actionName, data, *params, **kw):
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 mode.apply(actionName, user, data, *params, **kw)
@@ -571,7 +571,7 @@ class IRCd(Service):
     
     def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
         paramList = dataList + params
-        userModes, channelModes = self._getActionModes(actionName, *params, **kw)
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user in users:
                 mode.apply(actionName, user, *paramList, **kw)
