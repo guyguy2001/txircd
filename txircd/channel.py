@@ -197,3 +197,11 @@ class IRCChannel(object):
             self.ircd.runActionProcessing("modemessage-channel", users, self, source, sourceName, changing)
             self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing)
         return changing
+    
+    def userRank(self, user):
+        if user not in self.users:
+            return -1
+        status = self.users[user]
+        if not status:
+            return 0
+        return self.ircd.channelStatuses[status[0]][1]
