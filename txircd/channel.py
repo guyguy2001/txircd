@@ -138,6 +138,9 @@ class IRCChannel(object):
                         if mode in self.users[targetUser]:
                             continue
                         statusLevel = self.ircd.channelStatuses[mode][1]
+                        if user and self.userRank(user) < statusLevel and self.ircd.runActionVoting("channelstatusoverride-{}".format(mode), self, user, param) < 0:
+                            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, ":You do not have permission to set channel mode +{}".format(mode))
+                            continue
                         for index, rank in enumerate(self.users[targetUser]):
                             if self.ircd.channelStatuses[rank][1] < statusLevel:
                                 self.users[targetUser].insert(index, mode)
