@@ -318,7 +318,7 @@ class IRCUser(irc.IRC):
                 self.ircd.runActionStandard("channeldestroy", channel)
                 del self.ircd.channels[channel.name]
     
-    def setMode(self, source, modeString, params):
+    def setModes(self, source, modeString, params):
         adding = True
         changing = []
         user = None
