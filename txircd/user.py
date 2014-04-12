@@ -298,11 +298,11 @@ class IRCUser(irc.IRC):
         if not override:
             if self.ircd.runActionVoting("joinpermission", channel, self) < 0:
                 return
-        if channel.name not in self.ircd.channels:
-            self.ircd.channels[channel.name] = channel
-            self.ircd.runActionStandard("channelcreate", channel)
         channel.users[self] = ""
         self.channels.append(channel)
+        if channel.name not in self.ircd.channels:
+            self.ircd.channels[channel.name] = channel
+            self.ircd.runActionStandard("channelcreate", channel, self)
         messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
         self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self)
         self.ircd.runActionStandard("join", channel, self)
@@ -366,7 +366,7 @@ class IRCUser(irc.IRC):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, mode, param) < 0:
+                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, param) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.List:
@@ -406,7 +406,7 @@ class IRCUser(irc.IRC):
                         else:
                             continue
                 changing.append((adding, mode, param))
-                self.ircd.runActionStandard("modechange-user-{}".format(mode), self, source, adding, mode, param)
+                self.ircd.runActionStandard("modechange-user-{}".format(mode), self, source, adding, param)
         if changing:
             users = []
             if user and user.uuid[:3] == self.ircd.serverID:
