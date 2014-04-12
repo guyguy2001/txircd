@@ -125,7 +125,7 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, mode, param) < 0:
+                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, param) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.Status:
@@ -146,7 +146,7 @@ class IRCChannel(object):
                                 self.users[targetUser].insert(index, mode)
                                 break
                         else:
-                            self.users[targetUser].append(mode)
+                            self.users[targetUser] = "{}{}".format(self.users[targetUser], mode)
                     elif modeType == ModeType.List:
                         if mode not in self.modes:
                             self.modes[mode] = []
@@ -191,7 +191,7 @@ class IRCChannel(object):
                             continue
                         del self.modes[mode]
                 changing.append((adding, mode, param))
-                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, source, adding, mode, param)
+                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, source, adding, param)
         if changing:
             users = []
             for chanUser in self.users.iterkeys():
