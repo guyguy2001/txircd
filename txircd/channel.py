@@ -38,9 +38,9 @@ class IRCChannel(object):
             for s in kw["skipservers"]:
                 servers.discard(s)
         servers = list(servers)
-        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw)
+        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw, users=userList, channels=[self])
         if userList or servers:
-            self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw)
+            self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw, users=userList, channels=[self])
     
     def setTopic(self, topic, setter):
         if setter in self.ircd.users:
@@ -55,7 +55,7 @@ class IRCChannel(object):
         self.topic = topic
         self.topicSetter = source
         self.topicTime = now()
-        self.ircd.runActionStandard("topic", self, setter, oldTopic)
+        self.ircd.runActionStandard("topic", self, setter, oldTopic, channels=[self])
         return True
     
     def setMetadata(self, namespace, key, value = None):
@@ -70,7 +70,7 @@ class IRCChannel(object):
             del self.metadata[namespace][key]
         else:
             self.metadata[namespace][key] = value
-        self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value)
+        self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value, channels=[self])
     
     def setModes(self, source, modeString, params):
         adding = True
@@ -125,7 +125,7 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, param) < 0:
+                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, param, users=[user], channels=[self]) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.Status:
@@ -138,7 +138,7 @@ class IRCChannel(object):
                         if mode in self.users[targetUser]:
                             continue
                         statusLevel = self.ircd.channelStatuses[mode][1]
-                        if user and self.userRank(user) < statusLevel and self.ircd.runActionVoting("channelstatusoverride-{}".format(mode), self, user, param) < 0:
+                        if user and self.userRank(user) < statusLevel and self.ircd.runActionVoting("channelstatusoverride-{}".format(mode), self, user, param, users=[user], channels=[self]) < 0:
                             user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, ":You do not have permission to set channel mode +{}".format(mode))
                             continue
                         for index, rank in enumerate(self.users[targetUser]):
@@ -191,14 +191,14 @@ class IRCChannel(object):
                             continue
                         del self.modes[mode]
                 changing.append((adding, mode, param))
-                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, source, adding, param)
+                self.ircd.runActionStandard("modechange-channel-{}".format(mode), self, source, adding, param, channels=[self])
         if changing:
             users = []
             for chanUser in self.users.iterkeys():
                 if chanUser.uuid[:3] == self.ircd.serverID:
                     users.append(chanUser)
-            self.ircd.runActionProcessing("modemessage-channel", users, self, source, sourceName, changing)
-            self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing)
+            self.ircd.runActionProcessing("modemessage-channel", users, self, source, sourceName, changing, users=users, channels=[self])
+            self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing, channels=[self])
         return changing
     
     def userRank(self, user):

@@ -54,7 +54,7 @@ class UserPart(Command):
         channel = data["channel"]
         reason = data["reason"]
         sendUserList = channel.users.keys()
-        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason)
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, users=sendUserList, channels=[channel])
         user.leaveChannel(channel)
         return True
 
@@ -82,7 +82,7 @@ class ServerPart(Command):
         channel = data["channel"]
         reason = data["reason"]
         sendUserList = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason)
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, users=sendUserList, channels=[channel])
         user.leaveChannel(channel, True)
         return True
 
