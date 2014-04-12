@@ -103,14 +103,13 @@ class NickServerCommand(Command):
             localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
             if localUser != user:
                 if localUser.localOnly:
-                    if self.ircd.runActionUntilTrue("localnickcollision"):
+                    if self.ircd.runActionUntilTrue("localnickcollision", localUser, user, users=[localUser, user]):
                         return {
                             "user": user,
                             "time": time,
                             "nick": params[1]
                         }
                     return None
-                self.disconnect("Desync: User data (nicknames)")
                 return None
         return {
             "user": user,
