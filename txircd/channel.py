@@ -146,7 +146,7 @@ class IRCChannel(object):
                                 self.users[targetUser].insert(index, mode)
                                 break
                         else:
-                            self.users[targetUser] = "{}{}".format(self.users[targetUser], mode)
+                            self.users[targetUser] += mode
                     elif modeType == ModeType.List:
                         if mode not in self.modes:
                             self.modes[mode] = []
