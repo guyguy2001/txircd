@@ -112,14 +112,14 @@ class IRCChannel(object):
             paramList = [param]
             if modeType == ModeType.Status:
                 if adding:
-                    paramList = self.ircd.channelStatuses[mode][2].checkSet(param)
+                    paramList = self.ircd.channelStatuses[mode][2].checkSet(self, param)
                 else:
-                    paramList = self.ircd.channelStatuses[mode][2].checkUnset(param)
+                    paramList = self.ircd.channelStatuses[mode][2].checkUnset(self, param)
             else:
                 if adding:
-                    paramList = self.ircd.channelModes[modeType][mode].checkSet(param)
+                    paramList = self.ircd.channelModes[modeType][mode].checkSet(self, param)
                 else:
-                    paramList = self.ircd.channelModes[modeType][mode].checkUnset(param)
+                    paramList = self.ircd.channelModes[modeType][mode].checkUnset(self, param)
             if paramList is None:
                 continue
             del param

@@ -358,9 +358,9 @@ class IRCUser(irc.IRC):
             paramList = [param]
             if param:
                 if adding:
-                    paramList = self.ircd.userModes[modeType][mode].checkSet(param)
+                    paramList = self.ircd.userModes[modeType][mode].checkSet(self, param)
                 else:
-                    paramList = self.ircd.userModes[modeType][mode].checkUnset(param)
+                    paramList = self.ircd.userModes[modeType][mode].checkUnset(self, param)
             if paramList is None:
                 continue
             del param # We use this later

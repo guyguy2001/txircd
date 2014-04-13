@@ -193,14 +193,14 @@ class Command(object):
 class IMode(Interface):
     affectedActions = Attribute("A list of action types for which to trigger the mode handler.")
     
-    def checkSet(param):
+    def checkSet(target, param):
         """
         Checks whether the mode can be set.  Returns a list of parameters, or None if the mode cannot be set.
         For non-list modes, return a list of one item.
         For non-parameter modes, return an empty list.
         """
     
-    def checkUnset(param):
+    def checkUnset(target, param):
         """
         Checks whether the mode can be unset.  Returns a list of parameters, or None if the mode cannot be unset.
         For non-list modes, return a list of one item.
@@ -230,10 +230,10 @@ class IMode(Interface):
 class Mode(object):
     affectedActions = []
     
-    def checkSet(self, param):
+    def checkSet(self, target, param):
         return [param]
     
-    def checkUnset(self, param):
+    def checkUnset(self, target, param):
         return [param]
     
     def apply(self, actionType, target, param, *params, **kw):
