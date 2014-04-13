@@ -52,7 +52,7 @@ class ModeCommand(ModuleData):
             adding, mode, param = modeData
             paramLen = 0
             if param is not None:
-                paramLen = len(param)
+                paramLen = len(str(param))
             if modeLen + paramLen + 3 > 300: # Don't let the mode output get too long
                 modeLists.append(["".join(modeStrList)] + params)
                 addInStr = None
@@ -69,8 +69,8 @@ class ModeCommand(ModuleData):
             modeStrList.append(mode)
             modeLen += 1
             if param is not None:
-                params.append(param)
-                modeLen += 1 + len(param)
+                params.append(str(param))
+                modeLen += 1 + paramLen
         modeLists.append(["".join(modeStrList)] + params)
         return modeLists
     
