@@ -184,6 +184,7 @@ class IRCd(Service):
             self.commonModules.add(module.name)
         
         self.runActionStandard("moduleload", module.name)
+        module.load()
         
         for type, typeSet in enumerate(newChannelModes):
             for mode, implementation in typeSet.iteritems():
