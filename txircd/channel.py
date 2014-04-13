@@ -174,7 +174,7 @@ class IRCChannel(object):
                     if modeType == ModeType.Status:
                         try:
                             targetUser = self.ircd.users[self.ircd.userNicks[param]]
-                            self.users[targetUser].remove(mode)
+                            self.users[targetUser].replace(mode, "")
                         except KeyError, ValueError:
                             continue
                     elif modeType == ModeType.List:
