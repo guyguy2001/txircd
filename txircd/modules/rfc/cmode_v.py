@@ -11,5 +11,8 @@ class VoiceMode(ModuleData, Mode):
     
     def channelModes(self):
         return [ ("v", ModeType.Status, self, 10, "+") ]
+    
+    def checkSet(self, channel, param):
+        return param.split(",")
 
 voiceMode = VoiceMode()

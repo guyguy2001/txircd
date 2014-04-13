@@ -11,5 +11,8 @@ class OpMode(ModuleData, Mode):
     
     def channelModes(self):
         return [ ("o", ModeType.Status, self, 100, "@") ]
+    
+    def checkSet(self, chanel, param):
+        return param.split(",")
 
 opMode = OpMode()
