@@ -187,7 +187,7 @@ class UserMode(Command):
                     if self.ircd.channelModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
                         modeStrList.append(mode)
                         if param is not None:
-                            params.append(param)
+                            params.append(str(param))
                 user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, "".join(modeStrList), *params)
                 user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
                 return True
