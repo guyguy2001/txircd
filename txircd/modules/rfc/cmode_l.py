@@ -25,7 +25,7 @@ class LimitMode(ModuleData, Mode):
             return channel.modes["l"]
         return None
     
-    def checkSet(self, param):
+    def checkSet(self, channel, param):
         try:
             return [ int(param) ]
         except ValueError:
