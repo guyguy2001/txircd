@@ -125,11 +125,17 @@ class ModeCommand(ModuleData):
                     server.sendMessage("MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
     
     def restrictUse(self, user, command, data):
-        if "channel" not in data:
+        if "channel" not in data or "modes" not in data:
             return None
+        if not data["params"]:
+            for mode in data["modes"]:
+                if mode != "+" and mode != "-" and (mode not in self.ircd.channelModeTypes or self.ircd.channelModeTypes[mode] != ModeType.List):
+                    break
+            else:
+                return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
         channel = data["channel"]
         if channel.userRank(user) < self.minLevel:
-            user.sendSingleCommandError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel mode m")
+            user.sendSingleCommandError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
             return False
         return None
 
