@@ -38,9 +38,11 @@ class IRCChannel(object):
             for s in kw["skipservers"]:
                 servers.discard(s)
         servers = list(servers)
-        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw, users=userList, channels=[self])
+        kw["users"] = userList
+        kw["channels"] = [self]
+        self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw)
         if userList or servers:
-            self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw, users=userList, channels=[self])
+            self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw)
     
     def setTopic(self, topic, setter):
         if setter in self.ircd.users:
