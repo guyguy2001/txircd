@@ -105,7 +105,7 @@ class IRCChannel(object):
             if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Status) or (modeType == ModeType.Param and adding):
                 try:
                     param = params.pop(0)
-                except KeyError:
+                except IndexError:
                     if modeType == ModeType.List and user:
                         self.channelModes[modeType][mode].showListParams(user, self)
                     continue
