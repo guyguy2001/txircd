@@ -11,6 +11,7 @@ class ModeCommand(ModuleData):
     
     name = "ModeCommand"
     core = True
+    minLevel = 100
     
     def hookIRCd(self, ircd):
         self.ircd = ircd
@@ -19,13 +20,27 @@ class ModeCommand(ModuleData):
         return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
                 ("modechanges-channel", 1, self.sendChannelModesToServers),
                 ("modemessage-user", 1, self.sendUserModesToUsers),
-                ("modechanges-user", 1, self.sendUserModesToServers) ]
+                ("modechanges-user", 1, self.sendUserModesToServers),
+                ("commandpermission-MODE", 1, self.restrictUse) ]
     
     def userCommands(self):
         return [ ("MODE", 1, UserMode(self.ircd)) ]
     
     def serverCommands(self):
         return [ ("MODE", 1, ServerMode(self.ircd)) ]
+    
+    def load(self):
+        self.rehash()
+    
+    def rehash(self):
+        newLevel = self.ircd.config.getWithDefault("channel_minimum_level_mode", 100)
+        try:
+            self.minLevel = int(newLevel)
+        except ValueError:
+            try:
+                self.minLevel = self.ircd.channelStatuses[newLevel[0]][1]
+            except KeyError:
+                self.minLevel = 100
     
     def getOutputModes(self, modes):
         addInStr = None
@@ -108,6 +123,15 @@ class ModeCommand(ModuleData):
             for server in self.ircd.servers.itervalues():
                 if server.nextClosest == self.ircd.serverID and server != fromServer:
                     server.sendMessage("MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
+    
+    def restrictUse(self, user, command, data):
+        if "channel" not in data:
+            return None
+        channel = data["channel"]
+        if channel.userRank(user) < self.minLevel:
+            user.sendSingleCommandError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel mode m")
+            return False
+        return None
 
 class UserMode(Command):
     implements(ICommand)
