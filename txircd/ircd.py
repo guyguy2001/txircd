@@ -376,6 +376,7 @@ class IRCd(Service):
             del kw["channels"]
         
         checkGenericAction = "modeactioncheck-user-{}".format(actionName)
+        checkExtraGenericAction = "modeactioncheck-user"
         userApplyModes = {}
         if users:
             for modeType in self.userModes:
@@ -409,11 +410,23 @@ class IRCd(Service):
                                     applyCheck += 1
                                     if param is None:
                                         param = vote
+                        if checkExtraGenericAction in self.actions:
+                            for action in self.actions[checkExtraGenericAction]:
+                                vote = action[0](actionName, mode, user, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
                         if applyCheck > 0:
                             userApplyModes.append((user, param))
                     if applyUsers:
                         userApplyModes[modeClass] = applyUsers
         checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
+        checkExtraGenericAction = "modeactioncheck-channel"
         channelApplyModes = {}
         if channels:
             for modeType in self.channelModes:
@@ -439,6 +452,17 @@ class IRCd(Service):
                         if checkGenericAction in self.actions:
                             for action in self.actions[checkGenericAction]:
                                 vote = action[0](mode, channel, *params, **kw)
+                                if vote is True:
+                                    applyCheck += 1
+                                elif vote is False:
+                                    applyCheck -= 1
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
+                        if checkExtraGenericAction in self.actions:
+                            for action in self.actions[checkExtraGenericAction]:
+                                vote = action[0](actionName, mode, channel, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
