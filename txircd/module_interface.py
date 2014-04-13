@@ -207,12 +207,13 @@ class IMode(Interface):
         For non-parameter modes, return an empty list.
         """
     
-    def apply(actionType, target, *params, **kw):
+    def apply(actionType, target, param, *params, **kw):
         """
         Affect the mode should have.
         This is similar binding the appropriate actions directly, except that the IRCd will automatically determine
         whether the mode function should fire instead of making you figure that out.  This allows features like
         extbans to just work consistently across the board without every module having to try to implement them.
+        A parameter is provided for the particular target to which the mode action is being applied.
         """
     
     def showParam(user, target):
@@ -235,7 +236,7 @@ class Mode(object):
     def checkUnset(self, param):
         return [param]
     
-    def apply(self, actionType, target, *params, **kw):
+    def apply(self, actionType, target, param, *params, **kw):
         pass
     
     def showParam(self, user, target):
