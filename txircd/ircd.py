@@ -375,6 +375,7 @@ class IRCd(Service):
             channels = kw["channels"]
             del kw["channels"]
         
+        checkGenericAction = "modeactioncheck-user-{}".format(actionName)
         userApplyModes = {}
         if users:
             for modeType in self.userModes:
@@ -383,31 +384,36 @@ class IRCd(Service):
                         continue
                     checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
                     applyUsers = []
-                    if checkAction in self.actions:
-                        for user in users:
-                            applyCheck = 0
+                    for user in users:
+                        applyCheck = 0
+                        param = None
+                        if checkAction in self.actions:
                             for action in self.actions[checkAction]:
                                 vote = action[0](user, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
                                     applyCheck -= 1
-                            if applyCheck > 0:
-                                applyUsers.append(user)
-                    checkGenericAction = "modeactioncheck-user-{}".format(actionName)
-                    if checkGenericAction in self.actions:
-                        for user in users:
-                            applyCheck = 0
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
+                        if checkGenericAction in self.actions:
                             for action in self.actions[checkGenericAction]:
                                 vote = action[0](mode, user, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
                                     applyCheck -= 1
-                            if applyCheck > 0:
-                                applyUsers.append(user)
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
+                        if applyCheck > 0:
+                            userApplyModes.append((user, param))
                     if applyUsers:
                         userApplyModes[modeClass] = applyUsers
+        checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
         channelApplyModes = {}
         if channels:
             for modeType in self.channelModes:
@@ -416,29 +422,33 @@ class IRCd(Service):
                         continue
                     checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
                     applyChannels = []
-                    if checkAction in self.actions:
-                        for channel in channels:
-                            applyCheck = 0
+                    for channel in channels:
+                        applyCheck = 0
+                        param = None
+                        if checkAction in self.actions:
                             for action in self.actions[checkAction]:
                                 vote = action[0](channel, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
-                                    applyCheck -= 1
-                            if applyCheck > 0:
-                                applyChannels.append(channel)
-                    checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
-                    if checkGenericAction in self.actions:
-                        for channel in channels:
-                            applyCheck = 0
+                                    applyCheck += 1
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
+                        if checkGenericAction in self.actions:
                             for action in self.actions[checkGenericAction]:
-                                vote = action[0](channel, *params, **kw)
+                                vote = action[0](mode, channel, *params, **kw)
                                 if vote is True:
                                     applyCheck += 1
                                 elif vote is False:
                                     applyCheck -= 1
-                            if applyCheck > 0:
-                                applyChannels.append(channel)
+                                elif vote is not None:
+                                    applyCheck += 1
+                                    if param is None:
+                                        param = vote
+                        if applyCheck > 0:
+                            applyChannels.append((channel, param))
                     if applyChannels:
                         channelApplyModes[modeClass] = applyChannels
         return userApplyModes, channelApplyModes
@@ -446,11 +456,11 @@ class IRCd(Service):
     def runActionStandard(self, actionName, *params, **kw):
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                mode.apply(actionName, user, *params, **kw)
+            for user, param in users:
+                mode.apply(actionName, user, param, *params, **kw)
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                mode.apply(actionName, channel, *params, **kw)
+            for channel, param in channels:
+                mode.apply(actionName, channel, param, *params, **kw)
         if actionName in self.actions:
             for action in self.actions[actionName]:
                 action[0](*params, **kw)
@@ -458,12 +468,12 @@ class IRCd(Service):
     def runActionUntilTrue(self, actionName, *params, **kw):
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                if mode.apply(actionName, user, *params, **kw):
+            for user, param in users:
+                if mode.apply(actionName, user, param, *params, **kw):
                     return True
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                if mode.apply(actionName, channel, *params, **kw):
+            for channel, param in channels:
+                if mode.apply(actionName, channel, param, *params, **kw):
                     return True
         if actionName in self.actions:
             for action in self.actions[actionName]:
@@ -474,12 +484,12 @@ class IRCd(Service):
     def runActionUntilFalse(self, actionName, *params, **kw):
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                if not mode.apply(actionName, user, *params, **kw):
+            for user, param in users:
+                if not mode.apply(actionName, user, param, *params, **kw):
                     return True
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                if not mode.apply(actionName, channel, *params, **kw):
+            for channel, param in channels:
+                if not mode.apply(actionName, channel, param, *params, **kw):
                     return True
         if actionName in self.actions:
             for action in self.actions[actionName]:
@@ -491,12 +501,12 @@ class IRCd(Service):
         oneIsTrue = False
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                if mode.apply(actionName, user, *params, **kw):
+            for user, param in users:
+                if mode.apply(actionName, user, param, *params, **kw):
                     oneIsTrue = True
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                if mode.apply(actionName, channel, *params, **kw):
+            for channel, param in channels:
+                if mode.apply(actionName, channel, param, *params, **kw):
                     oneIsTrue = True
         if actionName in self.actions:
             for action in self.actions[actionName]:
@@ -508,12 +518,12 @@ class IRCd(Service):
         oneIsFalse = False
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                if not mode.apply(actionName, user, *params, **kw):
+            for user, param in users:
+                if not mode.apply(actionName, user, param, *params, **kw):
                     oneIsFalse = True
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                if not mode.apply(actionName, channel, *params, **kw):
+            for channel, param in channels:
+                if not mode.apply(actionName, channel, param, *params, **kw):
                     oneIsFalse = True
         if actionName in self.actions:
             for action in self.actions[actionName]:
@@ -525,15 +535,15 @@ class IRCd(Service):
         voteCount = 0
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                vote = mode.apply(actionName, user, *params, **kw)
+            for user, param in users:
+                vote = mode.apply(actionName, user, param, *params, **kw)
                 if vote is True:
                     voteCount += 1
                 elif vote is False:
                     voteCount -= 1
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                vote = mode.apply(actionName, channel, *params, **kw)
+            for channel, param in channels:
+                vote = mode.apply(actionName, channel, param, *params, **kw)
                 if vote is True:
                     voteCount += 1
                 elif vote is False:
@@ -550,13 +560,13 @@ class IRCd(Service):
     def runActionProcessing(self, actionName, data, *params, **kw):
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                mode.apply(actionName, user, data, *params, **kw)
+            for user, param in users:
+                mode.apply(actionName, user, param, data, *params, **kw)
                 if not data:
                     return
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                mode.apply(actionName, channel, data, *params, **kw)
+            for channel, param in channels:
+                mode.apply(actionName, channel, param, data, *params, **kw)
                 if not data:
                     return
         if actionName in self.actions:
@@ -569,16 +579,16 @@ class IRCd(Service):
         paramList = dataList + params
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
-            for user in users:
-                mode.apply(actionName, user, *paramList, **kw)
+            for user, param in users:
+                mode.apply(actionName, user, param, *paramList, **kw)
                 for data in dataList:
                     if data:
                         break
                 else:
                     return
         for mode, channels in channelModes.iteritems():
-            for channel in channels:
-                mode.apply(actionName, channel, *paramList, **kw)
+            for channel, param in channels:
+                mode.apply(actionName, channel, param, *paramList, **kw)
                 for data in dataList:
                     if data:
                         break
