@@ -79,7 +79,8 @@ class JoinChannel(Command):
         for chan in joiningChannels:
             channels.append(self.ircd.channels[chan] if chan in self.ircd.channels else IRCChannel(self.ircd, chan))
         return {
-            "channels": channels
+            "channels": channels,
+            "keys": chanKeys
         }
     
     def affectedChannels(self, user, data):
