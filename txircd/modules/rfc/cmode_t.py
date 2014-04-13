@@ -39,7 +39,7 @@ class TopicLockMode(ModuleData, Mode):
             return True
         return None
     
-    def apply(self, actionType, channel, user, command, data):
+    def apply(self, actionType, channel, param, user, command, data):
         if channel.userRank(user) < self.chanLevel:
             user.sendSingleCommandError("+t-notopic", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to change the topic on this channel")
             return False

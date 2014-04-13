@@ -21,7 +21,7 @@ class NoExtMsgMode(ModuleData, Mode):
         return [ ("modeactioncheck-channel-n-commandpermission-PRIVMSG", 1, self.countChannelsWithMode),
                 ("modeactioncheck-channel-n-commandpermission-NOTICE", 1, self.countChannelsWithMode) ]
     
-    def apply(self, actionType, channel, user, command, data):
+    def apply(self, actionType, channel, param, user, command, data):
         if user not in channel.users:
             user.startCommandErrorBatch("CMode-n")
             user.sendCommandError("CMode-n", irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (no external messages)")
