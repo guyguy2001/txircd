@@ -27,12 +27,12 @@ class TopicLockMode(ModuleData, Mode):
     def rehash(self):
         newLevel = self.ircd.config.getWithDefault("channel_minimum_level_+t", 100)
         try:
-            chanLevel = int(newLevel)
+            self.chanLevel = int(newLevel)
         except ValueError:
             try:
-                chanLevel = self.ircd.channelStatuses[newLevel[0]][1]
+                self.chanLevel = self.ircd.channelStatuses[newLevel[0]][1]
             except KeyError:
-                chanLevel = 100
+                self.chanLevel = 100
     
     def channelHasMode(self, channel, user, command, data):
         if "t" in channel.modes:
