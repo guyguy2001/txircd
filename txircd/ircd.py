@@ -358,11 +358,6 @@ class IRCd(Service):
         isupport["STATUSMSG"] = statusSymbolOrder
         isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
         isupportList = []
-        for name, val in self.isupport_tokens.iteritems():
-            if val:
-                isupportList.append("{}={}".format(name, val))
-            else:
-                isupportList.append(name)
         for key, val in isupport.iteritems():
             if val is None:
                 isupportList.append(key)
