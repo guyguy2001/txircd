@@ -65,7 +65,7 @@ class ModeCommand(ModuleData):
             modeStr = modeOut[0]
             params = modeOut[1:]
             for user in users:
-                user.sendMessage("MODE", channel.name, modeStr, *params, prefix=sourceName)
+                user.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=channel.name)
         del users[:]
     
     def sendChannelModesToServers(self, channel, source, sourceName, modes):
@@ -89,8 +89,8 @@ class ModeCommand(ModuleData):
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
-            for user in users:
-                user.sendMessage("MODE", channel.name, modeStr, *params, prefix=sourceName)
+            for u in users:
+                u.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=user.nick)
         del users[:]
     
     def sendUserModesToServers(self, user, source, sourceName, modes):
