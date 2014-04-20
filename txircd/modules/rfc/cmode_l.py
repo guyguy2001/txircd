@@ -32,6 +32,10 @@ class LimitMode(ModuleData, Mode):
             return None
     
     def apply(self, actionType, channel, param, alsoChannel, user):
+        try: # There may be cases when the parameter we're passed is in string form still (e.g. from modules other than this one)
+            param = int(param)
+        except ValueError:
+            return None
         if len(channel.users) >= param:
             user.sendMessage(irc.ERR_CHANNELISFULL, channel.name, ":Cannot join channel (Channel is full)")
             return False
