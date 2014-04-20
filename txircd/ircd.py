@@ -376,101 +376,73 @@ class IRCd(Service):
             del kw["channels"]
         
         checkGenericAction = "modeactioncheck-user-{}".format(actionName)
-        checkExtraGenericAction = "modeactioncheck-user"
+        if "modeactioncheck-user" in self.actions:
+            for action in self.actions["modeactioncheck-user"]:
+                genericActionList.append(((lambda user, *params, **kw: action[0](actionName, mode, user, *params, **kw)), action[1]))
         userApplyModes = {}
         if users:
             for modeType in self.userModes:
                 for mode, modeClass in modeType.iteritems():
                     if actionName not in modeClass.affectedActions:
                         continue
+                    actionList = []
+                    if checkGenericAction in self.actions:
+                        for action in self.actions[checkGenericAction]:
+                            actionList.append(((lambda user, *params, **kw: action[0](mode, user, *params, **kw)), action[1]))
                     checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
+                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList + genericActionList, key=lambda action: action[1], reverse=True)
                     applyUsers = []
                     for user in users:
                         applyCheck = 0
                         param = None
-                        if checkAction in self.actions:
-                            for action in self.actions[checkAction]:
-                                vote = action[0](user, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck -= 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
-                        if checkGenericAction in self.actions:
-                            for action in self.actions[checkGenericAction]:
-                                vote = action[0](mode, user, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck -= 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
-                        if checkExtraGenericAction in self.actions:
-                            for action in self.actions[checkExtraGenericAction]:
-                                vote = action[0](actionName, mode, user, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck -= 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
+                        for action in actionList:
+                            vote = action[0](user, *params, **kw)
+                            if vote is True:
+                                applyCheck += 1
+                            elif vote is False:
+                                applyCheck -= 1
+                            elif vote is not None:
+                                applyCheck += 1
+                                if param is None:
+                                    param = vote
                         if applyCheck > 0:
                             userApplyModes.append((user, param))
                     if applyUsers:
                         userApplyModes[modeClass] = applyUsers
         checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
-        checkExtraGenericAction = "modeactioncheck-channel"
+        genericActionList = []
+        if checkGenericAction in self.actions:
+            for action in self.actions[checkGenericAction]:
+                genericActionList.append(((lambda channel, *params, **kw: action[0](mode, channel, *params, **kw)), action[1]))
+        if "modeactioncheck-channel" in self.actions:
+            for action in self.actions["modeactioncheck-channel"]:
+                genericActionList.append(((lambda channel, *params, **kw: 
         channelApplyModes = {}
         if channels:
             for modeType in self.channelModes:
                 for mode, modeClass in modeType.iteritems():
                     if actionName not in modeClass.affectedActions:
                         continue
+                    actionList = []
+                    if checkGenericAction in self.actions:
+                        for action in self.actions[checkGenericAction]:
+                            actionList.append(((lambda channel, *params, **kw: action[0](mode, channel, *params, **kw)), action[1]))
                     checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
+                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList + genericActionList, key=lambda action: action[1], reverse=True)
                     applyChannels = []
                     for channel in channels:
                         applyCheck = 0
                         param = None
-                        if checkAction in self.actions:
-                            for action in self.actions[checkAction]:
-                                vote = action[0](channel, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck += 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
-                        if checkGenericAction in self.actions:
-                            for action in self.actions[checkGenericAction]:
-                                vote = action[0](mode, channel, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck -= 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
-                        if checkExtraGenericAction in self.actions:
-                            for action in self.actions[checkExtraGenericAction]:
-                                vote = action[0](actionName, mode, channel, *params, **kw)
-                                if vote is True:
-                                    applyCheck += 1
-                                elif vote is False:
-                                    applyCheck -= 1
-                                elif vote is not None:
-                                    applyCheck += 1
-                                    if param is None:
-                                        param = vote
+                        for action in actionList:
+                            vote = action[0](channel, *params, **kw)
+                            if vote is True:
+                                applyCheck += 1
+                            elif vote is False:
+                                applyCheck -= 1
+                            elif vote is not None:
+                                applyCheck += 1
+                                if param is None:
+                                    param = vote
                         if applyCheck > 0:
                             applyChannels.append((channel, param))
                     if applyChannels:
