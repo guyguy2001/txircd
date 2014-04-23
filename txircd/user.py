@@ -255,12 +255,16 @@ class IRCUser(irc.IRC):
     def changeIdent(self, newIdent):
         if newIdent == self.ident:
             return
+        if len(newIdent) > 12:
+            return
         oldIdent = self.ident
         self.ident = newIdent
         if self.isRegistered():
             self.ircd.runActionStandard("changeident", self, oldIdent, users=[self])
     
     def changeHost(self, newHost):
+        if len(newHost) > 64:
+            return
         if newHost == self.host:
             return
         oldHost = self.host
@@ -495,6 +499,8 @@ class RemoteUser(IRCUser):
             self.ircd.runActionUntilTrue("remotenickrequest", self, newNick, users=[self])
     
     def changeIdent(self, newIdent, fromRemote = False):
+        if len(newIdent) > 12:
+            return
         if fromRemote:
             oldIdent = self.ident
             self.ident = newIdent
@@ -503,6 +509,8 @@ class RemoteUser(IRCUser):
             self.ircd.runActionUntilTrue("remoteidentrequest", self, newIdent, users=[self])
     
     def changeHost(self, newHost, fromRemote = False):
+        if len(newHost) > 64:
+            return
         if fromRemote:
             oldHost = self.host
             self.host = newHost
