@@ -411,12 +411,9 @@ class IRCd(Service):
                         userApplyModes[modeClass] = applyUsers
         checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
         genericActionList = []
-        if checkGenericAction in self.actions:
-            for action in self.actions[checkGenericAction]:
-                genericActionList.append(((lambda channel, *params, **kw: action[0](mode, channel, *params, **kw)), action[1]))
         if "modeactioncheck-channel" in self.actions:
             for action in self.actions["modeactioncheck-channel"]:
-                genericActionList.append(((lambda channel, *params, **kw: 
+                genericActionList.append(((lambda channel, *params, **kw: action[0](actionName, mode, user, *params, **kw)), action[1]))
         channelApplyModes = {}
         if channels:
             for modeType in self.channelModes:
