@@ -5,7 +5,7 @@ from twisted.words.protocols import irc
 from txircd import version
 from txircd.utils import ModeType, now, splitMessage
 from copy import copy
-from socket import gethostbyaddr, herror
+from socket import gaierror, gethostbyaddr, gethostbyname, herror
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -17,8 +17,14 @@ class IRCUser(irc.IRC):
         self.ident = None
         if host is None:
             try:
-                host = gethostbyaddr(ip)[0]
-            except herror:
+                resolvedHost = gethostbyaddr(ip)[0]
+                # First half of host resolution done, run second half to prevent rDNS spoofing.
+                # Refuse hosts that are too long as well.
+                if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= 64:
+                    host = resolvedHost
+                else:
+                    host = ip
+            except (herror, gaierror):
                 host = ip
         self.host = host
         self.realhost = host
