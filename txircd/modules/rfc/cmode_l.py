@@ -26,10 +26,9 @@ class LimitMode(ModuleData, Mode):
         return None
     
     def checkSet(self, channel, param):
-        try:
-            return [ int(param) ]
-        except ValueError:
-            return None
+        if param.isdigit():
+            return param
+        return None
     
     def apply(self, actionType, channel, param, alsoChannel, user):
         try: # There may be cases when the parameter we're passed is in string form still (e.g. from modules other than this one)

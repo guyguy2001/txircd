@@ -52,7 +52,7 @@ class ModeCommand(ModuleData):
             adding, mode, param = modeData
             paramLen = 0
             if param is not None:
-                paramLen = len(str(param))
+                paramLen = len(param)
             if modeLen + paramLen + 3 > 300: # Don't let the mode output get too long
                 modeLists.append(["".join(modeStrList)] + params)
                 addInStr = None
@@ -69,7 +69,7 @@ class ModeCommand(ModuleData):
             modeStrList.append(mode)
             modeLen += 1
             if param is not None:
-                params.append(str(param))
+                params.append(param)
                 modeLen += 1 + paramLen
         modeLists.append(["".join(modeStrList)] + params)
         return modeLists
@@ -193,7 +193,7 @@ class UserMode(Command):
                     if self.ircd.channelModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
                         modeStrList.append(mode)
                         if param is not None:
-                            params.append(str(param))
+                            params.append(param)
                 user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, "".join(modeStrList), *params)
                 user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
                 return True
