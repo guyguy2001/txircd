@@ -46,5 +46,10 @@ class ChannelKeyMode(ModuleData, Mode):
             user.sendMessage(irc.ERR_BADCHANNELKEY, channel.name, ":Cannot join channel (Incorrect channel key)")
             del data["channels"][keyIndex]
             del data["keys"][keyIndex]
+    
+    def showParam(self, user, channel):
+        if user in channel.users:
+            return channel.modes["k"]
+        return "*"
 
 channelKeyMode = ChannelKeyMode()
