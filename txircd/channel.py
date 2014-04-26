@@ -203,6 +203,26 @@ class IRCChannel(object):
             self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing, channels=[self])
         return changing
     
+    def modeString(self, toUser):
+        modeStr = ["+"]
+        params = []
+        for mode in self.modes:
+            modeType = self.ircd.channelModeTypes[mode]
+            if modeType not in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
+                continue
+            if modeType != ModeType.NoParam:
+                param = self.ircd.channelModes[modeType][mode].showParam(toUser, self)
+                if not param:
+                    param = self.modes[mode]
+            else:
+                param = None
+            modeStr.append(mode)
+            if param:
+                params.append(param)
+        if params:
+            return "{} {}".format("".join(modeStr), " ".join(params))
+        return "".join(modeStr)
+    
     def userRank(self, user):
         if user not in self.users:
             return -1

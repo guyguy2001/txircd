@@ -240,7 +240,7 @@ class Mode(object):
         pass
     
     def showParam(self, user, target):
-        return ""
+        return None
     
     def showListParams(self, user, target):
         pass

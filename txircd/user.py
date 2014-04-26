@@ -423,6 +423,26 @@ class IRCUser(irc.IRC):
                 self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, changing, users=[self])
             self.ircd.runActionStandard("modechanges-user", self, source, sourceName, changing, users=[self])
         return changing
+    
+    def modeString(self, toUser):
+        modeStr = ["+"]
+        params = []
+        for mode in self.modes:
+            modeType = self.ircd.userModeTypes[mode]
+            if modeType not in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
+                continue
+            if modeType != ModeType.NoParam:
+                param = self.ircd.userModes[modeType][mode].showParam(toUser, self)
+                if not param:
+                    param = self.modes[mode]
+            else:
+                param = None
+            modeStr.append(mode)
+            if param:
+                params.append(param)
+        if params:
+            return "{} {}".format("".join(modeStr), " ".join(params))
+        return "".join(modeStr)
 
 class RemoteUser(IRCUser):
     def __init__(self, ircd, ip, uuid = None, host = None):
