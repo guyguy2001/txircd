@@ -18,8 +18,8 @@ class NoExtMsgMode(ModuleData, Mode):
         return [ ("n", ModeType.NoParam, self) ]
     
     def actions(self):
-        return [ ("modeactioncheck-channel-n-commandpermission-PRIVMSG", 1, self.countChannelsWithMode),
-                ("modeactioncheck-channel-n-commandpermission-NOTICE", 1, self.countChannelsWithMode) ]
+        return [ ("modeactioncheck-channel-n-commandpermission-PRIVMSG", 1, self.channelHasMode),
+                ("modeactioncheck-channel-n-commandpermission-NOTICE", 1, self.channelHasMode) ]
     
     def apply(self, actionType, channel, param, user, command, data):
         if user not in channel.users:
@@ -28,9 +28,9 @@ class NoExtMsgMode(ModuleData, Mode):
             return False
         return None
     
-    def countChannelsWithMode(self, channel, user, command, data):
+    def channelHasMode(self, channel, user, command, data):
         if "n" in channel.modes:
-            return True
+            return ""
         return None
 
 noExtMsgMode = NoExtMsgMode()

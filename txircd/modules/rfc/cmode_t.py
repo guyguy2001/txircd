@@ -36,7 +36,7 @@ class TopicLockMode(ModuleData, Mode):
     
     def channelHasMode(self, channel, user, command, data):
         if "t" in channel.modes:
-            return True
+            return ""
         return None
     
     def apply(self, actionType, channel, param, user, command, data):

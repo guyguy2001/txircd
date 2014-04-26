@@ -23,7 +23,7 @@ class ModeratedMode(ModuleData, Mode):
     
     def channelHasMode(self, channel, user, command, data):
         if "m" in channel.modes:
-            return True
+            return ""
         return None
     
     def apply(self, actionName, channel, param, user, command, data):
