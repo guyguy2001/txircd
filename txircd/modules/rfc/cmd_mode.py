@@ -187,24 +187,10 @@ class UserMode(Command):
         if "modes" not in data:
             if "channel" in data:
                 channel = data["channel"]
-                modeStrList = ["+"]
-                params = []
-                for mode, param in channel.modes.iteritems():
-                    if self.ircd.channelModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
-                        modeStrList.append(mode)
-                        if param is not None:
-                            params.append(param)
-                user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, "".join(modeStrList), *params)
+                user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, channel.modeString(user))
                 user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
                 return True
-            modeStrList = ["+"]
-            params = []
-            for mode, param in user.modes.iteritems():
-                if self.ircd.userModeTypes[mode] in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
-                    modeStrList.append(mode)
-                    if param is not None:
-                        params.append(param)
-            user.sendMessage(irc.RPL_UMODEIS, "".join(modeStrList), *params)
+            user.sendMessage(irc.RPL_UMODEIS, user.modeString(user))
             return True
         if "channel" in data:
             channel = data["channel"]
