@@ -375,15 +375,10 @@ class IRCd(Service):
             channels = kw["channels"]
             del kw["channels"]
         
+        # Python is dumb and doesn't capture variables in lambdas properly
+        # So we have to force static capture by wrapping the lambdas
         checkGenericAction = "modeactioncheck-user-{}".format(actionName)
         checkGenericWithAction = "modeactioncheck-user-withchannel-{}".format(actionName)
-        if "modeactioncheck-user" in self.actions:
-            for action in self.actions["modeactioncheck-user"]:
-                genericActionList.append(((lambda user, *params, **kw: action[0](actionName, mode, user, *params, **kw)), action[1]))
-        if "modeactioncheck-user-withchannel" in self.actions:
-            for action in self.actions["modeactioncheck-user-withchannel"]:
-                for channel in channels:
-                    genericActionList.append(((lambda user, *params, **kw: action[0](actionName, mode, user, channel, *params, **kw)), action[1]))
         userApplyModes = {}
         if users:
             for modeType in self.userModes:
@@ -391,20 +386,27 @@ class IRCd(Service):
                     if actionName not in modeClass.affectedActions:
                         continue
                     actionList = []
+                    if "modeactioncheck-user" in self.actions:
+                        for action in self.actions["modeactioncheck-user"]:
+                            actionList.append(((lambda action, actionName, mode: lambda user, *params, **kw: action[0](actionName, mode, user, *params, **kw))(action, actionName, mode), action[1]))
+                    if "modeactioncheck-user-withchannel" in self.actions:
+                        for action in self.actions["modeactioncheck-user-withchannel"]:
+                            for channel in channels:
+                                actionList.append(((lambda action, actionName, mode, channel: lambda user, *params, **kw: action[0](actionName, mode, user, channel, *params, **kw))(action, actionName, mode, channel), action[1]))
                     if checkGenericAction in self.actions:
                         for action in self.actions[checkGenericAction]:
-                            actionList.append(((lambda user, *params, **kw: action[0](mode, user, *params, **kw)), action[1]))
+                            actionList.append(((lambda action, mode: lambda user, *params, **kw: action[0](mode, user, *params, **kw))(action, mode), action[1]))
                     if checkGenericWithAction in self.actions:
                         for action in self.actions[checkGenericWithAction]:
                             for channel in channels:
-                                actionList.append(((lambda user, *params, **kw: action[0](mode, user, channel, *params, **kw)), action[1]))
+                                actionList.append(((lambda action, mode, channel: lambda user, *params, **kw: action[0](mode, user, channel, *params, **kw))(action, mode, channel), action[1]))
                     checkWithAction = "modeactioncheck-user-withchannel-{}-{}".format(mode, actionName)
                     if checkWithAction in self.actions:
                         for action in self.actions[checkWithAction]:
                             for channel in channels:
-                                actionList.append(((lambda user, *params, **kw: action[0](user, channel, *params, **kw)), action[1]))
+                                actionList.append(((lambda action, channel: lambda user, *params, **kw: action[0](user, channel, *params, **kw))(action, channel), action[1]))
                     checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
-                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList + genericActionList, key=lambda action: action[1], reverse=True)
+                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
                     applyUsers = []
                     for user in users:
                         applyCheck = 0
@@ -417,14 +419,6 @@ class IRCd(Service):
                         userApplyModes[modeClass] = applyUsers
         checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
         checkGenericWithAction = "modeactioncheck-channel-withuser-{}".format(actionName)
-        genericActionList = []
-        if "modeactioncheck-channel" in self.actions:
-            for action in self.actions["modeactioncheck-channel"]:
-                genericActionList.append(((lambda channel, *params, **kw: action[0](actionName, mode, channel, *params, **kw)), action[1]))
-        if "modeactioncheck-channel-withuser" in self.actions:
-            for action in self.actions["modeactioncheck-channel-withuser"]:
-                for user in users:
-                    genericActionList.append(((lambda channel, *params, **kw: action[0](actionName, mode, channel, user, *params, **kw)), action[1]))
         channelApplyModes = {}
         if channels:
             for modeType in self.channelModes:
@@ -432,20 +426,27 @@ class IRCd(Service):
                     if actionName not in modeClass.affectedActions:
                         continue
                     actionList = []
+                    if "modeactioncheck-channel" in self.actions:
+                        for action in self.actions["modeactioncheck-channel"]:
+                            actionList.append(((lambda action, actionName, mode: lambda channel, *params, **kw: action[0](actionName, mode, channel, *params, **kw))(action, actionName, mode), action[1]))
+                    if "modeactioncheck-channel-withuser" in self.actions:
+                        for action in self.actions["modeactioncheck-channel-withuser"]:
+                            for user in users:
+                                actionList.append(((lambda action, actionName, mode, user: lambda channel, *params, **kw: action[0](actionName, mode, channel, user, *params, **kw))(action, actionName, mode, user), action[1]))
                     if checkGenericAction in self.actions:
                         for action in self.actions[checkGenericAction]:
-                            actionList.append(((lambda channel, *params, **kw: action[0](mode, channel, *params, **kw)), action[1]))
+                            actionList.append(((lambda action, mode: lambda channel, *params, **kw: action[0](mode, channel, *params, **kw))(action, mode), action[1]))
                     if checkGenericWithAction in self.actions:
                         for action in self.actions[checkGenericWithAction]:
                             for user in users:
-                                actionList.append(((lambda channel, *params, **kw: action[0](mode, channel, user, *params, **kw)), action[1]))
+                                actionList.append(((lambda action, mode, user: lambda channel, *params, **kw: action[0](mode, channel, user, *params, **kw))(action, mode, user), action[1]))
                     checkWithAction = "modeactioncheck-channel-withuser-{}-{}".format(mode, actionName)
                     if checkWithAction in self.actions:
                         for action in self.actions[checkWithAction]:
                             for user in users:
-                                actionList.append(((lambda channel, *params, **kw: action[0](channel, user, *params, **kw)), action[1]))
+                                actionList.append(((lambda action, user: lambda channel, *params, **kw: action[0](channel, user, *params, **kw))(action, user), action[1]))
                     checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
-                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList + genericActionList, key=lambda action: action[1], reverse=True)
+                    actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
                     applyChannels = []
                     for channel in channels:
                         applyCheck = 0
