@@ -135,7 +135,7 @@ class ModeCommand(ModuleData):
                 return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
         channel = data["channel"]
         if channel.userRank(user) < self.minLevel:
-            user.sendSingleCommandError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
+            user.sendSingleError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
             return False
         return None
 
@@ -147,17 +147,17 @@ class UserMode(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendSingleCommandError("ModeCmd", irc.ERR_NEEDMOREPARAMS, "MODE", ":Not enough parameters")
+            user.sendSingleError("ModeCmd", irc.ERR_NEEDMOREPARAMS, "MODE", ":Not enough parameters")
             return None
         channel = None
         if params[0] in self.ircd.channels:
             channel = self.ircd.channels[params[0]]
         elif params[0] in self.ircd.userNicks:
             if self.ircd.userNicks[params[0]] != user.uuid:
-                user.sendSingleCommandError("ModeCmd", irc.ERR_USERSDONTMATCH, ":Can't operate on modes for other users")
+                user.sendSingleError("ModeCmd", irc.ERR_USERSDONTMATCH, ":Can't operate on modes for other users")
                 return None
         else:
-            user.sendSingleCommandError("ModeCmd", irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+            user.sendSingleError("ModeCmd", irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
             return None
         if len(params) == 1:
             if channel:

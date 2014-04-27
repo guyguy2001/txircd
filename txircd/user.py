@@ -45,8 +45,8 @@ class IRCUser(irc.IRC):
         self.idleSince = now()
         self._registerHolds = set(("NICK", "USER"))
         self.disconnectedDeferred = Deferred()
-        self._cmdErrorBatchName = None
-        self._cmdError = []
+        self._errorBatchName = None
+        self._errorBatch = []
         self.ircd.users[self.uuid] = self
         self.localOnly = False
         self._pinger = LoopingCall(self._ping)
@@ -118,23 +118,15 @@ class IRCUser(irc.IRC):
                         self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
-                elif self._cmdError:
-                    for error in self._cmdError:
-                        self.sendMessage(error[0], *error[1], **error[2])
-                    self._cmdError = []
-                    self._cmdErrorBatchName = None
+                elif self._hasBatchedErrors:
+                    self._dispatchErrorBatch()
                 return
-            self._cmdError = []
-            self._cmdErrorBatchName = None
+            self._clearErrorBatch()
             if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) < 0:
-                if self._cmdError:
-                    for error in self._cmdError:
-                        self.sendMessage(error[0], *error[1], **error[2])
-                    self._cmdError = []
-                    self._cmdErrorBatchName = None
+                if self._hasBatchedErrors:
+                    self._dispatchErrorBatch()
                 return
-            self._cmdError = []
-            self._cmdErrorBatchName = None
+            self._clearErrorBatch()
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
@@ -148,18 +140,32 @@ class IRCUser(irc.IRC):
             if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
                 self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
     
-    def startCommandErrorBatch(self, batchName):
-        if not self._cmdErrorBatchName or not self._cmdError: # Only the first batch should apply
-            self._cmdErrorBatchName = batchName
+    def startErrorBatch(self, batchName):
+        if not self._errorBatchName or not self._errorBatch: # Only the first batch should apply
+            self._errorBatchName = batchName
         
-    def sendCommandError(self, batchName, command, *args, **kw):
-        if batchName and self._cmdErrorBatchName == batchName:
-            self._cmdError.append((command, args, kw))
+    def sendBatchedError(self, batchName, command, *args, **kw):
+        if batchName and self._errorBatchName == batchName:
+            self._errorBatch.append((command, args, kw))
     
-    def sendSingleCommandError(self, batchName, command, *args, **kw):
-        if not self._cmdErrorBatchName:
-            self._cmdErrorBatchName = batchName
-            self._cmdError.append((command, args, kw))
+    def sendSingleError(self, batchName, command, *args, **kw):
+        if not self._errorBatchName:
+            self._errorBatchName = batchName
+            self._errorBatch.append((command, args, kw))
+    
+    def _hasBatchedErrors(self):
+        if self._errorBatch:
+            return True
+        return False
+    
+    def _clearErrorBatch(self):
+        self._errorBatchName = None
+        self._errorBatch = []
+    
+    def _dispatchErrorBatch(self):
+        for error in self._errorBatch:
+            self.sendMessage(error[0], error[1], error[2])
+        self._clearErrorBatch()
     
     def connectionLost(self, reason):
         if self.uuid in self.ircd.users:

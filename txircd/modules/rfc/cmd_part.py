@@ -35,10 +35,10 @@ class UserPart(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendSingleCommandError("PartCmd", irc.ERR_NEEDMOREPARAMS, "PART", ":Not enough parameters")
+            user.sendSingleError("PartCmd", irc.ERR_NEEDMOREPARAMS, "PART", ":Not enough parameters")
             return None
         if params[0] not in self.ircd.channels:
-            user.sendSingleCommandError("PartCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+            user.sendSingleError("PartCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
             return None
         reason = params[1] if len(params) > 1 else ""
         reason = reason[:self.ircd.config.getWithDefault("part_message_length", 300)]

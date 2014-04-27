@@ -56,17 +56,17 @@ class JoinChannel(Command):
     
     def parseParams(self, user, params, prefix, tags):
         if not params or not params[0]:
-            user.sendSingleCommandError("JoinCmd", irc.ERR_NEEDMOREPARAMS, "JOIN", ":Not enough parameters")
+            user.sendSingleError("JoinCmd", irc.ERR_NEEDMOREPARAMS, "JOIN", ":Not enough parameters")
             return None
         joiningChannels = params[0].split(",")
         chanKeys = params[1].split(",") if len(params) > 1 else []
         while len(chanKeys) < len(joiningChannels):
             chanKeys.append("")
-        user.startCommandErrorBatch("JoinCmd")
+        user.startErrorBatch("JoinCmd")
         removeIndices = []
         for index, chanName in enumerate(joiningChannels):
             if chanName[0] != "#":
-                user.sendCommandError("JoinCmd", irc.ERR_BADCHANMASK, chanName, ":Bad channel mask")
+                user.sendBatchedError("JoinCmd", irc.ERR_BADCHANMASK, chanName, ":Bad channel mask")
                 removeIndices.append(index)
         removeIndices.sort()
         removeIndices.reverse() # Put the indices to remove in reverse order so we don't have to finagle with them on removal

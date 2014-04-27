@@ -23,8 +23,8 @@ class NoExtMsgMode(ModuleData, Mode):
     
     def apply(self, actionType, channel, param, user, command, data):
         if user not in channel.users:
-            user.startCommandErrorBatch("CMode-n")
-            user.sendCommandError("CMode-n", irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (no external messages)")
+            user.startErrorBatch("CMode-n")
+            user.sendBatchedError("CMode-n", irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (no external messages)")
             return False
         return None
     
