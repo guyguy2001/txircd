@@ -180,7 +180,7 @@ class IRCChannel(object):
                     elif modeType == ModeType.List:
                         if mode not in self.modes:
                             continue
-                        for index, paramData in self.modes[mode]:
+                        for index, paramData in enumerate(self.modes[mode]):
                             if paramData[0] == param:
                                 del self.modes[mode][index]
                                 break
