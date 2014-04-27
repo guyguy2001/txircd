@@ -164,7 +164,7 @@ class IRCUser(irc.IRC):
     
     def _dispatchErrorBatch(self):
         for error in self._errorBatch:
-            self.sendMessage(error[0], error[1], error[2])
+            self.sendMessage(error[0], *error[1], **error[2])
         self._clearErrorBatch()
     
     def connectionLost(self, reason):
