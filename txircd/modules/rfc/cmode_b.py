@@ -175,49 +175,55 @@ class BanMode(ModuleData, Mode):
         actionExtban = ""
         actionParam = ""
         matchingExtban = ""
-        banmask = param
-        if ";" in banmask:
-            actionExtban, banmask = banmask.split(";", 1)
-            if not actionExtban or not banmask:
-                return []
-            if ":" in actionExtban:
-                actionExtban, actionParam = actionExtban.split(":", 1)
-                if not actionParam:
-                    return []
-            if actionExtban not in self.ircd.channelModeTypes:
-                return None
-            actionModeType = self.ircd.channelModeTypes[actionExtban]
-            if actionModeType == ModeType.List or actionModeType == ModeType.Status:
-                return []
-            if actionParam and actionModeType == ModeType.NoParam:
-                return []
-            if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
-                return []
-        if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
-            matchingExtban, banmask = banmask.split(":", 1)
-            if not matchingExtban:
-                return []
-        else:
-            if "!" not in banmask:
-                param += "!*@*" # Append it to the param since it needs to go to output (and banmask is at the trailing end of param so it's OK)
-            elif "@" not in banmask:
-                param += "@*"
-        return [param]
+        validParams = []
+        for fullBanmask in param.split(","):
+            banmask = fullBanmask
+            if ";" in banmask:
+                actionExtban, banmask = banmask.split(";", 1)
+                if not actionExtban or not banmask:
+                    continue
+                if ":" in actionExtban:
+                    actionExtban, actionParam = actionExtban.split(":", 1)
+                    if not actionParam:
+                        continue
+                if actionExtban not in self.ircd.channelModeTypes:
+                    continue
+                actionModeType = self.ircd.channelModeTypes[actionExtban]
+                if actionModeType == ModeType.List or actionModeType == ModeType.Status:
+                    continue
+                if actionParam and actionModeType == ModeType.NoParam:
+                    continue
+                if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
+                    continue
+            if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
+                matchingExtban, banmask = banmask.split(":", 1)
+                if not matchingExtban:
+                    continue
+            else:
+                if "!" not in banmask:
+                    fullBanmask += "!*@*" # Append it to the param since it needs to go to output (and banmask is at the trailing end of param so it's OK)
+                elif "@" not in banmask:
+                    fullBanmask += "@*"
+            validParams.append(fullBanmask)
+        return validParams
     
     def checkUnset(self, channel, param):
         actionExtban = ""
-        banmask = param
-        if ";" in banmask:
-            actionExtban, banmask = banmask.split(";", 1)
-            # We don't care about the rest of actionExtban here
-        if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
-            return [param] # Just let it go; the other checks will be managed by checking whether the parameter is actually set on the channel
-        # If there's no matching extban, make sure the ident and host are given
-        if "!" not in banmask:
-            return ["{}!*@*".format(param)]
-        if "@" not in banmask:
-            return ["{}@*".format(param)]
-        return [param]
+        validParams = []
+        for fullBanmask in param.split(","):
+            banmask = fullBanmask
+            if ";" in banmask:
+                actionExtban, banmask = banmask.split(";", 1)
+                # We don't care about the rest of actionExtban here
+            if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
+                continue # Just let it go; the other checks will be managed by checking whether the parameter is actually set on the channel
+            # If there's no matching extban, make sure the ident and host are given
+            if "!" not in banmask:
+                fullBanmask += "!*@*"
+            if "@" not in banmask:
+                fullBanmask += "@*"
+            validParams.append(fullBanmask)
+        return validParams
     
     def apply(self, actionType, channel, param, actionChannel, user): # We spell the parameters out because the only action we accept is joinpermission
         # When we get in this function, the user is trying to join, so the cache will always either not exist or be invalid
