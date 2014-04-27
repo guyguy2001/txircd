@@ -235,6 +235,7 @@ class BanMode(ModuleData, Mode):
             if ";" in param:
                 continue # Ignore entries with action extbans
             if self.banMatchesUser(user, param):
+                user.sendSingleError("BanMode-NoJoin", irc.ERR_BANNEDFROMCHAN, channel.name, ":Cannot join channel (You're banned)")
                 return False
         return None
     
