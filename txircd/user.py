@@ -118,12 +118,12 @@ class IRCUser(irc.IRC):
                         self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
                     else:
                         self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
-                elif self._hasBatchedErrors:
+                elif self._hasBatchedErrors():
                     self._dispatchErrorBatch()
                 return
             self._clearErrorBatch()
             if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) < 0:
-                if self._hasBatchedErrors:
+                if self._hasBatchedErrors():
                     self._dispatchErrorBatch()
                 return
             self._clearErrorBatch()
@@ -315,6 +315,8 @@ class IRCUser(irc.IRC):
             return
         if not override:
             if self.ircd.runActionVoting("joinpermission", channel, self, users=[self], channels=[channel]) < 0:
+                if self._hasBatchedErrors():
+                    self._dispatchErrorBatch()
                 return
         channel.users[self] = ""
         self.channels.append(channel)
