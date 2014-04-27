@@ -413,7 +413,8 @@ class IRCd(Service):
                         for action in actionList:
                             param = action[0](user, *params, **kw)
                             if param is not None:
-                                applyUsers.append((user, param))
+                                if param is not False:
+                                    applyUsers.append((user, param))
                                 break
                     if applyUsers:
                         userApplyModes[modeClass] = applyUsers
@@ -453,7 +454,8 @@ class IRCd(Service):
                         for action in actionList:
                             param = action[0](channel, *params, **kw)
                             if param is not None:
-                                applyChannels.append((channel, param))
+                                if param is not False:
+                                    applyChannels.append((channel, param))
                                 break
                     if applyChannels:
                         channelApplyModes[modeClass] = applyChannels
