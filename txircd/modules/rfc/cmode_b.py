@@ -22,7 +22,8 @@ class BanMode(ModuleData, Mode):
         return [ ("modeactioncheck-channel-withuser", 100, self.checkAction),
                 ("modechange-channel-b", 1, self.onChange),
                 ("userbancheck", 1, self.matchBans),
-                ("join", 1, self.populateBanCache),
+                ("join", 10, self.populateBanCache),
+                ("join", 9, self.autoStatus),
                 ("leave", 10, self.clearBanCache) ]
     
     def banMatchesUser(self, user, banmask):
@@ -167,6 +168,18 @@ class BanMode(ModuleData, Mode):
             if self.banMatchesUser(user, param):
                 user.cache["bans"][channel][actionExtban] = actionParam
     
+    def autoStatus(self, channel, user):
+        if "bans" not in user.cache:
+            return
+        if channel not in user.cache["bans"]:
+            return
+        applyModes = []
+        for mode in self.ircd.channelStatusOrder:
+            if mode in user.cache["bans"][channel]:
+                applyModes.append(mode)
+        if applyModes:
+            channel.setModes(self.ircd.serverID, "+{}".format("".join(applyModes)), [user.nick for i in applyModes])
+    
     def clearBanCache(self, channel, user):
         if "bans" in user.cache and channel in user.cache["bans"]:
             del user.cache["bans"][channel]
@@ -189,9 +202,9 @@ class BanMode(ModuleData, Mode):
                 if actionExtban not in self.ircd.channelModeTypes:
                     continue
                 actionModeType = self.ircd.channelModeTypes[actionExtban]
-                if actionModeType == ModeType.List or actionModeType == ModeType.Status:
+                if actionModeType == ModeType.List:
                     continue
-                if actionParam and actionModeType == ModeType.NoParam:
+                if actionParam and actionModeType in (ModeType.NoParam, ModeType.Status):
                     continue
                 if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
                     continue
