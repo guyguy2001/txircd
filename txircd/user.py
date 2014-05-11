@@ -407,7 +407,7 @@ class IRCUser(irc.IRC):
                             continue
                         self.modes[mode].append((param, sourceName, now()))
                     else:
-                        if mode not in self.modes or self.modes[mode] == param:
+                        if mode in self.modes and self.modes[mode] == param:
                             continue
                         self.modes[mode] = param
                 else:
