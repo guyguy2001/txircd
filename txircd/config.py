@@ -9,6 +9,7 @@ _defaults = {
 _required = [
     "server_name",
     "server_id",
+    "server_description",
     "network_name"
 ]
 
