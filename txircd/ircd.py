@@ -505,6 +505,25 @@ class IRCd(Service):
                     return True
         return False
     
+    def runActionUntilValue(self, actionName, *params, **kw):
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
+        for mode, users in userModes.iteritems():
+            for user, param in users:
+                value = mode.apply(actionName, user, param, *params, **kw)
+                if value is not None:
+                    return value
+        for mode, channels in channelModes.iteritems():
+            for channel, param in channels:
+                value = mode.apply(actionName, channel, param, *params, **kw)
+                if value is not None:
+                    return value
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                value = action[0](*params, **kw)
+                if value is not None:
+                    return value
+        return None
+    
     def runActionFlagTrue(self, actionName, *params, **kw):
         oneIsTrue = False
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
