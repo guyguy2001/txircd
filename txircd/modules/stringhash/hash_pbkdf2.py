@@ -60,7 +60,7 @@ class HashPBKDF2(ModuleData):
                 raise ValueError ("Illegal character {!r} found in salt".format(char))
         
         hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(bytes))
-        return "{}:{}:{}:{}".format(algorithm, iterations, salt, hash)
+        return "{}:{}:{}:{}".format(algorithm, iterations, salt, hashedStr)
     
     def makeSalt(self):
         return b64encode("".join([pack("@H", randint(0, 0xffff)) for i in range(3)]))
