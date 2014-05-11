@@ -104,7 +104,7 @@ class ModeCommand(ModuleData):
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
-            for u in users:
+            for u in set(users):
                 u.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=user.nick)
         del users[:]
     
