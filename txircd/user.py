@@ -1,5 +1,6 @@
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
+from twisted.internet.interfaces import ISSLTransport
 from twisted.internet.task import LoopingCall
 from twisted.words.protocols import irc
 from txircd import version
@@ -49,6 +50,7 @@ class IRCUser(irc.IRC):
         self._errorBatch = []
         self.ircd.users[self.uuid] = self
         self.localOnly = False
+        self.secureConnection = False
         self._pinger = LoopingCall(self._ping)
         self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
     
@@ -56,6 +58,8 @@ class IRCUser(irc.IRC):
         if self.ircd.runActionUntilFalse("userconnect", self, users=[self]):
             self.transport.loseConnection()
             return
+        if ISSLTransport.providedBy(self.transport):
+            self.secureConnection = True
     
     def dataReceived(self, data):
         data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
