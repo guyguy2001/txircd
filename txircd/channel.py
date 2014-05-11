@@ -127,7 +127,7 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, param, users=[user], channels=[self]) < 0:
+                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, adding, param, users=[user], channels=[self]) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.Status:

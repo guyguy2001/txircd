@@ -386,7 +386,7 @@ class IRCUser(irc.IRC):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, param, users=[self, user]) < 0:
+                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) < 0:
                     continue
                 if adding:
                     if modeType == ModeType.List:
