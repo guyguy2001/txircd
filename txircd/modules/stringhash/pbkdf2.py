@@ -20,10 +20,13 @@ class HashPBKDF2(ModuleData):
     
     def load(self):
         self.ircd.functionCache["hash-pbkdf2"] = self.hash
+        self.ircd.functionCache["compare-pbkdf2"] = self.compare
     
     def unload(self):
         if self.ircd.functionCache["hash-pbkdf2"] == self.hash:
             del self.ircd.functionCache["hash-pbkdf2"]
+        if self.ircd.functionCache["compare-pbkdf2"] == self.compare:
+            del self.ircd.functionCache["compare-pbkdf2"]
     
     def hash(self, string, salt=None, iterations=1000, algorithm="sha256", bytes=24):
         possibleAlgorithms = {
@@ -35,6 +38,12 @@ class HashPBKDF2(ModuleData):
             "sha512": sha512
         }
         
+        if algorithm not in possibleAlgorithms:
+            raise ValueError ("Unknown algorithm {}".format(algorithm))
+        
+        if iterations < 1:
+            raise ValueError ("Invalid iteration count: {}".format(iterations))
+        
         if salt is None:
             salt = self.makeSalt()
         
@@ -45,29 +54,26 @@ class HashPBKDF2(ModuleData):
         if isinstance(string, unicode):
             string = string.encode("utf-8")
         
-        if ":" in salt:
-            # Here, we're likely comparing against an already computed hash.
-            # We need to get the same parameters to make sure that the hash can match.
-            # We were given the old hash to pull the parameters out, so let's do that now.
-            algorithm, iterations, salt, oldHash = salt.split(":", 3)
-            if iterations:
-                iterations = int(iterations)
-                if iterations < 1:
-                    raise ValueError ("Invalid salt")
-            bytes = len(b64decode(oldHash))
-        
         saltGoodChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/="
         for char in salt:
             if char not in saltGoodChars:
                 raise ValueError ("Illegal character {!r} found in salt".format(char))
-        
-        if algorithm not in possibleAlgorithms:
-            raise ValueError ("Unknown algorithm {}".format(algorithm))
         
         hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(bytes))
         return "{}:{}:{}:{}".format(algorithm, iterations, salt, hash)
     
     def makeSalt(self):
         return b64encode("".join([pack("@H", randint(0, 0xffff)) for i in range(3)]))
+    
+    def compare(self, string, compareWith):
+        # The algorithm outputs strings with all the parameters
+        # So we'll pull them apart and feed them to the hash function
+        # to make sure the string we're comparing gets hashed the same way
+        algorithm, iterations, salt, oldHash = compareWith.split(":", 3)
+        if iterations:
+            iterations = int(iterations)
+        bytes = len(b64decode(oldHash))
+        
+        return self.hash(string, salt, iterations, algorithm, bytes) == compareWith
 
 pbkdf2Hash = HashPBKDF2()
