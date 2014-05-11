@@ -66,9 +66,6 @@ class Config(object):
     def __getitem__(self, key):
         return self._configData[key]
     
-    def __setitem__(self, key, value):
-        self._configData[key] = value
-    
     def __iter__(self):
         return iter(self._configData)
     
