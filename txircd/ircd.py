@@ -29,6 +29,8 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
+        self.dataCache = {}
+        self.functionCache = {}
         
         self.serverID = None
         self.name = None
