@@ -105,15 +105,15 @@ def splitMessage(message, maxLength):
     msgList = []
     while message:
         limitedMessage = message[:maxLength]
-        if limitedMessage == message:
-            msgList.append(limitedMessage)
-            message = ""
-        elif "\n" in limitedMessage:
-            pos = limitedMessage.rfind("\n")
+        if "\n" in limitedMessage:
+            pos = limitedMessage.find("\n")
             newMsg = limitedMessage[:pos]
             if newMsg:
                 msgList.append(newMsg)
             message = message[pos+1:] # Skip the newline
+        elif limitedMessage == message:
+            msgList.append(limitedMessage)
+            message = ""
         elif " " in limitedMessage:
             pos = limitedMessage.rfind(" ")
             newMsg = limitedMessage[:pos]
