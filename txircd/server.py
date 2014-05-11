@@ -8,6 +8,7 @@ class IRCServer(IRC):
         self.ircd = ircd
         self.serverID = None
         self.name = None
+        self.description = None
         self.ip = ip
         self.remoteServers = {}
         self.nextClosest = self.ircd.serverID
