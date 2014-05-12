@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
+from copy import copy
 
 class MessageCommands(ModuleData):
     implements(IPlugin, IModuleData)
@@ -157,12 +158,12 @@ class UserPrivmsg(Command):
     
     def affectedUsers(self, user, data):
         if "targetusers" in data:
-            return data["targetusers"]
+            return copy(data["targetusers"])
         return []
     
     def affectedChannels(self, user, data):
         if "targetchans" in data:
-            return data["targetchans"]
+            return copy(data["targetchans"])
         return []
     
     def execute(self, user, data):
@@ -179,6 +180,16 @@ class UserNotice(Command):
             user.sendSingleError("NoticeCmd", irc.ERR_NEEDMOREPARAMS, "NOTICE", ":Not enough parameters")
             return None
         return self.module.cmdParseParams(user, params, prefix, tags)
+    
+    def affectedUsers(self, user, data):
+        if "targetusers" in data:
+            return copy(data["targetusers"])
+        return []
+    
+    def affectedChannels(self, user, data):
+        if "targetchans" in data:
+            return copy(data["targetchans"])
+        return []
     
     def execute(self, user, data):
         return self.module.cmdExecute("NOTICE", user, data)
