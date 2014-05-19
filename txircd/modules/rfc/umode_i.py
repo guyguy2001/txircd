@@ -42,7 +42,7 @@ class InvisibleMode(ModuleData, Mode):
     def applyUsers(self, user, fromUser, sameUser):
         if user != sameUser:
             return None
-        if set(fromUser.channels) & set(user.channels): # Get the set intersection to see if there is any overlap
+        if set(fromUser.channels).intersection(user.channels): # Get the set intersection to see if there is any overlap
             return None
         return False
 
