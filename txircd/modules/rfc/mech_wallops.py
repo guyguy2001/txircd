@@ -26,7 +26,7 @@ class Wallops(ModuleData, Mode):
         return [ ("w", ModeType.NoParam, self) ]
     
     def canWallops(self, user, command, data):
-        if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-wallops"):
+        if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-wallops", users=[user]):
             user.sendSingleError("WallopsPermission", irc.ERR_NOPRIVILEGES, ":Permission denied - no oper permission to run command WALLOPS")
             return False
         return None
