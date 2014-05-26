@@ -359,6 +359,9 @@ class IRCd(Service):
         isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
         isupport["STATUSMSG"] = statusSymbolOrder
         isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
+        networkName = self.config.getWithDefault("network_name", "")[:32]
+        if networkName:
+            isupport["NETWORK"] = networkName
         isupportList = []
         for key, val in isupport.iteritems():
             if val is None:
