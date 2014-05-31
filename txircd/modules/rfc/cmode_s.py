@@ -11,9 +11,6 @@ class SecretMode(ModuleData, Mode):
     core = True
     affectedActions = [ "displaychannel" ]
     
-    def hookIRCd(self, ircd):
-        self.ircd = ircd
-    
     def channelModes(self):
         return [ ("s", ModeType.NoParam, self) ]
     
