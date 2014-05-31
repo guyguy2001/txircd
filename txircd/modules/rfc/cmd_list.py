@@ -50,7 +50,7 @@ class ListCommand(ModuleData, Command):
                 "usercount": len(channel.users),
                 "modestopic": "[{}] {}".format(channel.modeString(user), channel.topic)
             }
-            self.ircd.runActionProcessing("displaychannel", displayData, channel, user)
+            self.ircd.runActionProcessing("displaychannel", displayData, channel, user, users=[user], channels=[channel])
             if "name" not in displayData or "usercount" not in displayData or "modestopic" not in displayData:
                 continue
             user.sendMessage(irc.RPL_LIST, displayData["name"], str(displayData["usercount"]), ":{}".format(displayData["modestopic"]))
