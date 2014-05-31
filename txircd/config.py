@@ -6,9 +6,11 @@ _defaults = {
     "modules": []
 }
 
-_required = [
-    "server_name",
+_required = []
+
+_requiredValue = [
     "server_id",
+    "server_name",
     "server_description",
     "network_name"
 ]
@@ -25,6 +27,11 @@ class Config(object):
         for item in _required:
             if item not in newConfig:
                 raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
+        for item in _requiredValue:
+            if item not in newConfig:
+                raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
+            if not newConfig[item]:
+                raise ConfigReadError (self._fileName, "Required item {} found in configuration file with no value.".format(item))
         self._configData = newConfig
     
     def _readConfig(self, fileName):
