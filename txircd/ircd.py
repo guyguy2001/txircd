@@ -590,7 +590,7 @@ class IRCd(Service):
         return voteCount
     
     def runActionProcessing(self, actionName, data, *params, **kw):
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
+        userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 mode.apply(actionName, user, param, data, *params, **kw)
@@ -609,7 +609,7 @@ class IRCd(Service):
     
     def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
         paramList = dataList + params
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
+        userModes, channelModes = self._getActionModes(actionName, kw, *paramList)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 mode.apply(actionName, user, param, *paramList, **kw)
