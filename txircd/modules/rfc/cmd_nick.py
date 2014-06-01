@@ -119,6 +119,10 @@ class NickServerCommand(Command):
     
     def execute(self, server, data):
         user = data["user"]
+        newNick = data["nick"]
+        if newNick in self.ircd.userNicks:
+            server.sendMessage("CHGNICK", user.uuid, user.uuid, prefix=self.ircd.serverID)
+            return True
         user.changeNick(data["nick"], True)
         user.nickSince = data["time"]
         return True
