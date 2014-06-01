@@ -1,8 +1,10 @@
 from twisted.plugin import IPlugin
+from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType, timestamp
 from zope.interface import implements
+import logging
 
 irc.RPL_CREATIONTIME = "329"
 
@@ -40,6 +42,7 @@ class ModeCommand(ModuleData):
             try:
                 self.minLevel = self.ircd.channelStatuses[newLevel[0]][1]
             except KeyError:
+                log.msg("ModeCommand: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
                 self.minLevel = 100
     
     def getOutputModes(self, modes):
