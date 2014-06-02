@@ -158,6 +158,8 @@ class ICommand(Interface):
         Determines which users are affected given parsed command data to determine which
         action functions to call.
         Returns a list of users (or an empty list for no users).
+        The user who issued the command is automatically added to this list if that user
+        is not already in it.
         """
     
     def affectedChannels(source, data):
