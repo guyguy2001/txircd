@@ -329,7 +329,8 @@ class IRCUser(irc.IRC):
         if channel.name not in self.ircd.channels:
             newChannel = True
             self.ircd.channels[channel.name] = channel
-        # We need to send the JOIN message before doing other processing
+        # We need to send the JOIN message before doing other processing, as chancreate will do things like
+        # mode defaulting, which will send messages about the channel before the JOIN message, which is bad.
         messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
         self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, users=messageUsers, channels=[channel])
         if newChannel:
