@@ -49,7 +49,7 @@ class IModuleData(Interface):
         The name is the name of the action as a string.
         The priority is a number.  Higher priorities will be executed first.  This may
         not be important for all actions; if you think priority doesn't matter for the
-        action you're implementing, go ahead and pass a default of 0.
+        action you're implementing, a typical "normal priority" is 10.
         The function is a reference to the function which handles the action in your module.
         """
     
