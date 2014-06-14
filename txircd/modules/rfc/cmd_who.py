@@ -37,16 +37,16 @@ class WhoCommand(ModuleData, Command):
         mask = data["mask"]
         if mask in ("0", "*"):
             for targetUser in self.ircd.users.itervalues():
-                if not set(user.channels).intersection(targetUser.channels) and self.ircd.runActionVoting("showuser", user, targetUser, users=[user, targetUser]) >= 0:
+                if not set(user.channels).intersection(targetUser.channels) and self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is not False:
                     matchingUsers.append(targetUser)
         elif mask in self.ircd.channels:
             channel = self.ircd.channels[data["mask"]]
             for targetUser in channel.users.iterkeys():
-                if self.ircd.runActionVoting("showchanneluser", channel, user, targetUser, users=[user, targetUser], channels=[channel]) >= 0:
+                if self.ircd.runActionUntilValue("showchanneluser", channel, user, targetUser, users=[user, targetUser], channels=[channel]) is not False:
                     matchingUsers.append(targetUser)
         else:
             for targetUser in self.ircd.users.itervalues():
-                if self.ircd.runActionVoting("showuser", user, targetUser, users=[user, targetUser]) < 0:
+                if self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is False:
                     continue
                 lowerMask = ircLower(mask)
                 serverName = self.ircd.name if targetUser.uuid[:3] == self.ircd.serverID else self.ircd.servers[targetUser.uuid[:3]].name

@@ -126,7 +126,7 @@ class IRCUser(irc.IRC):
                     self._dispatchErrorBatch()
                 return
             self._clearErrorBatch()
-            if self.ircd.runActionVoting("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) < 0:
+            if self.ircd.runActionUntilValue("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) is False:
                 if self._hasBatchedErrors():
                     self._dispatchErrorBatch()
                 return
@@ -319,7 +319,7 @@ class IRCUser(irc.IRC):
         if channel in self.channels:
             return
         if not override:
-            if self.ircd.runActionVoting("joinpermission", channel, self, users=[self], channels=[channel]) < 0:
+            if self.ircd.runActionUntilValue("joinpermission", channel, self, users=[self], channels=[channel]) is False:
                 if self._hasBatchedErrors():
                     self._dispatchErrorBatch()
                 return
@@ -396,7 +396,7 @@ class IRCUser(irc.IRC):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) < 0:
+                if user and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) is False:
                     continue
                 if adding:
                     if modeType == ModeType.List:

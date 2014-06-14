@@ -42,7 +42,7 @@ class NamesCommand(ModuleData, Command):
         for channel in chanList:
             showChannelUsers = []
             for chanUser in channel.users.iterkeys():
-                if self.ircd.runActionVoting("showchanneluser", channel, user, chanUser, users=[user, chanUser], channels=[channel]) < 0:
+                if self.ircd.runActionUntilValue("showchanneluser", channel, user, chanUser, users=[user, chanUser], channels=[channel]) is False:
                     continue
                 showAs = self.ircd.runActionUntilValue("displaychanneluser", channel, chanUser, users=[chanUser], channels=[channel])
                 if not showAs:

@@ -561,32 +561,6 @@ class IRCd(Service):
                     oneIsFalse = True
         return oneIsFalse
     
-    def runActionVoting(self, actionName, *params, **kw):
-        voteCount = 0
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
-        for mode, users in userModes.iteritems():
-            for user, param in users:
-                vote = mode.apply(actionName, user, param, *params, **kw)
-                if vote is True:
-                    voteCount += 1
-                elif vote is False:
-                    voteCount -= 1
-        for mode, channels in channelModes.iteritems():
-            for channel, param in channels:
-                vote = mode.apply(actionName, channel, param, *params, **kw)
-                if vote is True:
-                    voteCount += 1
-                elif vote is False:
-                    voteCount -= 1
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                vote = action[0](*params, **kw)
-                if vote is True:
-                    voteCount += 1
-                elif vote is False:
-                    voteCount -= 1
-        return voteCount
-    
     def runActionProcessing(self, actionName, data, *params, **kw):
         userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
         for mode, users in userModes.iteritems():

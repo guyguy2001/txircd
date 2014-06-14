@@ -127,7 +127,7 @@ class IRCChannel(object):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionVoting("modepermission-channel-{}".format(mode), self, user, adding, param, users=[user], channels=[self]) < 0:
+                if user and self.ircd.runActionUntilValue("modepermission-channel-{}".format(mode), self, user, adding, param, users=[user], channels=[self]) is False:
                     continue
                 if adding:
                     if modeType == ModeType.Status:
@@ -140,7 +140,7 @@ class IRCChannel(object):
                         if mode in self.users[targetUser]:
                             continue
                         statusLevel = self.ircd.channelStatuses[mode][1]
-                        if user and self.userRank(user) < statusLevel and self.ircd.runActionVoting("channelstatusoverride-{}".format(mode), self, user, param, users=[user], channels=[self]) <= 0:
+                        if user and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride-{}".format(mode), self, user, param, users=[user], channels=[self]):
                             user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, ":You do not have permission to set channel mode +{}".format(mode))
                             continue
                         for index, rank in enumerate(self.users[targetUser]):
