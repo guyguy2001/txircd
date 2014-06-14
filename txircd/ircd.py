@@ -465,6 +465,17 @@ class IRCd(Service):
         return userApplyModes, channelApplyModes
     
     def runActionStandard(self, actionName, *params, **kw):
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            action[0](*params, **kw)
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -472,11 +483,22 @@ class IRCd(Service):
         for mode, channels in channelModes.iteritems():
             for channel, param in channels:
                 mode.apply(actionName, channel, param, *params, **kw)
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                action[0](*params, **kw)
+        for action in actionList:
+            action[0](*params, **kw)
     
     def runActionUntilTrue(self, actionName, *params, **kw):
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            if action[0](*params, **kw):
+                return True
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -486,13 +508,24 @@ class IRCd(Service):
             for channel, param in channels:
                 if mode.apply(actionName, channel, param, *params, **kw):
                     return True
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                if action[0](*params, **kw):
-                    return True
+        for action in actionList:
+            if action[0](*params, **kw):
+                return True
         return False
     
     def runActionUntilFalse(self, actionName, *params, **kw):
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            if not action[0](*params, **kw):
+                return True
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -502,13 +535,25 @@ class IRCd(Service):
             for channel, param in channels:
                 if not mode.apply(actionName, channel, param, *params, **kw):
                     return True
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                if not action[0](*params, **kw):
-                    return True
+        for action in actionList:
+            if not action[0](*params, **kw):
+                return True
         return False
     
     def runActionUntilValue(self, actionName, *params, **kw):
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            value = action[0](*params, **kw)
+            if value is not None:
+                return value
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -520,15 +565,26 @@ class IRCd(Service):
                 value = mode.apply(actionName, channel, param, *params, **kw)
                 if value is not None:
                     return value
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                value = action[0](*params, **kw)
-                if value is not None:
-                    return value
+        for action in actionList:
+            value = action[0](*params, **kw)
+            if value is not None:
+                return value
         return None
     
     def runActionFlagTrue(self, actionName, *params, **kw):
         oneIsTrue = False
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            if action[0](*params, **kw):
+                oneIsTrue = True
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -538,14 +594,25 @@ class IRCd(Service):
             for channel, param in channels:
                 if mode.apply(actionName, channel, param, *params, **kw):
                     oneIsTrue = True
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                if action[0](*params, **kw):
-                    oneIsTrue = True
+        for action in actionList:
+            if action[0](*params, **kw):
+                oneIsTrue = True
         return oneIsTrue
     
     def runActionFlagFalse(self, actionName, *params, **kw):
         oneIsFalse = False
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            if not action[0](*params, **kw):
+                oneIsFalse = True
         userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -555,13 +622,25 @@ class IRCd(Service):
             for channel, param in channels:
                 if not mode.apply(actionName, channel, param, *params, **kw):
                     oneIsFalse = True
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                if not action[0](*params, **kw):
-                    oneIsFalse = True
+        for action in actionList:
+            if not action[0](*params, **kw):
+                oneIsFalse = True
         return oneIsFalse
     
     def runActionProcessing(self, actionName, data, *params, **kw):
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            action[0](data, *params, **kw)
+            if not data:
+                return
         userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -573,14 +652,29 @@ class IRCd(Service):
                 mode.apply(actionName, channel, param, data, *params, **kw)
                 if not data:
                     return
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                action[0](data, *params, **kw)
-                if not data:
-                    return
+        for action in actionList:
+            action[0](data, *params, **kw)
+            if not data:
+                return
     
     def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
         paramList = dataList + params
+        actionsHighPriority = []
+        actionList = []
+        if actionName in self.actions:
+            for action in self.actions[actionName]:
+                if action[1] >= 100:
+                    actionsHighPriority.append(action)
+                else:
+                    break
+            actionList = self.actions[actionName][len(actionsHighPriority):]
+        for action in actionsHighPriority:
+            action[0](*paramList, **kw)
+            for data in dataList:
+                if data:
+                    break
+            else:
+                return
         userModes, channelModes = self._getActionModes(actionName, kw, *paramList)
         for mode, users in userModes.iteritems():
             for user, param in users:
@@ -598,14 +692,13 @@ class IRCd(Service):
                         break
                 else:
                     return
-        if actionName in self.actions:
-            for action in self.actions[actionName]:
-                action[0](*paramList, **kw)
-                for data in dataList:
-                    if data:
-                        break
-                else:
-                    return
+        for action in actionList:
+            action[0](*paramList, **kw)
+            for data in dataList:
+                if data:
+                    break
+            else:
+                return
 
 class ModuleLoadError(Exception):
     def __init__(self, name, desc):
