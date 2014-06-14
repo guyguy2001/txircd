@@ -230,11 +230,14 @@ class IRCUser(irc.IRC):
             chanModes = "".join(["".join(modes.keys()) for modes in self.ircd.channelModes])
             chanModes += "".join(self.ircd.channelStatuses.keys())
             self.sendMessage(irc.RPL_MYINFO, self.ircd.config["network_name"], versionWithName, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), chanModes)
-            isupportList = self.ircd.generateISupportList()
-            isupportMsgList = splitMessage(" ".join(isupportList), 350)
-            for line in isupportMsgList:
-                self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
+            self.sendISupport()
             self.ircd.runActionStandard("welcome", self, users=[self])
+    
+    def sendISupport(self):
+        isupportList = self.ircd.generateISupportList()
+        isupportMsgList = splitMessage(" ".join(isupportList), 350)
+        for line in isupportMsgList:
+            self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
     
     def addRegisterHold(self, holdName):
         if not self._registerHolds:
