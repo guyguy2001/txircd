@@ -15,6 +15,10 @@ _requiredValue = [
     "network_name"
 ]
 
+_formatValue = {
+    "network_name": lambda name: name[:32]
+}
+
 class Config(object):
     def __init__(self, configFileName):
         self._fileName = configFileName
@@ -32,6 +36,9 @@ class Config(object):
                 raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
             if not newConfig[item]:
                 raise ConfigReadError (self._fileName, "Required item {} found in configuration file with no value.".format(item))
+        for item, formatFunc in _formatValue.iteritems():
+            if item in newConfig:
+                newConfig[item] = formatFunc(newConfig[item])
         self._configData = newConfig
     
     def _readConfig(self, fileName):
