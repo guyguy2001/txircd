@@ -52,6 +52,35 @@ def timestamp(time):
     return int((time - unixEpoch).total_seconds())
 
 
+def durationToSeconds(durationStr):
+    try: # If it's just a number, assume it's seconds.
+        return int(durationStr)
+    except ValueError:
+        pass
+    
+    units = {
+        "y": 31557600,
+        "w": 604800,
+        "d": 86400,
+        "h": 3600,
+        "m": 60
+    }
+    seconds = 0
+    count = []
+    for char in durationStr:
+        if char.isdigit():
+            count.append(char)
+        else:
+            if not count:
+                continue
+            newSeconds = int("".join(count))
+            if char in units:
+                newSeconds *= units[char]
+            seconds += newSeconds
+            count = []
+    return seconds
+
+
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
 def unmapIPv4(ip):
     mapped = ipv4MappedAddr.match(ip)
