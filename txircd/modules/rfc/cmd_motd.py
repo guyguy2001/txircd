@@ -18,10 +18,10 @@ class MessageOfTheDay(ModuleData, Command):
     
     def actions(self):
         return [ ("welcome", 5, self.showMOTD),
-                ("sendremoteusermessage-372", 1, self.pushMessage),
-                ("sendremoteusermessage-375", 1, self.pushMessage),
-                ("sendremoteusermessage-376", 1, self.pushMessage),
-                ("sendremoteusermessage-422", 1, self.pushMessage) ]
+                ("sendremoteusermessage-372", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_MOTD, *params, **kw)),
+                ("sendremoteusermessage-375", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_MOTDSTART, *params, **kw)),
+                ("sendremoteusermessage-376", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ENDOFMOTD, *params, **kw)),
+                ("sendremoteusermessage-422", 1, lambda user, *params, **kw: self.pushMessage(user, irc.ERR_NOMOTD, *params, **kw)) ]
     
     def userCommands(self):
         return [ ("MOTD", 1, UserMOTD(self.ircd, self.showMOTD)) ]
@@ -51,9 +51,9 @@ class MessageOfTheDay(ModuleData, Command):
                 user.sendMessage(irc.RPL_MOTD, ":{}".format(line))
             user.sendMessage(irc.RPL_ENDOFMOTD, ":End of message of the day")
     
-    def pushMessage(self, user, *params, **kw):
+    def pushMessage(self, user, numeric, *params, **kw):
         server = self.ircd.servers[user.uuid[:3]]
-        server.sendMessage("PUSH", user.uuid, ":{}".format(" ".join(params)), prefix=self.ircd.serverID)
+        server.sendMessage("PUSH", user.uuid, "::{} {} {}".format(self.ircd.name, numeric, " ".join(params)), prefix=self.ircd.serverID)
         return True
 
 class UserMOTD(Command):
