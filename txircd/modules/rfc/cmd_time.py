@@ -72,7 +72,7 @@ class ServerTime(Command):
             return {
                "fromuser": self.ircd.users[prefix]
             }
-        if params[0] not in self.ircd.servers:
+        if params[0] not in self.ircd.serverNames:
             return None
         return {
             "server": self.ircd.servers[params[0]],
