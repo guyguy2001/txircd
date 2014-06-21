@@ -189,8 +189,8 @@ class IRCUser(irc.IRC):
             userSendList.extend(channel.users.keys())
         userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
         userSendList.remove(self)
-        self.ircd.runActionProcessing("quitmessage", userSendList, self, reason)
-        self.ircd.runActionStandard("quit", self, reason)
+        self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=[self] + userSendList)
+        self.ircd.runActionStandard("quit", self, reason, users=self)
         channelList = copy(self.channels)
         for channel in channelList:
             self.leaveChannel(channel)
