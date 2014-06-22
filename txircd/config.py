@@ -21,21 +21,21 @@ _formatValue = {
 
 class Config(object):
     def __init__(self, configFileName):
-        self._fileName = configFileName
+        self.fileName = configFileName
     
     def reload(self):
-        newConfig = self._readConfig(self._fileName)
+        newConfig = self._readConfig(self.fileName)
         for key, val in _defaults.iteritems():
             if key not in newConfig:
                 newConfig[key] = val
         for item in _required:
             if item not in newConfig:
-                raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
+                raise ConfigReadError (self.fileName, "Required item {} not found in configuration file.".format(item))
         for item in _requiredValue:
             if item not in newConfig:
-                raise ConfigReadError (self._fileName, "Required item {} not found in configuration file.".format(item))
+                raise ConfigReadError (self.fileName, "Required item {} not found in configuration file.".format(item))
             if not newConfig[item]:
-                raise ConfigReadError (self._fileName, "Required item {} found in configuration file with no value.".format(item))
+                raise ConfigReadError (self.fileName, "Required item {} found in configuration file with no value.".format(item))
         for item, formatFunc in _formatValue.iteritems():
             if item in newConfig:
                 newConfig[item] = formatFunc(newConfig[item])
