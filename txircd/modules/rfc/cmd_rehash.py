@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigReadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
+from fnmatch import fnmatch
 
 class RehashCommand(ModuleData):
     implements(IPlugin, IModuleData)
@@ -43,26 +44,37 @@ class UserRehash(Command):
     def parseParams(self, user, params, prefix, tags):
         if not params:
             return {}
-        if params[0] == self.ircd.name:
-            return {}
-        if params[0] not in self.ircd.serverNames:
-            user.sendMessage(irc.ERR_NOSUCHSERVER, params[0], ":No such server")
+        servers = []
+        serverMask = params[0]
+        if fnmatch(self.ircd.name, serverMask):
+            servers.append(None)
+        for server in self.ircd.servers.itervalues():
+            if fnmatch(server.name, serverMask):
+                servers.append(server)
+        if not servers:
+            user.sendSingleError("RehashServer", irc.ERR_NOSUCHSERVER, params[0], ":No matching servers")
             return None
         return {
-            "server": self.ircd.servers[self.ircd.serverNames[params[0]]]
+            "servers": servers
         }
     
     def execute(self, user, data):
-        if "server" in data:
-            server = data["server"]
-            server.sendMessage("REHASH", server.serverID, prefix=user.uuid)
+        if "servers" not in data:
+            self.rehashSelf(user)
             return True
+        for server in data["servers"]:
+            if server is None:
+                self.rehashSelf(user)
+            else:
+                server.sendMessage("REHASH", server.serverID, prefix=user.uuid)
+        return True
+    
+    def rehashSelf(self, user):
         user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehashing")
         try:
             self.ircd.rehash()
         except ConfigReadError as e:
             user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehash failed: {}".format(e))
-        return True
 
 class ServerRehash(Command):
     implements(ICommand)
