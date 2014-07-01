@@ -20,7 +20,7 @@ class DieCommand(ModuleData, Command):
         return [ ("DIE", 1, self) ]
     
     def checkCommandPermission(self, user, command, data):
-        if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-die"):
+        if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-die", users=[user]):
             return False
         return None
     
