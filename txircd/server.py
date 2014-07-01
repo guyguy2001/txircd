@@ -72,6 +72,7 @@ class IRCServer(IRC):
             return
         self.ircd.servers[self.serverID] = self
         self.ircd.serverNames[self.name] = self.serverID
+        self.ircd.runActionStandard("serverconnect", self)
 
 class RemoteServer(IRCServer):
     def __init__(self, ircd, ip):
