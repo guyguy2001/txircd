@@ -511,6 +511,7 @@ class RemoteUser(IRCUser):
         self._registerHolds.remove(holdName)
         if not self._registerHolds:
             self.ircd.runActionStandard("remoteregister", self, users=[self])
+            self.ircd.userNicks[self.nick] = self.uuid
     
     def addRegisterHold(self, holdName):
         pass # We're just not going to allow this here.
