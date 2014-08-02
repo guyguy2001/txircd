@@ -22,7 +22,7 @@ class ServerListenFactory(Factory):
         self.ircd = ircd
     
     def buildProtocol(self, addr):
-        return self.protocol(self.ircd, unmapIPv4(addr.host))
+        return self.protocol(self.ircd, unmapIPv4(addr.host), True)
 
 class DenyConnection(Exception):
     pass

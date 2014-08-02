@@ -4,7 +4,7 @@ from twisted.internet.task import LoopingCall
 from twisted.words.protocols.irc import IRC
 
 class IRCServer(IRC):
-    def __init__(self, ircd, ip):
+    def __init__(self, ircd, ip, received):
         self.ircd = ircd
         self.serverID = None
         self.name = None
@@ -14,6 +14,7 @@ class IRCServer(IRC):
         self.nextClosest = self.ircd.serverID
         self.cache = {}
         self.disconnectedDeferred = Deferred()
+        self.receivedConnection = received
         self._pinger = LoopingCall(self._ping)
         self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("server_registration_timeout", 10), self._timeoutRegistration)
     
@@ -76,7 +77,7 @@ class IRCServer(IRC):
 
 class RemoteServer(IRCServer):
     def __init__(self, ircd, ip):
-        IRCServer.__init__(self, ircd, ip)
+        IRCServer.__init__(self, ircd, ip, True)
         self._registrationTimeoutTimer.cancel()
     
     def sendMessage(self, command, *params, **kw):
