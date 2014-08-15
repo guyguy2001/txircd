@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ircLower, isValidNick, timestamp
+from txircd.utils import isValidNick, timestamp
 from zope.interface import implements
 from datetime import datetime
 

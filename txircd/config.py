@@ -70,7 +70,7 @@ class Config(object):
                                     for subkey, subval in val.iteritems(): # So merge them manually
                                         if subkey not in configData[key]:
                                             configData[key][subkey] = subval
-                                except AttributeError, TypeError: # If either of these, they weren't both dicts (but were still iterable); requires user to resolve
+                                except (AttributeError, TypeError): # If either of these, they weren't both dicts (but were still iterable); requires user to resolve
                                     raise ConfigReadError(fileName, "The variable {} could not be successfully merged across files.".format(key))
             del configData["include"]
         return configData

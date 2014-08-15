@@ -78,7 +78,7 @@ class IRCServer(IRC):
     def _ping(self):
         self.ircd.runActionStandard("pingserver", self)
     
-    def register():
+    def register(self):
         if not self.serverID:
             return
         if not self.name:

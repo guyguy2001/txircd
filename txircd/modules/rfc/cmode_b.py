@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ircLower, ModeType, now, timestamp
+from txircd.utils import ircLower, ModeType, timestamp
 from zope.interface import implements
 from fnmatch import fnmatch
 
@@ -64,8 +64,6 @@ class BanMode(ModuleData, Mode):
             param = paramData[0]
             actionExtban = ""
             actionParam = ""
-            matchingExtban = ""
-            matchNegated = False
             if ";" in param:
                 actionExtban, param = param.split(";", 1)
                 if ":" in actionExtban:
@@ -119,7 +117,6 @@ class BanMode(ModuleData, Mode):
     def matchBans(self, user, channel):
         if user in channel.users and "bans" in user.cache and channel in user.cache["bans"]:
             return user.cache["bans"][channel]
-        matchedActions = {}
         if "b" in channel.modes:
             matchesActions = {}
             for paramData in channel.modes["b"]:
@@ -158,7 +155,6 @@ class BanMode(ModuleData, Mode):
             param = paramData[0]
             actionExtban = ""
             actionParam = ""
-            matchingExtban = ""
             if ";" in param:
                 actionExtban, param = param.split(";", 1)
                 if ":" in actionExtban:
