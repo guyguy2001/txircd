@@ -491,8 +491,8 @@ class RemoteUser(IRCUser):
         else:
             paramList = params
         kw["users"] = [self]
-        if not self.ircd.runActionUntilTrue("sendremoteusermessage-{}".format(command), self, *params, **kw):
-            self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *params, **kw)
+        if not self.ircd.runActionUntilTrue("sendremoteusermessage-{}".format(command), self, *paramList, **kw):
+            self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *paramList, **kw)
     
     def _getPrefix(self, msgKeywords):
         if "sourceuser" in msgKeywords:
