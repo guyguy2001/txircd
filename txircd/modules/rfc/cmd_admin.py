@@ -109,7 +109,7 @@ class ServerAdmin(Command):
     def execute(self, server, data):
         if "server" in data:
             server = data["server"]
-            server.sendMessage("ADMINREQ", server.serverID, prefix=user.uuid)
+            server.sendMessage("ADMINREQ", server.serverID, prefix=data["fromuser"].uuid)
         else:
             self.sendFunc(user, self.ircd.name)
         return True
