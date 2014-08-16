@@ -24,8 +24,8 @@ class ListCommand(ModuleData, Command):
         wildcardNames = []
         for name in params[0].split(","):
             if "*" not in name and "?" not in name:
-                if channelNames in self.ircd.channels:
-                    channels.append(self.ircd.channels[channelNames])
+                if name in self.ircd.channels:
+                    channels.append(self.ircd.channels[name])
             else:
                 wildcardNames.append(ircLower(name))
         for lowerName, channel in self.ircd.channels.iteritems():
