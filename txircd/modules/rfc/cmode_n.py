@@ -9,7 +9,7 @@ class NoExtMsgMode(ModuleData, Mode):
     
     name = "NoExtMsgMode"
     core = True
-    affectedActions = [ "commandpermission-PRIVMSG", "commandpermission-NOTICE" ]
+    affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
     
     def hookIRCd(self, ircd):
         self.ircd = ircd
@@ -22,11 +22,9 @@ class NoExtMsgMode(ModuleData, Mode):
                 ("modeactioncheck-channel-n-commandpermission-NOTICE", 1, self.channelHasMode) ]
     
     def apply(self, actionType, channel, param, user, command, data):
-        if user not in channel.users:
-            user.startErrorBatch("CMode-n")
-            user.sendBatchedError("CMode-n", irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (no external messages)")
-            return False
-        return None
+        if user not in channel.users and channel in data["targetchans"]:
+            del data["targetchans"][channel]
+            user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (no external messages)")
     
     def channelHasMode(self, channel, user, command, data):
         if "n" in channel.modes:
