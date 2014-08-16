@@ -13,6 +13,7 @@ class IRCServer(IRC):
         self.remoteServers = {}
         self.nextClosest = self.ircd.serverID
         self.cache = {}
+        self.bursted = None
         self.disconnectedDeferred = Deferred()
         self.receivedConnection = received
         self._pinger = LoopingCall(self._ping)
@@ -21,6 +22,11 @@ class IRCServer(IRC):
     def handleCommand(self, command, prefix, params):
         if command not in self.ircd.serverCommands:
             self.disconnect("Unknown command {}".format(command)) # If we receive a command we don't recognize, abort immediately to avoid a desync
+            return
+        if self.bursted is False:
+            if "burst_queue" not in self.cache:
+                self.cache["burst_queue"] = []
+            self.cache["burst_queue"].append((command, prefix, params))
             return
         handlers = self.ircd.serverCommands[command]
         data = None
