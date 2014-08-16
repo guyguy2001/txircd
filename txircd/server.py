@@ -20,7 +20,7 @@ class IRCServer(IRC):
     
     def handleCommand(self, command, prefix, params):
         if command not in self.ircd.serverCommands:
-            self.transport.loseConnection() # If we receive a command we don't recognize, abort immediately to avoid a desync
+            self.disconnect("Unknown command {}".format(command)) # If we receive a command we don't recognize, abort immediately to avoid a desync
             return
         handlers = self.ircd.serverCommands[command]
         data = None
@@ -29,13 +29,13 @@ class IRCServer(IRC):
             if data is not None:
                 break
         if data is None:
-            self.transport.loseConnection() # If we receive a command we can't parse, also abort immediately
+            self.disconnect("Failed to parse command {} from {} with parameters '{}'".format(command, prefix, " ".join(params))) # If we receive a command we can't parse, also abort immediately
             return
         for handler in handlers:
             if handler[0].execute(self, data):
                 break
         else:
-            self.disconnect("Desync: Couldn't process command") # Also abort connection if we can't process a command
+            self.disconnect("Couldn't process command {} from {} with parameters '{}'".format(command, prefix, " ".join(params))) # Also abort connection if we can't process a command
             return
     
     def connectionLost(self, reason):
