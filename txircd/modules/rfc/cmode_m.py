@@ -28,7 +28,7 @@ class ModeratedMode(ModuleData, Mode):
     
     def apply(self, actionName, channel, param, user, command, data):
         if channel.userRank(user) < 10 and channel in data["targetchans"]:
-            data["targetchans"].remove(channel)
+            del data["targetchans"][channel]
             user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (+m)")
 
 moderatedMode = ModeratedMode()

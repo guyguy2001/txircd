@@ -73,39 +73,42 @@ class MessageCommands(ModuleData):
                 users.append(self.ircd.users[self.ircd.userNicks[target]])
             else:
                 user.sendBatchedError("MsgCmd", irc.ERR_NOSUCHNICK, target, ":No such nick/channel")
+        message = params[1]
+        chanMessages = {}
+        userMessages = {}
+        for chan in channels:
+            chanMessages[chan] = message
+        for targetUser in users:
+            userMessages[targetUser] = message
         if channels and users:
             return {
-                "targetchans": channels,
-                "targetusers": users,
-                "message": params[1]
+                "targetchans": chanMessages,
+                "targetusers": userMessages
             }
         if channels:
             return {
-                "targetchans": channels,
-                "message": params[1]
+                "targetchans": chanMessages
             }
         if users:
             return {
-                "targetusers": users,
-                "message": params[1]
+                "targetusers": userMessages
             }
         return None
     
     def cmdExecute(self, command, user, data):
-        if not data["message"]:
-            user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
-            return None
-        target = None
-        sentAMessage = None
+        sentAMessage = False
         if "targetusers" in data:
-            for target in data["targetusers"]:
-                target.sendMessage(command, ":{}".format(data["message"]), sourceuser=user)
+            for target, message in data["targetusers"].iteritems():
+                target.sendMessage(command, ":{}".format(message), sourceuser=user)
                 sentAMessage = True
         if "targetchans" in data:
-            for target in data["targetchans"]:
-                target.sendMessage(command, ":{}".format(data["message"]), to=target.name, sourceuser=user, skipusers=[user])
+            for target, message in data["targetchans"].iteritems():
+                target.sendMessage(command, ":{}".format(message), to=target.name, sourceuser=user, skipusers=[user])
                 sentAMessage = True
-        return sentAMessage
+        if not sentAMessage:
+            user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
+            return None
+        return True
     
     def serverParseParams(self, server, params, prefix, tags):
         if len(params) != 2:
@@ -158,12 +161,12 @@ class UserPrivmsg(Command):
     
     def affectedUsers(self, user, data):
         if "targetusers" in data:
-            return copy(data["targetusers"])
+            return data["targetusers"].keys()
         return []
     
     def affectedChannels(self, user, data):
         if "targetchans" in data:
-            return copy(data["targetchans"])
+            return data["targetchans"].keys()
         return []
     
     def execute(self, user, data):
@@ -183,12 +186,12 @@ class UserNotice(Command):
     
     def affectedUsers(self, user, data):
         if "targetusers" in data:
-            return copy(data["targetusers"])
+            return data["targetusers"].keys()
         return []
     
     def affectedChannels(self, user, data):
         if "targetchans" in data:
-            return copy(data["targetchans"])
+            return data["targetchans"].keys()
         return []
     
     def execute(self, user, data):

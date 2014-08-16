@@ -23,7 +23,7 @@ class AwayCommand(ModuleData, Command):
     def notifyAway(self, user, command, data):
         if "targetusers" not in data:
             return
-        for u in data["targetusers"]:
+        for u in data["targetusers"].iterkeys():
             if "away" in u.metadata["ext"]:
                 user.sendMessage(irc.RPL_AWAY, u.nick, ":{}".format(u.metadata["ext"]["away"]))
     
