@@ -1,5 +1,4 @@
 from twisted.plugin import IPlugin
-from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements

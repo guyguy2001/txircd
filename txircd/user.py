@@ -623,8 +623,8 @@ class LocalUser(IRCUser):
         if not handlers:
             return
         data = None
-        affUsers = []
-        affChannels = []
+        affectedUsers = []
+        affectedChannels = []
         for handler in handlers:
             if handler[0].forRegisteredUsers is False:
                 continue
@@ -632,8 +632,8 @@ class LocalUser(IRCUser):
             if data is not None:
                 affectedUsers = handler[0].affectedUsers(self, data)
                 affectedChannels = handler[0].affectedChannels(self, data)
-                if self not in affUsers:
-                    affUsers.append(self)
+                if self not in affectedUsers:
+                    affectedUsers.append(self)
                 break
         if data is None:
             return

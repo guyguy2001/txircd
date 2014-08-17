@@ -413,7 +413,6 @@ class IRCd(Service):
                     actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
                     applyUsers = []
                     for user in users:
-                        applyCheck = 0
                         for action in actionList:
                             param = action[0](user, *params, **kw)
                             if param is not None:
@@ -454,7 +453,6 @@ class IRCd(Service):
                     actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
                     applyChannels = []
                     for channel in channels:
-                        applyCheck = 0
                         for action in actionList:
                             param = action[0](channel, *params, **kw)
                             if param is not None:

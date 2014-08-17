@@ -26,6 +26,7 @@ class InfoCommand(ModuleData, Command):
         user.sendMessage(irc.RPL_INFO, ":Developed by ElementalAlchemist <ElementAlchemist7@gmail.com>")
         user.sendMessage(irc.RPL_INFO, ":Contributors:")
         user.sendMessage(irc.RPL_INFO, ":   Heufneutje")
+        user.sendMessage(irc.RPL_INFO, ":   ekimekim")
         user.sendMessage(irc.RPL_ENDOFINFO, ":End of /INFO list")
         return True
 

@@ -111,7 +111,7 @@ class ServerAdmin(Command):
             server = data["server"]
             server.sendMessage("ADMINREQ", server.serverID, prefix=data["fromuser"].uuid)
         else:
-            self.sendFunc(user, self.ircd.name)
+            self.sendFunc(data["fromuser"], self.ircd.name)
         return True
 
 adminCmd = AdminCommand()

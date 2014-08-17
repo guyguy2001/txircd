@@ -5,7 +5,7 @@ from txircd.utils import ircLower
 from zope.interface import implements
 
 class ServerQuit(ModuleData):
-    implements(IModuleData)
+    implements(IPlugin, IModuleData)
     
     name = "ServerQuit"
     core = True
