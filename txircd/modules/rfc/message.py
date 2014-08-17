@@ -74,25 +74,15 @@ class MessageCommands(ModuleData):
             else:
                 user.sendBatchedError("MsgCmd", irc.ERR_NOSUCHNICK, target, ":No such nick/channel")
         message = params[1]
-        chanMessages = {}
-        userMessages = {}
-        for chan in channels:
-            chanMessages[chan] = message
-        for targetUser in users:
-            userMessages[targetUser] = message
-        if channels and users:
-            return {
-                "targetchans": chanMessages,
-                "targetusers": userMessages
-            }
+        chanMessages = {target: message for target in channels}
+        userMessages = {target: message for target in users}
+        data = {}
         if channels:
-            return {
-                "targetchans": chanMessages
-            }
+            data["targetchans"] = chanMessages
         if users:
-            return {
-                "targetusers": userMessages
-            }
+            data["targetusers"] = userMessages
+        if data:
+            return data
         return None
     
     def cmdExecute(self, command, user, data):
