@@ -69,6 +69,7 @@ class IRCd(Service):
         log.msg("Binding ports...", logLevel=logging.INFO)
         self._bindPorts()
         log.msg("txircd started!", logLevel=logging.INFO)
+        self.runActionStandard("startup")
     
     def stopService(self):
         stopDeferreds = []
