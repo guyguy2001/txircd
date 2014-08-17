@@ -5,11 +5,9 @@ from zope.interface import implements
 import re
 
 class StripColors(ModuleData, Mode):
-    """Strip formatting chars from any users <= voiced rank"""
     implements(IPlugin, IModuleData, IMode)
 
     name = "StripColors"
-    core = False
     affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
 
     def hookIRCd(self, ircd):
