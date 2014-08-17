@@ -64,7 +64,13 @@ class IRCUser(irc.IRC):
     def dataReceived(self, data):
         data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
         self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
-        irc.IRC.dataReceived(self, data)
+        try:
+            irc.IRC.dataReceived(self, data)
+        except Exception:
+            # it seems that twisted.protocols.irc makes no attempt to raise useful "invalid syntax"
+            # errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
+            # so let's catch everything.
+            self.disconnect("Invalid data")
     
     def sendLine(self, line):
         self.ircd.runActionStandard("usersenddata", self, line, users=[self])
