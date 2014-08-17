@@ -303,7 +303,7 @@ class IRCUser(irc.IRC):
         if self.isRegistered():
             self.ircd.runActionStandard("changegecos", self, oldGecos, users=[self])
     
-    def setMetadata(self, namespace, key, value):
+    def setMetadata(self, namespace, key, value, fromServer = None):
         if namespace not in self.metadata:
             return
         oldValue = None
@@ -316,7 +316,7 @@ class IRCUser(irc.IRC):
                 del self.metadata[namespace][key]
         else:
             self.metadata[namespace][key] = value
-        self.ircd.runActionStandard("usermetadataupdate", self, namespace, key, oldValue, value, users=[self])
+        self.ircd.runActionStandard("usermetadataupdate", self, namespace, key, oldValue, value, fromServer, users=[self])
     
     def joinChannel(self, channel, override = False):
         if channel in self.channels:
