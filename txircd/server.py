@@ -44,6 +44,12 @@ class IRCServer(IRC):
             self.disconnect("Couldn't process command {} from {} with parameters '{}'".format(command, prefix, " ".join(params))) # Also abort connection if we can't process a command
             return
     
+    def endBurst(self):
+        self.bursted = True
+        for command, prefix, params in self.cache["burst_queue"]:
+            self.handleCommand(command, prefix, params)
+        del self.cache["burst_queue"]
+    
     def connectionLost(self, reason):
         if self.serverID in self.ircd.servers:
             self.disconnect("Connection reset")
