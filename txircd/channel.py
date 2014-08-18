@@ -203,6 +203,23 @@ class IRCChannel(object):
             self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing, channels=[self])
         return changing
     
+    def addListMode(self, param, sourceName, time, settingUser = None):
+        if mode not in self.modes:
+            self.modes[mode] = []
+        found = False
+        for paramData in self.modes[mode]:
+            if param == paramData[0]:
+                found = True
+                break
+        if found:
+            if not self.modes[mode]:
+                del self.modes[mode]
+            return False
+        if len(param) > 250: # Set a max limit on param length
+            if not self.modes[mode]:
+                del self.modes[mode]
+            return False
+    
     def modeString(self, toUser):
         modeStr = ["+"]
         params = []

@@ -403,22 +403,8 @@ class IRCUser(irc.IRC):
                     continue
                 if adding:
                     if modeType == ModeType.List:
-                        if mode not in self.modes:
-                            self.modes[mode] = []
-                        found = False
-                        for data in self.modes[mode]:
-                            if data[0] == param:
-                                found = True
-                                break
-                        if found:
+                        if not self.addListMode(param, sourceName, now(), user):
                             continue
-                        if len(param) > 250: # Set a max limit on param length
-                            continue
-                        if len(self.modes[mode]) > self.ircd.config.getWithDefault("user_list_limit", 100):
-                            if user:
-                                user.sendMessage(irc.ERR_BANLISTFULL, self.nick, param, ":User +{} list is full".format(mode))
-                            continue
-                        self.modes[mode].append((param, sourceName, now()))
                     else:
                         if mode in self.modes and self.modes[mode] == param:
                             continue
@@ -450,6 +436,31 @@ class IRCUser(irc.IRC):
                 self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, changing, users=[self])
             self.ircd.runActionStandard("modechanges-user", self, source, sourceName, changing, users=[self])
         return changing
+    
+    def addListMode(self, param, sourceName, time, settingUser = None):
+        if mode not in self.modes:
+            self.modes[mode] = []
+        found = False
+        for data in self.modes[mode]:
+            if data[0] == param:
+                found = True
+                break
+        if found:
+            if not self.modes[mode]:
+                del self.modes[mode]
+            return False
+        if len(param) > 250: # Set a max limit on param length
+            if not self.modes[mode]:
+                del self.modes[mode]
+            return False
+        if len(self.modes[mode]) > self.ircd.config.getWithDefault("user_list_limit", 100):
+            if settingUser:
+                settingUser.sendMessage(irc.ERR_BANLISTFULL, self.nick, param, ":User +{} list is full".format(mode))
+            if not self.modes[mode]: # The config limit really shouldn't be this low, but it's possible
+                del self.modes[mode]
+            return False
+        self.modes[mode].append((param, sourceName, time))
+        return True
     
     def modeString(self, toUser):
         modeStr = ["+"]
