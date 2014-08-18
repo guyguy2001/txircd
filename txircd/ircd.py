@@ -2,6 +2,7 @@ from twisted.application.service import Service
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import serverFromString
+from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 from twisted.python import log
 from txircd.config import Config
@@ -29,6 +30,7 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
+        self.storage_syncer = LoopingCall(self.storage.sync)
         self.dataCache = {}
         self.functionCache = {}
         
@@ -63,7 +65,8 @@ class IRCd(Service):
         if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
-        self.storage = shelve.open("data.db")
+        self.storage = shelve.open("data.db", writeback=True)
+        self.storage_syncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()
         log.msg("Binding ports...", logLevel=logging.INFO)
@@ -95,7 +98,9 @@ class IRCd(Service):
         for module in moduleList:
             self.unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
         log.msg("Closing data storage...", logLevel=logging.INFO)
-        self.storage.close()
+        if self.storage_syncer.running:
+            self.storage_syncer.stop()
+        self.storage.close() # a close() will sync() also
         log.msg("Releasing ports...", logLevel=logging.INFO)
         stopDeferreds.extend(self._unbindPorts())
         return DeferredList(stopDeferreds)

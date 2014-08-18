@@ -62,7 +62,6 @@ class WhowasCommand(ModuleData, Command):
             allWhowas[lowerNick] = whowasEntries
         elif lowerNick in allWhowas:
             del allWhowas[lowerNick]
-        self.ircd.storage["whowas"] = allWhowas
     
     def parseParams(self, user, params, prefix, tags):
         if not params:
