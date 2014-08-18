@@ -150,22 +150,8 @@ class IRCChannel(object):
                         else:
                             self.users[targetUser] += mode
                     elif modeType == ModeType.List:
-                        if mode not in self.modes:
-                            self.modes[mode] = []
-                        found = False
-                        for paramData in self.modes[mode]:
-                            if param == paramData[0]:
-                                found = True
-                                break
-                        if found:
+                        if not self.addListMode(mode, param, sourceName, now(), user):
                             continue
-                        if len(param) > 250: # Set a max limit on param length
-                            continue
-                        if len(self.modes[mode]) > self.ircd.config.getWithDefault("channel_list_limit", 100):
-                            if user:
-                                user.sendMessage(irc.ERR_BANLISTFULL, self.name, param, ":Channel +{} list is full".format(mode))
-                            continue
-                        self.modes[mode].append((param, sourceName, now()))
                     else:
                         if mode in self.modes and param == self.modes[mode]:
                             continue
@@ -203,7 +189,7 @@ class IRCChannel(object):
             self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, changing, channels=[self])
         return changing
     
-    def addListMode(self, param, sourceName, time, settingUser = None):
+    def addListMode(self, mode, param, sourceName, time, settingUser = None):
         if mode not in self.modes:
             self.modes[mode] = []
         found = False
@@ -219,6 +205,14 @@ class IRCChannel(object):
             if not self.modes[mode]:
                 del self.modes[mode]
             return False
+        if len(self.modes[mode]) > self.ircd.config.getWithDefault("channel_list_limit", 100):
+            if settingUser:
+                settingUser.sendMessage(irc.ERR_BANLISTFULL, self.name, param, ":Channel +{} list is full".format(mode))
+            if not self.modes[mode]: # The config limit really shouldn't be this low, but it's possible
+                del self.modes[mode]
+            return False
+        self.modes[mode].append((param, sourceName, time))
+        return True
     
     def modeString(self, toUser):
         modeStr = ["+"]

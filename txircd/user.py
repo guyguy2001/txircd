@@ -409,7 +409,7 @@ class IRCUser(irc.IRC):
                     continue
                 if adding:
                     if modeType == ModeType.List:
-                        if not self.addListMode(param, sourceName, now(), user):
+                        if not self.addListMode(mode, param, sourceName, now(), user):
                             continue
                     else:
                         if mode in self.modes and self.modes[mode] == param:
@@ -443,7 +443,7 @@ class IRCUser(irc.IRC):
             self.ircd.runActionStandard("modechanges-user", self, source, sourceName, changing, users=[self])
         return changing
     
-    def addListMode(self, param, sourceName, time, settingUser = None):
+    def addListMode(self, mode, param, sourceName, time, settingUser = None):
         if mode not in self.modes:
             self.modes[mode] = []
         found = False
