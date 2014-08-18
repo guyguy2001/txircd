@@ -40,11 +40,11 @@ class MessageCommands(ModuleData):
         del toUsers[:]
         del toServers[:]
     
-    def sendChannelPrivmsg(self, toUsers, toServers, user, *params, **kw):
-        self.sendChannelMsg(toUsers, toServers, "PRIVMSG", user, *params, **kw)
+    def sendChannelPrivmsg(self, toUsers, toServers, channel, *params, **kw):
+        self.sendChannelMsg(toUsers, toServers, "PRIVMSG", channel, *params, **kw)
     
-    def sendChannelNotice(self, toUsers, toServers, user, *params, **kw):
-        self.sendChannelMsg(toUsers, toServers, "NOTICE", user, *params, **kw)
+    def sendChannelNotice(self, toUsers, toServers, channel, *params, **kw):
+        self.sendChannelMsg(toUsers, toServers, "NOTICE", channel, *params, **kw)
     
     def sendRemoteMsg(self, command, targetUser, dest, message, **kw):
         targetUser.sendMessage(command, targetUser.uuid, message, **kw)
