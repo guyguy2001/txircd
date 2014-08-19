@@ -2,11 +2,14 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import ISSLTransport
 from twisted.internet.task import LoopingCall
+from twisted.python import log
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.utils import ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
+from traceback import print_exc
+import logging
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -66,11 +69,13 @@ class IRCUser(irc.IRC):
         self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
         try:
             irc.IRC.dataReceived(self, data)
-        except Exception:
+        except Exception as ex:
             # it seems that twisted.protocols.irc makes no attempt to raise useful "invalid syntax"
             # errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
             # so let's catch everything.
             self.disconnect("Invalid data")
+            log.msg("An error occurred processing data.", logLevel=logging.DEBUG)
+            print_exc()
     
     def sendLine(self, line):
         self.ircd.runActionStandard("usersenddata", self, line, users=[self])
