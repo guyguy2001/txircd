@@ -64,7 +64,7 @@ class UserPing(Command):
         }
     
     def execute(self, user, data):
-        user.sendMessage("PONG", ":{}".format(data["data"]), to=None, prefix=None)
+        user.sendMessage("PONG", ":{}".format(data["data"]), to=self.ircd.name)
         return True
 
 class UserPong(Command):
