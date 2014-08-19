@@ -626,6 +626,7 @@ class LocalUser(IRCUser):
         self.localOnly = True
         self._sendMsgFunc = lambda self, command, *args, **kw: None
         self._registrationTimeoutTimer.cancel()
+        self._registerHolds = set(("NICK",))
     
     def setSendMsgFunc(self, func):
         self._sendMsgFunc = func
