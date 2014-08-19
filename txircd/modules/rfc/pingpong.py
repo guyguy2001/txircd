@@ -18,7 +18,7 @@ class PingPong(ModuleData):
                 ("pingserver", 10, self.pingServer) ]
     
     def userCommands(self):
-        return [ ("PING", 1, UserPing()),
+        return [ ("PING", 1, UserPing(self.ircd)),
                 ("PONG", 1, UserPong()) ]
     
     def serverCommands(self):
@@ -54,6 +54,9 @@ class UserPing(Command):
     
     resetsIdleTime = False
     forRegisteredUsers = None
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
     
     def parseParams(self, user, params, prefix, tags):
         if not params:
