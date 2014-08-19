@@ -30,7 +30,7 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
-        self.storage_syncer = LoopingCall(self.storage.sync)
+        self.storage_syncer = None
         self.dataCache = {}
         self.functionCache = {}
         
@@ -66,6 +66,7 @@ class IRCd(Service):
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
         self.storage = shelve.open("data.db", writeback=True)
+        self.storage_syncer = LoopingCall(self.storage.sync)
         self.storage_syncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()

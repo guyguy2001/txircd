@@ -31,6 +31,7 @@ class Oper(ModuleData, Mode):
     
     def nope(self, user, settingUser, adding, param):
         if adding:
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - User mode o may not be set")
             return False
         return None
 
@@ -85,6 +86,7 @@ class UserOper(Command):
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
             return True
         user.setModes(self.ircd.serverID, "+o", [])
+        user.sendMessage(irc.RPL_YOUREOPER, ":You are now an IRC operator")
         return True
 
 oper = Oper()
