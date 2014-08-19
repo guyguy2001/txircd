@@ -684,6 +684,7 @@ class LocalUser(IRCUser):
         self._registerHolds.remove(holdName)
         if not self._registerHolds:
             self.ircd.runActionStandard("localregister", self, users=[self])
+            self.ircd.userNicks[self.nick] = self.uuid
     
     def joinChannel(self, channel, override = False):
         IRCUser.joinChannel(self, channel, True)
