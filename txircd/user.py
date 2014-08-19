@@ -8,7 +8,7 @@ from txircd import version
 from txircd.utils import ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
-from traceback import print_exc
+from traceback import format_exc
 import logging
 
 irc.ERR_ALREADYREGISTERED = "462"
@@ -74,8 +74,7 @@ class IRCUser(irc.IRC):
             # errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
             # so let's catch everything.
             self.disconnect("Invalid data")
-            log.msg("An error occurred processing data.", logLevel=logging.DEBUG)
-            print_exc()
+            log.msg("An error occurred processing data:\n{}".format(format_exc()), logLevel=logging.WARNING)
     
     def sendLine(self, line):
         self.ircd.runActionStandard("usersenddata", self, line, users=[self])
