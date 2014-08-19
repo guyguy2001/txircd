@@ -31,6 +31,7 @@ class Oper(ModuleData, Mode):
     
     def nope(self, user, settingUser, adding, param):
         if adding:
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - User mode o may not be set")
             return False
         return None
 
