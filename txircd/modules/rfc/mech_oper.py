@@ -85,6 +85,7 @@ class UserOper(Command):
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
             return True
         user.setModes(self.ircd.serverID, "+o", [])
+        user.sendMessage(irc.RPL_YOUREOPER, ":You are now an IRC operator")
         return True
 
 oper = Oper()
