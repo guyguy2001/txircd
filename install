@@ -2,6 +2,7 @@
 set -o errexit
 
 # This is the install directory, edit it if you wish
+# Anything already there will be deleted!
 INSTALL_DIR="/var/lib/txircd"
 
 # This is where the config file lives, edit it if you wish
@@ -16,6 +17,11 @@ SAMPLE_CONF="txircd.yaml"
 
 # cd to location of this script
 cd $(dirname $(readlink -f "$0"))
+
+if [ -e "$INSTALL_DIR" ]; then
+    echo "Clearing existing files"
+    rm -rf "$INSTALL_DIR"
+fi
 
 echo "Creating the virtualenv"
 mkdir -p "$INSTALL_DIR"
