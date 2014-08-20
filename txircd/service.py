@@ -130,4 +130,4 @@ class Service(ModuleData):
         user.sendMessage("NOTICE", self.name, ":No help available for \x02{}\x02".format(command))
 
     def isAdmin(self, user):
-        return False # TODO how?
+        return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(self.name))
