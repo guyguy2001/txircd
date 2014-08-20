@@ -1,0 +1,49 @@
+#!/bin/bash
+set -o errexit
+
+# This is the install directory, edit it if you wish
+INSTALL_DIR="/var/lib/txircd"
+
+# This is where the config file lives, edit it if you wish
+CONF_FILE="/etc/txircd.yaml"
+
+# This is the upstart config file. You probably don't want to move it, or it won't work.
+UPSTART_FILE="/etc/init/txircd.conf"
+
+
+TO_INSTALL=(twisted txircd)
+SAMPLE_CONF="txircd.yaml"
+
+# cd to location of this script
+cd $(dirname $(readlink -f "$0"))
+
+echo "Creating the virtualenv"
+mkdir -p "$INSTALL_DIR"
+virtualenv "$INSTALL_DIR"
+
+echo "Installing dependencies"
+"$INSTALL_DIR/bin/pip" install -r requirements.txt
+
+echo "Installing txircd"
+cp -r "${TO_INSTALL[@]}" "$INSTALL_DIR"
+install -m 644 "$SAMPLE_CONF" "$CONF_FILE"
+
+# write the upstart config
+cat > "$UPSTART_FILE" <<EOF
+description "txircd: A modular irc server"
+
+start on filesystems
+stop on runlevel [06]
+
+# Respawn it if the process exits
+respawn
+
+# log stdout/err to /var/log/upstart/txircd.log
+console log
+
+chdir "$INSTALL_DIR"
+exec "$INSTALL_DIR/bin/twistd" -n txircd --config "$CONF_FILE"
+EOF
+chmod 644 "$UPSTART_FILE"
+
+echo "Done"
