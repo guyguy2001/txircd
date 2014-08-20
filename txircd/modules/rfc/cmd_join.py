@@ -2,7 +2,9 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import timestamp
 from zope.interface import implements
+from datetime import datetime
 
 class JoinCommand(ModuleData):
     implements(IPlugin, IModuleData)
@@ -38,7 +40,7 @@ class JoinCommand(ModuleData):
     def broadcastJoin(self, channel, user):
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
-                server.sendMessage("JOIN", channel.name, prefix=user.uuid)
+                server.sendMessage("JOIN", channel.name, str(timestamp(channel.existedSince)), prefix=user.uuid)
     
     def propagateJoin(self, channel, user):
         fromServer = self.ircd.servers[user.uuid[:3]]
@@ -46,7 +48,7 @@ class JoinCommand(ModuleData):
             fromServer = self.ircd.servers[fromServer.nextClosest]
         for server in self.ircd.servers.itervalues():
             if server != fromServer and server.nextClosest == self.ircd.serverID:
-                server.sendMessage("JOIN", channel.name, prefix=user.uuid)
+                server.sendMessage("JOIN", channel.name, str(timestamp(channel.existedSince)), prefix=user.uuid)
 
 class JoinChannel(Command):
     implements(ICommand)
@@ -98,17 +100,24 @@ class ServerJoin(Command):
         self.ircd = ircd
     
     def parseParams(self, server, params, prefix, tags):
-        if not params or not params[0]:
+        if len(params) != 2:
             return None
         if prefix not in self.ircd.users:
             return None
-        return {
-            "user": self.ircd.users[prefix],
-            "channel": self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0])
-        }
+        try:
+            return {
+                "user": self.ircd.users[prefix],
+                "channel": self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0]),
+                "time": datetime.utcfromtimestamp(int(params[1]))
+            }
+        except ValueError:
+            return None
     
     def execute(self, server, data):
         data["user"].joinChannel(data["channel"], True, True)
+        chanTime = data["time"]
+        if chanTime < channel.existedSince:
+            channel.existedSince = chanTime
         return True
 
 class RemoteJoin(Command):
