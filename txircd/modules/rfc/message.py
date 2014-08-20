@@ -86,18 +86,24 @@ class MessageCommands(ModuleData):
     
     def cmdExecute(self, command, user, data):
         sentAMessage = False
+        sentNoTextError = False
         if "targetusers" in data:
             for target, message in data["targetusers"].iteritems():
                 if message:
                     target.sendMessage(command, ":{}".format(message), sourceuser=user)
                     sentAMessage = True
+                elif not sentNoTextError:
+                    user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
+                    sentNoTextError = True
         if "targetchans" in data:
             for target, message in data["targetchans"].iteritems():
                 if message:
                     target.sendMessage(command, ":{}".format(message), to=target.name, sourceuser=user, skipusers=[user])
                     sentAMessage = True
+                elif not sentNoTextError:
+                    user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
+                    sentNoTextError = True
         if not sentAMessage:
-            user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
             return None
         return True
     
