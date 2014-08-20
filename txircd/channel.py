@@ -60,7 +60,7 @@ class IRCChannel(object):
         self.ircd.runActionStandard("topic", self, setter, oldTopic, channels=[self])
         return True
     
-    def setMetadata(self, namespace, key, value = None):
+    def setMetadata(self, namespace, key, value = None, fromServer = None):
         if namespace not in self.metadata:
             return
         oldValue = None
