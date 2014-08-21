@@ -100,24 +100,20 @@ class ServerJoin(Command):
         self.ircd = ircd
     
     def parseParams(self, server, params, prefix, tags):
-        if len(params) != 2:
+        if len(params) != 1:
             return None
         if prefix not in self.ircd.users:
             return None
         try:
             return {
                 "user": self.ircd.users[prefix],
-                "channel": self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0]),
-                "time": datetime.utcfromtimestamp(int(params[1]))
+                "channel": self.ircd.channels[params[0]] if params[0] in self.ircd.channels else IRCChannel(self.ircd, params[0])
             }
         except ValueError:
             return None
     
     def execute(self, server, data):
         data["user"].joinChannel(data["channel"], True, True)
-        chanTime = data["time"]
-        if chanTime < channel.existedSince:
-            channel.existedSince = chanTime
         return True
 
 class RemoteJoin(Command):
