@@ -17,7 +17,7 @@ class ServerUID(ModuleData, Command):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("welcome", 10, self.broadcastUID) ]
+        return [ ("welcome", 500, self.broadcastUID) ]
     
     def serverCommands(self):
         return [ ("UID", 1, self) ]
