@@ -80,19 +80,7 @@ class ServerUID(ModuleData, Command):
         return True
     
     def broadcastUID(self, user):
-        modes = [ "+" ]
-        params = []
-        for mode, param in user.modes.iteritems():
-            if self.ircd.userModeTypes(mode) == ModeType.List:
-                for p in param:
-                    modes.append(mode)
-                    params.append(p[0])
-            else:
-                modes.append(mode)
-                if param is not None:
-                    params.append(param)
-        params.insert(0, "".join(modes))
-        modeStr = " ".join(params)
+        modeStr = "+{}".format(user.modeString())
         finalGecos = ":{}".format(user.gecos)
         currentTimestamp = str(timestamp(now()))
         signonTimestamp = str(timestamp(user.connectedSince))
