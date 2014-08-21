@@ -46,6 +46,9 @@ class KickCommand(ModuleData):
         if channel.userRank(user) < self.minLevel:
             user.sendSingleError("KickPermission", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick users from {}".format(channel.name))
             return False
+        if channel.userRank(user) < channel.userRank(data["user"]):
+            user.sendSingleError("KickPermission", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick this user")
+            return False
         return None
 
 
