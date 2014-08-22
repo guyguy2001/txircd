@@ -80,7 +80,7 @@ class ServerUID(ModuleData, Command):
         return True
     
     def broadcastUID(self, user):
-        modeStr = "+{}".format(user.modeString())
+        modeStr = "+{}".format(user.modeString(None))
         finalGecos = ":{}".format(user.gecos)
         currentTimestamp = str(timestamp(now()))
         signonTimestamp = str(timestamp(user.connectedSince))

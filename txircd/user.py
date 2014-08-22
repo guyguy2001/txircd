@@ -480,7 +480,9 @@ class IRCUser(irc.IRC):
             if modeType not in (ModeType.ParamOnUnset, ModeType.Param, ModeType.NoParam):
                 continue
             if modeType != ModeType.NoParam:
-                param = self.ircd.userModes[modeType][mode].showParam(toUser, self)
+                param = None
+                if toUser:
+                    param = self.ircd.userModes[modeType][mode].showParam(toUser, self)
                 if not param:
                     param = self.modes[mode]
             else:
