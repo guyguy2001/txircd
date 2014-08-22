@@ -35,6 +35,12 @@ class ServerMetadata(ModuleData, Command):
     def propagateChannelMetadata(self, channel, namespace, key, oldValue, value, fromServer):
         self.propagateMetadata(channel.name, str(timestamp(channel.existedSince)), namespace, key, value, fromServer)
     
+    def clearMetadata(self, target, server):
+        metadataToClear = target.metadata.copy()
+        for namespace, data in metadataToClear.iteritems():
+            for key in data.iterkeys():
+                target.setMetadata(namespace, key, None, server)
+    
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 4 and len(params) != 5:
             return None
@@ -61,10 +67,12 @@ class ServerMetadata(ModuleData, Command):
         if "user" in data:
             target = data["user"]
             if data["time"] > target.connectedSince:
+                self.clearMetadata(target, server)
                 return True
         else:
             target = data["channel"]
             if data["time"] > target.existedSince:
+                self.clearMetadata(target, server)
                 return True
         if "value" in data:
             value = data["value"]
