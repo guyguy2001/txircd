@@ -24,7 +24,7 @@ class ServerMetadata(ModuleData, Command):
         serverPrefix = fromServer.serverID if fromServer else self.ircd.serverID
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID and server != fromServer:
-                if valueParam is None:
+                if value is None:
                     server.sendMessage("METADATA", targetID, targetTime, namespace, key, prefix=serverPrefix)
                 else:
                     server.sendMessage("METADATA", targetID, targetTime, namespace, key, ":{}".format(value), prefix=serverPrefix)
