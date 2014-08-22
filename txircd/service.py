@@ -103,31 +103,33 @@ class Service(ModuleData):
             if not admin_only or self.isAdmin(user):
                 handler(user, params)
                 return
-        user.sendMessage("NOTICE", self.name,
-                         ":Unknown command \x02{}\x02. Use \x1f/msg {} HELP\x1f for help.".format(command, self.name))
+        self.tellUser(user, "Unknown command \x02{}\x02. Use \x1f/msg {} HELP\x1f for help.".format(command, self.name))
 
     def handleHelp(self, user, params):
         if not params:
-            for chunk in splitMessage(self.help, 80):
-                user.sendMessage("NOTICE", self.name, ":{}".format(chunk))
+            self.tellUser(user, self.help)
             for command, (handler, admin_only, summary, long_help) in sorted(self._serviceCommands().items()):
                 if admin_only and not self.isAdmin(user):
                     continue
                 if summary is None:
                     continue
-                user.sendMessage("NOTICE", self.name, ":\x02{}\x02: {}".format(command, summary))
-            user.sendMessage("NOTICE", self.name, ":*** End of help")
+                self.tellUser(user, "\x02{}\x02: {}".format(command, summary), split=False)
+            self.tellUser(user, "*** End of help")
             return
         command = params[0].upper()
         if command in self._serviceCommands():
             handler, admin_only, summary, long_help = self._serviceCommands()[command]
             if not admin_only or self.isAdmin(user):
-                user.sendMessage("NOTICE", self.name, ":*** Help for \x02{}\x02:".format(command))
-                for chunk in splitMessage(long_help, 80):
-                    user.sendMessage("NOTICE", self.name, ":{}".format(chunk))
-                user.sendMessage("NOTICE", self.name, ":*** End of help for \x02{}\x02".format(command))
+                self.tellUser(user, "*** Help for \x02{}\x02:".format(command))
+                self.tellUser(user, long_help)
+                self.tellUser(user, "*** End of help for \x02{}\x02".format(command))
                 return
-        user.sendMessage("NOTICE", self.name, ":No help available for \x02{}\x02".format(command))
+        self.tellUser(user, "No help available for \x02{}\x02".format(command))
 
     def isAdmin(self, user):
         return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(self.name))
+
+    def tellUser(self, user, message, split=True):
+        chunks = splitMessage(message, 80) if split else [message]
+        for chunk in chunks:
+            user.sendMessage("NOTICE", ":{}".format(chunk), sourceuser=self.user)
