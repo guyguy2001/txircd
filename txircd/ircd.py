@@ -480,9 +480,9 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             action[0](*params, **kw)
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 mode.apply(actionName, user, param, *params, **kw)
@@ -502,10 +502,10 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             if action[0](*params, **kw):
                 return True
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 if mode.apply(actionName, user, param, *params, **kw):
@@ -529,10 +529,10 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             if not action[0](*params, **kw):
                 return True
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 if not mode.apply(actionName, user, param, *params, **kw):
@@ -556,11 +556,11 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             value = action[0](*params, **kw)
             if value is not None:
                 return value
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 value = mode.apply(actionName, user, param, *params, **kw)
@@ -588,10 +588,10 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             if action[0](*params, **kw):
                 oneIsTrue = True
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 if mode.apply(actionName, user, param, *params, **kw):
@@ -616,10 +616,10 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for action in actionsHighPriority:
             if not action[0](*params, **kw):
                 oneIsFalse = True
-        userModes, channelModes = self._getActionModes(actionName, kw, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 if not mode.apply(actionName, user, param, *params, **kw):
@@ -643,11 +643,11 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
         for action in actionsHighPriority:
             action[0](data, *params, **kw)
             if not data:
                 return
-        userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 mode.apply(actionName, user, param, data, *params, **kw)
@@ -674,6 +674,7 @@ class IRCd(Service):
                 else:
                     break
             actionList = self.actions[actionName][len(actionsHighPriority):]
+        userModes, channelModes = self._getActionModes(actionName, kw, *paramList)
         for action in actionsHighPriority:
             action[0](*paramList, **kw)
             for data in dataList:
@@ -681,7 +682,6 @@ class IRCd(Service):
                     break
             else:
                 return
-        userModes, channelModes = self._getActionModes(actionName, kw, *paramList)
         for mode, users in userModes.iteritems():
             for user, param in users:
                 mode.apply(actionName, user, param, *paramList, **kw)
