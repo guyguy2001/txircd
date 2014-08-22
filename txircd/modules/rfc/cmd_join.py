@@ -4,7 +4,6 @@ from txircd.channel import IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import timestamp
 from zope.interface import implements
-from datetime import datetime
 
 class JoinCommand(ModuleData):
     implements(IPlugin, IModuleData)
