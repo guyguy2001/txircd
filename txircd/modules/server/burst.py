@@ -1,0 +1,89 @@
+from twisted.plugin import IPlugin
+from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import ModeType, now, timestamp
+from zope.interface import implements
+
+class ServerBurst(ModuleData, Command):
+    implements(IPlugin, IModuleData, ICommand)
+    
+    name = "ServerBurst"
+    core = True
+    
+    def hookIRCd(self, ircd):
+        self.ircd = ircd
+    
+    def actions(self):
+        return [ ("startburst", 1, self.startBurst) ]
+    
+    def serverCommands(self):
+        return [ ("BURST", 1, self) ]
+    
+    def startBurst(self, server):
+        server.bursted = False
+        for user in self.ircd.users.itervalues():
+            if user.localOnly:
+                continue
+            currentTimestamp = timestamp(now())
+            signonTimestamp = timestamp(user.connectedSince)
+            modes = ["+"]
+            params = []
+            listModes = {}
+            for mode, param in user.modes.iteritems():
+                if self.ircd.userModeTypes[mode] == ModeType.LIST:
+                    listModes[mode] = param
+                else:
+                    modes.append(mode)
+                    if param is not None:
+                        params.append(param)
+            modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
+            server.sendMessage("UID", user.uuid, currentTimestamp, user.nick, user.realHost, user.host, user.ident, user.ip, signonTimestamp, modeStr, ":{}".format(user.gecos), prefix=self.ircd.serverID)
+            for mode, paramList in listModes.iteritems():
+                for param, setter, time in paramList:
+                    server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
+            for namespace, metadata in user.metadata.iteritems():
+                for key, value in metadata.iteritems():
+                    server.sendMessage("METADATA", user.uuid, signonTimestamp, namespace, key, value, prefix=self.ircd.serverID)
+        for channel in self.ircd.channels.itervalues():
+            channelTimestamp = str(timestamp(channel.existedSince))
+            users = []
+            for user, ranks in channel.user.iteritems():
+                if user.localOnly:
+                    continue
+                users.append("{},{}".format(ranks, user.uuid))
+            if not users:
+                continue # Let's not sync this channel since it won't sync properly
+            modes = ["+"]
+            params = []
+            listModes = {}
+            for mode, param in channel.modes.iteritems():
+                if self.ircd.channelModeTypes[mode] == ModeType.LIST:
+                    listModes[mode] = param
+                else:
+                    modes.append(mode)
+                    if param is not None:
+                        params.append(param)
+            modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
+            server.sendMessage("FJOIN", channel.name, channelTimestamp, modeStr, ":{}".format(" ".join(users)), prefix=self.ircd.serverID)
+            for mode, params in listModes.iteritems():
+                for param, setter, time in params:
+                    server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
+            server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=self.ircd.serverID)
+            for namespace, metadata in channel.metadata.iteritems():
+                for key, value in metadata.iteritems():
+                    server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
+        serversByHopcount = []
+        for remoteServer in self.ircd.servers.itervalues():
+            hopCount = 1
+            servTrace = remoteServer
+            while servTrace.nextClosest != self.ircd.serverID:
+                servTrace = self.ircd.servers[servTrace.nextClosest]
+                hopCount += 1
+            while len(serversByHopcount) < hopCount:
+                serversByHopcount.append([])
+            serversByHopcount[hopCount - 1].append(remoteServer)
+        for hopCount in range(1, len(serversByHopcount) + 1):
+            strHopCount = str(hopCount)
+            for remoteServer in serversByHopcount[hopCount - 1]:
+                server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, ":{}".format(remoteServer.description), prefix=self.ircd.serverID)
+
+serverBurst = ServerBurst()
