@@ -1,12 +1,12 @@
 from twisted.application.service import Service
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredList
-from twisted.internet.endpoints import serverFromString
+from twisted.internet.endpoints import clientFromString, serverFromString
 from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 from twisted.python import log
 from txircd.config import Config
-from txircd.factory import ServerListenFactory, UserFactory
+from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
 import logging, shelve, txircd.modules
@@ -375,6 +375,17 @@ class IRCd(Service):
             else:
                 isupportList.append("{}={}".format(key, val))
         return isupportList
+    
+    def connectServer(self, name):
+        if name not in self.ircd.config.getWithDefault("links", {}):
+            return None
+        serverConfig = self.ircd.config["links"][name]
+        if "connect_descriptor" not in serverConfig:
+            return None
+        endpoint = clientFromString(reactor, unescapeEndpointDescription(serverConfig["connect_descriptor"]))
+        d = endpoint.connect(ServerConnectFactory(self))
+        d.addCallback(lambda result: self.runActionStandard("initiateserverconnection", result))
+        return d
     
     def _getActionModes(self, actionName, kw, *params):
         users = []

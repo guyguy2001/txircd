@@ -13,7 +13,7 @@ class ServerCommand(ModuleData, Command):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("serverconnect", 1, self.introduceSelf) ]
+        return [ ("initiateserverconnection", 1, self.introduceSelf) ]
     
     def serverCommands(self):
         return [ ("SERVER", 1, self) ]
