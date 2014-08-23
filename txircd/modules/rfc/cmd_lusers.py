@@ -51,7 +51,8 @@ class LUsersCommand(ModuleData, Command):
         self.syncTimer.start(3600, True) # Resync the statistics every hour just in case
     
     def unload(self):
-        self.syncTimer.stop()
+        if self.syncTimer.running:
+            self.syncTimer.stop()
     
     def addUser(self, user):
         self.currentUsers += 1

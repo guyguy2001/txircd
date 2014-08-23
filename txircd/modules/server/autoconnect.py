@@ -20,7 +20,8 @@ class ServerAutoconnect(ModuleData):
         self.connector.start(self.ircd.config.getWithDefault("autoconnect_period", 60), False)
     
     def unload(self):
-        self.connector.stop()
+        if self.connector.running:
+            self.connector.stop()
     
     def runConnections(self):
         autoconnectServers = self.ircd.config.getWithDefault("autoconnect", [])
