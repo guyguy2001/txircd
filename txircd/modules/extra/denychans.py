@@ -3,6 +3,8 @@ from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 from fnmatch import fnmatch
 
+irc.ERR_CHANNOTALLOWED = "926"
+
 class DenyChannels(ModuleData):
     implements(IPlugin, IModuleData)
     
@@ -24,6 +26,7 @@ class DenyChannels(ModuleData):
                 return None
         for name in deniedChannels:
             if fnmatch(channel.name, name):
+                user.sendMessage(irc.ERR_CHANNOTALLOWED, channel.name, ":Channel {} is forbidden".format(channel.name))
                 return False
         return None
 
