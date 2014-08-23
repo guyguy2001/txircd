@@ -377,6 +377,8 @@ class IRCd(Service):
         return isupportList
     
     def connectServer(self, name):
+        if name in self.ircd.serverNames:
+            return None
         if name not in self.ircd.config.getWithDefault("links", {}):
             return None
         serverConfig = self.ircd.config["links"][name]

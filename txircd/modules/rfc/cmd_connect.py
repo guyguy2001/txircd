@@ -33,7 +33,9 @@ class ConnectCommand(ModuleData, Command):
     
     def execute(self, user, data):
         serverName = data["server"]
-        if self.ircd.connectServer(serverName):
+        if serverName in self.ircd.serverNames:
+            user.sendMessage("NOTICE", ":*** Server {} is already on the network".format(serverName))
+        elif self.ircd.connectServer(serverName):
             user.sendMessage("NOTICE", ":*** Connecting to {}".format(serverName))
         else:
             user.sendMessage("NOTICE", ":*** Failed to connect to {}".format(serverName))
