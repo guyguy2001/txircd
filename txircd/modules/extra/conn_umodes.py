@@ -11,7 +11,7 @@ class AutoUserModes(ModuleData):
         self.ircd = ircd
 
     def actions(self):
-        return [ ("welcome", 1, self.autoSetUserModes) ]
+        return [ ("welcome", 50, self.autoSetUserModes) ]
 
     def autoSetUserModes(self, user):
         try:
