@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.server import RemoteServer
 from zope.interface import implements
 
 class ServerCommand(ModuleData, Command):
@@ -50,11 +51,15 @@ class ServerCommand(ModuleData, Command):
             if nextClosest not in self.ircd.servers:
                 server.disconnect("Next closest server {} does not exist".format(nextClosest))
                 return True
-        server.serverID = serverID
-        server.name = name
-        server.description = data["description"]
-        server.nextClosest = nextClosest
         if hopCount == 0:
+            newServer = server
+        else:
+            newServer = RemoteServer(self.ircd, "0.0.0.0")
+        newServer.serverID = serverID
+        newServer.name = name
+        newServer.description = data["description"]
+        newServer.nextClosest = nextClosest
+        if hopCount == 0: # The connecting server is the server being introduced, so let's start the connection going
             if server.received:
                 linkData = self.ircd.config.getWithDefault("links", {})
                 if server.name not in linkData:
