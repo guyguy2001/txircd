@@ -377,11 +377,11 @@ class IRCd(Service):
         return isupportList
     
     def connectServer(self, name):
-        if name in self.ircd.serverNames:
+        if name in self.serverNames:
             return None
-        if name not in self.ircd.config.getWithDefault("links", {}):
+        if name not in self.config.getWithDefault("links", {}):
             return None
-        serverConfig = self.ircd.config["links"][name]
+        serverConfig = self.config["links"][name]
         if "connect_descriptor" not in serverConfig:
             return None
         endpoint = clientFromString(reactor, unescapeEndpointDescription(serverConfig["connect_descriptor"]))
