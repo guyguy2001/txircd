@@ -39,7 +39,7 @@ class NickCommand(ModuleData):
         return True
     
     def broadcastNickChange(self, user, oldNick):
-        nickTS = timestamp(user.nickSince)
+        nickTS = str(timestamp(user.nickSince))
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
                 server.sendMessage("NICK", nickTS, user.nick, prefix=user.uuid)
