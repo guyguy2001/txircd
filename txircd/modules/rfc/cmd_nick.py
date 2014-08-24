@@ -96,7 +96,7 @@ class NickServerCommand(Command):
             return None
         user = self.ircd.users[prefix]
         try:
-            time = datetime.utcfromtimestamp(params[0])
+            time = datetime.utcfromtimestamp(int(params[0]))
         except ValueError:
             return None
         if params[1] in self.ircd.userNicks:
