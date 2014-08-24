@@ -5,7 +5,7 @@ from zope.interface import implements
 class ErrorResponse(ModuleData):
     implements(IPlugin, IModuleData)
     
-    name = "errorResponse"
+    name = "ErrorResponse"
     core = True
     
     def actions(self):
