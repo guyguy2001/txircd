@@ -51,6 +51,8 @@ class IRCServer(IRC):
         if "burst_queue" in self.cache:
             for command, prefix, params in self.cache["burst_queue"]:
                 self.handleCommand(command, prefix, params)
+                if self.bursted is None:
+                    break # Something failed to process, so we disconnected
             del self.cache["burst_queue"]
     
     def connectionLost(self, reason):
@@ -68,6 +70,7 @@ class IRCServer(IRC):
             for user in allUsers:
                 if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
                     user.disconnect(netsplitQuitMsg)
+        self.bursted = None
         self._endConnection()
     
     def _endConnection(self):
