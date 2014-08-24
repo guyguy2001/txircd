@@ -75,7 +75,7 @@ class FJoinCommand(ModuleData, Command):
         remoteModes = data["modes"]
         remoteStatuses = []
         for user, ranks in data["users"].iteritems():
-            user.joinChannel(channel, True)
+            user.joinChannel(channel, False, True)
             for rank in ranks:
                 remoteStatuses.append((user.nick, rank))
         if time < channel.existedSince:
