@@ -19,8 +19,6 @@ class ServerCommand(ModuleData, Command):
         return [ ("SERVER", 1, self) ]
     
     def introduceSelf(self, server):
-        if not server.receivedConnection:
-            return
         server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, ":{}".format(self.ircd.config["server_description"]))
     
     def parseParams(self, server, params, prefix, tags):
