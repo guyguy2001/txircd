@@ -82,7 +82,7 @@ class IRCd(Service):
         self.servers = {} # And then destroy the server dict to inhibit server objects generating lots of noise
         for server in serverList:
             if server.nextClosest == self.serverID:
-                stopDeferreds.append(server.disconnectDeferred)
+                stopDeferreds.append(server.disconnectedDeferred)
                 allUsers = self.users.keys()
                 for user in allUsers:
                     if user[:3] == server.serverID:
