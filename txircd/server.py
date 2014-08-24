@@ -63,13 +63,13 @@ class IRCServer(IRC):
     def disconnect(self, reason):
         if self.bursted:
             self.ircd.runActionStandard("serverquit", self, reason)
-            del self.ircd.servers[self.serverID]
-            del self.ircd.serverNames[self.name]
             netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
             allUsers = self.ircd.users.values()
             for user in allUsers:
                 if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
                     user.disconnect(netsplitQuitMsg, True)
+            del self.ircd.servers[self.serverID]
+            del self.ircd.serverNames[self.name]
         self.bursted = None
         if self._pinger.running:
             self._pinger.stop()
