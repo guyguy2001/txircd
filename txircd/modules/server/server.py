@@ -71,6 +71,7 @@ class ServerCommand(ModuleData, Command):
                 password = ""
             server.sendMessage("PASS", ":{}".format(password), prefix=self.ircd.serverID)
             return True
+        newServer.register()
         return True
 
 serverCmd = ServerCommand()
