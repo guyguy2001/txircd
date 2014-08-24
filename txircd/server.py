@@ -58,7 +58,7 @@ class IRCServer(IRC):
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason):
-        if self.serverID:
+        if self.bursted:
             self.ircd.runActionStandard("serverquit", self, reason)
             del self.ircd.servers[self.serverID]
             del self.ircd.serverNames[self.name]
