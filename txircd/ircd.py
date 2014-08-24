@@ -9,7 +9,7 @@ from txircd.config import Config
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
-import logging, shelve, txircd.modules
+import logging, random, shelve, string, txircd.modules
 
 class IRCd(Service):
     def __init__(self, configFileName):
@@ -61,7 +61,13 @@ class IRCd(Service):
         self.name = self.config["server_name"][:64]
         if "." not in self.name:
             raise ValueError ("Server name must look like a domain name")
-        self.serverID = self.config["server_id"].upper()
+        if "server_id" in self.config:
+            self.serverID = self.config["server_id"].upper()
+        else:
+            randFromName = random.Random(self.name)
+            self.serverID = randFromName.choice(string.digits)
+            self.serverID += randFromName.choice(string.digits + string.uppercase)
+            self.serverID += randFromName.choice(string.digits + string.uppercase)
         if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
