@@ -23,15 +23,15 @@ class ServerUID(ModuleData, Command):
         return [ ("UID", 1, self) ]
     
     def parseParams(self, server, params, prefix, tags):
-        if len(params) < 10:
+        if len(params) < 9:
             return None
         uuid, ts, nick, realHost, displayHost, ident, ip, signonTs = params[:8]
         msgTime = datetime.utcfromtimestamp(int(ts))
         connectTime = datetime.utcfromtimestamp(int(signonTs))
         sourceServer = self.ircd.servers[uuid[:3]]
-        currParam = 10
+        currParam = 9
         modes = {}
-        for mode in params[9]:
+        for mode in params[8]:
             if mode == "+":
                 continue
             try:
