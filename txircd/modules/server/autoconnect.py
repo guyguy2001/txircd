@@ -32,6 +32,6 @@ class ServerAutoconnect(ModuleData):
             if not d:
                 log.msg("Failed to autoconnect server {}: probably broken config".format(serverName), logLevel=logging.WARNING)
             else:
-                d.addErrback(lambda result: log.msg("Failed to autoconnect server {}: {}".format(result.getErrorMessage()), logLevel=logging.ERROR))
+                d.addErrback(lambda result: log.msg("Failed to autoconnect server {}: {}".format(serverName, result.getErrorMessage()), logLevel=logging.ERROR))
 
 autoconnect = ServerAutoconnect()
