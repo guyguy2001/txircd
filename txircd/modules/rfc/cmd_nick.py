@@ -56,7 +56,7 @@ class NickCommand(ModuleData):
 class NickUserCommand(Command):
     implements(ICommand)
     
-    forRegisteredUsers = None
+    forRegistered = None
     
     def __init__(self, ircd):
         self.ircd = ircd

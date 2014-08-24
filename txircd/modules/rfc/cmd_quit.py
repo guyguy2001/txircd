@@ -49,7 +49,7 @@ class QuitCommand(ModuleData, Command):
 class UserQuit(Command):
     implements(ICommand)
     
-    forRegisteredUsers = None
+    forRegistered = None
     
     def __init__(self, ircd):
         self.ircd = ircd

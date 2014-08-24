@@ -8,7 +8,7 @@ class PassCommand(ModuleData, Command):
     
     name = "PassCommand"
     core = True
-    forRegisteredUsers = False
+    forRegistered = False
     
     def hookIRCd(self, ircd):
         self.ircd = ircd

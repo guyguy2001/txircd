@@ -139,12 +139,13 @@ class ModuleData(object):
 
 class ICommand(Interface):
     resetsIdleTime = Attribute("Whether this command resets the user's idle time.")
-    forRegisteredUsers = Attribute("""
+    forRegistered = Attribute("""
         Whether this command should be triggered for users only after they've registered.
         True to only activate for registered users.
         False to only activate for unregistered users.
         None to be agnostic about the whole thing.
-        This flag is ignored for servers.
+        This flag is ignored for servers, except that non-True commands will be executed
+        immediately upon receiving instead of going on the burst queue during bursting.
         """)
     
     def parseParams(source, params, prefix, tags):
@@ -177,7 +178,7 @@ class ICommand(Interface):
 
 class Command(object):
     resetsIdleTime = True
-    forRegisteredUsers = True
+    forRegistered = True
     
     def parseParams(self, source, params, prefix, tags):
         return None

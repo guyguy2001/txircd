@@ -53,7 +53,7 @@ class UserPing(Command):
     implements(ICommand)
     
     resetsIdleTime = False
-    forRegisteredUsers = None
+    forRegistered = None
     
     def __init__(self, ircd):
         self.ircd = ircd
@@ -74,7 +74,7 @@ class UserPong(Command):
     implements(ICommand)
     
     resetsIdleTime = False
-    forRegisteredUsers = None
+    forRegistered = None
     
     def parseParams(self, user, params, prefix, tags):
         if not params:

@@ -115,8 +115,8 @@ class IRCUser(irc.IRC):
             affectedUsers = []
             affectedChannels = []
             for handler in handlers:
-                if handler[0].forRegisteredUsers is not None:
-                    if (handler[0].forRegisteredUsers is True and not self.isRegistered()) or (handler[0].forRegisteredUsers is False and self.isRegistered()):
+                if handler[0].forRegistered is not None:
+                    if (handler[0].forRegistered is True and not self.isRegistered()) or (handler[0].forRegistered is False and self.isRegistered()):
                         continue
                 spewRegWarning = False
                 data = handler[0].parseParams(self, params, prefix, {})
@@ -650,7 +650,7 @@ class LocalUser(IRCUser):
         affectedUsers = []
         affectedChannels = []
         for handler in handlers:
-            if handler[0].forRegisteredUsers is False:
+            if handler[0].forRegistered is False:
                 continue
             data = handler[0].parseParams(self, params, prefix, {})
             if data is not None:

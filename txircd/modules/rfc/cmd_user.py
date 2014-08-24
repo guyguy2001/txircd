@@ -8,7 +8,7 @@ class UserCommand(Command, ModuleData):
     
     name = "UserCommand"
     core = True
-    forRegisteredUsers = False
+    forRegistered = False
     
     def userCommands(self):
         return [ ("USER", 1, self) ]

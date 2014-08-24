@@ -8,6 +8,7 @@ class ServerBurst(ModuleData, Command):
     
     name = "ServerBurst"
     core = True
+    forRegistered = False
     
     def hookIRCd(self, ircd):
         self.ircd = ircd
