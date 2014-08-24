@@ -85,5 +85,19 @@ class ServerBurst(ModuleData, Command):
             strHopCount = str(hopCount)
             for remoteServer in serversByHopcount[hopCount - 1]:
                 server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, ":{}".format(remoteServer.description), prefix=self.ircd.serverID)
+    
+    def parseParams(self, server, params, prefix, tags):
+        return {}
+    
+    def execute(self, server, data):
+        if server.serverID in self.ircd.servers:
+            server.disconnect("Server {} already exists".format(server.serverID))
+            return True
+        if server.name in self.ircd.serverNames:
+            server.disconnect("Server with name {} already exists".format(server.name))
+            return True
+        server.register()
+        server.endBurst()
+        return True
 
 serverBurst = ServerBurst()
