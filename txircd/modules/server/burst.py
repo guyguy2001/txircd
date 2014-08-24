@@ -23,8 +23,8 @@ class ServerBurst(ModuleData, Command):
         for user in self.ircd.users.itervalues():
             if user.localOnly:
                 continue
-            currentTimestamp = timestamp(now())
-            signonTimestamp = timestamp(user.connectedSince)
+            currentTimestamp = str(timestamp(now()))
+            signonTimestamp = str(timestamp(user.connectedSince))
             modes = ["+"]
             params = []
             listModes = {}
