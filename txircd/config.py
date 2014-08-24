@@ -9,7 +9,6 @@ _defaults = {
 _required = []
 
 _requiredValue = [
-    "server_id",
     "server_name",
     "server_description",
     "network_name"
