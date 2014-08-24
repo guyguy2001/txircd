@@ -25,9 +25,12 @@ class ServerUID(ModuleData, Command):
     def parseParams(self, server, params, prefix, tags):
         if len(params) < 9:
             return None
-        uuid, ts, nick, realHost, displayHost, ident, ip, signonTs = params[:8]
-        msgTime = datetime.utcfromtimestamp(int(ts))
-        connectTime = datetime.utcfromtimestamp(int(signonTs))
+        uuid, signonTS, nick, realHost, displayHost, ident, ip, nickTS = params[:8]
+        try:
+            connectTime = datetime.utcfromtimestamp(int(signonTS))
+            nickTime = datetime.utcfromtimestamp(int(nickTS))
+        except ValueError:
+            return None
         sourceServer = self.ircd.servers[uuid[:3]]
         currParam = 9
         modes = {}
@@ -53,28 +56,51 @@ class ServerUID(ModuleData, Command):
         gecos = params[currParam]
         return {
             "uuid": uuid,
-            "time": msgTime,
+            "connecttime": connectTime,
             "nick": nick,
             "ident": ident,
             "host": realHost,
             "displayhost": displayHost,
             "ip": ip,
             "gecos": gecos,
-            "connecttime": connectTime,
+            "nicktime": nickTime,
             "modes": modes
         }
     
     def execute(self, server, data):
-        msgTime = data["time"]
         connectTime = data["connecttime"]
+        nickTime = data["nicktime"]
         newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
         newUser.changeHost(data["displayhost"], True)
         newUser.changeIdent(data["ident"], True)
         newUser.changeNick(data["nick"], True)
         newUser.changeGecos(data["gecos"], True)
         newUser.connectedSince = connectTime
-        newUser.nickSince = msgTime
-        newUser.idleSince = msgTime
+        newUser.nickSince = nickTime
+        newUser.idleSince = now()
+        if newUser.nick in self.ircd.userNicks: # Handle nick collisions
+            otherUser = self.ircd.users[self.ircd.userNicks[newUser.nick]]
+            sameUser = ("{}@{}".format(otherUser.ident, otherUser.ip) == "{}@{}".format(newUser.ident, newUser.ip))
+            if sameUser and newUser.nickSince < otherUser.nickSince: # If the user@ip is the same, the newer nickname should win
+                newUser.changeNick(newUser.uuid)
+            elif sameUser and otherUser.nickSince < newUser.nickSince:
+                otherUser.changeNick(otherUser.uuid)
+            elif newUser.nickSince < otherUser.nickSince: # Otherwise, the older nickname should win
+                otherUser.changeNick(otherUser.uuid)
+            elif otherUser.nickSince < newUser.nickSince:
+                newUser.changeNick(newUser.uuid)
+            else: # If the nickname times are the same, fall back on connection times, with the same hierarchy as before
+                if sameUser and newUser.connectedSince < otherUser.connectedSince:
+                    newUser.changeNick(newUser.uuid)
+                elif sameUser and otherUser.connectedSince < newUser.connectedSince:
+                    otherUser.changeNick(otherUser.uuid)
+                elif newUser.connectedSince < otherUser.connectedSince:
+                    otherUser.changeNick(otherUser.uuid)
+                elif otherUser.connectedSince < newUser.connectedSince:
+                    newUser.changeNick(newUser.uuid)
+                else: # As a final fallback, change both nicknames
+                    otherUser.changeNick(otherUser.uuid)
+                    newUser.changeNick(newUser.uuid)
         newUser.register("USER")
         newUser.register("NICK")
         return True
@@ -82,10 +108,10 @@ class ServerUID(ModuleData, Command):
     def broadcastUID(self, user):
         modeStr = "+{}".format(user.modeString(None))
         finalGecos = ":{}".format(user.gecos)
-        currentTimestamp = str(timestamp(now()))
         signonTimestamp = str(timestamp(user.connectedSince))
+        nickTimestamp = str(timestamp(user.nickSince))
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
-                server.sendMessage("UID", user.uuid, currentTimestamp, user.nick, user.realHost, user.host, user.ident, user.ip, signonTimestamp, modeStr, finalGecos, prefix=self.ircd.serverID)
+                server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realHost, user.host, user.ident, user.ip, nickTimestamp, modeStr, finalGecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()
