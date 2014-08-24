@@ -35,6 +35,12 @@ class Service(ModuleData):
         """
         return {}
 
+    def getIdentityInfo(self):
+        """Optional method that should return identity info for the service user
+        as a dict with keys "host", "ident" and "gecos".
+        """
+        return {}
+
     def _serviceCommands(self):
         """For internal use. Gets custom serviceCommands and then adds in default ones."""
         commands = {
@@ -54,6 +60,10 @@ class Service(ModuleData):
         self.user = LocalUser(self.ircd, "127.0.0.1")
         self.user.setSendMsgFunc(self.handleMessage)
         self.user.changeNick(self.nick)
+        info = self.getIdentityInfo()
+        self.user.changeIdent(info.get("ident", self.nick))
+        self.user.changeGecos(info.get("gecos", self.nick))
+        self.user.changeHost(info.get("host", self.ircd.name))
         self.user.register("NICK")
 
     def handleMessage(self, user, command, *params, **kw):
