@@ -59,7 +59,7 @@ class FJoinCommand(ModuleData, Command):
         except ValueError:
             return None
         if params[0] in self.ircd.channels:
-            channel = self.ircd.channels[channel[0]]
+            channel = self.ircd.channels[params[0]]
         else:
             channel = IRCChannel(self.ircd, params[0])
         return {
