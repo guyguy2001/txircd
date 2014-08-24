@@ -2,7 +2,6 @@
 set -o errexit
 
 # This is the install directory, edit it if you wish
-# Anything already there will be deleted!
 INSTALL_DIR="/var/lib/txircd"
 
 # This is where the config file lives, edit it if you wish
@@ -43,19 +42,21 @@ fi
 
 if [ -e "$INSTALL_DIR" ]; then
 	echo "Clearing existing files"
-	rm -rf "$INSTALL_DIR"
+    for path in "${TO_INSTALL[@]}"; do
+    	rm -rf "$INSTALL_DIR/$path"
+    done
+else
+    echo "Creating the virtualenv"
+    mkdir -p "$INSTALL_DIR"
+    virtualenv "$INSTALL_DIR"
 fi
-
-echo "Creating the virtualenv"
-mkdir -p "$INSTALL_DIR"
-virtualenv "$INSTALL_DIR"
 
 echo "Installing dependencies"
 "$INSTALL_DIR/bin/pip" install -r requirements.txt
 
 echo "Installing txircd"
 cp -r "${TO_INSTALL[@]}" "$INSTALL_DIR"
-install -m 644 "$SAMPLE_CONF" "$CONF_FILE"
+[ -f "$CONF_FILE" ] || install -m 644 "$SAMPLE_CONF" "$CONF_FILE"
 # fix file permissions - txircd assumes the local dir is writable
 chown -R "$RUN_USER:" "$INSTALL_DIR"
 
