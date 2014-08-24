@@ -58,7 +58,7 @@ class ServerCommand(ModuleData, Command):
         newServer.description = data["description"]
         newServer.nextClosest = nextClosest
         if hopCount == 0: # The connecting server is the server being introduced, so let's start the connection going
-            if server.received:
+            if server.receivedConnection:
                 linkData = self.ircd.config.getWithDefault("links", {})
                 if server.name not in linkData:
                     server.disconnect("No link block for server {}".format(server.name))
