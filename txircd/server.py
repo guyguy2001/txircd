@@ -1,7 +1,9 @@
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
+from twisted.python import log
 from twisted.words.protocols.irc import IRC
+import logging
 
 class IRCServer(IRC):
     def __init__(self, ircd, ip, received):
