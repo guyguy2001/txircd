@@ -26,13 +26,13 @@ class IRCServer(IRC):
             self.disconnect("Unknown command {}".format(command)) # If we receive a command we don't recognize, abort immediately to avoid a desync
             return
         handlers = self.ircd.serverCommands[command]
-        if self.bursted is False and handlers[0].forRegistered:
-            if "burst_queue" not in self.cache:
-                self.cache["burst_queue"] = []
-            self.cache["burst_queue"].append((command, prefix, params))
-            return
         data = None
         for handler in handlers:
+            if self.bursted is False and handler[0].forRegistered:
+                if "burst_queue" not in self.cache:
+                    self.cache["burst_queue"] = []
+                self.cache["burst_queue"].append((command, prefix, params))
+                return
             data = handler[0].parseParams(self, params, prefix, {})
             if data is not None:
                 break
