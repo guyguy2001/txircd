@@ -26,8 +26,8 @@ class ServerUID(ModuleData, Command):
         if len(params) < 10:
             return None
         uuid, ts, nick, realHost, displayHost, ident, ip, signonTs = params[:8]
-        msgTime = datetime.utcfromtimestamp(ts)
-        connectTime = datetime.utcfromtimestamp(signonTs)
+        msgTime = datetime.utcfromtimestamp(int(ts))
+        connectTime = datetime.utcfromtimestamp(int(signonTs))
         sourceServer = self.ircd.servers[uuid[:3]]
         currParam = 10
         modes = {}
