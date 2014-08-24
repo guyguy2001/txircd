@@ -389,6 +389,10 @@ class IRCd(Service):
         d.addCallback(lambda result: self.runActionStandard("initiateserverconnection", result))
         return d
     
+    def _completeServerConnection(self, result, name):
+        log.msg("Connected to server {}".format(name), logLevel=logging.INFO)
+        self.runActionStandard("initiateserverconnection", result)
+    
     def _getActionModes(self, actionName, kw, *params):
         users = []
         channels = []

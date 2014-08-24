@@ -56,14 +56,15 @@ class IRCServer(IRC):
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason):
-        self.ircd.runActionStandard("serverquit", self, reason)
-        del self.ircd.servers[self.serverID]
-        del self.ircd.serverNames[self.name]
-        netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
-        allUsers = self.ircd.users.values()
-        for user in allUsers:
-            if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
-                user.disconnect(netsplitQuitMsg)
+        if self.serverID:
+            self.ircd.runActionStandard("serverquit", self, reason)
+            del self.ircd.servers[self.serverID]
+            del self.ircd.serverNames[self.name]
+            netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
+            allUsers = self.ircd.users.values()
+            for user in allUsers:
+                if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
+                    user.disconnect(netsplitQuitMsg)
         self._endConnection()
     
     def _endConnection(self):

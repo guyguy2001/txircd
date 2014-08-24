@@ -31,6 +31,7 @@ class ServerAutoconnect(ModuleData):
             d = self.ircd.connectServer(serverName)
             if not d:
                 log.msg("Failed to autoconnect server {}: probably broken config".format(serverName), logLevel=logging.WARNING)
-            d.addErrback(lambda result: log.msg("Failed to autoconnect server {}: {}".format(result.getErrorMessage()), logLevel=logging.ERROR))
+            else:
+                d.addErrback(lambda result: log.msg("Failed to autoconnect server {}: {}".format(result.getErrorMessage()), logLevel=logging.ERROR))
 
 autoconnect = ServerAutoconnect()
