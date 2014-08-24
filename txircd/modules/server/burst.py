@@ -46,7 +46,7 @@ class ServerBurst(ModuleData, Command):
         for channel in self.ircd.channels.itervalues():
             channelTimestamp = str(timestamp(channel.existedSince))
             users = []
-            for user, ranks in channel.user.iteritems():
+            for user, ranks in channel.users.iteritems():
                 if user.localOnly:
                     continue
                 users.append("{},{}".format(ranks, user.uuid))
