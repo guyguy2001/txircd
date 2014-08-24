@@ -5,21 +5,28 @@ How to install
 Option 1 - Install to System
 
 Run:
-    sudo ./install
-This will install txircd to default locations on the filesystem,
-and register it as an upstart service. Python dependencies get installed into a virtualenv.
+    sudo ./install.upstart
+or:
+    sudo ./install.systemd
+(pick whichever is appropriate for your system)
 
-This script assumes that python2, pip and virtualenv are installed,
-and an ubuntu-like system.
+This will install txircd to default locations on the filesystem,
+and register it as a service. Python dependencies get installed into a virtualenv.
+
+This script assumes that python2, pip and virtualenv are installed.
 
 The config file will be placed in /etc/txircd.yaml
-The server will log to /var/log/upstart/txircd.log
+The server will log to /var/log/upstart/txircd.log (on upstart)
+or to the systemd journal (on systemd)
 The server process will run as unprivliged user "txircd"
 
-You may change these options by editing the variables at the top of the file.
+You may change some of these options by editing the variables at the top of the file.
 
-Once the service is installed, it will start on boot, and you can control it with
+Once the service is installed, it will start on boot, and you can control it with:
+on upstart:
     sudo service txircd (start|stop|status)
+on systemd:
+    sudo systemctl (start|stop|status) txircd
 
 
 Option 2 - Manual

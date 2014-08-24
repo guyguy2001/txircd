@@ -11,29 +11,39 @@ CONF_FILE="/etc/txircd.yaml"
 # Info for the user to run txircd as. This user will be created if it doesn't exist.
 RUN_USER="txircd"
 
-# This is the upstart config file. You probably don't want to move it, or it won't work.
-UPSTART_FILE="/etc/init/txircd.conf"
+# If this is "true", set up the service to run on boot.
+START_ON_BOOT="true"
+
 
 TO_INSTALL=(twisted txircd)
 SAMPLE_CONF="txircd.yaml"
+UPSTART_FILE="/etc/init/txircd.conf"
+SYSTEMD_FILE="/etc/systemd/system/txircd.service"
+
+if [ "$#" -lt 1 ]; then
+	echo "Please don't run this script manually - use either install.upstart"
+	echo "or install.systemd, depending on your system."
+	exit 1
+fi
+INIT_TYPE="$1"
 
 # cd to location of this script
 cd $(dirname $(readlink -f "$0"))
 
 # create user if it doesn't exist
 if ! id -u "$RUN_USER" >/dev/null 2>&1; then
-    echo "Creating user: $RUN_USER"
-    useradd --comment "An irc server" \
-            --home-dir "$INSTALL_DIR" \
-            --user-group \
-            --system \
-            --shell "/bin/false" \
-            "$RUN_USER"
+	echo "Creating user: $RUN_USER"
+	useradd --comment "An irc server" \
+	        --home-dir "$INSTALL_DIR" \
+	        --user-group \
+	        --system \
+	        --shell "/bin/false" \
+	        "$RUN_USER"
 fi
 
 if [ -e "$INSTALL_DIR" ]; then
-    echo "Clearing existing files"
-    rm -rf "$INSTALL_DIR"
+	echo "Clearing existing files"
+	rm -rf "$INSTALL_DIR"
 fi
 
 echo "Creating the virtualenv"
@@ -46,26 +56,56 @@ echo "Installing dependencies"
 echo "Installing txircd"
 cp -r "${TO_INSTALL[@]}" "$INSTALL_DIR"
 install -m 644 "$SAMPLE_CONF" "$CONF_FILE"
+# fix file permissions - txircd assumes the local dir is writable
+chown -R "$RUN_USER:" "$INSTALL_DIR"
 
-# write the upstart config
-cat > "$UPSTART_FILE" <<EOF
-description "txircd: A modular irc server"
+echo "Setting up service"
+case "$INIT_TYPE" in
+	"upstart")
+		ON_BOOT_STANZA="start on filesystem"
+		[ "$START_ON_BOOT" == "true" ] || ON_BOOT_STANZA="# $ON_BOOT_STANZA"
+		# write the upstart config
+		cat > "$UPSTART_FILE" <<-EOF
+		description "txircd: A modular irc server"
 
-start on filesystems
-stop on runlevel [06]
+		$ON_BOOT_STANZA
+		stop on runlevel [06]
 
-# Respawn it if the process exits
-respawn
+		# Respawn it if the process exits
+		respawn
 
-# log stdout/err to /var/log/upstart/txircd.log
-console log
+		# log stdout/err to /var/log/upstart/txircd.log
+		console log
 
-# run as user
-setuid $RUN_USER
+		# run as user
+		setuid $RUN_USER
 
-chdir "$INSTALL_DIR"
-exec "$INSTALL_DIR/bin/twistd" -n txircd --config "$CONF_FILE"
-EOF
-chmod 644 "$UPSTART_FILE"
+		chdir "$INSTALL_DIR"
+		exec "$INSTALL_DIR/bin/twistd" -n txircd --config "$CONF_FILE"
+		EOF
+		chmod 644 "$UPSTART_FILE"
+		;;
+	"systemd")
+		# write the systemd unit file
+		cat > "$SYSTEMD_FILE" <<-EOF
+		[Unit]
+		Description=txircd: A modular irc server
+
+		[Service]
+		WorkingDirectory=$INSTALL_DIR
+		ExecStart=$INSTALL_DIR/bin/twistd -n txircd --config "$CONF_FILE"
+		User=$RUN_USER
+		Restart=on-failure
+
+		[Install]
+		WantedBy=multi-user.target
+		EOF
+		chmod 644 "$SYSTEMD_FILE"
+		[ "$START_ON_BOOT" == "true" ] && systemctl enable txircd
+		;;
+	*)
+		echo "WARNING: Unknown init system \"$INIT_SYSTEM\" - cannot set up service"
+		;;
+esac
 
 echo "Done"
