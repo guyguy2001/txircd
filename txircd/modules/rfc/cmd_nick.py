@@ -103,11 +103,18 @@ class NickServerCommand(Command):
             localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
             if localUser != user:
                 if localUser.localOnly:
-                    if self.ircd.runActionUntilTrue("localnickcollision", localUser, user, users=[localUser, user]):
+                    allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, users=[localUser, user])
+                    if allowChange:
                         return {
                             "user": user,
                             "time": time,
                             "nick": params[1]
+                        }
+                    if allowChange is False:
+                        return {
+                            "user": user,
+                            "time": time,
+                            "nick": None
                         }
                     return None
                 return None
@@ -120,6 +127,8 @@ class NickServerCommand(Command):
     def execute(self, server, data):
         user = data["user"]
         newNick = data["nick"]
+        if not newNick:
+            return True # Handled collision by not changing the user's nick
         if newNick in self.ircd.userNicks:
             server.sendMessage("CHGNICK", user.uuid, user.uuid, prefix=self.ircd.serverID)
             return True
