@@ -19,7 +19,7 @@ class ServerCommand(ModuleData, Command):
         return [ ("SERVER", 1, self) ]
     
     def introduceSelf(self, server):
-        server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, ":{}".format(self.ircd.config["server_description"]))
+        server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
     
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 5:
@@ -69,7 +69,7 @@ class ServerCommand(ModuleData, Command):
                     password = ""
                 server.sendMessage("PASS", ":{}".format(password), prefix=self.ircd.serverID)
                 return True
-            server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, ":{}".format(self.ircd.config["server_description"]))
+            server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
             return True
         return True
 
