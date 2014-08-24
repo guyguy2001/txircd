@@ -71,6 +71,8 @@ class IRCServer(IRC):
                 if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
                     user.disconnect(netsplitQuitMsg)
         self.bursted = None
+        if self._pinger.running:
+            self._pinger.stop()
         self._endConnection()
     
     def _endConnection(self):
