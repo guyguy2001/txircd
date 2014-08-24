@@ -11,6 +11,9 @@ class PassCommand(ModuleData, Command):
     def hookIRCd(self, ircd):
         self.ircd = ircd
     
+    def serverCommands(self):
+        return [ ("PASS", 1, self) ]
+    
     def parseParams(self, server, params, prefix, tags):
         if params != 1:
             return None
