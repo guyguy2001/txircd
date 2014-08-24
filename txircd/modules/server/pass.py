@@ -15,7 +15,7 @@ class PassCommand(ModuleData, Command):
         return [ ("PASS", 1, self) ]
     
     def parseParams(self, server, params, prefix, tags):
-        if params != 1:
+        if len(params) != 1:
             return None
         if not params[0]:
             return None
