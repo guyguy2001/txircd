@@ -557,7 +557,8 @@ class RemoteUser(IRCUser):
     def changeNick(self, newNick, fromRemote = False):
         if fromRemote:
             oldNick = self.nick
-            del self.ircd.userNicks[self.nick]
+            if self.nick:
+                del self.ircd.userNicks[self.nick]
             self.nick = newNick
             self.ircd.userNicks[self.nick] = self.uuid
             userSendList = [self]
