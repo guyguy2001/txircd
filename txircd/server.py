@@ -48,9 +48,10 @@ class IRCServer(IRC):
     
     def endBurst(self):
         self.bursted = True
-        for command, prefix, params in self.cache["burst_queue"]:
-            self.handleCommand(command, prefix, params)
-        del self.cache["burst_queue"]
+        if "burst_queue" in self.cache:
+            for command, prefix, params in self.cache["burst_queue"]:
+                self.handleCommand(command, prefix, params)
+            del self.cache["burst_queue"]
     
     def connectionLost(self, reason):
         if self.serverID in self.ircd.servers:
