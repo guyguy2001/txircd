@@ -68,7 +68,8 @@ class ServerBurst(ModuleData, Command):
             for mode, params in listModes.iteritems():
                 for param, setter, time in params:
                     server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
-            server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=self.ircd.serverID)
+            if channel.topic:
+                server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=self.ircd.serverID)
             for namespace, metadata in channel.metadata.iteritems():
                 for key, value in metadata.iteritems():
                     server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
