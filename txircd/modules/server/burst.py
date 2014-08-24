@@ -29,7 +29,7 @@ class ServerBurst(ModuleData, Command):
             params = []
             listModes = {}
             for mode, param in user.modes.iteritems():
-                if self.ircd.userModeTypes[mode] == ModeType.LIST:
+                if self.ircd.userModeTypes[mode] == ModeType.List:
                     listModes[mode] = param
                 else:
                     modes.append(mode)
@@ -56,7 +56,7 @@ class ServerBurst(ModuleData, Command):
             params = []
             listModes = {}
             for mode, param in channel.modes.iteritems():
-                if self.ircd.channelModeTypes[mode] == ModeType.LIST:
+                if self.ircd.channelModeTypes[mode] == ModeType.List:
                     listModes[mode] = param
                 else:
                     modes.append(mode)
