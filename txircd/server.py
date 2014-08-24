@@ -74,6 +74,7 @@ class IRCServer(IRC):
         if self.serverID and self.name:
             self._pinger.start(self.ircd.config.getWithDefault("server_ping_frequency", 60))
             return
+        log.msg("Disconnecting unregistered server", logLevel=logging.INFO)
         self.disconnect("Registration timeout")
     
     def _ping(self):
