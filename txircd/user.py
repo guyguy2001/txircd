@@ -556,7 +556,7 @@ class RemoteUser(IRCUser):
     def changeNick(self, newNick, fromRemote = False):
         if fromRemote:
             oldNick = self.nick
-            if self.nick:
+            if self.nick and self.nick in self.ircd.userNicks and self.ircd.userNicks[self.nick] == self.uuid:
                 del self.ircd.userNicks[self.nick]
             self.nick = newNick
             self.ircd.userNicks[self.nick] = self.uuid
