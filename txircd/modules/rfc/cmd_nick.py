@@ -16,16 +16,14 @@ class NickCommand(ModuleData):
     
     def actions(self):
         return [ ("changenickmessage", 1, self.sendNickMessage),
-                ("remotenickrequest", 1, self.forwardNickRequest),
                 ("changenick", 1, self.broadcastNickChange),
-                ("remotechangenick", 1, self.propagateNickChange) ]
+                ("remotechangenick", 1, self.broadcastNickChange) ]
     
     def userCommands(self):
         return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
     
     def serverCommands(self):
-        return [ ("NICK", 1, NickServerCommand(self.ircd)),
-                ("CHGNICK", 1, ChgNickServerCommand(self.ircd)) ]
+        return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
     
     def sendNickMessage(self, userShowList, user, oldNick):
         def transformUser(sayingUser):
@@ -34,23 +32,10 @@ class NickCommand(ModuleData):
             targetUser.sendMessage("NICK", to=user.nick, sourceuser=user, usertransform=transformUser)
         del userShowList[:]
     
-    def forwardNickRequest(self, user, newNick):
-        self.ircd.servers[user.uuid[:3]].sendMessage("CHGNICK", user.uuid, newNick, prefix=self.ircd.serverID)
-        return True
-    
-    def broadcastNickChange(self, user, oldNick):
+    def broadcastNickChange(self, user, oldNick, fromServer):
         nickTS = str(timestamp(user.nickSince))
         for server in self.ircd.servers.itervalues():
-            if server.nextClosest == self.ircd.serverID:
-                server.sendMessage("NICK", nickTS, user.nick, prefix=user.uuid)
-    
-    def propagateNickChange(self, user, oldNick):
-        nickTS = str(timestamp(user.nickSince))
-        fromServer = self.ircd.servers[user.uuid[:3]]
-        while fromServer.nextClosest != self.ircd.serverID:
-            fromServer = self.ircd.servers[fromServer.nextClosest]
-        for server in self.ircd.servers.itervalues():
-            if server != fromServer and server.nextClosest == self.ircd.serverID:
+            if server.nextClosest == self.ircd.serverID and server != fromServer:
                 server.sendMessage("NICK", nickTS, user.nick, prefix=user.uuid)
 
 class NickUserCommand(Command):
@@ -130,35 +115,10 @@ class NickServerCommand(Command):
         if not newNick:
             return True # Handled collision by not changing the user's nick
         if newNick in self.ircd.userNicks:
-            server.sendMessage("CHGNICK", user.uuid, user.uuid, prefix=self.ircd.serverID)
+            user.changeNick(user.uuid)
             return True
-        user.changeNick(data["nick"], True)
+        user.changeNick(data["nick"], server)
         user.nickSince = data["time"]
-        return True
-
-class ChgNickServerCommand(Command):
-    implements(ICommand)
-    
-    def __init__(self, ircd):
-        self.ircd = ircd
-    
-    def parseParams(self, server, params, prefix, tags):
-        if len(params) != 2:
-            return None
-        if params[0] not in self.ircd.users:
-            return None
-        return {
-            "prefix": prefix,
-            "user": params[0],
-            "nick": params[1]
-        }
-    
-    def execute(self, server, data):
-        user = self.ircd.users[data["user"]]
-        if user.uuid[:3] == self.ircd.serverID:
-            user.changeNick(data["nick"])
-        else:
-            self.ircd.servers[user.uuid[:3]].sendMessage("CHGNICK", user.uuid, data["nick"], prefix=data["prefix"])
         return True
 
 cmd_nick = NickCommand()

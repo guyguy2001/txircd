@@ -263,7 +263,7 @@ class IRCUser(irc.IRC):
     def hostmaskWithIP(self):
         return "{}!{}@{}".format(self.nick, self.ident, self.ip)
     
-    def changeNick(self, newNick):
+    def changeNick(self, newNick, fromServer = None):
         if newNick == self.nick:
             return
         if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != self.uuid:
@@ -280,7 +280,7 @@ class IRCUser(irc.IRC):
                 userSendList.extend(channel.users.keys())
             userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
             self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
-            self.ircd.runActionStandard("changenick", self, oldNick, users=[self])
+            self.ircd.runActionStandard("changenick", self, oldNick, fromServer, users=[self])
     
     def changeIdent(self, newIdent):
         if newIdent == self.ident:
@@ -556,21 +556,18 @@ class RemoteUser(IRCUser):
         else:
             self.ircd.runActionUntilTrue("remotequitrequest", self, reason, users=[self])
     
-    def changeNick(self, newNick, fromRemote = False):
-        if fromRemote:
-            oldNick = self.nick
-            if self.nick and self.nick in self.ircd.userNicks and self.ircd.userNicks[self.nick] == self.uuid:
-                del self.ircd.userNicks[self.nick]
-            self.nick = newNick
-            self.ircd.userNicks[self.nick] = self.uuid
-            userSendList = [self]
-            for channel in self.channels:
-                userSendList.extend(channel.users.keys())
-            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-            self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
-            self.ircd.runActionStandard("remotechangenick", self, oldNick, users=[self])
-        else:
-            self.ircd.runActionUntilTrue("remotenickrequest", self, newNick, users=[self])
+    def changeNick(self, newNick, fromServer = None):
+        oldNick = self.nick
+        if self.nick and self.nick in self.ircd.userNicks and self.ircd.userNicks[self.nick] == self.uuid:
+            del self.ircd.userNicks[self.nick]
+        self.nick = newNick
+        self.ircd.userNicks[self.nick] = self.uuid
+        userSendList = [self]
+        for channel in self.channels:
+            userSendList.extend(channel.users.keys())
+        userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+        self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
+        self.ircd.runActionStandard("remotechangenick", self, oldNick, fromServer, users=[self])
     
     def changeIdent(self, newIdent, fromRemote = False):
         if len(newIdent) > 12:
