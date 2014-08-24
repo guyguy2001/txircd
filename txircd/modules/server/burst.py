@@ -21,6 +21,20 @@ class ServerBurst(ModuleData, Command):
     
     def startBurst(self, server):
         server.bursted = False
+        serversByHopcount = []
+        for remoteServer in self.ircd.servers.itervalues():
+            hopCount = 1
+            servTrace = remoteServer
+            while servTrace.nextClosest != self.ircd.serverID:
+                servTrace = self.ircd.servers[servTrace.nextClosest]
+                hopCount += 1
+            while len(serversByHopcount) < hopCount:
+                serversByHopcount.append([])
+            serversByHopcount[hopCount - 1].append(remoteServer)
+        for hopCount in range(1, len(serversByHopcount) + 1):
+            strHopCount = str(hopCount)
+            for remoteServer in serversByHopcount[hopCount - 1]:
+                server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, ":{}".format(remoteServer.description), prefix=self.ircd.serverID)
         for user in self.ircd.users.itervalues():
             if user.localOnly:
                 continue
@@ -73,20 +87,6 @@ class ServerBurst(ModuleData, Command):
             for namespace, metadata in channel.metadata.iteritems():
                 for key, value in metadata.iteritems():
                     server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
-        serversByHopcount = []
-        for remoteServer in self.ircd.servers.itervalues():
-            hopCount = 1
-            servTrace = remoteServer
-            while servTrace.nextClosest != self.ircd.serverID:
-                servTrace = self.ircd.servers[servTrace.nextClosest]
-                hopCount += 1
-            while len(serversByHopcount) < hopCount:
-                serversByHopcount.append([])
-            serversByHopcount[hopCount - 1].append(remoteServer)
-        for hopCount in range(1, len(serversByHopcount) + 1):
-            strHopCount = str(hopCount)
-            for remoteServer in serversByHopcount[hopCount - 1]:
-                server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, ":{}".format(remoteServer.description), prefix=self.ircd.serverID)
         server.sendMessage("BURST", prefix=self.ircd.serverID)
     
     def parseParams(self, server, params, prefix, tags):
