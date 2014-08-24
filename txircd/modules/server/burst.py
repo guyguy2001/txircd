@@ -26,7 +26,7 @@ class ServerBurst(ModuleData, Command):
                 continue
             currentTimestamp = str(timestamp(now()))
             signonTimestamp = str(timestamp(user.connectedSince))
-            modes = ["+"]
+            modes = []
             params = []
             listModes = {}
             for mode, param in user.modes.iteritems():
@@ -53,7 +53,7 @@ class ServerBurst(ModuleData, Command):
                 users.append("{},{}".format(ranks, user.uuid))
             if not users:
                 continue # Let's not sync this channel since it won't sync properly
-            modes = ["+"]
+            modes = []
             params = []
             listModes = {}
             for mode, param in channel.modes.iteritems():
