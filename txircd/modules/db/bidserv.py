@@ -68,6 +68,9 @@ class BidServ(DBService):
                            "Using this command will send you back some information on the current auction."),
         }
 
+    def getIdentityInfo(self):
+        return self.getConfig()
+
     def toDecimal(self, value):
         """Converts value (string, int, float or Decimal) to a 2-digit precision Decimal"""
         value = Decimal(str(value))
