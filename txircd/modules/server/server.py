@@ -59,17 +59,17 @@ class ServerCommand(ModuleData, Command):
         newServer.nextClosest = nextClosest
         if hopCount == 0: # The connecting server is the server being introduced, so let's start the connection going
             if server.receivedConnection:
-                linkData = self.ircd.config.getWithDefault("links", {})
-                if server.name not in linkData:
-                    server.disconnect("No link block for server {}".format(server.name))
-                    return True
-                if "out_password" in linkData[server.name]:
-                    password = linkData[server.name]["out_password"]
-                else:
-                    password = ""
-                server.sendMessage("PASS", ":{}".format(password), prefix=self.ircd.serverID)
+                server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
                 return True
-            server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
+            linkData = self.ircd.config.getWithDefault("links", {})
+            if server.name not in linkData:
+                server.disconnect("No link block for server {}".format(server.name))
+                return True
+            if "out_password" in linkData[server.name]:
+                password = linkData[server.name]["out_password"]
+            else:
+                password = ""
+            server.sendMessage("PASS", ":{}".format(password), prefix=self.ircd.serverID)
             return True
         return True
 
