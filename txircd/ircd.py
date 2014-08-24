@@ -386,7 +386,7 @@ class IRCd(Service):
             return None
         endpoint = clientFromString(reactor, unescapeEndpointDescription(serverConfig["connect_descriptor"]))
         d = endpoint.connect(ServerConnectFactory(self))
-        d.addCallback(lambda result: self.runActionStandard("initiateserverconnection", result))
+        d.addCallback(self._completeServerConnection, name)
         return d
     
     def _completeServerConnection(self, result, name):
