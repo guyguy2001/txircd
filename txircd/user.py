@@ -548,6 +548,9 @@ class RemoteUser(IRCUser):
             for channel in self.channels:
                 userSendList.extend(channel.users.keys())
             userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+            channels = copy(self.channels)
+            for channel in self.channels:
+                self.leaveChannel(channel, True)
             self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
             self.ircd.runActionStandard("remotequit", self, reason, users=[self])
         else:
