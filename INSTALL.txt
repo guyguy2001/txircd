@@ -14,6 +14,9 @@ and an ubuntu-like system.
 
 The config file will be placed in /etc/txircd.yaml
 The server will log to /var/log/upstart/txircd.log
+The server process will run as unprivliged user "txircd"
+
+You may change these options by editing the variables at the top of the file.
 
 Once the service is installed, it will start on boot, and you can control it with
     sudo service txircd (start|stop|status)

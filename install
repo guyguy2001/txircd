@@ -8,15 +8,28 @@ INSTALL_DIR="/var/lib/txircd"
 # This is where the config file lives, edit it if you wish
 CONF_FILE="/etc/txircd.yaml"
 
+# Info for the user to run txircd as. This user will be created if it doesn't exist.
+RUN_USER="txircd"
+
 # This is the upstart config file. You probably don't want to move it, or it won't work.
 UPSTART_FILE="/etc/init/txircd.conf"
-
 
 TO_INSTALL=(twisted txircd)
 SAMPLE_CONF="txircd.yaml"
 
 # cd to location of this script
 cd $(dirname $(readlink -f "$0"))
+
+# create user if it doesn't exist
+if ! id -u "$RUN_USER" >/dev/null 2>&1; then
+    echo "Creating user: $RUN_USER"
+    useradd --comment "An irc server" \
+            --home-dir "$INSTALL_DIR" \
+            --user-group \
+            --system \
+            --shell "/bin/false" \
+            "$RUN_USER"
+fi
 
 if [ -e "$INSTALL_DIR" ]; then
     echo "Clearing existing files"
@@ -46,6 +59,9 @@ respawn
 
 # log stdout/err to /var/log/upstart/txircd.log
 console log
+
+# run as user
+setuid $RUN_USER
 
 chdir "$INSTALL_DIR"
 exec "$INSTALL_DIR/bin/twistd" -n txircd --config "$CONF_FILE"
