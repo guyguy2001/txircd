@@ -106,7 +106,7 @@ class ServerUID(ModuleData, Command):
         finalGecos = ":{}".format(newUser.gecos)
         for remoteServer in self.ircd.servers.itervalues():
             if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-                remoteServer.sendMessage("UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, user.modeString(None), finalGecos, prefix=self.ircd.serverID)
+                remoteServer.sendMessage("UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realhost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, user.modeString(None), finalGecos, prefix=self.ircd.serverID)
         return True
     
     def broadcastUID(self, user):
@@ -116,6 +116,6 @@ class ServerUID(ModuleData, Command):
         nickTimestamp = str(timestamp(user.nickSince))
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
-                server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realHost, user.host, user.ident, user.ip, nickTimestamp, modeStr, finalGecos, prefix=self.ircd.serverID)
+                server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realhost, user.host, user.ident, user.ip, nickTimestamp, modeStr, finalGecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()
