@@ -15,9 +15,11 @@ class BidServ(DBService):
     name = "BidServ"
     user_cmd_aliases = {
         "BID": (10, "BID"),
+        "BS": (10, None),
     }
     help = ("This service manages auctions - what the prize is, who can bid, "
-            "tracks the bids and records the results on the backend.")
+            "tracks the bids and records the results on the backend.\n"
+            "You can run these commands with \x02/bs COMMAND\x02.")
 
     auction = None
     starting = False
