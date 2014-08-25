@@ -84,22 +84,22 @@ class ServerUID(ModuleData, Command):
             if sameUser and newUser.nickSince < otherUser.nickSince: # If the user@ip is the same, the newer nickname should win
                 newUser.changeNick(newUser.uuid, server)
             elif sameUser and otherUser.nickSince < newUser.nickSince:
-                otherUser.changeNick(otherUser.uuid)
+                otherUser.changeNick(otherUser.uuid, server)
             elif newUser.nickSince < otherUser.nickSince: # Otherwise, the older nickname should win
-                otherUser.changeNick(otherUser.uuid)
+                otherUser.changeNick(otherUser.uuid, server)
             elif otherUser.nickSince < newUser.nickSince:
                 newUser.changeNick(newUser.uuid, server)
             else: # If the nickname times are the same, fall back on connection times, with the same hierarchy as before
                 if sameUser and newUser.connectedSince < otherUser.connectedSince:
                     newUser.changeNick(newUser.uuid, server)
                 elif sameUser and otherUser.connectedSince < newUser.connectedSince:
-                    otherUser.changeNick(otherUser.uuid)
+                    otherUser.changeNick(otherUser.uuid, server)
                 elif newUser.connectedSince < otherUser.connectedSince:
-                    otherUser.changeNick(otherUser.uuid)
+                    otherUser.changeNick(otherUser.uuid, server)
                 elif otherUser.connectedSince < newUser.connectedSince:
                     newUser.changeNick(newUser.uuid, server)
                 else: # As a final fallback, change both nicknames
-                    otherUser.changeNick(otherUser.uuid)
+                    otherUser.changeNick(otherUser.uuid, server)
                     newUser.changeNick(newUser.uuid, server)
         newUser.register("USER")
         newUser.register("NICK")
