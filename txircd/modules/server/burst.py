@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ModeType, now, timestamp
+from txircd.utils import ModeType, timestamp
 from zope.interface import implements
 
 class ServerBurst(ModuleData, Command):
@@ -38,8 +38,8 @@ class ServerBurst(ModuleData, Command):
         for user in self.ircd.users.itervalues():
             if user.localOnly:
                 continue
-            currentTimestamp = str(timestamp(now()))
             signonTimestamp = str(timestamp(user.connectedSince))
+            nickTimestamp = str(timestamp(user.nickSince))
             modes = []
             params = []
             listModes = {}
@@ -51,7 +51,7 @@ class ServerBurst(ModuleData, Command):
                     if param is not None:
                         params.append(param)
             modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-            server.sendMessage("UID", user.uuid, currentTimestamp, user.nick, user.realhost, user.host, user.ident, user.ip, signonTimestamp, modeStr, ":{}".format(user.gecos), prefix=self.ircd.serverID)
+            server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realhost, user.host, user.ident, user.ip, nickTimestamp, modeStr, ":{}".format(user.gecos), prefix=self.ircd.serverID)
             for mode, paramList in listModes.iteritems():
                 for param, setter, time in paramList:
                     server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
