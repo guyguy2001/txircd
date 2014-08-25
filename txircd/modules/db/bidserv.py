@@ -52,14 +52,18 @@ class BidServ(DBService):
                        "USAGE: \x02REVERT\x02\n"
                        "Remove the latest bid as though it didn't happen. "
                        "The previous high bid will be reinstated, and the going once/twice counter reset."),
-            "ONCE": (self.goOnce, True, "Call the auction as Going Once",
+            "ONCE": (self.goOnce, True, "Call the auction as Going Once, or cancel that call",
                        "USAGE: \x02ONCE\x02\n"
                        "Call the current auction as Going Once. This can only be done when the auction "
-                       "is not Going Anything yet."),
-            "TWICE": (self.goTwice, True, "Call the auction as Going Twice",
+                       "is not Going Anything yet.\n"
+                       "Alternately, \x02ONCE REVERT\x02 when already Going Once "
+                       "to revert to not going anything."),
+            "TWICE": (self.goTwice, True, "Call the auction as Going Twice, or cancel that call",
                        "USAGE: \x02TWICE\x02\n"
                        "Call the current auction as Going Twice. This can only be done when the auction "
-                       "is already Going Once."),
+                       "is already Going Once.\n"
+                       "Alternately, \x02ONCE REVERT\x02 when already Going Twice "
+                       "to revert to Going Once."),
             "SOLD": (self.goSold, True, "Call the auction as Sold to the current top bidder!",
                      "USAGE: \x02SOLD\x02\n"
                      "Call the current auction as Sold. The current high bid will be recorded as the winner. "
@@ -296,7 +300,7 @@ class BidServ(DBService):
                    "\x02 - Called by {caller}").format(badBid=badBid, newBid=newBid, caller=user.nick)
         self.broadcast(message)
 
-    def goingCall(self, going, user):
+    def goingCall(self, going, user, revert=False):
         auction = self.getAuction()
         def getGoingName(called):
             return {
@@ -308,22 +312,34 @@ class BidServ(DBService):
         if not auction:
             self.tellUser(user, "There is not an auction going on right now")
             return False
-        if auction["called"] != going - 1:
-            self.tellUser(user, "Now is not the time to call {}.  (Current state: {})".format(
-                                getGoingName(going), getGoingName(auction["called"])))
-            return False
+
+        if revert:
+            if auction["called"] != going:
+                self.tellUser(user, "Cannot revert - we are not currently {} (Current state: {})".format(
+                                    getGoingName(going), getGoingName(auction["called"])))
+                return False
+            going = going - 1
+        else:
+            if auction["called"] != going - 1:
+                self.tellUser(user, "Now is not the time to call {}.  (Current state: {})".format(
+                                    getGoingName(going), getGoingName(auction["called"])))
+                return False
+
         auction["called"] = going
         highBid = self.getHighBid()
-        message = "\x02\x034{}! To {} for ${:,}!\x02 - Called by {}".format(
-                  getGoingName(going), highBid["donorName"], highBid["value"], user.nick)
+        if going == 0:
+            message = "\x02\x034No longer going anything! High bid is ${value:,} for {donorName} - Called by {caller}"
+        else:
+            message = "\x02\x034{going}! To {donorName} for ${value:,}!\x02 - Called by {caller}"
+        message = message.format(going=getGoingName(going), caller=user.nick, **highBid)
         self.broadcast(message)
         return True
 
     def goOnce(self, user, params):
-        self.goingCall(1, user)
+        self.goingCall(1, user, params and params[0].upper() == "REVERT")
 
     def goTwice(self, user, params):
-        self.goingCall(2, user)
+        self.goingCall(2, user, params and params[0].upper() == "REVERT")
 
     def goSold(self, user, params):
         auction = self.getAuction()
