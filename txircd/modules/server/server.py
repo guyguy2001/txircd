@@ -13,13 +13,26 @@ class ServerCommand(ModuleData, Command):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("initiateserverconnection", 1, self.introduceSelf) ]
+        return [ ("initiateserverconnection", 1, self.introduceSelf),
+                ("serverconnect", 10, self.propagateServer) ]
     
     def serverCommands(self):
         return [ ("SERVER", 1, self) ]
     
     def introduceSelf(self, server):
         server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
+    
+    def propagateServer(self, server):
+        hopCount = 1
+        serverTrace = server
+        while serverTrace.nextClosest != self.ircd.serverID:
+            hopCount += 1
+            serverTrace = self.ircd.servers[serverTrace.nextClosest]
+        sendHopCount = str(hopCount)
+        sendDescription = ":{}".format(server.description)
+        for remoteServer in self.ircd.servers.itervalues():
+            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
+                remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, sendDescription)
     
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 5:
