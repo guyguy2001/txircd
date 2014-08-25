@@ -68,7 +68,8 @@ class IRCServer(IRC):
             for user in allUsers:
                 if user.uuid[:3] == self.serverID:
                     user.disconnect(netsplitQuitMsg, True)
-            for server in self.ircd.servers.itervalues():
+            allServers = self.ircd.servers.values()
+            for server in allServers:
                 if server.nextClosest == self.serverID:
                     server.disconnect(reason, netsplitQuitMsg)
             del self.ircd.servers[self.serverID]
