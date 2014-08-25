@@ -88,7 +88,7 @@ class NickServerCommand(Command):
             localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
             if localUser != user:
                 if localUser.localOnly:
-                    allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, users=[localUser, user])
+                    allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, server, users=[localUser, user])
                     if allowChange:
                         return {
                             "user": user,
