@@ -330,6 +330,7 @@ class BidServ(DBService):
         self.logAuction(user)
         winningBid = self.getHighBid()
         prizeID = auction["id"]
+        # TODO do this check with a loop over all users looking for winningBid["donorID"] instead
         if winningBid["donorName"] in self.ircd.userNicks:
             winner = self.ircd.users[self.ircd.userNicks[winningBid["donorName"]]]
             winMessage = ("Congratulations! You won \"{}\"! "
