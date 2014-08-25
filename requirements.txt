@@ -2,3 +2,4 @@ twisted==13.2.0
 pyopenssl==0.13.1
 pyyaml==3.10
 pbkdf2
+pymysql
