@@ -5,8 +5,6 @@ from txircd.utils import ModeType, now, timestamp
 from zope.interface import implements
 from datetime import datetime
 
-# :<sid of new users server> UID <uid> <timestamp> <nick> <hostname> <displayed-hostname> <ident> <ip> <signon time> +<modes {mode params}> :<gecos>
-
 class ServerUID(ModuleData, Command):
     implements(IPlugin, IModuleData, ICommand)
     
