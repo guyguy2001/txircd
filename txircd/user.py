@@ -562,12 +562,13 @@ class RemoteUser(IRCUser):
             del self.ircd.userNicks[self.nick]
         self.nick = newNick
         self.ircd.userNicks[self.nick] = self.uuid
-        userSendList = [self]
-        for channel in self.channels:
-            userSendList.extend(channel.users.keys())
-        userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-        self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
-        self.ircd.runActionStandard("remotechangenick", self, oldNick, fromServer, users=[self])
+        if self.isRegistered():
+            userSendList = [self]
+            for channel in self.channels:
+                userSendList.extend(channel.users.keys())
+            userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+            self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
+            self.ircd.runActionStandard("remotechangenick", self, oldNick, fromServer, users=[self])
     
     def changeIdent(self, newIdent, fromRemote = False):
         if len(newIdent) > 12:
