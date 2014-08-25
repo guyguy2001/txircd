@@ -140,6 +140,8 @@ class Service(ModuleData):
         return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(self.name))
 
     def tellUser(self, user, message, split=True):
+        if user.uuid not in self.ircd.users:
+            return # user has disconnected
         chunks = splitMessage(message, 80) if split else [message]
         for chunk in chunks:
             user.sendMessage("NOTICE", ":{}".format(chunk), sourceuser=self.user)
