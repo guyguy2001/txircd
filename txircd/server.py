@@ -12,7 +12,6 @@ class IRCServer(IRC):
         self.name = None
         self.description = None
         self.ip = ip
-        self.remoteServers = {}
         self.nextClosest = self.ircd.serverID
         self.cache = {}
         self.bursted = None
@@ -60,14 +59,18 @@ class IRCServer(IRC):
             self.disconnect("Connection reset")
         self.disconnectedDeferred.callback(None)
     
-    def disconnect(self, reason):
+    def disconnect(self, reason, netsplitQuitMsg = None):
         if self.bursted:
             self.ircd.runActionStandard("serverquit", self, reason)
-            netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
+            if netsplitQuitMsg is None:
+                netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
             allUsers = self.ircd.users.values()
             for user in allUsers:
-                if user.uuid[:3] == self.serverID or user.uuid[:3] in self.remoteServers:
+                if user.uuid[:3] == self.serverID:
                     user.disconnect(netsplitQuitMsg, True)
+            for server in self.ircd.servers.itervalues():
+                if server.nextClosest == self.serverID:
+                    server.disconnect(reason, netsplitQuitMsg)
             del self.ircd.servers[self.serverID]
             del self.ircd.serverNames[self.name]
         self.bursted = None
