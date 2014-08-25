@@ -4,6 +4,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now, timestamp
 from zope.interface import implements
 
+irc.RPL_WHOISHOST = "378"
 irc.RPL_WHOISSECURE = "671"
 
 class WhoisCommand(ModuleData, Command):
@@ -38,6 +39,8 @@ class WhoisCommand(ModuleData, Command):
     def execute(self, user, data):
         for targetUser in data["targetusers"]:
             user.sendMessage(irc.RPL_WHOISUSER, targetUser.nick, targetUser.ident, targetUser.host, "*", ":{}".format(targetUser.gecos))
+            if self.ircd.runActionUntilValue("userhasoperpermission", user, "whois-host", users=[user]) or user == targetUser:
+                user.sendMessage(irc.RPL_WHOISHOST, targetUser.nick, ":is connecting from {}@{} {}".format(targetUser.ident, targetUser.realhost, targetUser.ip))
             chanList = []
             for channel in targetUser.channels:
                 if self.ircd.runActionUntilValue("showchannel-whois", channel, user, targetUser) is not False:
