@@ -122,8 +122,8 @@ class FJoinCommand(ModuleData, Command):
                     newModes = []
                     newModeParams = []
             for status in remoteStatuses:
-                newModes.append(status[0])
-                newModeParams.append(status[1])
+                newModes.append(status[1])
+                newModeParams.append(status[0])
                 if len(newModes) == 20:
                     channel.setModes(self.ircd.serverID, "+{}".format("".join(newModes)), newModeParams)
                     newModes = []
