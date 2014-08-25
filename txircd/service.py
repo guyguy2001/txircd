@@ -66,6 +66,14 @@ class Service(ModuleData):
         self.user.changeHost(info.get("host", self.ircd.name))
         self.user.register("NICK")
 
+    def actions(self):
+        return [("localnickcollision", 20, self.handleNickCollision)]
+
+    def handleNickCollision(self, localUser, remoteUser, fromServer):
+        if localUser == self.user:
+            remoteUser.changeNick(remoteUser.uuid)
+            return False
+
     def handleMessage(self, user, command, *params, **kw):
         """Handle any messages directly addressed to us."""
         if command != "PRIVMSG":
