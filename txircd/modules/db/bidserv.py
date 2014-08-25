@@ -8,6 +8,9 @@ import itertools, logging, os, yaml
 
 from dbservice import DBService
 
+# teach yaml how to deal with Decimals - just use str()
+yaml.add_representer(Decimal, lambda dumper, value: dumper.represent_str(str(value)))
+
 
 class BidServ(DBService):
     implements(IPlugin, IModuleData)
