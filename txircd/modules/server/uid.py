@@ -103,6 +103,12 @@ class ServerUID(ModuleData, Command):
                     newUser.changeNick(newUser.uuid, server)
         newUser.register("USER")
         newUser.register("NICK")
+        connectTimestamp = str(timestamp(connectTime))
+        nickTimestamp = str(timestamp(nickTime))
+        finalGecos = ":{}".format(newUser.gecos)
+        for remoteServer in self.ircd.servers.itervalues():
+            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
+                remoteServer.sendMessage("UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, user.modeString(None), finalGecos, prefix=self.ircd.serverID)
         return True
     
     def broadcastUID(self, user):
