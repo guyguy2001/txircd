@@ -15,7 +15,7 @@ START_ON_BOOT="true"
 
 
 TO_INSTALL=(twisted txircd)
-SAMPLE_CONF="txircd.yaml"
+SAMPLE_CONF="txircd-example.yaml"
 UPSTART_FILE="/etc/init/txircd.conf"
 SYSTEMD_FILE="/etc/systemd/system/txircd.service"
 
