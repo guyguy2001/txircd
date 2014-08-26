@@ -20,6 +20,7 @@ class NickServ(DBService):
 
     user_cmd_aliases = {
         "NS": (10, None),
+        "GHOST": (10, "GHOST"),
     }
 
     help = ("NickServ matches your IRC nickname to your Donor account, allowing for a painless auction process, "
@@ -27,7 +28,6 @@ class NickServ(DBService):
            "You can run these commands with \x02/ns COMMAND\x02.")
 
     # TODO:
-    # ghost NICK - Kick other conn with your creds (possibly also other non-authed nick owned by you?)
     # drop NICK - delete NICK from your nick list
     # nicklist - Get list of registered nicks
 
@@ -71,6 +71,11 @@ class NickServ(DBService):
                        "USAGE: \x02LOGOUT\x02\n"
                        "Log out of whatever account you're currently logged in to. "
                        "Useful to prevent your roommate from bidding on auctions in your name."),
+            "GHOST": (self.handleGhost, False, "Disconnect another user who is authenticated as you",
+                      "USAGE: \x02GHOST nick\x02\n"
+                      "Disconnects the given user, but only if they previously authenticated as you. "
+                      "This lets you clean up after malfunctioning or remote clients and reclaim your "
+                      "preferred nick."),
         }
 
     def actions(self):
@@ -271,5 +276,26 @@ class NickServ(DBService):
             self.checkNick(user)
         else:
             self.tellUser(user, "You are currently not logged in.")
+
+    def handleGhost(self, user, params):
+        if not params:
+            self.tellUser(user, "USAGE: \x02GHOST nick\x02")
+            return
+        nick = params[0]
+        donorID = getDonorID(user)
+        if not donorID:
+            self.tellUser(user, "You can't ghost anyone until you're logged in")
+            return
+        if nick not in self.ircd.userNicks:
+            self.tellUser(user, "No such nick: {}".format(nick))
+            return
+        target = self.ircd.users[self.ircd.userNicks[nick]]
+        if donorID != getDonorID(target):
+            self.tellUser(user, "That user does not appear to be yours")
+            return
+        if target is user:
+            self.tellUser(user, "You can't ghost yourself")
+            return
+        target.disconnect("Killed (GHOST command issued by {})".format(user.nick))
 
 nickServ = NickServ()
