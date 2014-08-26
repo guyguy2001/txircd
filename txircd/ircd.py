@@ -263,6 +263,11 @@ class IRCd(Service):
         if d is not None:
             unloadDeferreds.append(d)
         
+        if fullUnload:
+            d = module.fullUnload()
+            if d is not None:
+                unloadDeferreds.append(d)
+        
         for modeData in moduleData["channelmodes"]:
             if modeData[1] == ModeType.Status:
                 del self.channelStatuses[modeData[0]]
@@ -281,10 +286,6 @@ class IRCd(Service):
         for commandData in moduleData["servercommands"]:
             self.serverCommands[commandData[0]].remove((commandData[2], commandData[1]))
         
-        if fullUnload:
-            d = module.fullUnload()
-            if d is not None:
-                unloadDeferreds.append(d)
         del self.loadedModules[moduleName]
         del self._loadedModuleData[moduleName]
         
