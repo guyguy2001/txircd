@@ -9,14 +9,15 @@ class CustomPrefix(ModuleData, Mode):
     implements(IPlugin, IModuleData, IMode)
 
     name = "CustomPrefix"
+    prefixes = None
 
     def hookIRCd(self, ircd):
         self.ircd = ircd
 
     def channelModes(self):
         modes = []
-        prefixes = self.ircd.config.getWithDefault("custom_prefixes", { "h": { "level": 50, "char": "%" }, "a": { "level": 150, "char": "&" }, "q" : { "level": 200, "char": "~" } })
-        for prefix, prefixValue in prefixes.iteritems():
+        self.prefixes = self.ircd.config.getWithDefault("custom_prefixes", { "h": { "level": 50, "char": "%" }, "a": { "level": 150, "char": "&" }, "q" : { "level": 200, "char": "~" } })
+        for prefix, prefixValue in self.prefixes.iteritems():
             try:
                 statusLevel = int(prefixValue["level"])
                 modes.append((prefix, ModeType.Status, self, statusLevel, prefixValue["char"]))
@@ -28,5 +29,12 @@ class CustomPrefix(ModuleData, Mode):
 
     def checkSet(self, channel, param):
         return param.split(",")
+
+    def fullUnload(self):
+        for channel in self.ircd.channels.itervalues():
+            for user, rank in channel.users.iteritems():
+                for prefix in self.prefixes.iterkeys():
+                    if prefix in rank:
+                        channel.setModes(self.ircd.serverID, "-{}".format(prefix), [user.nick])
 
 customPrefix = CustomPrefix()

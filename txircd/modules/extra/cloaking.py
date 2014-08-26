@@ -94,7 +94,7 @@ class HostCloaking(Mode, ModuleData):
 
     def fullUnload(self):
         for user in self.ircd.users.itervalues():
-            if user.uuid[:3] == self.ircd.serverID:
+            if user.uuid[:3] == self.ircd.serverID and "x" in user.modes:
                 user.setModes(self.ircd.serverID, "-x", [])
 
 hostCloaking = HostCloaking()
