@@ -28,14 +28,13 @@ class NickServ(DBService):
 
     # TODO:
     # ghost NICK - Kick other conn with your creds (possibly also other non-authed nick owned by you?)
-    # logout - log out (removes accountid from user.cache)
     # drop NICK - delete NICK from your nick list
     # nicklist - Get list of registered nicks
 
     def load(self):
         super(NickServ, self).load()
         # Some explanation of the flow of checking a user's nick and how it works:
-        # A nick check is started by a user registering, changing nick, or at module load.
+        # A nick check is started by a user registering, changing nick, logging out, or at module load.
         # A DB query and a timer are both started.
         # If the DB query shows that the nick is not protected, or that the user owns it, the timer is cancelled.
         # Once both the DB query and the timer have completed, the final conditions are checked:
@@ -68,6 +67,10 @@ class NickServ(DBService):
                       "The first form (with a space) is preferred, the other form is available "
                       "for compatability with some clients. If it isn't already, your current nick "
                       "will be associated with the account and protected from impersonation."),
+            "LOGOUT": (self.handleLogout, False, "Log out of your donor account",
+                       "USAGE: \x02LOGOUT\x02\n"
+                       "Log out of whatever account you're currently logged in to. "
+                       "Useful to prevent your roommate from bidding on auctions in your name."),
         }
 
     def actions(self):
@@ -146,6 +149,9 @@ class NickServ(DBService):
             return # cannot register forced nicks
 
         def gotNicks(results):
+            # Note that throughout this service we treat a nick as possibly having multiple owners,
+            # even though we don't allow this. This is because it is technically possible in the database,
+            # and we should try to act correctly no matter what the data says.
             myNicks = [nick for donor, nick in results if donor == donorID]
             nickOwners = [donor for donor, nick in results if nick == newNick]
             if newNick in myNicks:
@@ -258,5 +264,12 @@ class NickServ(DBService):
                 return
         assert False, "Failed to force nick change - user's uuid was already taken?"
 
+    def handleLogout(self, user, params):
+        if getDonorID(user):
+            del user.cache["accountid"]
+            self.tellUser(user, "You are now logged out.")
+            self.checkNick(user)
+        else:
+            self.tellUser(user, "You are currently not logged in.")
 
 nickServ = NickServ()
