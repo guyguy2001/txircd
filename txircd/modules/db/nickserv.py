@@ -27,9 +27,6 @@ class NickServ(DBService):
            "as well as the peace of mind that nobody can use your nickname but you.\n"
            "You can run these commands with \x02/ns COMMAND\x02.")
 
-    # TODO:
-    # nicklist - Get list of registered nicks
-
     def load(self):
         super(NickServ, self).load()
         # Some explanation of the flow of checking a user's nick and how it works:
@@ -82,6 +79,9 @@ class NickServ(DBService):
                      "USAGE: \x02DROP nick\n"
                      "Unregisters the given nick from your account, allowing others to use it "
                      "and giving you more space to register other nicks instead."),
+            "NICKLIST": (self.handleNickList, False, "List nicks owned by your account",
+                         "USAGE: \x02NICKLIST\n"
+                         "Lists all nicks owned by your account."),
         }
 
     def actions(self):
@@ -346,5 +346,23 @@ class NickServ(DBService):
             self.tellUser(user, "You can't ghost yourself")
             return
         target.disconnect("Killed (GHOST command issued by {})".format(user.nick))
+
+    def handleNickList(self, user, params):
+        donorID = getDonorID(user)
+        if not donorID:
+            self.tellUser(user, "You can't list nicks, you aren't logged in.")
+
+        def gotNicks(results):
+            nicks = [nick for nick, in results]
+            if not nicks:
+                message = "You have no registered nicks."
+            else:
+                message = "Registered nicks: {}".format(", ".join(nicks))
+            self.tellUser(user, message)
+
+        self.query(gotNicks,
+                   self.reportError(user, "Failed to get a list of nicks due to server error"),
+                   "SELECT nick FROM ircnicks WHERE donor_id = %s",
+                   donorID)
 
 nickServ = NickServ()
