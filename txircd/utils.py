@@ -129,8 +129,6 @@ def unescapeEndpointDescription(desc):
 
 
 def splitMessage(message, maxLength):
-    if len(message) < maxLength:
-        return [message]
     msgList = []
     while message:
         limitedMessage = message[:maxLength]
