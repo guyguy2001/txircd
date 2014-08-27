@@ -28,7 +28,6 @@ class NickServ(DBService):
            "You can run these commands with \x02/ns COMMAND\x02.")
 
     # TODO:
-    # drop NICK - delete NICK from your nick list
     # nicklist - Get list of registered nicks
 
     def load(self):
@@ -76,6 +75,13 @@ class NickServ(DBService):
                       "Disconnects the given user, but only if they previously authenticated as you. "
                       "This lets you clean up after malfunctioning or remote clients and reclaim your "
                       "preferred nick."),
+            "ADD": (self.handleAdd, False, "Add a nick to your account",
+                    "USAGE: \x02ADD nick\n"
+                    "Associates the given nick with your account, reserving it for your use only."),
+            "DROP": (self.handleDrop, False, "Unregisters a nick from your account",
+                     "USAGE: \x02DROP nick\n"
+                     "Unregisters the given nick from your account, allowing others to use it "
+                     "and giving you more space to register other nicks instead."),
         }
 
     def actions(self):
@@ -139,6 +145,16 @@ class NickServ(DBService):
 
         self.registerNick(user, user.nick, ignoreAlreadyRegistered=True)
 
+    def handleAdd(self, user, params):
+        if not params:
+            self.tellUser(user, "USAGE: \x02ADD nick")
+            return
+        if not getDonorID(user):
+            self.tellUser(user, "Cannot add nick: You aren't logged in")
+            return
+        nick = params[0]
+        self.registerNick(user, nick)
+
     def registerNick(self, user, newNick, ignoreAlreadyRegistered=False):
         """Associate nick with logged in user.
         If ignoreAlreadyRegistered, don't emit errors for already registered nicks."""
@@ -187,6 +203,39 @@ class NickServ(DBService):
     def registerOnChange(self, user, oldNick, fromServer):
         if getDonorID(user):
             self.registerNick(user, user.nick, ignoreAlreadyRegistered=True)
+
+    def handleDrop(self, user, params):
+        if not params:
+            self.tellUser(user, "USAGE: \x02DROP nick")
+            return
+
+        dropNick = params[0]
+        donorID = getDonorID(user)
+        genericErrorMessage = ("Warning: Due to a server error, we couldn't drop this nick. "
+                               "Please inform a mod and try again later.")
+
+        if not donorID:
+            self.tellUser(user, "Cannot drop nick: You aren't logged in")
+            return
+
+        def checkOwned(result):
+            if not result:
+                self.tellUser(user, "You don't own the nick {}".format(dropNick))
+                return
+            self.query(deleteSuccess,
+                       self.reportError(user, genericErrorMessage),
+                       "DELETE FROM ircnicks WHERE donor_id = %s AND nick = %s",
+                       donorID, dropNick)
+
+        def deleteSuccess(result):
+            self.tellUser(user, "Dropped nick {} from your account".format(dropNick))
+            if dropNick == user.nick:
+                self.checkNick(user)
+
+        self.query(checkOwned,
+                   self.reportError(user, genericErrorMessage),
+                   "SELECT 1 FROM ircnicks WHERE donor_id = %s AND nick = %s",
+                   donorID, dropNick)
 
     def checkNick(self, user):
         """Start timer for registered nick change.
