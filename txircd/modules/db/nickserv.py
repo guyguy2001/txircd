@@ -47,7 +47,7 @@ class NickServ(DBService):
             self.checkNick(user)
 
     def serviceCommands(self):
-        return {
+        commands = {
             "ID": (self.handleLogin, False, "This is an alias for LOGIN",
                    "USAGE: \x02ID email password\n"
                    "ALTERNATE: \x02ID email:password\n"
@@ -83,6 +83,13 @@ class NickServ(DBService):
                          "USAGE: \x02NICKLIST\n"
                          "Lists all nicks owned by your account."),
         }
+        if self.getConfig().get("allow_register", False):
+            commands["REGISTER"] = (self.handleRegister, False, "Register a new account",
+                                    "USAGE: \x02REGISTER email password\n"
+                                    "Register a new donor account for the given email. "
+                                    "This command is only intended for use during testing. "
+                                    "Please visit desertbus.org to create a new account properly.")
+        return commands
 
     def actions(self):
         return super(NickServ, self).actions() + [
@@ -364,5 +371,39 @@ class NickServ(DBService):
                    self.reportError(user, "Failed to get a list of nicks due to server error"),
                    "SELECT nick FROM ircnicks WHERE donor_id = %s",
                    donorID)
+
+    def handleRegister(self, user, params):
+        if len(params) < 2:
+            self.tellUser(user, "USAGE: \x02REGISTER email password")
+            return
+        if getDonorID(user):
+            self.tellUser(user, "You can't register a new account - log out of the current one first")
+            return
+
+        email, password = params[:2]
+        name = user.nick
+        genericErrorMessage = ("Warning: Due to a server error, we can't register this account. "
+                               "Please inform a mod and try again later.")
+
+        def checkEmail(result):
+            if result:
+                self.tellUser(user, "Failed to create account - an account already exists with that email")
+                return
+            if 'hash-pbkdf2' not in self.ircd.functionCache:
+                self.tellUser(user, "The server cannot create an account due to an admin error")
+                return
+            pass_hash = self.ircd.functionCache["hash-pbkdf2"](password)
+            self.query(insertSuccess,
+                       self.reportError(user, genericErrorMessage),
+                       "INSERT INTO donors (email, password, display_name) VALUES (%s, %s, %s)",
+                       email, pass_hash, name)
+
+        def insertSuccess(result):
+            self.tellUser(user, ("Account created for {} with email {}. "
+                                 "Please confirm it is working by authenticating now.").format(name, email))
+
+        self.queryGetOne(checkEmail,
+                         self.reportError(user, genericErrorMessage),
+                         "SELECT 1 FROM donors WHERE email = %s", email)
 
 nickServ = NickServ()
