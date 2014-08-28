@@ -322,6 +322,8 @@ class NickServ(DBService):
         for nick in self.genForceNicks(user):
             if nick not in self.ircd.userNicks:
                 user.changeNick(nick)
+                self.tellUser(user, ("{} is a registered nick. Your nick has been changed "
+                                     "to prevent impersonation.").format(user.nick))
                 return
         assert False, "Failed to force nick change - user's uuid was already taken?"
 
