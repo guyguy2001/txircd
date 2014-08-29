@@ -7,6 +7,7 @@ from traceback import format_exc
 import itertools, logging, os, yaml
 
 from dbservice import DBService
+from nickserv import getDonorID
 
 # teach yaml how to deal with Decimals - just use str()
 yaml.add_representer(Decimal, lambda dumper, value: dumper.represent_str(str(value)))
@@ -234,9 +235,10 @@ class BidServ(DBService):
             self.tellUser(user, "There is not an auction going on right now")
             return
 
-        # TODO get user's donorID (presumably NickServ populates user.cache with it?)
-        # THIS IS A PLACEHOLDER until we can get the proper donor ids from NickServ
-        donorID = hash(user.nick) % 2**10
+        donorID = getDonorID(user)
+        if not donorID:
+            self.tellUser(user, "You cannot bid until you are logged in")
+            return
 
         newBid = params[0].lstrip('$').replace(',', '') # allow stuff like "$1,000"
         smackTalk = " ".join(params[1:])[:250]
