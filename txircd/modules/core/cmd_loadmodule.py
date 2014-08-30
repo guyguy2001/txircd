@@ -8,8 +8,8 @@ from zope.interface import implements
 irc.ERR_CANTLOADMODULE = "974"
 irc.RPL_LOADEDMODULE = "975"
 
-class LoadModuleCommand(Command, ModuleData):
-    implements(IPlugin, ICommand, IModuleData)
+class LoadModuleCommand(ModuleData, Command):
+    implements(IPlugin, IModuleData, ICommand)
 
     name = "LoadModuleCommand"
     core = True

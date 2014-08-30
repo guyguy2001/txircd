@@ -7,8 +7,8 @@ from zope.interface import implements
 irc.RPL_MODLIST = "702"
 irc.RPL_ENDOFMODLIST = "703"
 
-class ModulesCommand(Command, ModuleData):
-    implements(IPlugin, ICommand, IModuleData)
+class ModulesCommand(ModuleData, Command):
+    implements(IPlugin, IModuleData, ICommand)
 
     name = "ModulesCommand"
     core = True

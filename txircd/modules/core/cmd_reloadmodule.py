@@ -7,8 +7,8 @@ from zope.interface import implements
 irc.ERR_CANTUNLOADMODULE = "972"
 irc.RPL_LOADEDMODULE = "975"
 
-class ReloadModuleCommand(Command, ModuleData):
-    implements(IPlugin, ICommand, IModuleData)
+class ReloadModuleCommand(ModuleData, Command):
+    implements(IPlugin, IModuleData, ICommand)
 
     name = "ReloadModuleCommand"
     core = True
