@@ -4,9 +4,9 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
 irc.ERR_NOSUCHXINFO = "772"
-irc.ERR_XINFOENTRY = "773"
-irc.ERR_XINFOEND = "774"
-irc.ERR_XINFOTYPE = "775"
+irc.RPL_XINFOENTRY = "773"
+irc.RPL_XINFOEND = "774"
+irc.RPL_XINFOTYPE = "775"
 
 # NOTE: The XINFO specification, at the time this module was written, is still incomplete.
 # As such, it's not yet a complete implementation of making STATS act like XINFO, but it's a start.
@@ -77,7 +77,7 @@ class UserStats(Command):
         if results:
             for key, val in results.iteritems():
                 user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val)
-        user.sendMessage(irc.RPL_XINF0END, typeName, ":End of XINFO request")
+        user.sendMessage(irc.RPL_XINFOEND, typeName, ":End of XINFO request")
         return True
     
     def checkPermission(self, user, typeName):
