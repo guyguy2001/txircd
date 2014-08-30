@@ -1,6 +1,6 @@
 from txircd.module_interface import Command, ICommand, ModuleData
 from txircd.user import LocalUser
-from txircd.utils import splitMessage
+from txircd.utils import ircLower, splitMessage
 from zope.interface import implements
 
 
@@ -79,7 +79,6 @@ class Service(ModuleData):
         if command != "PRIVMSG":
             return
         if "to" in kw:
-            # TODO is this really the best way to determine this?
             return # message was a channel message
         if "sourceuser" not in kw:
             return # we don't know who it's from?
@@ -145,7 +144,7 @@ class Service(ModuleData):
         self.tellUser(user, "No help available for \x02{}\x02".format(command))
 
     def isAdmin(self, user):
-        return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(self.name))
+        return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(ircLower(self.name)))
 
     def tellUser(self, user, message, split=True):
         if user.uuid not in self.ircd.users:
