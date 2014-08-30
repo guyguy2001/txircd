@@ -1,8 +1,8 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData
-from txircd.service import Service
 from zope.interface import implements
 
+from service import Service
 
 class TestServ(Service):
     implements(IPlugin, IModuleData)
