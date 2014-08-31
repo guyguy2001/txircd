@@ -1,5 +1,6 @@
 from twisted.internet import reactor
 from twisted.plugin import IPlugin
+from twisted.python import log
 from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
 from txircd.utils import isValidNick, ircLower
@@ -342,7 +343,9 @@ class NickServ(DBService):
                 self.tellUser(user, ("{} is a registered nick. Your nick has been changed "
                                      "to prevent impersonation.").format(user.nick))
                 return
-        assert False, "Failed to force nick change - user's uuid was already taken?"
+        # getting here should be impossible! uuid was already taken?
+        log("Disconnecting user {}: Cannot force nick to uuid!".format(user))
+        user.disconnect("Server error")
 
     def handleLogout(self, user, params):
         if getDonorID(user):
