@@ -100,6 +100,8 @@ class IRCServer(IRC):
         self.ircd.servers[self.serverID] = self
         self.ircd.serverNames[self.name] = self.serverID
         self.ircd.runActionStandard("serverconnect", self)
+        if self.nextClosest != self.ircd.serverID:
+            self.bursted = True # Indicate that this server is fully connected and synced NOW since it's a remote server and we've either already gotten or are about to get all the interesting tidbits
 
 class RemoteServer(IRCServer):
     def __init__(self, ircd, ip):
