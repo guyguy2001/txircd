@@ -210,6 +210,11 @@ class NickServ(DBService):
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
                                  "and can not be used by any other user.").format(newNick))
+            # we may need to kick off someone already on the nick
+            if newNick in self.ircd.userNicks:
+                currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
+                if currentHolder is not user:
+                    self.checkNick(currentHolder)
 
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
