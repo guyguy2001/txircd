@@ -2,8 +2,9 @@ from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
-from txircd.utils import isValidNick
+from txircd.utils import isValidNick, ircLower
 from zope.interface import implements
+import re
 
 from dbservice import DBService
 
@@ -178,7 +179,7 @@ class NickServ(DBService):
             raise ValueError("User is not authenticated")
         maxNicks = self.getConfig().get("nick_limit", None)
 
-        if newNick in self.genForceNicks(user) or not isValidNick(newNick):
+        if self.isForcedNick(newNick) or not isValidNick(newNick):
             if not quiet:
                 self.tellUser(user, "{} is not a nick that you can register".format(newNick))
             return
@@ -257,7 +258,7 @@ class NickServ(DBService):
         """
         nick = user.nick # save it here in case it changes
 
-        if nick in self.genForceNicks(user):
+        if self.isForcedNick(nick):
             return # ignore generated nicks
         if isinstance(user, LocalUser):
             return # LocalUsers are trusted - they don't need auth
@@ -324,6 +325,15 @@ class NickServ(DBService):
         if prefix:
             return [prefix + user.uuid, user.uuid]
         return [user.uuid]
+
+    def isForcedNick(self, nick):
+        prefix = self.getConfig().get("guest_prefix", "")
+        if not ircLower(nick).startswith(ircLower(prefix)):
+            return False
+        nick = nick[len(prefix):] # strip prefix
+        if not re.match(r'^[0-9][A-Za-z0-9]{8}$', nick): # match uuid
+            return False
+        return True
 
     def forceNick(self, user):
         for nick in self.genForceNicks(user):
