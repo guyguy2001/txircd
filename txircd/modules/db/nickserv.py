@@ -312,7 +312,7 @@ class NickServ(DBService):
         if (user, nick) in self.nick_checks:
             return # user switched BACK to a nick that's still being timed
 
-        timeout = self.getConfig().get("nick_timeout", 5)
+        timeout = self.getConfig().get("nick_timeout", 30)
         timer = reactor.callLater(timeout, timerComplete)
 
         self.query(queryComplete, queryFailed,
