@@ -24,14 +24,14 @@ class ServerCommand(ModuleData, Command):
     
     def propagateServer(self, server):
         hopCount = 1
-        serverTrace = server
-        while serverTrace.nextClosest != self.ircd.serverID:
+        closestServer = server
+        while closestServer.nextClosest != self.ircd.serverID:
             hopCount += 1
-            serverTrace = self.ircd.servers[serverTrace.nextClosest]
+            closestServer = self.ircd.servers[closestServer.nextClosest]
         sendHopCount = str(hopCount)
         sendDescription = ":{}".format(server.description)
         for remoteServer in self.ircd.servers.itervalues():
-            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
+            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != closestServer:
                 remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, sendDescription)
     
     def parseParams(self, server, params, prefix, tags):
