@@ -102,6 +102,7 @@ class NickServ(DBService):
             ("welcome", 10, self.checkNick),
             ("changenick", 10, lambda user, oldNick, fromServer: self.checkNick(user)),
             ("changenick", 10, self.registerOnChange),
+            ("commandpermission-PRIVMSG", 10, self.checkMessagePermission),
         ]
 
     def getConfig(self):
@@ -351,6 +352,24 @@ class NickServ(DBService):
         # getting here should be impossible! uuid was already taken?
         log("Disconnecting user {}: Cannot force nick to uuid!".format(user))
         user.disconnect("Server error")
+
+    def checkMessagePermission(self, user, command, data):
+        if (user, user.nick) not in self.nick_checks:
+            return # no check pending, so they're either authed or nick isn't protected
+        if data.get("targetusers", {}).keys() == [self.user] and not data.get("targetchans", {}):
+            return # messages to nickserv and only nickserv are ok
+        timer, owners = self.nick_checks[user, user.nick]
+        if owners and getDonorID(user) in owners:
+            # user has authed since query returned, so let's abort the timer early
+            timer.cancel()
+            del self.nick_checks[user, user.nick]
+            return
+        if owners is None:
+            self.tellUser(user, "We are still verifying that your nick {} is ok to use. Please try again.".format(
+                                user.nick))
+        else:
+            self.tellUser(user, "You cannot message anyone other than NickServ until you identify or change nicks.")
+        return False # query is still pending, or user has not authed to the correct account
 
     def handleLogout(self, user, params):
         if getDonorID(user):
