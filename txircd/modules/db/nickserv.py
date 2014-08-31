@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
+from txircd.utils import isValidNick
 from zope.interface import implements
 
 from dbservice import DBService
@@ -153,7 +154,7 @@ class NickServ(DBService):
         user.setMetadata("ext", "accountname", displayName.replace(" ", "_"))
         self.tellUser(user, "You are now identified. Welcome, {}".format(displayName))
 
-        self.registerNick(user, user.nick, ignoreAlreadyRegistered=True)
+        self.registerNick(user, user.nick, quiet=True)
 
     def handleAdd(self, user, params):
         if not params:
@@ -165,9 +166,10 @@ class NickServ(DBService):
         nick = params[0]
         self.registerNick(user, nick)
 
-    def registerNick(self, user, newNick, ignoreAlreadyRegistered=False):
+    def registerNick(self, user, newNick, quiet=False):
         """Associate nick with logged in user.
-        If ignoreAlreadyRegistered, don't emit errors for already registered nicks."""
+        If quiet, only emit failures to add - sliently fail if the nick is already registered or
+        otherwise not eligible."""
         genericErrorMessage = ("Warning: Due to a server error, we can't register this nick. "
                                "Please inform a mod and try again later.")
 
@@ -176,8 +178,10 @@ class NickServ(DBService):
             raise ValueError("User is not authenticated")
         maxNicks = self.getConfig().get("nick_limit", None)
 
-        if newNick in self.genForceNicks(user):
-            return # cannot register forced nicks
+        if newNick in self.genForceNicks(user) or not isValidNick(newNick):
+            if not quiet:
+                self.tellUser(user, "{} is not a nick that you can register".format(newNick))
+            return
 
         def gotNicks(results):
             # Note that throughout this service we treat a nick as possibly having multiple owners,
@@ -186,11 +190,11 @@ class NickServ(DBService):
             myNicks = [nick for donor, nick in results if donor == donorID]
             nickOwners = [donor for donor, nick in results if nick == newNick]
             if newNick in myNicks:
-                if not ignoreAlreadyRegistered:
+                if not quiet:
                     self.tellUser(user, "The nick {} is already registered to your account".format(newNick))
                 return
             if nickOwners:
-                self.tellUser(user, "The nick {} is already owned by someone else".format(newNick))
+                self.tellUser(user, "The nick {} is already owned by someone else, and will not be protected".format(newNick))
                 return
             if maxNicks is not None and len(myNicks) >= maxNicks:
                 self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
@@ -212,7 +216,7 @@ class NickServ(DBService):
 
     def registerOnChange(self, user, oldNick, fromServer):
         if getDonorID(user):
-            self.registerNick(user, user.nick, ignoreAlreadyRegistered=True)
+            self.registerNick(user, user.nick, quiet=True)
 
     def handleDrop(self, user, params):
         if not params:
