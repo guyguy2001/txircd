@@ -63,7 +63,7 @@ class ELineCommand(ModuleData, Command):
 
     def execute(self, user, data):
         exceptmask = data["mask"]
-        if "reason" in data:
+        if "reason" not in data:
             # Unsetting E:line
             if exceptmask not in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
