@@ -78,6 +78,10 @@ class ServerUID(ModuleData, Command):
         newUser.idleSince = now()
         if newUser.nick in self.ircd.userNicks: # Handle nick collisions
             otherUser = self.ircd.users[self.ircd.userNicks[newUser.nick]]
+            if otherUser.localOnly:
+                changeOK = self.ircd.runActionUntilValue("localnickcollision", otherUser, newUser, server, users=[otherUser, newUser])
+                if changeOK is None:
+                    return None
             sameUser = ("{}@{}".format(otherUser.ident, otherUser.ip) == "{}@{}".format(newUser.ident, newUser.ip))
             if sameUser and newUser.nickSince < otherUser.nickSince: # If the user@ip is the same, the newer nickname should win
                 newUser.changeNick(newUser.uuid, server)
