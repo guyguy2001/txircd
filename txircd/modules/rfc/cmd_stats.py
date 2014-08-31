@@ -76,7 +76,10 @@ class UserStats(Command):
         results = self.ircd.runActionUntilValue("statsruntype", user, typeName)
         if results:
             for key, val in results.iteritems():
-                user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val)
+                user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, ":{}".format(val))
+                # The spec technically allows more than one key/value pair on a line
+                # If we do that, we'll need to make sure that if there's a space in the value,
+                # it ends the line.
         user.sendMessage(irc.RPL_XINFOEND, typeName, ":End of XINFO request")
         return True
     
