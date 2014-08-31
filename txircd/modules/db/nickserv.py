@@ -48,17 +48,17 @@ class NickServ(DBService):
 
     def serviceCommands(self):
         commands = {
-            "ID": (self.handleLogin, False, "This is an alias for LOGIN",
+            "ID": (self.handleLogin, False, "This is an alias for IDENTIFY",
                    "USAGE: \x02ID email password\n"
                    "ALTERNATE: \x02ID email:password\n"
                    "This command is an alias for LOGIN, for compatibility with some clients."),
-            "IDENTIFY": (self.handleLogin, False, "This is an alias for LOGIN",
-                         "USAGE: \x02IDENTIFY email password\n"
-                         "ALTERNATE: \x02IDENTIFY email:password\n"
-                         "This command is an alias for LOGIN, for compatibility with some clients."),
-            "LOGIN": (self.handleLogin, False, "Log into your donor account",
-                      "USAGE: \x02LOGIN email password\n"
-                      "ALTERNATE: \x02LOGIN email:password\n"
+            "LOGIN": (self.handleLogin, False, "This is an alias for IDENTIFY",
+                         "USAGE: \x02LOGIN email password\n"
+                         "ALTERNATE: \x02LOGIN email:password\n"
+                         "This command is an alias for IDENTIFY, for compatibility with some clients."),
+            "IDENTIFY": (self.handleLogin, False, "Log into your donor account",
+                      "USAGE: \x02IDENTIFY email password\n"
+                      "ALTERNATE: \x02IDENTIFY email:password\n"
                       "Log into the donor account specified by email with the given password. "
                       "The first form (with a space) is preferred, the other form is available "
                       "for compatability with some clients. If it isn't already, your current nick "
@@ -75,6 +75,9 @@ class NickServ(DBService):
             "ADD": (self.handleAdd, False, "Add a nick to your account",
                     "USAGE: \x02ADD nick\n"
                     "Associates the given nick with your account, reserving it for your use only."),
+            "GROUP": (self.handleAdd, False, "This is an alias for ADD",
+                      "USAGE: \x02GROUP nick\n"
+                      "This command is an alias for ADD, for compatibility with some clients."),
             "DROP": (self.handleDrop, False, "Unregisters a nick from your account",
                      "USAGE: \x02DROP nick\n"
                      "Unregisters the given nick from your account, allowing others to use it "
