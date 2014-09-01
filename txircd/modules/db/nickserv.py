@@ -23,6 +23,7 @@ class NickServ(DBService):
 
     user_cmd_aliases = {
         "NS": (10, None),
+        "NICKSERV": (10, None),
         "GHOST": (10, "GHOST"),
         "ID": (10, "IDENTIFY"),
         "IDENTIFY": (10, "IDENTIFY"),
