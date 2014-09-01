@@ -147,7 +147,7 @@ class IRCUser(irc.IRC):
                 if hasPermission is False:
                    if self._hasBatchedErrors():
                        self._dispatchErrorBatch()
-                    return
+                   return
             self._clearErrorBatch()
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
