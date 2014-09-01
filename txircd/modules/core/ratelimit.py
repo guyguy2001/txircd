@@ -8,6 +8,7 @@ class RateLimit(ModuleData):
     implements(IPlugin, IModuleData)
 
     name = "RateLimit"
+    core = True
 
     def hookIRCd(self, ircd):
         self.ircd = ircd
