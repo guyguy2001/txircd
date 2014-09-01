@@ -84,6 +84,10 @@ INSERT INTO `txircd`.`prizes`(`name`) VALUES("Alex's Derp");
 INSERT INTO `txircd`.`prizes`(`name`) VALUES("James's Patience");
 INSERT INTO `txircd`.`prizes`(`name`) VALUES("Morgan's Charisma");
 INSERT INTO `txircd`.`prizes`(`name`) VALUES("Paul's Beard");
+INSERT INTO `txircd`.`donors`(`email`, `password`, `display_name`) VALUES
+    ("test@example.com", "sha256:1000:skdG1QVN:46Hsqzg0+Goz2ph1PL2pXRvXlMuyRuVl", "test"); -- password: "test"
+INSERT INTO `txircd`.`donors`(`email`, `password`, `display_name`) VALUES
+    ("foo@example.com", "sha256:1000:JVkCoQzt:rz7ppq6XApM8lN29eYIGXlu4W7b6aCv5", "foo"); -- password: "bar"
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
