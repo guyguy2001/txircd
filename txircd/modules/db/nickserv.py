@@ -5,6 +5,7 @@ from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
 from txircd.utils import isValidNick, ircLower
 from zope.interface import implements
+from collections import defaultdict
 import re
 
 from dbservice import DBService
@@ -49,6 +50,9 @@ class NickServ(DBService):
         # it is ignored - this prevents someone from being able to repeatedly switch nicks
         # and keep the timer pending.
         self.nick_checks = {}
+        # This dict maps users to pending registrations, preventing a user from getting away with
+        # registering too many nicks by sending them rapidly.
+        self.nick_registrations = defaultdict(lambda: 0)
         for user in self.ircd.users.values():
             self.checkNick(user)
 
@@ -202,23 +206,39 @@ class NickServ(DBService):
             if nickOwners:
                 self.tellUser(user, "The nick {} is already owned by someone else, and will not be protected.".format(newNick))
                 return
-            if maxNicks is not None and len(myNicks) >= maxNicks:
-                self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
-                              len(myNicks), newNick))
-                return
+            if maxNicks is not None:
+                if len(myNicks) >= maxNicks:
+                    self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
+                                  len(myNicks), newNick))
+                    return
+                if len(myNicks) + self.nick_registrations[user] >= maxNicks:
+                    self.tellUser(user, ("You already have {} registered nicks and {} pending, "
+                                         "so {} will not be protected.").format(
+                                         len(myNicks), self.nick_registrations[user], newNick))
+                    return
+            self.nick_registrations[user] += 1
             self.query(insertSuccess,
-                       self.reportError(user, genericErrorMessage),
+                       insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
                        donorID, newNick)
 
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
                                  "and can not be used by any other user.").format(newNick))
+            self.nick_registrations[user] -= 1
+            if not self.nick_registrations[user]:
+                del self.nick_registrations[user] # clear users with 0 from dict
             # we may need to kick off someone already on the nick
             if newNick in self.ircd.userNicks:
                 currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
                 if currentHolder is not user:
                     self.checkNick(currentHolder)
+
+        def insertFail(error):
+            self.reportError(user, genericErrorMessage)(error)
+            self.nick_registrations[user] -= 1
+            if not self.nick_registrations[user]:
+                del self.nick_registrations[user] # clear users with 0 from dict
 
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
