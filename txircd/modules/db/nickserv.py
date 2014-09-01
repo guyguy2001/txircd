@@ -284,7 +284,8 @@ class NickServ(DBService):
             owners = [owner for owner, in results]
             if not owners or getDonorID(user) in owners:
                 # nick is not protected, or nick is owned by user
-                timer.cancel()
+                if timer.active():
+                    timer.cancel()
                 del self.nick_checks[user, nick]
                 return
             self.nick_checks[user, nick] = timer, owners
@@ -309,7 +310,8 @@ class NickServ(DBService):
 
         def queryFailed(failure):
             timer, owners = self.nick_checks.pop((user, nick))
-            timer.cancel()
+            if timer.active():
+                timer.cancel()
             if user.nick != nick:
                 return # they already changed
             if user.uuid not in self.ircd.users:
