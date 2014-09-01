@@ -65,6 +65,9 @@ class Service(ModuleData):
         self.user.changeGecos(info.get("gecos", self.nick))
         self.user.changeHost(info.get("host", self.ircd.name))
         self.user.register("NICK")
+    
+    def unload(self):
+        self.user.disconnect("Unloading module")
 
     def actions(self):
         return [("localnickcollision", 20, self.handleNickCollision)]
