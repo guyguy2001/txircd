@@ -32,7 +32,7 @@ class ServerCommand(ModuleData, Command):
         sendDescription = ":{}".format(server.description)
         for remoteServer in self.ircd.servers.itervalues():
             if remoteServer.nextClosest == self.ircd.serverID and remoteServer != closestServer:
-                remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, sendDescription, prefix=self.ircd.serverID)
+                remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, sendDescription, prefix=server.nextClosest)
     
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 5:
