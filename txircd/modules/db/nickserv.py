@@ -370,9 +370,9 @@ class NickServ(DBService):
     def forceNick(self, user):
         for nick in self.genForceNicks(user):
             if nick not in self.ircd.userNicks:
-                user.changeNick(nick)
                 self.tellUser(user, ("{} is a registered nick. Your nick has been changed "
                                      "to prevent impersonation.").format(user.nick))
+                user.changeNick(nick)
                 return
         # getting here should be impossible! uuid was already taken?
         log("Disconnecting user {}: Cannot force nick to uuid!".format(user))
@@ -394,8 +394,10 @@ class NickServ(DBService):
         if owners is None:
             self.tellUser(user, "We are still verifying that your nick {} is ok to use. Please try again.".format(
                                 user.nick))
-        else:
+        elif command == "PRIVMSG":
             self.tellUser(user, "You cannot message anyone other than NickServ until you identify or change nicks.")
+        else:
+            self.tellUser(user, "You cannot use the command \x02{}\x02 until you identify or change nicks.".format(command))
         return False # query is still pending, or user has not authed to the correct account
 
     def handleLogout(self, user, params):
