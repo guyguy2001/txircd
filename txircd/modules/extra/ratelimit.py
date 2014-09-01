@@ -17,7 +17,8 @@ class RateLimit(ModuleData):
 
     def getConfig(self):
         config = {
-            "limit": 60,
+            "limit": 60, # stop accepting commands after this many
+            "kill_limit": 1000, # disconnect the user after this many
             "interval": 60,
         }
         config.update(self.ircd.config.getWithDefault("ratelimit", {}))
@@ -39,6 +40,9 @@ class RateLimit(ModuleData):
             rateData["messages"] = 0
             rateData["period"] = thisPeriod
             rateData["noticeSent"] = False
+        rateData["messages"] += 1
+        if rateData["messages"] > self.getConfig()["kill_limit"]:
+            user.disconnect("Killed: Flooding")
         if rateData["messages"] > self.getConfig()["limit"]:
             # only send notice once per period
             if not rateData["noticeSent"]:
@@ -47,7 +51,6 @@ class RateLimit(ModuleData):
                                            ).format(timeToEnd=timeToEnd, **self.getConfig()))
                 rateData["noticeSent"] = True
             return False
-        rateData["messages"] += 1
         return None
 
 rateLimit = RateLimit()
