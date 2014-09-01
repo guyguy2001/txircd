@@ -19,7 +19,7 @@ class RateLimit(ModuleData):
     def getConfig(self):
         config = {
             "limit": 60, # stop accepting commands after this many
-            "kill_limit": 1000, # disconnect the user after this many
+            "kill_limit": 500, # disconnect the user after this many
             "interval": 60,
         }
         config.update(self.ircd.config.getWithDefault("ratelimit", {}))
