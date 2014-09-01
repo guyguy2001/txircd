@@ -124,13 +124,15 @@ class Service(ModuleData):
 
     def handleHelp(self, user, params):
         if not params:
-            self.tellUser(user, self.help)
+            self.tellUser(user, self.help, split=True)
+            self.tellUser(user, "")
             for command, (handler, admin_only, summary, long_help) in sorted(self._serviceCommands().items()):
                 if admin_only and not self.isAdmin(user):
                     continue
                 if summary is None:
                     continue
                 self.tellUser(user, "\x02{}\x02: {}".format(command, summary), split=False)
+            self.tellUser(user, "")
             self.tellUser(user, "*** End of help")
             return
         command = params[0].upper()
@@ -146,7 +148,7 @@ class Service(ModuleData):
     def isAdmin(self, user):
         return self.ircd.runActionUntilValue("userhasoperpermission", user, "service-admin-{}".format(ircLower(self.name)))
 
-    def tellUser(self, user, message, split=True):
+    def tellUser(self, user, message, split=False):
         if user.uuid not in self.ircd.users:
             return # user has disconnected
         chunks = splitMessage(message, 80) if split else [message]
