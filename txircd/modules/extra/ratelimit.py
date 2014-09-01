@@ -50,7 +50,9 @@ class RateLimit(ModuleData):
                                             "You cannot send any more messages for {timeToEnd:.2f} seconds."
                                            ).format(timeToEnd=timeToEnd, **self.getConfig()))
                 rateData["noticeSent"] = True
-            return False
+            # we whitelist ping/pong to prevent ping timeouts
+            if command not in ("PING", "PONG"):
+                return False
         return None
 
 rateLimit = RateLimit()
