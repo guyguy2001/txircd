@@ -129,16 +129,16 @@ class NickServ(DBService):
 
     def verifyLogin(self, user, password, result):
         if 'compare-pbkdf2' not in self.ircd.functionCache:
-            self.tellUser(user, "The server cannot authenticate due to an admin error")
+            self.tellUser(user, "The server cannot authenticate due to an admin error.")
             return
 
         if not result:
-            self.tellUser(user, "The login credentials you provided were incorrect")
+            self.tellUser(user, "The login credentials you provided were incorrect.")
             return
         donorID, displayName, correctHash = result
 
         if not self.ircd.functionCache["compare-pbkdf2"](password, correctHash):
-            self.tellUser(user, "The login credentials you provided were incorrect")
+            self.tellUser(user, "The login credentials you provided were incorrect.")
             return
 
         self.loginUser(user, displayName, donorID)
@@ -148,7 +148,7 @@ class NickServ(DBService):
         # it takes args (user, displayName, donorID) and may return False to deny login
         denied = self.ircd.runActionUntilFalse("user-login", user, displayName, donorID)
         if denied:
-            self.tellUser(user, "The login credentials you provided were incorrect")
+            self.tellUser(user, "The login credentials you provided were incorrect.")
             return
 
         user.cache["accountid"] = donorID
@@ -164,7 +164,7 @@ class NickServ(DBService):
             self.tellUser(user, "USAGE: \x02ADD nick")
             return
         if not getDonorID(user):
-            self.tellUser(user, "Cannot add nick: You aren't logged in")
+            self.tellUser(user, "Cannot add nick: You aren't logged in.")
             return
         nick = params[0]
         self.registerNick(user, nick)
@@ -183,7 +183,7 @@ class NickServ(DBService):
 
         if self.isForcedNick(newNick) or not isValidNick(newNick):
             if not quiet:
-                self.tellUser(user, "{} is not a nick that you can register".format(newNick))
+                self.tellUser(user, "{} is not a nick that you can register.".format(newNick))
             return
 
         def gotNicks(results):
@@ -194,10 +194,10 @@ class NickServ(DBService):
             nickOwners = [donor for donor, nick in results if nick == newNick]
             if newNick in myNicks:
                 if not quiet:
-                    self.tellUser(user, "The nick {} is already registered to your account".format(newNick))
+                    self.tellUser(user, "The nick {} is already registered to your account.".format(newNick))
                 return
             if nickOwners:
-                self.tellUser(user, "The nick {} is already owned by someone else, and will not be protected".format(newNick))
+                self.tellUser(user, "The nick {} is already owned by someone else, and will not be protected.".format(newNick))
                 return
             if maxNicks is not None and len(myNicks) >= maxNicks:
                 self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
@@ -237,12 +237,12 @@ class NickServ(DBService):
                                "Please inform a mod and try again later.")
 
         if not donorID:
-            self.tellUser(user, "Cannot drop nick: You aren't logged in")
+            self.tellUser(user, "Cannot drop nick: You aren't logged in.")
             return
 
         def checkOwned(result):
             if not result:
-                self.tellUser(user, "You don't own the nick {}".format(dropNick))
+                self.tellUser(user, "You don't own the nick {}.".format(dropNick))
                 return
             self.query(deleteSuccess,
                        self.reportError(user, genericErrorMessage),
@@ -250,7 +250,7 @@ class NickServ(DBService):
                        donorID, dropNick)
 
         def deleteSuccess(result):
-            self.tellUser(user, "Dropped nick {} from your account".format(dropNick))
+            self.tellUser(user, "Dropped nick {} from your account.".format(dropNick))
             if dropNick == user.nick:
                 self.checkNick(user)
 
@@ -386,17 +386,17 @@ class NickServ(DBService):
         nick = params[0]
         donorID = getDonorID(user)
         if not donorID:
-            self.tellUser(user, "You can't ghost anyone until you're logged in")
+            self.tellUser(user, "You can't ghost anyone until you're logged in.")
             return
         if nick not in self.ircd.userNicks:
             self.tellUser(user, "No such nick: {}".format(nick))
             return
         target = self.ircd.users[self.ircd.userNicks[nick]]
         if donorID != getDonorID(target):
-            self.tellUser(user, "That user does not appear to be yours")
+            self.tellUser(user, "That user does not appear to be yours.")
             return
         if target is user:
-            self.tellUser(user, "You can't ghost yourself")
+            self.tellUser(user, "You can't ghost yourself.")
             return
         target.disconnect("Killed (GHOST command issued by {})".format(user.nick))
 
@@ -414,7 +414,7 @@ class NickServ(DBService):
             self.tellUser(user, message)
 
         self.query(gotNicks,
-                   self.reportError(user, "Failed to get a list of nicks due to server error"),
+                   self.reportError(user, "Failed to get a list of nicks due to server error."),
                    "SELECT nick FROM ircnicks WHERE donor_id = %s",
                    donorID)
 
@@ -423,7 +423,7 @@ class NickServ(DBService):
             self.tellUser(user, "USAGE: \x02REGISTER email password")
             return
         if getDonorID(user):
-            self.tellUser(user, "You can't register a new account - log out of the current one first")
+            self.tellUser(user, "You can't register a new account - log out of the current one first.")
             return
 
         email, password = params[:2]
@@ -433,10 +433,10 @@ class NickServ(DBService):
 
         def checkEmail(result):
             if result:
-                self.tellUser(user, "Failed to create account - an account already exists with that email")
+                self.tellUser(user, "Failed to create account - an account already exists with that email.")
                 return
             if 'hash-pbkdf2' not in self.ircd.functionCache:
-                self.tellUser(user, "The server cannot create an account due to an admin error")
+                self.tellUser(user, "The server cannot create an account due to an admin error.")
                 return
             pass_hash = self.ircd.functionCache["hash-pbkdf2"](password)
             self.query(insertSuccess,
