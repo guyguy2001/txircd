@@ -3,9 +3,8 @@ from twisted.plugin import IPlugin
 from twisted.python import log
 from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
-from txircd.utils import isValidNick, ircLower
+from txircd.utils import isValidNick, ircLower, SafeDefaultDict
 from zope.interface import implements
-from collections import defaultdict
 import re
 
 from dbservice import DBService
@@ -52,7 +51,7 @@ class NickServ(DBService):
         self.nick_checks = {}
         # This dict maps users to pending registrations, preventing a user from getting away with
         # registering too many nicks by sending them rapidly.
-        self.nick_registrations = defaultdict(lambda: 0)
+        self.nick_registrations = SafeDefaultDict(0)
         for user in self.ircd.users.values():
             self.checkNick(user)
 
@@ -226,8 +225,6 @@ class NickServ(DBService):
             self.tellUser(user, ("Nickname {} is now registered to your account "
                                  "and can not be used by any other user.").format(newNick))
             self.nick_registrations[user] -= 1
-            if not self.nick_registrations[user]:
-                del self.nick_registrations[user] # clear users with 0 from dict
             # we may need to kick off someone already on the nick
             if newNick in self.ircd.userNicks:
                 currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
@@ -237,8 +234,6 @@ class NickServ(DBService):
         def insertFail(error):
             self.reportError(user, genericErrorMessage)(error)
             self.nick_registrations[user] -= 1
-            if not self.nick_registrations[user]:
-                del self.nick_registrations[user] # clear users with 0 from dict
 
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
