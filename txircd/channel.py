@@ -144,7 +144,9 @@ class IRCChannel(object):
                             continue
                         for index, rank in enumerate(self.users[targetUser]):
                             if self.ircd.channelStatuses[rank][1] < statusLevel:
-                                self.users[targetUser].insert(index, mode)
+                                statusList = list(self.users[targetUser])
+                                statusList.insert(index, mode)
+                                self.users[targetUser] = "".join(statusList)
                                 break
                         else:
                             self.users[targetUser] += mode
