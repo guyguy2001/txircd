@@ -131,7 +131,7 @@ class Service(ModuleData):
                     continue
                 if summary is None:
                     continue
-                self.tellUser(user, "\x02{}\x02: {}".format(command, summary), split=False)
+                self.tellUser(user, "\x02{}\x02: {}".format(command, summary))
             self.tellUser(user, "")
             self.tellUser(user, "*** End of help")
             return
@@ -140,7 +140,7 @@ class Service(ModuleData):
             handler, admin_only, summary, long_help = self._serviceCommands()[command]
             if not admin_only or self.isAdmin(user):
                 self.tellUser(user, "*** Help for \x02{}\x02:".format(command))
-                self.tellUser(user, long_help)
+                self.tellUser(user, long_help, split=True)
                 self.tellUser(user, "*** End of help for \x02{}\x02".format(command))
                 return
         self.tellUser(user, "No help available for \x02{}\x02".format(command))

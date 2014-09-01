@@ -288,7 +288,7 @@ class NickServ(DBService):
                 return
             self.nick_checks[user, nick] = timer, owners
             self.tellUser(user, "This is a registered nick. Please use \x02/msg NickServ login EMAIL PASSWORD\x02 "
-                                "to verify your identity", split=False)
+                                "to verify your identity")
             if not timer.active():
                 bothComplete()
 
@@ -314,8 +314,8 @@ class NickServ(DBService):
             if user.uuid not in self.ircd.users:
                 return # they disconnected
             if not self.getConfig().get("allow_all_on_db_failure", False):
-                self.tellUser(user, "Sorry, something went wrong. I'm not sure if you are who you say you are. "
-                                    "Please inform a mod and the problem will be fixed shortly.")
+                self.tellUser(user, "Sorry, something went wrong. I'm not sure if you are who you say you are.")
+                self.tellUser(user, "Please inform a mod and the problem will be fixed shortly.")
                 self.forceNick(user)
 
         if (user, nick) in self.nick_checks:
