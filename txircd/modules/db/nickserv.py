@@ -104,7 +104,7 @@ class NickServ(DBService):
             ("welcome", 10, self.checkNick),
             ("changenick", 10, lambda user, oldNick, fromServer: self.checkNick(user)),
             ("changenick", 10, self.registerOnChange),
-            ("commandpermission-PRIVMSG", 10, self.checkMessagePermission),
+            ("commandpermission", 10, self.checkMessagePermission),
         ]
 
     def getConfig(self):
@@ -358,8 +358,10 @@ class NickServ(DBService):
     def checkMessagePermission(self, user, command, data):
         if (user, user.nick) not in self.nick_checks:
             return None # no check pending, so they're either authed or nick isn't protected
-        if data.get("targetusers", {}).keys() == [self.user] and not data.get("targetchans", {}):
-            return None # messages to nickserv and only nickserv are ok
+        if command == "PRIVMSG" and data.get("targetusers", {}).keys() == [self.user] and not data.get("targetchans", {}):
+            return None # PRIVMSG to nickserv and only nickserv are ok
+        if command in ("PING", "PONG", "NICK", "QUIT", "NS", "ID", "IDENTIFY"):
+            return None # These commands are always allowed
         timer, owners = self.nick_checks[user, user.nick]
         if owners and getDonorID(user) in owners:
             # user has authed since query returned, so let's abort the timer early
