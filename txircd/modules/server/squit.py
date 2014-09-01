@@ -31,7 +31,8 @@ class ServerQuit(ModuleData):
         for otherServer in self.ircd.servers.itervalues():
             if closestHop == otherServer:
                 continue
-            otherServer.sendMessage("SQUIT", server.serverID, ":{}".format(reason), prefix=server.nextClosest)
+            if otherServer.nextClosest == self.ircd.serverID:
+                otherServer.sendMessage("SQUIT", server.serverID, ":{}".format(reason), prefix=server.nextClosest)
     
     def restrictSQuit(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-squit"):
