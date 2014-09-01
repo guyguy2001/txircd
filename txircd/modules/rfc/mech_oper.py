@@ -1,9 +1,11 @@
 from twisted.plugin import IPlugin
+from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType
 from zope.interface import implements
 from fnmatch import fnmatch
+import logging
 
 class Oper(ModuleData, Mode):
     implements(IPlugin, IModuleData, IMode)
@@ -25,9 +27,13 @@ class Oper(ModuleData, Mode):
         return [ ("o", ModeType.NoParam, self) ]
     
     def operPermission(self, user, permissionType):
-        # For now, we're just going to check for usermode +o
-        # Later, when we add a permission system, this can be expanded
-        return "o" in user.modes
+        if "o" not in user.modes:
+            # Maybe the user de-opered or something, but if they did they're clearly not an oper now
+            return False
+        # Check for oper permissions in the user's permission storage
+        if "oper-permissions" not in user.cache:
+            return False
+        return permissionType in user.cache["oper-permissions"]
     
     def nope(self, user, settingUser, adding, param):
         if adding:
@@ -87,6 +93,14 @@ class UserOper(Command):
             return True
         user.setModes(self.ircd.serverID, "+o", [])
         user.sendMessage(irc.RPL_YOUREOPER, ":You are now an IRC operator")
+        if "types" in operData:
+            configuredOperTypes = self.ircd.config.getWithDefault("oper_types", {})
+            operPermissions = set()
+            for type in operData["types"]:
+                if type not in configuredOperTypes:
+                    continue
+                operPermissions.update(configuredOperTypes[type])
+            user.cache["oper-permissions"] = operPermissions
         return True
 
 oper = Oper()
