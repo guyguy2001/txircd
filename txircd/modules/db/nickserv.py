@@ -3,7 +3,7 @@ from twisted.plugin import IPlugin
 from twisted.python import log
 from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
-from txircd.utils import isValidNick, ircLower
+from txircd.utils import isValidNick, ircLower, SafeDefaultDict
 from zope.interface import implements
 import re
 
@@ -23,6 +23,7 @@ class NickServ(DBService):
 
     user_cmd_aliases = {
         "NS": (10, None),
+        "NICKSERV": (10, None),
         "GHOST": (10, "GHOST"),
         "ID": (10, "IDENTIFY"),
         "IDENTIFY": (10, "IDENTIFY"),
@@ -48,6 +49,9 @@ class NickServ(DBService):
         # it is ignored - this prevents someone from being able to repeatedly switch nicks
         # and keep the timer pending.
         self.nick_checks = {}
+        # This dict maps users to pending registrations, preventing a user from getting away with
+        # registering too many nicks by sending them rapidly.
+        self.nick_registrations = SafeDefaultDict(0)
         for user in self.ircd.users.values():
             self.checkNick(user)
 
@@ -201,23 +205,35 @@ class NickServ(DBService):
             if nickOwners:
                 self.tellUser(user, "The nick {} is already owned by someone else, and will not be protected.".format(newNick))
                 return
-            if maxNicks is not None and len(myNicks) >= maxNicks:
-                self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
-                              len(myNicks), newNick))
-                return
+            if maxNicks is not None:
+                if len(myNicks) >= maxNicks:
+                    self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
+                                  len(myNicks), newNick))
+                    return
+                if len(myNicks) + self.nick_registrations[user] >= maxNicks:
+                    self.tellUser(user, ("You already have {} registered nicks and {} pending, "
+                                         "so {} will not be protected.").format(
+                                         len(myNicks), self.nick_registrations[user], newNick))
+                    return
+            self.nick_registrations[user] += 1
             self.query(insertSuccess,
-                       self.reportError(user, genericErrorMessage),
+                       insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
                        donorID, newNick)
 
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
                                  "and can not be used by any other user.").format(newNick))
+            self.nick_registrations[user] -= 1
             # we may need to kick off someone already on the nick
             if newNick in self.ircd.userNicks:
                 currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
                 if currentHolder is not user:
                     self.checkNick(currentHolder)
+
+        def insertFail(error):
+            self.reportError(user, genericErrorMessage)(error)
+            self.nick_registrations[user] -= 1
 
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
@@ -283,7 +299,8 @@ class NickServ(DBService):
             owners = [owner for owner, in results]
             if not owners or getDonorID(user) in owners:
                 # nick is not protected, or nick is owned by user
-                timer.cancel()
+                if timer.active():
+                    timer.cancel()
                 del self.nick_checks[user, nick]
                 return
             self.nick_checks[user, nick] = timer, owners
@@ -308,7 +325,8 @@ class NickServ(DBService):
 
         def queryFailed(failure):
             timer, owners = self.nick_checks.pop((user, nick))
-            timer.cancel()
+            if timer.active():
+                timer.cancel()
             if user.nick != nick:
                 return # they already changed
             if user.uuid not in self.ircd.users:
@@ -347,9 +365,9 @@ class NickServ(DBService):
     def forceNick(self, user):
         for nick in self.genForceNicks(user):
             if nick not in self.ircd.userNicks:
-                user.changeNick(nick)
                 self.tellUser(user, ("{} is a registered nick. Your nick has been changed "
                                      "to prevent impersonation.").format(user.nick))
+                user.changeNick(nick)
                 return
         # getting here should be impossible! uuid was already taken?
         log("Disconnecting user {}: Cannot force nick to uuid!".format(user))
@@ -371,8 +389,10 @@ class NickServ(DBService):
         if owners is None:
             self.tellUser(user, "We are still verifying that your nick {} is ok to use. Please try again.".format(
                                 user.nick))
-        else:
+        elif command == "PRIVMSG":
             self.tellUser(user, "You cannot message anyone other than NickServ until you identify or change nicks.")
+        else:
+            self.tellUser(user, "You cannot use the command \x02{}\x02 until you identify or change nicks.".format(command))
         return False # query is still pending, or user has not authed to the correct account
 
     def handleLogout(self, user, params):
