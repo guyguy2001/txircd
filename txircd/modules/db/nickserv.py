@@ -111,7 +111,7 @@ class NickServ(DBService):
     def handleLogin(self, user, params):
         try:
             if len(params) == 1:
-                email, password = params[0].split(':', 1)
+                email, password = params[0].split(":", 1)
             else:
                 email, password = params[:2]
         except ValueError:
@@ -128,7 +128,7 @@ class NickServ(DBService):
             email)
 
     def verifyLogin(self, user, password, result):
-        if 'compare-pbkdf2' not in self.ircd.functionCache:
+        if "compare-pbkdf2" not in self.ircd.functionCache:
             self.tellUser(user, "The server cannot authenticate due to an admin error.")
             return
 
@@ -338,7 +338,7 @@ class NickServ(DBService):
         if not ircLower(nick).startswith(ircLower(prefix)):
             return False
         nick = nick[len(prefix):] # strip prefix
-        if not re.match(r'^[0-9][A-Za-z0-9]{8}$', nick): # match uuid
+        if not re.match(r"^[0-9][A-Za-z0-9]{8}$", nick): # match uuid
             return False
         return True
 
@@ -355,15 +355,15 @@ class NickServ(DBService):
 
     def checkMessagePermission(self, user, command, data):
         if (user, user.nick) not in self.nick_checks:
-            return # no check pending, so they're either authed or nick isn't protected
+            return None # no check pending, so they're either authed or nick isn't protected
         if data.get("targetusers", {}).keys() == [self.user] and not data.get("targetchans", {}):
-            return # messages to nickserv and only nickserv are ok
+            return None # messages to nickserv and only nickserv are ok
         timer, owners = self.nick_checks[user, user.nick]
         if owners and getDonorID(user) in owners:
             # user has authed since query returned, so let's abort the timer early
             timer.cancel()
             del self.nick_checks[user, user.nick]
-            return
+            return None
         if owners is None:
             self.tellUser(user, "We are still verifying that your nick {} is ok to use. Please try again.".format(
                                 user.nick))
@@ -435,7 +435,7 @@ class NickServ(DBService):
             if result:
                 self.tellUser(user, "Failed to create account - an account already exists with that email.")
                 return
-            if 'hash-pbkdf2' not in self.ircd.functionCache:
+            if "hash-pbkdf2" not in self.ircd.functionCache:
                 self.tellUser(user, "The server cannot create an account due to an admin error.")
                 return
             pass_hash = self.ircd.functionCache["hash-pbkdf2"](password)
