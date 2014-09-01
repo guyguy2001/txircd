@@ -359,7 +359,7 @@ class BidServ(DBService):
                       "https://desertbus.org/donate?type=auction&prize={} to pay for your prize."
                      ).format(auction["name"], prizeID)
         for winnerUser in winnerUsers:
-            for line in winMessage:
+            for line in winMessage.splitlines():
                 self.tellUser(winnerUser, line)
         auction.clear()
         self.ircd.storage.sync() # we really don't want an item marked as sold in the DB with an ongoing auction
