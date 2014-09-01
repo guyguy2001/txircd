@@ -354,12 +354,13 @@ class BidServ(DBService):
         winningBid = self.getHighBid()
         prizeID = auction["id"]
         winnerUsers = [_user for _user in self.ircd.users.values() if getDonorID(_user) == winningBid["donorID"]]
+        winMessage = ("Congratulations! You won \"{}\"!\n"
+                      "Please log into your donor account and visit "
+                      "https://desertbus.org/donate?type=auction&prize={} to pay for your prize."
+                     ).format(auction["name"], prizeID)
         for winnerUser in winnerUsers:
-            winMessage = ("Congratulations! You won \"{}\"! "
-                          "Please log into your donor account and visit "
-                          "https://desertbus.org/donate?type=auction&prize={} to pay for your prize."
-                         ).format(auction["name"], prizeID)
-            self.tellUser(winnerUser, winMessage)
+            for line in winMessage.splitlines():
+                self.tellUser(winnerUser, line)
         auction.clear()
         self.ircd.storage.sync() # we really don't want an item marked as sold in the DB with an ongoing auction
         successMessage = "Database updated - Item #{} sold for ${:,}!".format(prizeID, winningBid["value"])
