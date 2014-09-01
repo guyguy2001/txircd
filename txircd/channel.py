@@ -35,8 +35,7 @@ class IRCChannel(object):
             if user.uuid[:3] != self.ircd.serverID:
                 servers.add(self.ircd.servers[user.uuid[:3]])
         if "skipservers" in kw:
-            for s in kw["skipservers"]:
-                servers.discard(s)
+            servers = servers.difference(kw["skipservers"])
         servers = list(servers)
         kw["users"] = userList
         kw["channels"] = [self]

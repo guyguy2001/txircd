@@ -27,6 +27,12 @@ class MessageCommands(ModuleData):
                 ("NOTICE", 1, ServerNotice(self)) ]
     
     def sendChannelMsg(self, toUsers, toServers, command, channel, *params, **kw):
+        localDestServers = set()
+        for server in toServers:
+            nearestServer = server
+            while nearestServer.nextClosest != self.ircd.serverID:
+                nearestServer = self.ircd.servers[nearestServer.nextClosest]
+            localDestServers.add(nearestServer)
         for user in toUsers:
             user.sendMessage(command, *params, **kw)
         if "to" in kw:
@@ -35,7 +41,7 @@ class MessageCommands(ModuleData):
             kw["prefix"] = kw["sourceuser"].uuid
         elif "sourceserver" in kw:
             kw["prefix"] = kw["sourceserver"].serverID
-        for server in toServers:
+        for server in localDestServers:
             server.sendMessage(command, *params, **kw)
         del toUsers[:]
         del toServers[:]
