@@ -44,6 +44,7 @@ class RateLimit(ModuleData):
         rateData["messages"] += 1
         if rateData["messages"] > self.getConfig()["kill_limit"]:
             user.disconnect("Killed: Flooding")
+            return False
         if rateData["messages"] > self.getConfig()["limit"]:
             # only send notice once per period
             if not rateData["noticeSent"]:
