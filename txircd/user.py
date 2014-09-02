@@ -73,8 +73,9 @@ class IRCUser(irc.IRC):
             # it seems that twisted.protocols.irc makes no attempt to raise useful "invalid syntax"
             # errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
             # so let's catch everything.
-            self.disconnect("Invalid data")
             log.msg("An error occurred processing data:\n{}".format(format_exc()), logLevel=logging.WARNING)
+            if self.uuid in self.ircd.users:
+                self.disconnect("Invalid data")
     
     def sendLine(self, line):
         self.ircd.runActionStandard("usersenddata", self, line, users=[self])
@@ -106,6 +107,8 @@ class IRCUser(irc.IRC):
         return self.ircd.name
     
     def handleCommand(self, command, prefix, params):
+        if self.uuid not in self.ircd.users:
+            return # we have been disconnected - ignore all further commands
         if command in self.ircd.userCommands:
             handlers = self.ircd.userCommands[command]
             if not handlers:
