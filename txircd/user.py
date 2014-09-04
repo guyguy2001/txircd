@@ -335,8 +335,6 @@ class IRCUser(irc.IRC):
             return
         if not override:
             if self.ircd.runActionUntilValue("joinpermission", channel, self, users=[self], channels=[channel]) is False:
-                if self._hasBatchedErrors():
-                    self._dispatchErrorBatch()
                 return
         channel.users[self] = ""
         self.channels.append(channel)
