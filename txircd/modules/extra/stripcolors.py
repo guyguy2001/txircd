@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ModeType
+from txircd.utils import ModeType, stripFormatting
 from zope.interface import implements
 import re
 
@@ -25,20 +25,11 @@ class StripColors(ModuleData, Mode):
             return ""
         return None
 
-    # \x02: bold
-    # \x1f: underline
-    # \x16: reverse
-    # \x1d: italic
-    # \x0f: normal
-    # \x03: color stop
-    # \x03FF: set foreground
-    # \x03FF,BB: set fore/background
-    format_chars = re.compile('[\x02\x1f\x16\x1d\x0f]|\x03([0-9]{1,2}(,[0-9]{1,2})?)?')
     def apply(self, actionName, channel, param, user, command, data):
         minAllowedRank = self.ircd.config.getWithDefault("exempt_chanops_stripcolor", 20)
         if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
             message = data["targetchans"][channel]
-            data["targetchans"][channel] = self.format_chars.sub('', message)
+            data["targetchans"][channel] = stripFormatting(message)
 
     def fullUnload(self):
         for channel in self.ircd.channels.itervalues():
