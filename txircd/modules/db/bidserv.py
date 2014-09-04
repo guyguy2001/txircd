@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.python import log
 from txircd.module_interface import IModuleData
+from txircd.utils import stripFormatting
 from zope.interface import implements
 from decimal import Decimal, InvalidOperation, ROUND_FLOOR
 from traceback import format_exc
@@ -282,6 +283,8 @@ class BidServ(DBService):
         if donorID == currentBid["donorID"]:
             extras.append(self.getConfig().get("spaceBid", "SPACE BID"))
         extras = "".join(["{}! ".format(extra) for extra in extras])
+        smackTalk = stripFormatting(smackTalk)
+        smackTalk = ''.join(c for c in smackTalk if ord(c) >= 0x20) # strip non-printing ascii chars
         message = "\x02\x034{}{} has the high bid of ${:,}! \x0312{}".format(extras, user.nick, newBid, smackTalk)
 
         auction["called"] = 0
