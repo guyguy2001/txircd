@@ -139,19 +139,10 @@ class IRCUser(irc.IRC):
                     self._dispatchErrorBatch()
                 return
             self._clearErrorBatch()
-            hasPermission = self.ircd.runActionUntilValue("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels)
-            if hasPermission is False:
-                if self._hasBatchedErrors():
-                    self._dispatchErrorBatch()
+            if not self.ircd.runActionUntilValue("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels):
                 return
-            self._clearErrorBatch()
-            if hasPermission is None: # If permission wasn't explicitly granted by a module, go through the generic commandpermission action
-                hasPermission = self.ircd.runActionUntilValue("commandpermission".format(command), self, command, data, users=affectedUsers, channels=affectedChannels)
-                if hasPermission is False:
-                   if self._hasBatchedErrors():
-                       self._dispatchErrorBatch()
-                   return
-            self._clearErrorBatch()
+            if not self.ircd.runActionUntilValue("commandpermission".format(command), self, command, data, users=affectedUsers, channels=affectedChannels): # Also check the generic commandpermission action
+                return
             self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
             for handler in handlers:
                 if handler[0].execute(self, data):
