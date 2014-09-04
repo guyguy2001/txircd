@@ -41,13 +41,13 @@ class KickCommand(ModuleData):
     def checkKickLevel(self, user, command, data):
         channel = data["channel"]
         if user not in channel.users:
-            user.sendSingleError("KickPermission", irc.ERR_NOTONCHANNEL, channel.name, ":You're not on that channel")
+            user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, ":You're not on that channel")
             return False
         if channel.userRank(user) < self.minLevel:
-            user.sendSingleError("KickPermission", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick users from {}".format(channel.name))
+            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick users from {}".format(channel.name))
             return False
         if channel.userRank(user) < channel.userRank(data["user"]):
-            user.sendSingleError("KickPermission", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick this user")
+            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick this user")
             return False
         return None
 

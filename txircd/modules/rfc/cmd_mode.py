@@ -138,7 +138,7 @@ class ModeCommand(ModuleData):
                 return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
         channel = data["channel"]
         if channel.userRank(user) < self.minLevel:
-            user.sendSingleError("ModeCmd", irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
+            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
             return False
         return None
 

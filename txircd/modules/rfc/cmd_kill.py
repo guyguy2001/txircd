@@ -23,7 +23,7 @@ class KillCommand(ModuleData):
     
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kill", users=[user]):
-            user.sendSingleError("KillPermission", irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
 

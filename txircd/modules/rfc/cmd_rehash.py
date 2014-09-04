@@ -26,7 +26,7 @@ class RehashCommand(ModuleData):
     
     def restrictRehashToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-rehash", users=[user]):
-            user.sendSingleError("RehashPermission", irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
     

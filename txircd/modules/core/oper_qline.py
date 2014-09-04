@@ -29,7 +29,7 @@ class QLineCommand(ModuleData, Command):
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
-            user.sendSingleError("GlinePermission", irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
 

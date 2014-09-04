@@ -40,12 +40,12 @@ class Invite(ModuleData, Mode):
     
     def apply(self, actionName, channel, param, joiningChannel, user):
         if "invites" not in user.cache or channel.name not in user.cache["invites"]:
-            user.sendSingleError("NotInvited", irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
+            user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
             return False
         if user.cache["invites"][channel.name] < channel.existedSince:
             # The invite is older than the channel, so the channel was destroyed and recreated since the invite occurred
             del user.cache["invites"][channel.name]
-            user.sendSingleError("NotInvited", irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
+            user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
             return False
         return None
 

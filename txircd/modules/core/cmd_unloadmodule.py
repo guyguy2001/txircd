@@ -24,7 +24,7 @@ class UnloadModuleCommand(ModuleData, Command):
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-unloadmodule", users=[user]):
-            user.sendSingleError("UnloadModulePermission", irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+            user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
 
