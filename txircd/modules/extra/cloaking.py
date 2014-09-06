@@ -7,8 +7,8 @@ from txircd.utils import ModeType
 from zope.interface import implements
 import logging
 
-class HostCloaking(Mode, ModuleData):
-    implements(IPlugin, IMode, IModuleData)
+class HostCloaking(ModuleData, Mode):
+    implements(IPlugin, IModuleData, IMode)
 
     name = "HostCloaking"
     affectedActions = [ "modechange-user-x" ]

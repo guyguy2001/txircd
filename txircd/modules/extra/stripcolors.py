@@ -2,7 +2,6 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, stripFormatting
 from zope.interface import implements
-import re
 
 class StripColors(ModuleData, Mode):
     implements(IPlugin, IModuleData, IMode)
