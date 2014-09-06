@@ -348,13 +348,13 @@ class NickServ(DBService):
         self.nick_checks[user, user.nick] = (timer, None)
 
     def genForceNicks(self, user):
-        prefix = self.getConfig().get("guest_prefix", "")
+        prefix = self.getConfig().get("guest_prefix", "Guest")
         if prefix:
             return [prefix + user.uuid, user.uuid]
         return [user.uuid]
 
     def isForcedNick(self, nick):
-        prefix = self.getConfig().get("guest_prefix", "")
+        prefix = self.getConfig().get("guest_prefix", "Guest")
         if not ircLower(nick).startswith(ircLower(prefix)):
             return False
         nick = nick[len(prefix):] # strip prefix
@@ -370,7 +370,7 @@ class NickServ(DBService):
                 user.changeNick(nick)
                 return
         # getting here should be impossible! uuid was already taken?
-        log("Disconnecting user {}: Cannot force nick to uuid!".format(user))
+        log.msg("Disconnecting user {}: Cannot force nick to uuid!".format(user))
         user.disconnect("Server error")
 
     def checkMessagePermission(self, user, command, data):
