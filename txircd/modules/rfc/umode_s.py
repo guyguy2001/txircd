@@ -27,7 +27,11 @@ class ServerNoticeMode(ModuleData, Mode):
                 ("sendservernotice", 1, self.sendServerNotice) ]
 
     def checkModePermission(self, user, settingUser, adding, param):
-        if adding and not self.ircd.runActionUntilValue("userhasoperpermission", user, "servernotice", users=[user]):
+        if adding:
+            if self.ircd.runActionUntilValue("userhasoperpermission", user, "servernotice-all", users=[user]):
+                return True
+            if self.ircd.runActionUntilValue("userhasoperpermission", user, "servernotice-type-{}".format(ircLower(param)), users=[user]):
+                return True
             user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
