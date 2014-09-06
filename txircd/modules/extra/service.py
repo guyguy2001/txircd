@@ -3,7 +3,6 @@ from txircd.user import LocalUser
 from txircd.utils import ircLower, splitMessage
 from zope.interface import implements
 
-
 class Service(ModuleData):
     """A service is a specific kind of module, with some pre-made stuff to assist in
     creating a pseudo-user that can do useful things in response to commands."""

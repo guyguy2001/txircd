@@ -388,5 +388,4 @@ class BidServ(DBService):
         self.tellUser(user, ("The item currently up for auction is lot #{id} ({name}). "
                             "http://desertbus.org/live-auction/{id}").format(**auction))
 
-
 bidServ = BidServ()
