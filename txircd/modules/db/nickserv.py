@@ -399,6 +399,7 @@ class NickServ(DBService):
         if getDonorID(user):
             del user.cache["accountid"]
             self.tellUser(user, "You are now logged out.")
+            user.setMetadata("ext", "accountname", None)
             self.checkNick(user)
         else:
             self.tellUser(user, "You are currently not logged in.")
