@@ -55,7 +55,7 @@ class WhoisCommand(ModuleData, Command):
                 serverName = server.name
                 serverDescription = server.description
             user.sendMessage(irc.RPL_WHOISSERVER, targetUser.nick, serverName, ":{}".format(serverDescription))
-            if "o" in targetUser.modes:
+            if self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "whois-display", users=[user]):
                 user.sendMessage(irc.RPL_WHOISOPERATOR, targetUser.nick, ":is an IRC operator")
             if targetUser.secureConnection:
                 user.sendMessage(irc.RPL_WHOISSECURE, targetUser.nick, ":is using a secure connection")
