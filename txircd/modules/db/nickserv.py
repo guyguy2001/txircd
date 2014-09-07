@@ -378,7 +378,7 @@ class NickServ(DBService):
             return None # no check pending, so they're either authed or nick isn't protected
         if command == "PRIVMSG" and data.get("targetusers", {}).keys() == [self.user] and not data.get("targetchans", {}):
             return None # PRIVMSG to nickserv and only nickserv are ok
-        if command in ("PING", "PONG", "NICK", "QUIT", "NS", "ID", "IDENTIFY"):
+        if command in ("PING", "PONG", "NICK", "QUIT", "NS", "NICKSERV", "ID", "IDENTIFY"):
             return None # These commands are always allowed
         timer, owners = self.nick_checks[user, user.nick]
         if owners and getDonorID(user) in owners:
