@@ -1,9 +1,7 @@
 from twisted.internet.protocol import ClientFactory, Factory
-from twisted.python import log
 from txircd.server import IRCServer
 from txircd.user import IRCUser
 from txircd.utils import unmapIPv4
-import logging
 
 class UserFactory(Factory):
     protocol = IRCUser
