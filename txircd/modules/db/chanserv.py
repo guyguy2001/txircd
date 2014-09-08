@@ -99,20 +99,26 @@ class ChanServ(DBService):
         self.ircd.runActionStandard("topic", channel, self.ircd.serverID, oldTopic, channels=[channel])
 
         # restore modes
-        for mode in info["modes"]:
-            if mode in self.ircd.channelModeTypes:
-                self.restoreMode(channel, mode)
+        modes = [mode for mode in info["modes"] if mode in self.ircd.channelModeTypes]
+        self.restoreModes(channel, modes)
 
-    def restoreMode(self, channel, mode):
-        # Restore an individual mode. Assumes channel is registered and mode exists.
-        modeType = self.ircd.channelModeTypes[mode]
+    def restoreModes(self, channel, modes):
+        changes = []
         info = self.getStore()[ircLower(channel.name)]
-        value = info["modes"][mode]
-        if modeType == ModeType.List:
-            for param, sourceName, time in value:
-                channel.addListMode(mode, param, sourceName, time)
-        else:
-            channel.setModes(self.ircd.serverID, mode, [value])
+        for mode in modes:
+            modeType = self.ircd.channelModeTypes[mode]
+            value = info["modes"][mode]
+            if modeType == ModeType.List:
+                for param, sourceName, time in value:
+                    changes.append((mode, param))
+            else:
+                changes.append((mode, value))
+        for n in range(0, len(changes), 20):
+            # we need to split into lots of 20 changes, since this is the max setMode allows per call
+            sublist = changes[n:n+20]
+            modestr = ''.join([mode for mode, param in changes])
+            params = [param for mode, param in changes if param is not None]
+            channel.setModes(self.ircd.serverID, modestr, params)
 
     def saveTopic(self, channel):
         info = self.getStore().get(ircLower(channel.name), None)
