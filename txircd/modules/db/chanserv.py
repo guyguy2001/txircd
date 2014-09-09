@@ -11,8 +11,14 @@ class ChanServ(DBService):
     implements(IPlugin, IModuleData)
 
     name = "ChanServ"
-    user_cmd_aliases = {}
-    help = ()
+    user_cmd_aliases = {
+        "CS": (10, None),
+        "CHANSERV": (10, None)
+    }
+    help = ("ChanServ can be used to register a channel, as well as keeping the topic and set modes even"
+            "after all users in the channel have left.\n"
+            "You can run these commands with \x02/cs COMMAND\x02.")
+
 
     def serviceCommands(self):
         return {
