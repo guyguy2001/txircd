@@ -126,6 +126,7 @@ class NickServ(DBService):
 
         if getDonorID(user):
             self.tellUser(user, "You're already logged in! You may want to LOGOUT first.")
+            return
 
         self.query(
             lambda result: self.verifyLogin(user, password, result),
