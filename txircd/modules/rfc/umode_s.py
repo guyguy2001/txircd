@@ -5,8 +5,8 @@ from txircd.utils import ircLower, ModeType, timestamp
 from zope.interface import implements
 from weakref import WeakSet
 
-irc.RPL_LISTMODE = "728" # Made up, based on freenode's quiet lists
-irc.RPL_ENDOFLISTMODE = "729" # Made up, based on freenode's quiet lists
+irc.RPL_LISTMODE = "786" # Made up
+irc.RPL_ENDOFLISTMODE = "787" # Made up
 irc.ERR_INVALIDSNOTYPE = "985" # Made up, is not used by any IRCd
 
 class ServerNoticeMode(ModuleData, Mode):
