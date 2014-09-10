@@ -11,8 +11,14 @@ class ChanServ(DBService):
     implements(IPlugin, IModuleData)
 
     name = "ChanServ"
-    user_cmd_aliases = {}
-    help = ()
+    user_cmd_aliases = {
+        "CS": (10, None),
+        "CHANSERV": (10, None)
+    }
+    help = ("ChanServ can be used to register a channel, as well as keeping the topic and set modes even"
+            "after all users in the channel have left.\n"
+            "You can run these commands with \x02/cs COMMAND\x02.")
+
 
     def serviceCommands(self):
         return {
@@ -37,6 +43,7 @@ class ChanServ(DBService):
             ("channelcreate", 10, lambda channel, user: self.restoreChannel(channel)),
             ("topic", 10, lambda channel, setter, oldTopic: self.saveTopic(channel)),
             ("modechanges-channel", 10, lambda channel, source, sourceName, changing: self.saveModes(channel)),
+            ("channelstatusoverride", 10, self.checkOverridePermission)
         ]
         # TODO may need to restore mode on new mode being registered (if we have that mode saved)
 
@@ -44,6 +51,11 @@ class ChanServ(DBService):
         if "chanserv" not in self.ircd.storage:
             self.ircd.storage["chanserv"] = {}
         return self.ircd.storage["chanserv"]
+
+    def checkOverridePermission(self, channel, user, mode, param):
+        if user == self.user:
+            return True
+        return None
 
     def handleRegister(self, user, params):
         if not params:
@@ -118,7 +130,7 @@ class ChanServ(DBService):
             sublist = changes[n:n+20]
             modestr = ''.join([mode for mode, param in changes])
             params = [param for mode, param in changes if param is not None]
-            channel.setModes(self.ircd.serverID, modestr, params)
+            channel.setModes(self.user.uuid, modestr, params)
 
     def saveTopic(self, channel):
         info = self.getStore().get(ircLower(channel.name), None)
@@ -170,7 +182,7 @@ class ChanServ(DBService):
         if channelName not in self.ircd.channels:
             self.tellUser(user, "Your channel {} does not exist yet. Try JOINing it first.".format(channelName))
         channel = self.ircd.channels[channelName]
-        channel.setModes(self.ircd.serverID, self.ircd.channelStatusOrder[0], [user.nick])
+        channel.setModes(self.user.uuid, self.ircd.channelStatusOrder[0], [user.nick])
 
 
 chanServ = ChanServ()
