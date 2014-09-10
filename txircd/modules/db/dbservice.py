@@ -33,6 +33,7 @@ class DBService(Service):
         )
 
     def unload(self):
+        super(DBService, self).unload()
         if self.db:
             self.db.close()
 
