@@ -164,7 +164,7 @@ class NickServ(DBService):
             return
 
         user.cache["accountid"] = donorID
-        user.cache["ownedNicks"] = nicklist
+        user.cache["ownedNicks"] = [ircLower(nick) for nick in nicklist]
         if not displayName:
             displayName = "Anonymous"
         user.setMetadata("ext", "accountname", displayName.replace(" ", "_"))
@@ -233,7 +233,7 @@ class NickServ(DBService):
                                  "and can not be used by any other user.").format(newNick))
             self.nick_registrations[donorID] -= 1
             if getDonorID(user) == donorID: # check user is still logged in
-                user.cache["ownedNicks"].append(newNick)
+                user.cache["ownedNicks"].append(ircLower(newNick))
             # we may need to kick off someone already on the nick
             if newNick in self.ircd.userNicks:
                 currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
@@ -279,7 +279,7 @@ class NickServ(DBService):
         def deleteSuccess(result):
             self.tellUser(user, "Dropped nick {} from your account.".format(dropNick))
             if getDonorID(user) == donorID: # check user is still logged in
-                user.cache["ownedNicks"].remove(dropNick)
+                user.cache["ownedNicks"].remove(ircLower(dropNick))
             if dropNick == user.nick:
                 self.checkNick(user)
 
@@ -510,7 +510,7 @@ class RExtbans(ModuleData):
             return not self.matchUser(user, False, param)
         if param == "*":
             return getDonorID(user) is not None
-        return param in user.cache.get("ownedNicks", [])
+        return ircLower(param) in user.cache.get("ownedNicks", [])
 
 
 nickServ = NickServ()
