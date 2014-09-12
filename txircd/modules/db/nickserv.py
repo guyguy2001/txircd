@@ -407,11 +407,13 @@ class NickServ(DBService):
         return False # query is still pending, or user has not authed to the correct account
 
     def handleLogout(self, user, params):
-        if getDonorID(user):
+        donorID = getDonorID(user)
+        if donorID:
             del user.cache["accountid"]
             del user.cache["ownedNicks"]
-            self.tellUser(user, "You are now logged out.")
             user.setMetadata("ext", "accountname", None)
+            self.ircd.runActionStandard("user-logout", user, donorID)
+            self.tellUser(user, "You are now logged out.")
             self.checkNick(user)
         else:
             self.tellUser(user, "You are currently not logged in.")
