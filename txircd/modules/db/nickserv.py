@@ -158,7 +158,7 @@ class NickServ(DBService):
     def loginUser(self, user, displayName, donorID, nicklist):
         # action "user-login" fires one a user is authenticated but before login happens
         # it takes args (user, displayName, donorID) and may return False to deny login
-        denied = self.ircd.runActionUntilFalse("user-login", user, displayName, donorID)
+        denied = self.ircd.runActionUntilFalse("user-login-permission", user, displayName, donorID)
         if denied:
             self.tellUser(user, "The login credentials you provided were incorrect.")
             return
@@ -169,6 +169,8 @@ class NickServ(DBService):
             displayName = "Anonymous"
         user.setMetadata("ext", "accountname", displayName.replace(" ", "_"))
         self.tellUser(user, "You are now identified. Welcome, {}".format(displayName))
+
+        self.ircd.runActionStandard("user-login", user)
 
         self.registerNick(user, user.nick, quiet=True)
 
