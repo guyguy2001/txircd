@@ -154,6 +154,6 @@ class ELineCommand(ModuleData, Command):
     def load(self):
         if "elines" not in self.ircd.storage:
             self.ircd.storage["elines"] = CaseInsensitiveDictionary()
-        self.banlist = self.ircd.storage["elines"]
+        self.exceptlist = self.ircd.storage["elines"]
 
 eline = ELineCommand()
