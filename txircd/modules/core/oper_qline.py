@@ -10,9 +10,7 @@ class QLineCommand(ModuleData, Command):
 
     name = "QLineCommand"
     core = True
-
-    def __init__(self):
-        self.banlist = CaseInsensitiveDictionary()
+    banlist = None
 
     def hookIRCd(self, ircd):
         self.ircd = ircd

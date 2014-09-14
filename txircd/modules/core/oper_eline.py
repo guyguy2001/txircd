@@ -10,9 +10,7 @@ class ELineCommand(ModuleData, Command):
 
     name = "ELineCommand"
     core = True
-
-    def __init__(self):
-        self.exceptlist = CaseInsensitiveDictionary()
+    exceptlist = None
 
     def hookIRCd(self, ircd):
         self.ircd = ircd
