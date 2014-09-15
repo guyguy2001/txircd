@@ -13,7 +13,7 @@ class DefaultModes(ModuleData):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("channelcreate", 10, self.setDefaults) ]
+        return [ ("channelcreate", 110, self.setDefaults) ]
     
     def setDefaults(self, channel, user):
         modes = self.ircd.config.getWithDefault("channel_default_modes", "ont")
