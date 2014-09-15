@@ -38,6 +38,7 @@ class IRCd(Service):
         self.name = None
         self.isupport_tokens = {
             "CHANNELLEN": 64,
+            "CHANTYPES": "#",
             "CASEMAPPING": "rfc1459",
             "MODES": 20,
             "NICKLEN": 32,
