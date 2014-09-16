@@ -119,6 +119,7 @@ class QLineCommand(ModuleData, Command):
         return None
 
     def restrictNickChange(self, user, command, data):
+        self.expireQLines()
         if user.isRegistered():
             lowerNick = ircLower(data["nick"])
             for mask, linedata in self.banlist.iteritems():
