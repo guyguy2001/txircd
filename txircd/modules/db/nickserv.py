@@ -105,7 +105,8 @@ class NickServ(DBService):
 
     def actions(self):
         return super(NickServ, self).actions() + [
-            ("welcome", 10, self.checkNick),
+            ("welcome", 10, self.loginAfterWelcome),
+            ("welcome", 9, self.checkNick),
             ("changenick", 10, lambda user, oldNick, fromServer: self.checkNick(user)),
             ("changenick", 10, self.registerOnChange),
             ("commandpermission", 10, self.checkMessagePermission),
@@ -113,6 +114,12 @@ class NickServ(DBService):
 
     def getConfig(self):
         return self.ircd.config.getWithDefault("nickserv", {})
+
+    def loginAfterWelcome(self, user):
+        # if user used PASS before welcome, we check it now
+        if "password" in user.cache:
+            params = user.cache["password"].split(" ", 1)
+            self.handleLogin(user, params)
 
     def handleLogin(self, user, params):
         try:
