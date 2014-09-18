@@ -59,10 +59,10 @@ class LUsersCommand(ModuleData, Command):
     
     def execute(self, user, data):
         counts, maxes = self.countStats()
-        user.sendMessage(irc.RPL_LUSERCLIENT, ":There are {visible} users and {invisible} invisible on {servers} servers".format(**counts))
+        user.sendMessage(irc.RPL_LUSERCLIENT, ":There are {counts[visible]} users and {counts[invisible]} invisible on {counts[servers]} servers".format(counts=counts))
         user.sendMessage(irc.RPL_LUSEROP, str(counts["opers"]), ":operator{} online".format("" if counts["opers"] == 1 else "s"))
         user.sendMessage(irc.RPL_LUSERCHANNELS, str(counts["channels"]), ":channel{} formed".format("" if counts["channels"] == 1 else "s"))
-        user.sendMessage(irc.RPL_LUSERME, ":I have {local} clients and {localservers} servers".format(**counts))
+        user.sendMessage(irc.RPL_LUSERME, ":I have {counts[local]} clients and {counts[localservers]} servers".format(counts=counts))
         user.sendMessage(irc.RPL_LOCALUSERS, ":Current Local Users: {}  Max: {}".format(counts["local"], maxes["local"]))
         user.sendMessage(irc.RPL_GLOBALUSERS, ":Current Global Users: {}  Max: {}".format(counts["users"], maxes["users"]))
         return True
