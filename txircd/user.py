@@ -47,7 +47,7 @@ class IRCUser(irc.IRC):
         self.connectedSince = now()
         self.nickSince = now()
         self.idleSince = now()
-        self._registerHolds = set(("NICK", "USER"))
+        self._registerHolds = set(("connection", "NICK", "USER"))
         self.disconnectedDeferred = Deferred()
         self._errorBatchName = None
         self._errorBatch = []
@@ -58,11 +58,20 @@ class IRCUser(irc.IRC):
         self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
     
     def connectionMade(self):
-        if self.ircd.runActionUntilFalse("userconnect", self, users=[self]):
-            self.transport.loseConnection()
-            return
+        # We need to callLater the connect action call because the connection isn't fully set up yet,
+        # nor is it fully set up even with a delay of zero, which causes the message buffer not to be sent
+        # when the connection is closed.
+        # The "connection" register hold is used basically solely for the purposes of this to prevent potential
+        # race conditions with registration.
+        reactor.callLater(0.1, self._callConnectAction)
         if ISSLTransport.providedBy(self.transport):
             self.secureConnection = True
+    
+    def _callConnectAction(self):
+        if self.ircd.runActionUntilFalse("userconnect", self, users=[self]):
+            self.transport.loseConnection()
+        else:
+            self.register("connection")
     
     def dataReceived(self, data):
         data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")

@@ -103,6 +103,7 @@ class ServerUID(ModuleData, Command):
                 else: # As a final fallback, change both nicknames
                     otherUser.changeNick(otherUser.uuid, server)
                     newUser.changeNick(newUser.uuid, server)
+        newUser.register("connection")
         newUser.register("USER")
         newUser.register("NICK")
         connectTimestamp = str(timestamp(connectTime))
