@@ -25,8 +25,6 @@ class BanMode(ModuleData, Mode):
                 ("join", 10, self.populateBanCache),
                 ("join", 9, self.autoStatus),
                 ("leave", 10, self.clearBanCache),
-                ("user-login", 10, self.updateUserCaches),
-                ("user-logout", 10, self.updateUserCaches),
         ]
     
     def banMatchesUser(self, user, banmask):
@@ -183,7 +181,7 @@ class BanMode(ModuleData, Mode):
         if "bans" in user.cache and channel in user.cache["bans"]:
             del user.cache["bans"][channel]
 
-    def updateUserCaches(self, user, donorID=None):
+    def updateUserCaches(self, user):
         for channel in user.channels:
             self.populateBanCache(channel, user)
             self.autoStatus(channel, user)
