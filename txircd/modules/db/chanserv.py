@@ -128,8 +128,8 @@ class ChanServ(DBService):
         for n in range(0, len(changes), 20):
             # we need to split into lots of 20 changes, since this is the max setMode allows per call
             sublist = changes[n:n+20]
-            modestr = ''.join([mode for mode, param in changes])
-            params = [param for mode, param in changes if param is not None]
+            modestr = ''.join([mode for mode, param in sublist])
+            params = [param for mode, param in sublist if param is not None]
             channel.setModes(self.user.uuid, modestr, params)
 
     def saveTopic(self, channel):
