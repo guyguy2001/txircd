@@ -10,9 +10,7 @@ class QLineCommand(ModuleData, Command):
 
     name = "QLineCommand"
     core = True
-
-    def __init__(self):
-        self.banlist = CaseInsensitiveDictionary()
+    banlist = None
 
     def hookIRCd(self, ircd):
         self.ircd = ircd
@@ -121,6 +119,7 @@ class QLineCommand(ModuleData, Command):
         return None
 
     def restrictNickChange(self, user, command, data):
+        self.expireQLines()
         if user.isRegistered():
             lowerNick = ircLower(data["nick"])
             for mask, linedata in self.banlist.iteritems():

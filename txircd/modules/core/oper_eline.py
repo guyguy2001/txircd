@@ -10,9 +10,7 @@ class ELineCommand(ModuleData, Command):
 
     name = "ELineCommand"
     core = True
-
-    def __init__(self):
-        self.exceptlist = CaseInsensitiveDictionary()
+    exceptlist = None
 
     def hookIRCd(self, ircd):
         self.ircd = ircd
@@ -154,6 +152,6 @@ class ELineCommand(ModuleData, Command):
     def load(self):
         if "elines" not in self.ircd.storage:
             self.ircd.storage["elines"] = CaseInsensitiveDictionary()
-        self.banlist = self.ircd.storage["elines"]
+        self.exceptlist = self.ircd.storage["elines"]
 
 eline = ELineCommand()
