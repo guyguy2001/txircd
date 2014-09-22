@@ -5,11 +5,12 @@ from twisted.internet.endpoints import clientFromString, serverFromString
 from twisted.internet.task import LoopingCall
 from twisted.plugin import getPlugins
 from twisted.python import log
+from twisted.python.rebuild import rebuild
 from txircd.config import Config
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
-import logging, random, shelve, string, txircd.modules
+import importlib, logging, random, shelve, string, txircd.modules
 
 class IRCd(Service):
     def __init__(self, configFileName):
@@ -127,6 +128,7 @@ class IRCd(Service):
     def loadModule(self, moduleName):
         for module in getPlugins(IModuleData, txircd.modules):
             if module.name == moduleName:
+                rebuild(importlib.import_module(module.__module__)) # getPlugins doesn't recompile modules, so let's do that ourselves.
                 self._loadModuleData(module)
                 break
     
