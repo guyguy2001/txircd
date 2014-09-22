@@ -23,7 +23,9 @@ class GLineCommand(ModuleData, Command):
                 ("register", 1, self.registerCheck),
                 ("statstypename", 1, self.checkStatsType),
                 ("statsruntype", 1, self.listStats),
-                ("xlinerematch", 1, self.matchGLine)]
+                ("xlinerematch", 1, self.matchGLine),
+                ("addxline", 1, self.addGLine),
+                ("removexline", 1, self.removeGLine) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
@@ -93,6 +95,21 @@ class GLineCommand(ModuleData, Command):
                     u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
                     u.disconnect("G:Lined: {}".format(reason))
         return True
+
+    def addGLine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "G" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeGLine(self, linetype, mask):
+        if linetype != "G" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
 
     def registerCheck(self, user):
         self.expireGLines()

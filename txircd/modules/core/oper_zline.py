@@ -22,7 +22,9 @@ class ZLineCommand(ModuleData, Command):
         return [ ("commandpermission-ZLINE", 1, self.restrictToOpers),
                 ("userconnect", 1, self.connectCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addZLine),
+                ("removexline", 1, self.removeZLine) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline", users=[user]):
@@ -90,6 +92,21 @@ class ZLineCommand(ModuleData, Command):
                     u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
                     u.disconnect("Z:Lined: {}".format(reason))
         return True
+
+    def addZLine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "Z" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeZLine(self, linetype, mask):
+        if linetype != "Z" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
 
     def connectCheck(self, user):
         self.expireZLines()

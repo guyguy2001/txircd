@@ -23,7 +23,9 @@ class QLineCommand(ModuleData, Command):
                 ("commandpermission-NICK", 1, self.restrictNickChange),
                 ("register", 1, self.registerCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addQLine),
+                ("removexline", 1, self.removeQLine) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
@@ -94,6 +96,21 @@ class QLineCommand(ModuleData, Command):
                     u.changeNick(uid)
                     u.sendMessage("NOTICE", ":Your nickname has been changed as it is now invalid ({}).".format(reason))
         return True
+
+    def addQLine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "Q" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeQLine(self, linetype, mask):
+        if linetype != "Q" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
 
     def registerCheck(self, user):
         self.expireQLines()

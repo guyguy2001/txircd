@@ -22,7 +22,9 @@ class ELineCommand(ModuleData, Command):
         return [ ("commandpermission-ELINE", 1, self.restrictToOpers),
                 ("register", 50, self.registerCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addELine),
+                ("removexline", 1, self.removeELine) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
@@ -100,6 +102,21 @@ class ELineCommand(ModuleData, Command):
                     if self.matchELine(user):
                         user.cache["eline_match"] = True
         return True
+
+    def addELine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "E" or mask in self.exceptlist:
+            return
+        self.exceptlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeELine(self, linetype, mask):
+        if linetype != "E" or mask not in self.exceptlist:
+            return
+        del self.exceptlist[mask]
 
     def registerCheck(self, user):
         self.expireELines()
