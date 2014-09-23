@@ -87,6 +87,7 @@ class ServerBurst(ModuleData, Command):
             for namespace, metadata in channel.metadata.iteritems():
                 for key, value in metadata.iteritems():
                     server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
+        self.ircd.runActionStandard("burst")
         server.sendMessage("BURST", prefix=self.ircd.serverID)
     
     def parseParams(self, server, params, prefix, tags):
