@@ -14,7 +14,8 @@ class ServerBurst(ModuleData, Command):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("startburst", 1, self.startBurst) ]
+        return [ ("burst", 100, self.startBurst),
+                ("burst", 1, self.completeBurst) ]
     
     def serverCommands(self):
         return [ ("BURST", 1, self) ]
@@ -87,7 +88,8 @@ class ServerBurst(ModuleData, Command):
             for namespace, metadata in channel.metadata.iteritems():
                 for key, value in metadata.iteritems():
                     server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
-        self.ircd.runActionStandard("burst")
+    
+    def completeBurst(self, server):
         server.sendMessage("BURST", prefix=self.ircd.serverID)
     
     def parseParams(self, server, params, prefix, tags):

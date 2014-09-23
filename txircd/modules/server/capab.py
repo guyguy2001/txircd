@@ -59,7 +59,7 @@ class CapabCommand(ModuleData, Command):
                 server.sendMessage("CAPAB", "START", "300", prefix=self.ircd.serverID)
                 server.sendMessage("CAPAB", "MODULES", ":{}".format(" ".join(self.ircd.loadedModules.keys())), prefix=self.ircd.serverID)
                 server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
-            self.ircd.runActionStandard("startburst", server)
+            self.ircd.runActionStandard("burst", server)
             return True
         return None
 
