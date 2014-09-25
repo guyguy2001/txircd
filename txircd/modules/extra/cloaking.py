@@ -1,10 +1,10 @@
-from hashlib import md5
 from twisted.internet.abstract import isIPAddress, isIPv6Address
 from twisted.plugin import IPlugin
 from twisted.python import log
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
+from hashlib import md5
 import logging
 
 class HostCloaking(ModuleData, Mode):
@@ -56,8 +56,8 @@ class HostCloaking(ModuleData, Mode):
     def applyIPv4Cloak(self, ip):
         pieces = ip.split(".")
         hashedParts = []
-        for i in range(len(pieces)):
-            piecesGroup = pieces[i:]
+        for i in range(len(pieces), 0, -1):
+            piecesGroup = pieces[:i]
             piecesGroup.reverse()
             hashedParts.append(md5(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:8])
         return "{}.IP".format(".".join(hashedParts))
@@ -78,8 +78,8 @@ class HostCloaking(ModuleData, Mode):
                 pieces[index] = "{}{}".format("".join(["0" for i in range(4 - pieceLen)]), piece)
         hashedParts = []
         pieces.reverse()
-        for i in range(len(pieces)):
-            piecesGroup = pieces[i:]
+        for i in range(len(pieces), 0, -1):
+            piecesGroup = pieces[:i]
             piecesGroup.reverse()
             hashedParts.append(md5(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:5])
         return "{}.IP".format(".".join(hashedParts))
