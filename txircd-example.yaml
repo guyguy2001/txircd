@@ -1,2 +1,417 @@
-# This will become the default config file
-# For now, it is blank
+
+# This is an example config file with most optional features enabled by default.
+# You should review this file and comment out or tweak what you want.
+
+
+# BASICS: These keys are required. It is highly reccomended you change them.
+
+# server_name: string  - The name this server should go by. Must be a fully-qualified domain name.
+# server_description: string  - A short sentence describing this server.
+# network_name: string  - The name of the irc network to connect to. This must match other servers. Max 32 chars.
+server_name: "test.local"
+server_description: "An example config"
+network_name: "test_net"
+
+# bind_client: list of strings
+# The bind_client key specifies what network sockets to listen on.
+# Each string in the list describes a "transport endpoint".
+# A quick guide:
+#    "tcp:port=PORT"
+#        Listen on an IPv4 TCP socket on the given port. Example: "tcp:port=6667"
+#    "tcp:port=PORT:interface=IP"
+#        As above, but only bind to one network interface,
+#        eg. loopback for a local-only connection. Example: "tcp:port=6667:interface=127.0.0.1"
+#        By giving an IPv6 address, it uses an IPv6 socket instead. Note that : characters must
+#        be escaped by surrounding the ip with {}. Example: "tcp6:port=6667:interface={::1}"
+#        You can bind to all interfaces (ipv4 and ipv6) with "interface={::}".
+#    "ssl:port=PORT:interface=IP:certKey=PATH:privateKey=PATH:sslmethod:METHOD"
+#        Port and interface options are as per tcp. privateKey should point to a PEM file containing your
+#        server's private key. If this same file contains your certificate, certKey may be omitted.
+#        sslmethod must contain SSLv3_METHOD, SSLv23_METHOD, or TLSv1_METHOD. TLSv1_METHOD is reccomended.
+#        Example: "ssl:port=443:privateKey=/path/to/file.pem:sslmethod=TLSv1_METHOD"
+# Note that if this config option is not given at all, the default binding is "tcp:port=6667:interface={::}",
+# ie. bind to all interfaces on ipv4 and ipv6.
+# This value will bind to port 6667 on loopback only (for safety). It does not enable SSL.
+bind_client:
+    - "tcp:port=6667:interface=127.0.0.1"
+    - "tcp:port=6667:interface={::1}"
+
+# bind_server: As per bind_client, but specifies listen sockets for server to server connections,
+# instead of incoming users.
+# The default is not to allow incoming server to server connections.
+bind_server: []
+
+# links: Used to specify other irc servers in our network to connect to.
+# The value should map names to server descriptions, where each server description contains subkeys:
+#     connect_descriptor: Endpoint descriptions similar to bind_client.
+#     in_password: Password to require this server to give when it connects to us. Not required, but reccomended.
+#     out_password: Password to send this server when connecting to it. Not required, but reccomended.
+# This example is not activated by default - uncomment to use it.
+# links:
+#     test2:
+#         connect_descriptor: "tcp:localhost:6668"
+#         in_password: "correct horse battery staple"
+#     test3:
+#         connect_descriptor: "tcp:localhost:6669"
+#         out_password: "swordfish"
+
+
+# OTHER CORE: The following keys are optional, and relate to the core ircd.
+# In all cases, these are set here to their defaults.
+
+# channel_list_limit: int  - Max allowed size for a list mode on a channel (eg. +b)
+channel_list_limit: 100
+
+# user_list_limit: int  - Max allowed size for a list mode on a user
+user_list_limit: 100
+
+# storage_sync_interval: float
+# Any changes to the server's persistent storage are periodically flushed to disk.
+# This option controls how often this occurs. Higher values may result in lost data on a server crash,
+# while lower values may cause performance problems. The default is every 5 seconds.
+storage_sync_interval: 5
+
+# server_registration_timeout: float
+# Time in seconds to wait for another server to handshake before giving up and disconnecting them.
+server_registration_timeout: 10
+
+# user_registration_timeout: float
+# Time in seconds to wait for a user to handshake before giving up and disconnecting them.
+user_registration_timeout: 10
+
+# server_ping_frequency: float
+# How often to PING another connected server, regardless of activity.
+# Defaults to one minute.
+server_ping_frequency: 60
+
+# user_ping_frequency: float
+# How often to PING a connected user if there was no other activity from them in this time.
+# Defaults to one minute.
+user_ping_frequency: 60
+
+
+# DATABASE: This subsection specifies how to connect to the mysql database used by some modules.
+# This whole section is optional, as all subkeys have defaults that can be used.
+# The subkeys are as follows:
+#    host: string     - The hostname to connect to (default: localhost)
+#    port: int        - The port to connect to (default: 3306)
+#    dbname: string   - The name of the database to connect to (default: txircd)
+#    user: string     - The username to authenticate with (default: txircd)
+#    password: string - The password to authenticate with (default: txircd)
+# The following config is the same as the defaults.
+database:
+    host: "localhost"
+    port: 3306
+    dbname: "txircd"
+    user: "txircd"
+    password: "txircd"
+
+
+# MODULES: The following keys relate to the operation of specific modules, and are only meaningful
+# if the corresponding module is loaded (note: core modules are always loaded).
+
+
+# modules: list of strings
+# This is perhaps the most important config option.
+# Here is where you specify what modules should be loaded, enabling specific features.
+# All non-core modules must be explicitly listed here to be loaded.
+# Note that the MODULES, LOADMODULE, UNLOADMODULE and RELOADMODULE commands (available to opers)
+# can modify this list at runtime, but the list given here will always be loaded on server start.
+modules:
+    - HashPBKDF2 # Utilities for password hashing
+    - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
+    - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
+    - AutoJoin # Automatically JOIN a user to a channel when they connect
+    - WhoisAccount # Report Account Name in WHOIS for logged in users (will do nothing without NickServ)
+    - CustomPrefix # Allow the config file to specify user status modes (see below)
+    - ConnectionLimit # Prohibit too many simultanious connections from a single IP
+    - AutoUserModes # Automatically set certain user modes on a user when they connect
+    - DenyChannels # Restrict certain channels to opers only
+    - HostCloaking # User mode +x: hash the user's host so (non-oper) users can't see it
+    - ChanServ # A service that allows channel admins to make their channels persistent
+    # The following modules require a database connection to work correctly:
+    - NickServ # Authenticates users and protects registered nicks. Requires HashPBKDF2.
+    - BidServ # Runs auctions and reports results back to the database
+    # The following modules are not enabled in this default config (uncomment to enable):
+    # - BlockColors # Channel mode +c: As StripColors, but blocks messages instead of simply omitting formatting
+
+
+# channel_default_modes: string
+# Used by DefaultModes (core). Specifies what modes to set on a channel when it is first created.
+# Modes are specified like a MODE command, with the first word (space-seperated) of the string listing mode letters,
+# and subsequent words providing parameters. Any mode that is a status mode (eg. +o) is applied to the user whose
+# JOIN caused the channel to be created.
+# For example, "okn foobar" would apply +n, +k foobar, and +o to the first user.
+channel_default_modes: "ont"
+
+# client_ban_msg: string
+# Used by ELineCommand, GLineCommand, KLineCommand, ZLineCommand (all core).
+# Specifies the message to display to a banned user.
+# It is highly reccomended that you change this message, if only to avoid spamming the folks at xyz.com
+client_ban_msg: "You're banned! Email abuse@xyz.com for help."
+
+# ratelimit: Used by RateLimit (core), this subsection governs rate limiting of the number of commands
+# being received by a single connection.
+# All subkeys are optional, with the defaults as below. The subkeys are as follows:
+#    limit: int  - Number of commands to receive per interval before further commands are ignored
+#    kill_limit: int  - Number of commands to receive per interval before the connection is killed
+#    interval: float  - The length in seconds over which the limits apply. The quota is reset after each interval.
+# For example, under the defaults, a user could send up to 60 commands in a one-minute interval before
+# further commands are ignored (the user will also receive a warning). After the next minute starts, the
+# user can send another 60 commands.
+ratelimit:
+    limit: 60
+    kill_limit: 500
+    interval: 60
+
+# The following keys are used by AdminCommand (core)
+# admin_server: string  - Provides the first line of "admin location" in the /admin command
+# admin_admin: string  - Provides the second line of "admin location" in the /admin command
+# admin_email: string  - Provides the "admin email" in the /admin command
+admin_server: "This server has no admins. Anarchy!"
+admin_admin: "Nobody configured the second line of this."
+admin_email: "No Admin <anarchy@example.com>"
+
+# channel_minimum_level_kick: int  - The minimum status level needed to kick someone from a channel.
+# Used by CommandKick (core).
+# Default modes +o is level 100, and +v is level 10, so a value of 100 means "+o or better".
+channel_minimum_level_kick: 100
+
+# channel_minimum_level_mode: int  - The minimum status level needed to change a channel's modes.
+# Used by CommandMode (core). See comments on channel_minimum_level_kick above.
+channel_minimum_level_mode: 100
+
+# channel_minimum_level_+t: int  - The minimum status level needed to change a channel's topic
+# when +t mode is on. Used by TopicLockMode (core). See comments on channel_minimum_level_kick above.
+channel_minimum_level_+t: 100
+
+# motd_file: string  - Path to the file containing the Message of the Day.
+# Used by MOTD (core). Has no default - instead it is reported as having no MOTD.
+# As such, our example here is commented out.
+# motd_file: "/path/to/file"
+
+# server_password: string  - Used by PassCommand (core). If set, enables a server-wide password
+# that is required in order to successfully connect.
+# server_password: "foobar"
+
+# part_message_length: int  - Max length of a user's PART message. Used by PartCommand (core).
+# Do not increase this unless you know what you're doing.
+part_message_length: 300
+
+# quit_message_length: int  - Max length of a user's QUIT message. Used by QuitCommand (core).
+# Do not increase this unless you know what you're doing.
+quit_message_length: 370
+
+# topic_length: int  - Max length of a channel's topic. Used by TopicCommand (core).
+# Do not increase this unless you know what you're doing.
+topic_length: 326
+
+# public_info: list of string
+# Used by StatsCommand (core). Lists stats that all users are allowed to query. Stats are defined by
+# other modules (as of this writing, no other modules implement this).
+public_info: []
+
+# whowas_duration: string  - Used by WhowasCommand (core).
+# Specifies how long to keep a whowas record for a user after they disconnect.
+# The number may be a simple integer seconds, or it may use the following units:
+#     'y': Years, 'w': Weeks, 'd': Days, 'h': Hours, 'm': Minutes
+# Units can be chained, like so: "1w2d12h"
+whowas_duration: "1d"
+
+# whowas_max_entries: int  - Used by WhowasCommand (core).
+# Puts an upper limit on how many whowas records to keep. If the number of entries exceeds this limit,
+# the oldest will be dropped. Note that this default is very low, and probably needs changing.
+whowas_max_entries: 10
+
+# opers: Maps from a oper's username to a subobject containg more info. Used by Oper (core).
+# The subkeys for each oper's subobject is as follows:
+#     host: Pattern that must match oper's host in order to authenticate. Optional.
+#     hash: Which hash module to use. Currently only valid value is "pbkdf2",
+#           which requires the HashPBKDF2 module to be loaded. Optional.
+#     password: If hash is not given, the plaintext password needed to authenticate.
+#               If hash given, this is passed to the hash comparison function, and depends on the hash module.
+#     type: Specifies what specific oper types this user has. See oper_types.
+# The default is to have no opers configured, but here is a commented out example:
+# opers:
+#     someguy:
+#         password: "correct horse battery staple"
+#         types: ["does_foobarbaz"]
+#     some_more_secure_guy:
+#         host: "*@foo.bar.example.com"
+#         hash: "pbkdf2" # this is the only hash currently implemented
+#         password: "sha256:1000:skdG1QVN:46Hsqzg0+Goz2ph1PL2pXRvXlMuyRuVl" # password "test", 1000x sha256 with salt "skdG1QVN"
+#         types: ["can_do_stuff", "can_do_other_stuff"]
+
+# oper_types: Maps oper types to the specific oper permissions they grant. Used by Oper (core).
+# Oper permissions can be broken into specific permissions that individual modules grant. An exhaustive list
+# will not be made here. An oper type is a collection of such permissions to grant to a user with that type
+# in their oper config (see above). The default is empty, here is a commented out example:
+# oper_types:
+#    does_foobarbaz:
+#        - allowed-to-foo
+#        - is-bar-admin
+#        - can-edit-baz
+
+# autoconnect: list of string  - Used by ServerAutoconnect (core).
+# Gives a list of server names (see links, above) to attempt to automatically connect to.
+autoconnect: []
+
+# autoconnect_period: int  - Used by ServerAutoconnect (core).
+# How often to attempt to automatically connect to servers specified in autoconnect.
+autoconnect_period: 60
+
+# exempt_chanops_blockcolor: int  - Used by BlockColors.
+# Minimum status level (see channel_minimum_level_kick) allowed to use colors in a channel with +c mode.
+# The default of 20 means that +v users (10) cannot use colors, whereas ops (100)
+# and potentially others lower than op can.
+exempt_chanops_blockcolor: 20
+
+# exempt_chanops_stripcolor: int  - Used by StripColors.
+# As per exempt_chanops_blockcolor, but for the +S channel mode.
+exempt_chanops_stripcolor: 20
+
+# cloaking_salt: string  - Used by HostCloaking to make host hashes more secure.
+# You should generate a random string and put it here.
+# cloaking_salt: "CHANGE ME"
+
+# cloaking_prefix: string  - Used by HostCloaking. Prefix for hosts that have been hashed.
+cloaking_prefix: "txircd"
+
+# client_join_on_connect: list of strings  - Used by AutoJoin. List of channels to automatically
+# JOIN the user to when they connect.
+client_join_on_connect:
+    - "#txircd"
+
+# connlimit_globmax: int  - Used by ConnectionLimit. Max number of connections allowed from a given IP.
+# The default (3) is probably too low, once you take into account multiple devices and multiple users
+# all sharing a single connection.
+connlimit_globmax: 3
+
+# connlimit_whitelist: list of string  - List of ip addresses to ignore connection limits for.
+# Used by ConnectionLimit.
+connlimit_whitelist:
+    - "127.0.0.1"
+    - "::1"
+
+# client_umodes_on_connect: string  - Used by AutoUserModes. Specifies user modes to grant to user upon connect.
+# Mode string is interpreted as per channel_default_modes.
+# The default is no modes, but here we enable host cloaking (since this is only really useful if done on connect)
+client_umodes_on_connect: "x"
+
+# The following are used by the DenyChannels module.
+# deny_channels: List of channel names (or patterns) to deny non-oper entry to.
+# allow_channels: List of channel names (or patterns) to allow non-oper entry to, even if deny_channels
+#                 would deny them.
+# With these config options you can both whitelist and blacklist channels.
+# The following example supposes that you only have two channels on the server, and wish to disallow
+# any other channels from being created:
+# allow_channels:
+#     - #foo
+#     - #bar
+# deny_channels:
+#     - #*
+
+# shun_whitelist: list of string  - Used by ShunCommand. The list of commands that a SHUNned user is always
+# allowed to perform. Some of these (such as PING and PONG) are absolutely needed to ensure proper operation
+# of the server, so please don't modify this unless you know what you're doing.
+shun_whitelist:
+    - JOIN
+    - PART
+    - QUIT
+    - PING
+    - PONG
+
+# custom_prefixes: Specifies new status modes for channels. The CustomPrefix module reads this config
+# and creates the corresponding modes. Each custom_prefixes entry should map a mode letter for the new mode
+# to an object containing the keys:
+#    level: int  - The status level that the mode gives (see channel_minimum_level_kick)
+#    char: string  - The prefix character that represents the mode
+custom_prefixes:
+    h: # half-op
+        level: 50
+        char: "%"
+    a: # admin
+        level: 150
+        char: "&"
+    q: # owner
+        level: 200
+        char: "~"
+
+# NickServ configuration is all kept under the nickserv key
+nickserv:
+    # allow_register: boolean  - Whether or not to enable the REGISTER action, which allows
+    # new accounts to be created. We have the option to disable this because some deployments
+    # may prefer to manipulate the database though other means.
+    allow_register: true
+
+    # nick_limit: int  - Max number of irc nicks that can be registered to one user.
+    # If not given, there is no limit.
+    # nick_limit: 5
+
+    # allow_all_on_db_failure: boolean  - Controls behaviour in a situation where we've lost access
+    # to the database. If true, the system is "fail-working": It will allow any user to use any nick,
+    # without restriction. If false, the system is "fail-safe": It will disallow any and all nick changes
+    # and new logins, since it can't tell whether or not a nick needs to be protected.
+    allow_all_on_db_failure: false
+
+    # nick_timeout: float  - The number of seconds to give a user to login or change their nick
+    # after they attempt to use a protected nick. Note that the user cannot send messages during this time.
+    nick_timeout: 30
+
+    # guest_prefix: string  - When a user's nick is forced to change due to exceeding nick_timeout,
+    # this string will be prefixed onto their user id (as it is guarenteed unique) to create a new nick.
+    # For example, the value "Guest" will produce nicks like "GuestAAAABC".
+    guest_prefix: "Guest"
+
+# BidServ configuration is all kept under the bidserv key.
+# Note that all monetary values in this config are given as string, not int or float.
+# This is just to be absolutely safe when it comes to rounding or precision issues.
+# All strings are parsed as a safe Decimal type internally.
+bidserv:
+    # min_increment: string (money)  - Minimum amount that a bid must exceed the previous bid by.
+    min_increment: "5.00"
+
+    # maxBid: string (money)  - Maximum amount that someone is able to bid.
+    # The main purpose here is to prevent joke bids.
+    # Note that the default is infinity, effectively disabling this feature.
+    maxBid: "inf"
+
+    # spaceBid: string  - String to display when someone out-bids themselves
+    spaceBid: "SPACE BID"
+
+    # madnessLevels: list of [int, string]
+    # A "madness" level is a custom message to display the first time bidding exceeds a threshold.
+    # The default config has no levels, but here's a basic list:
+    madnessLevels:
+        - [300, "MADNESS"]
+        - [600, "DOUBLE MADNESS"]
+        - [900, "TRIPLE MADNESS"]
+        - [1200, "QUADRUPLE MADNESS"]
+        - [1500, "QUINTUPLE MADNESS"]
+        - [1800, "SEXTUPLE MADNESS"]
+        - [2100, "SEPTUPLE MADNESS"]
+        - [2400, "OCTUPLE MADNESS"]
+        - [2700, "NONUPLE MADNESS"]
+        - [3000, "DECUPLE MADNESS"]
+        - [3300, "UNDECUPLE MADNESS"]
+        - [3600, "DUODECUPLE MADNESS"]
+        - [3900, "TREDECUPLE MADNESS"]
+        - [4200, "QUADDECUPLE MADNESS"]
+        - [4500, "QUINDECUPLE MADNESS"]
+        - [4800, "SEXDECUPLE MADNESS"]
+        - [5100, "SEPDECUPLE MADNESS"]
+        - [5400, "OCTDECUPLE MADNESS"]
+        - [5700, "NONDECUPLE MADNESS"]
+        - [6000, "ISOCAMADNESS"]
+        - [90000, "MADNESS SQUARED?!?!?"]
+
+    # showAllMadness: boolean  - When a bid hits multiple madness levels in one go,
+    # this option configures whether or not to display all new levels, or only the largest.
+    showAllMadness: false
+
+    # logDirectory: string  - The path to put log files into.
+    # Log files are written with the full results of every auction, called "auction-PRIZEID.log"
+    # or "auction_stopped-PRIZEID.log" if the auction was aborted. If the file already exists, it'll append
+    # a ".0", ".1", ... until it finds an unused filename.
+    # Defaults to the current directory.
+    logDirectory: "."
