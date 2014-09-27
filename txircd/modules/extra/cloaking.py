@@ -4,7 +4,7 @@ from twisted.python import log
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
-from hashlib import md5
+from hashlib import sha256
 import logging
 
 class HostCloaking(ModuleData, Mode):
@@ -43,7 +43,7 @@ class HostCloaking(ModuleData, Mode):
         # Find the last segments of the hostname.
         index = len(host[::-1].split(".", 3)[-1])
         # Cloak the first part of the host and leave the last segments alone.
-        hostmask = "{}-{}{}".format(self.cloakingPrefix, md5(self.cloakingSalt + host[:index]).hexdigest()[:8], host[index:])
+        hostmask = "{}-{}{}".format(self.cloakingPrefix, sha256(self.cloakingSalt + host[:index]).hexdigest()[:8], host[index:])
         # This is very rare since we only leave up to 3 segments uncloaked, but make sure the end result isn't too long.
         if len(hostmask) > 64:
             if isIPv6Address(ip):
@@ -59,7 +59,7 @@ class HostCloaking(ModuleData, Mode):
         for i in range(len(pieces), 0, -1):
             piecesGroup = pieces[:i]
             piecesGroup.reverse()
-            hashedParts.append(md5(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:8])
+            hashedParts.append(sha256(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:8])
         return "{}.IP".format(".".join(hashedParts))
 
     def applyIPv6Cloak(self, ip):
@@ -81,7 +81,7 @@ class HostCloaking(ModuleData, Mode):
         for i in range(len(pieces), 0, -1):
             piecesGroup = pieces[:i]
             piecesGroup.reverse()
-            hashedParts.append(md5(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:5])
+            hashedParts.append(sha256(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:5])
         return "{}.IP".format(".".join(hashedParts))
 
     def load(self):
