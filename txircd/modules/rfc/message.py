@@ -38,11 +38,15 @@ class MessageCommands(ModuleData):
         if "to" in kw:
             params = (kw["to"],) + params # Prepend the destination to the parameters
         if "sourceuser" in kw:
-            kw["prefix"] = kw["sourceuser"].uuid
+            prefix = kw["sourceuser"].uuid
+            fromServer = prefix[:3]
         elif "sourceserver" in kw:
-            kw["prefix"] = kw["sourceserver"].serverID
+            prefix = kw["sourceserver"].serverID
+            fromServer = prefix
+        kw["prefix"] = prefix
         for server in localDestServers:
-            server.sendMessage(command, *params, **kw)
+            if server.serverID != fromServer:
+                server.sendMessage(command, *params, **kw)
         del toUsers[:]
         del toServers[:]
     
