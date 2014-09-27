@@ -37,15 +37,20 @@ class MessageCommands(ModuleData):
             user.sendMessage(command, *params, **kw)
         if "to" in kw:
             params = (kw["to"],) + params # Prepend the destination to the parameters
+        fromServers = []
         if "sourceuser" in kw:
             prefix = kw["sourceuser"].uuid
-            fromServer = prefix[:3]
+            fromServers.append(prefix[:3])
         elif "sourceserver" in kw:
             prefix = kw["sourceserver"].serverID
-            fromServer = prefix
+            fromServers.append(prefix)
         kw["prefix"] = prefix
+        fromServer = self.ircd.servers[fromServers[0]]
+        while fromServer.nextClosest != self.ircd.serverID:
+            fromServer = self.ircd.servers[fromServer.nextClosest]
+            fromServers.append(fromServer.serverID)
         for server in localDestServers:
-            if server.serverID != fromServer:
+            if server.serverID not in fromServers:
                 server.sendMessage(command, *params, **kw)
         del toUsers[:]
         del toServers[:]
