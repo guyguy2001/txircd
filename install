@@ -43,7 +43,7 @@ fi
 if [ -e "$INSTALL_DIR" ]; then
 	echo "Clearing existing files"
     for path in "${TO_INSTALL[@]}"; do
-    	rm -rf "$INSTALL_DIR/$path"
+    	find "$INSTALL_DIR/$path" -name '*.py{,c}' -exec rm {} +
     done
 else
     echo "Creating the virtualenv"

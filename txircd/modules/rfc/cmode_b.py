@@ -24,7 +24,8 @@ class BanMode(ModuleData, Mode):
                 ("userbancheck", 1, self.matchBans),
                 ("join", 10, self.populateBanCache),
                 ("join", 9, self.autoStatus),
-                ("leave", 10, self.clearBanCache) ]
+                ("leave", 10, self.clearBanCache),
+        ]
     
     def banMatchesUser(self, user, banmask):
         matchingExtban = ""
@@ -179,6 +180,11 @@ class BanMode(ModuleData, Mode):
     def clearBanCache(self, channel, user):
         if "bans" in user.cache and channel in user.cache["bans"]:
             del user.cache["bans"][channel]
+
+    def updateUserCaches(self, user):
+        for channel in user.channels:
+            self.populateBanCache(channel, user)
+            self.autoStatus(channel, user)
     
     def checkSet(self, channel, param):
         actionExtban = ""

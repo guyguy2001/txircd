@@ -1,13 +1,14 @@
 from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from twisted.python import log
-from txircd.module_interface import IModuleData
+from txircd.module_interface import IModuleData, ModuleData
 from txircd.user import LocalUser
 from txircd.utils import isValidNick, ircLower, SafeDefaultDict
 from zope.interface import implements
 import re
 
 from dbservice import DBService
+from cmode_b import banMode
 
 
 def getDonorID(user):
@@ -105,7 +106,8 @@ class NickServ(DBService):
 
     def actions(self):
         return super(NickServ, self).actions() + [
-            ("welcome", 10, self.checkNick),
+            ("welcome", 10, self.loginAfterWelcome),
+            ("welcome", 9, self.checkNick),
             ("changenick", 10, lambda user, oldNick, fromServer: self.checkNick(user)),
             ("changenick", 10, self.registerOnChange),
             ("commandpermission", 10, self.checkMessagePermission),
@@ -113,6 +115,12 @@ class NickServ(DBService):
 
     def getConfig(self):
         return self.ircd.config.getWithDefault("nickserv", {})
+
+    def loginAfterWelcome(self, user):
+        # if user used PASS before welcome, we check it now
+        if "password" in user.cache:
+            params = user.cache["password"].split(" ", 1)
+            self.handleLogin(user, params)
 
     def handleLogin(self, user, params):
         try:
@@ -126,11 +134,14 @@ class NickServ(DBService):
 
         if getDonorID(user):
             self.tellUser(user, "You're already logged in! You may want to LOGOUT first.")
+            return
 
-        self.queryGetOne(
+        self.query(
             lambda result: self.verifyLogin(user, password, result),
             self.reportError(user, "Server failure while trying to authenticate. Please try again later."),
-            "SELECT id, display_name, password FROM donors WHERE email = %s",
+            "SELECT donors.id, donors.display_name, donors.password, ircnicks.nick "
+            "FROM donors LEFT JOIN ircnicks ON donors.id = ircnicks.donor_id "
+            "WHERE donors.email = %s",
             email)
 
     def verifyLogin(self, user, password, result):
@@ -141,27 +152,33 @@ class NickServ(DBService):
         if not result:
             self.tellUser(user, "The login credentials you provided were incorrect.")
             return
-        donorID, displayName, correctHash = result
+        donorID, displayName, correctHash, _ = result[0]
+        nicklist = [nick for _, _, _, nick in result]
+        if nicklist == [None]: # no matching nicks in outer join
+            nicklist = []
 
         if not self.ircd.functionCache["compare-pbkdf2"](password, correctHash):
             self.tellUser(user, "The login credentials you provided were incorrect.")
             return
 
-        self.loginUser(user, displayName, donorID)
+        self.loginUser(user, displayName, donorID, nicklist)
 
-    def loginUser(self, user, displayName, donorID):
+    def loginUser(self, user, displayName, donorID, nicklist):
         # action "user-login" fires one a user is authenticated but before login happens
         # it takes args (user, displayName, donorID) and may return False to deny login
-        denied = self.ircd.runActionUntilFalse("user-login", user, displayName, donorID)
+        denied = self.ircd.runActionUntilFalse("user-login-permission", user, displayName, donorID)
         if denied:
             self.tellUser(user, "The login credentials you provided were incorrect.")
             return
 
         user.cache["accountid"] = donorID
+        user.cache["ownedNicks"] = [ircLower(nick) for nick in nicklist]
         if not displayName:
             displayName = "Anonymous"
         user.setMetadata("ext", "accountname", displayName.replace(" ", "_"))
         self.tellUser(user, "You are now identified. Welcome, {}".format(displayName))
+
+        self.ircd.runActionStandard("user-login", user)
 
         self.registerNick(user, user.nick, quiet=True)
 
@@ -210,12 +227,12 @@ class NickServ(DBService):
                     self.tellUser(user, "You already have {} registered nicks, so {} will not be protected.".format(
                                   len(myNicks), newNick))
                     return
-                if len(myNicks) + self.nick_registrations[user] >= maxNicks:
+                if len(myNicks) + self.nick_registrations[donorID] >= maxNicks:
                     self.tellUser(user, ("You already have {} registered nicks and {} pending, "
                                          "so {} will not be protected.").format(
-                                         len(myNicks), self.nick_registrations[user], newNick))
+                                         len(myNicks), self.nick_registrations[donorID], newNick))
                     return
-            self.nick_registrations[user] += 1
+            self.nick_registrations[donorID] += 1
             self.query(insertSuccess,
                        insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
@@ -224,16 +241,18 @@ class NickServ(DBService):
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
                                  "and can not be used by any other user.").format(newNick))
-            self.nick_registrations[user] -= 1
+            self.nick_registrations[donorID] -= 1
+            if getDonorID(user) == donorID: # check user is still logged in
+                user.cache["ownedNicks"].append(ircLower(newNick))
             # we may need to kick off someone already on the nick
             if newNick in self.ircd.userNicks:
                 currentHolder = self.ircd.users[self.ircd.userNicks[newNick]]
-                if currentHolder is not user:
+                if getDonorID(currentHolder) != donorID:
                     self.checkNick(currentHolder)
 
         def insertFail(error):
             self.reportError(user, genericErrorMessage)(error)
-            self.nick_registrations[user] -= 1
+            self.nick_registrations[donorID] -= 1
 
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
@@ -269,6 +288,8 @@ class NickServ(DBService):
 
         def deleteSuccess(result):
             self.tellUser(user, "Dropped nick {} from your account.".format(dropNick))
+            if getDonorID(user) == donorID: # check user is still logged in
+                user.cache["ownedNicks"].remove(ircLower(dropNick))
             if dropNick == user.nick:
                 self.checkNick(user)
 
@@ -396,10 +417,13 @@ class NickServ(DBService):
         return False # query is still pending, or user has not authed to the correct account
 
     def handleLogout(self, user, params):
-        if getDonorID(user):
+        donorID = getDonorID(user)
+        if donorID:
             del user.cache["accountid"]
-            self.tellUser(user, "You are now logged out.")
+            del user.cache["ownedNicks"]
             user.setMetadata("ext", "accountname", None)
+            self.ircd.runActionStandard("user-logout", user, donorID)
+            self.tellUser(user, "You are now logged out.")
             self.checkNick(user)
         else:
             self.tellUser(user, "You are currently not logged in.")
@@ -477,4 +501,37 @@ class NickServ(DBService):
                          self.reportError(user, genericErrorMessage),
                          "SELECT 1 FROM donors WHERE email = %s", email)
 
+
+class RExtbans(ModuleData):
+    implements(IPlugin, IModuleData)
+
+    name = "RExtbans"
+
+    # R extbans take the following forms:
+    # "R:*" Match any logged in user
+    # "R:<nick>" Match the user that owns that nick (regardless of whether it is their current nick)
+
+    def hookIRCd(self, ircd):
+        self.ircd = ircd
+
+    def actions(self):
+        return [
+            ("usermatchban-R", 10, self.matchUser),
+            ("user-login", 10, self.refreshUser),
+            ("user-logout", 10, self.refreshUser),
+        ]
+
+    def matchUser(self, user, negated, param):
+        if negated:
+            return not self.matchUser(user, False, param)
+        if param == "*":
+            return getDonorID(user) is not None
+        return ircLower(param) in user.cache.get("ownedNicks", [])
+
+    def refreshUser(self, user, donorID=None):
+        if banMode in self.loadedModules.values():
+            banMode.updateUserCaches(user)
+
+
 nickServ = NickServ()
+rExtbans = RExtbans()
