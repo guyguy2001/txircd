@@ -2,6 +2,7 @@ from twisted.internet.task import LoopingCall
 from twisted.plugin import IPlugin
 from twisted.python import log
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import durationToSeconds
 from zope.interface import implements
 import logging
 
@@ -17,11 +18,16 @@ class ServerAutoconnect(ModuleData):
     
     def load(self):
         self.connector = LoopingCall(self.runConnections)
-        self.connector.start(self.ircd.config.getWithDefault("autoconnect_period", 60), False)
+        self.connector.start(durationToSeconds(self.ircd.config.getWithDefault("autoconnect_period", 60)), False)
     
     def unload(self):
         if self.connector.running:
             self.connector.stop()
+    
+    def rehash(self):
+        if self.connector.running:
+            self.connector.stop()
+        self.connector.start(durationToSeconds(self.ircd.config.getWithDefault("autoconnect_period", 60)), False)
     
     def runConnections(self):
         autoconnectServers = self.ircd.config.getWithDefault("autoconnect", [])
