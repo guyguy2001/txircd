@@ -71,6 +71,10 @@ user_list_limit: 100
 # while lower values may cause performance problems. The default is every 5 seconds.
 storage_sync_interval: 5
 
+# datastore_path: string
+# The filesystem path relative to the install directory in which to store the persistent storage.
+datastore_path: "./data.db"
+
 # server_registration_timeout: float
 # Time in seconds to wait for another server to handshake before giving up and disconnecting them.
 server_registration_timeout: 10

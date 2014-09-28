@@ -73,7 +73,7 @@ class IRCd(Service):
         if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
-        self.storage = shelve.open("data.db", writeback=True)
+        self.storage = shelve.open(self.config.getWithDefault("datastore_path", "data.db"), writeback=True)
         self.storage_syncer = LoopingCall(self.storage.sync)
         self.storage_syncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
         log.msg("Loading modules...", logLevel=logging.INFO)
