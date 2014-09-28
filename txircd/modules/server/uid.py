@@ -71,13 +71,12 @@ class ServerUID(ModuleData, Command):
         newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
         newUser.changeHost(data["displayhost"], True)
         newUser.changeIdent(data["ident"], True)
-        newUser.changeNick(data["nick"], server)
         newUser.changeGecos(data["gecos"], True)
         newUser.connectedSince = connectTime
         newUser.nickSince = nickTime
         newUser.idleSince = now()
-        if newUser.nick in self.ircd.userNicks: # Handle nick collisions
-            otherUser = self.ircd.users[self.ircd.userNicks[newUser.nick]]
+        if data["nick"] in self.ircd.userNicks: # Handle nick collisions
+            otherUser = self.ircd.users[self.ircd.userNicks[data["nick"]]]
             if otherUser.localOnly:
                 changeOK = self.ircd.runActionUntilValue("localnickcollision", otherUser, newUser, server, users=[otherUser, newUser])
                 if changeOK is None:
@@ -103,9 +102,11 @@ class ServerUID(ModuleData, Command):
                 else: # As a final fallback, change both nicknames
                     otherUser.changeNick(otherUser.uuid, server)
                     newUser.changeNick(newUser.uuid, server)
-        newUser.register("connection")
-        newUser.register("USER")
-        newUser.register("NICK")
+        if newUser.nick is None: # wasn't set by above logic
+            newUser.changeNick(data["nick"], server)
+        newUser.register("connection", True)
+        newUser.register("USER", True)
+        newUser.register("NICK", True)
         connectTimestamp = str(timestamp(connectTime))
         nickTimestamp = str(timestamp(nickTime))
         modeString = newUser.modeString(None)
