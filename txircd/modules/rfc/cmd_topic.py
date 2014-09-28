@@ -30,13 +30,12 @@ class TopicCommand(ModuleData):
         for user in channel.users.iterkeys():
             if user.uuid[:3] == self.ircd.serverID:
                 user.sendMessage("TOPIC", ":{}".format(channel.topic), to=channel.name, prefix=channel.topicSetter)
+        sourceServer = None
         if setter in self.ircd.users and setter[:3] == self.ircd.serverID:
             settingUser = self.ircd.users[setter]
             if settingUser not in channel.users:
                 settingUser.sendMessage("TOPIC", ":{}".format(channel.topic), to=channel.name, prefix=channel.topicSetter)
-        elif setter == self.ircd.serverID:
-            sourceServer = None
-        else:
+        elif setter != self.ircd.serverID:
             sourceServer = self.ircd.servers[setter[:3]]
             while sourceServer.nextClosest != self.ircd.serverID:
                 sourceServer = self.ircd.servers[sourceServer.nextClosest]
