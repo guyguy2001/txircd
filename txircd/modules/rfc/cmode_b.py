@@ -25,6 +25,7 @@ class BanMode(ModuleData, Mode):
                 ("join", 10, self.populateBanCache),
                 ("join", 9, self.autoStatus),
                 ("leave", 10, self.clearBanCache),
+                ("updateuserbancache", 1, self.updateUserCaches)
         ]
     
     def banMatchesUser(self, user, banmask):

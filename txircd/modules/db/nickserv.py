@@ -8,7 +8,6 @@ from zope.interface import implements
 import re
 
 from dbservice import DBService
-from cmode_b import banMode
 
 
 def getDonorID(user):
@@ -529,8 +528,7 @@ class RExtbans(ModuleData):
         return ircLower(param) in user.cache.get("ownedNicks", [])
 
     def refreshUser(self, user, donorID=None):
-        if banMode in self.loadedModules.values():
-            banMode.updateUserCaches(user)
+        self.ircd.runActionStandard("updateuserbancache", user)
 
 
 nickServ = NickServ()
