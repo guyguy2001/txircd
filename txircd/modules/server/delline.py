@@ -12,7 +12,7 @@ class DellineCommand(ModuleData, Command):
         self.ircd = ircd
 
     def actions(self):
-        return [ ("propagateremotexline", 1, self.propagateRemoveXLine) ]
+        return [ ("propagateremovexline", 1, self.propagateRemoveXLine) ]
 
     def serverCommands(self):
         return [ ("DELLINE", 10, self) ]

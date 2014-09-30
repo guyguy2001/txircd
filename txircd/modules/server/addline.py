@@ -12,7 +12,8 @@ class AddlineCommand(ModuleData, Command):
         self.ircd = ircd
 
     def actions(self):
-        return [ ("propagateaddxline", 1, self.propagateAddXLine) ]
+        return [ ("propagateaddxline", 1, self.propagateAddXLine),
+                ("burstxlines", 10, self.burstXLines) ]
 
     def serverCommands(self):
         return [ ("ADDLINE", 10, self) ]
@@ -22,6 +23,11 @@ class AddlineCommand(ModuleData, Command):
         for server in self.ircd.servers:
             if server.serverID != serverPrefix: # Probably needs more spanning tree style propagation
                 server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=serverPrefix)
+
+    def burstXLines(self, server, linetype, lines):
+        for mask, linedata in lines.iteritems():
+            server.sendMessage("ADDLINE", linetype, mask, linedata["setter"], linedata["created"],
+                               linedata["duration"], ":{}".format(linedata["reason"]), prefix=self.ircd.serverID)
 
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:

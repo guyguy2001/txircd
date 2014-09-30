@@ -66,20 +66,24 @@ class ZLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** Z:Line for {} does not currently exist; check /stats Z for a list of active Z:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["zlines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** Z:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "Z", banmask)
+                user.sendMessage("NOTICE", ":*** Z:Line removed on {}".format(banmask))
         else:
             # Setting Z:line
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a Z:Line set on {}! Check /stats Z for a list of active Z:Lines.".format(banmask))
             else:
-                self.banlist[banmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
                     "duration": data["duration"],
                     "reason": data["reason"]
                 }
+                self.banlist[banmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "Z", banmask, linedata["setter"], linedata["created"],
+                               linedata["duration"], ":{}".format(linedata["reason"]))
                 user.sendMessage("NOTICE", ":*** Z:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
                 self.ircd.storage["zlines"] = self.banlist
                 bannedUsers = {}

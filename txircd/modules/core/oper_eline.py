@@ -68,9 +68,10 @@ class ELineCommand(ModuleData, Command):
             if exceptmask not in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                del self.exceptlist[data["mask"]]
+                del self.exceptlist[exceptmask]
                 self.ircd.storage["elines"] = self.exceptlist
-                user.sendMessage("NOTICE", ":*** E:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "E", exceptmask)
+                user.sendMessage("NOTICE", ":*** E:Line removed on {}".format(exceptmask))
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
                     # Clear E:line cache and rematch
@@ -90,12 +91,15 @@ class ELineCommand(ModuleData, Command):
             if exceptmask in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                self.exceptlist[exceptmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
                     "duration": data["duration"],
                     "reason": data["reason"]
                 }
+                self.exceptlist[exceptmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, linedata["setter"], linedata["created"],
+                               linedata["duration"], ":{}".format(linedata["reason"]))
                 user.sendMessage("NOTICE", ":*** E:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
                 self.ircd.storage["elines"] = self.exceptlist
                 for user in self.ircd.users.itervalues():

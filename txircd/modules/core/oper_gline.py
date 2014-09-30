@@ -69,20 +69,24 @@ class GLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** G:Line for {} does not currently exist; check /stats G for a list of active G:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["glines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** G:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "G", banmask)
+                user.sendMessage("NOTICE", ":*** G:Line removed on {}".format(banmask))
         else:
             # Setting G:line
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a G:Line set on {}! Check /stats G for a list of active G:Lines.".format(banmask))
             else:
-                self.banlist[banmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
                     "duration": data["duration"],
                     "reason": data["reason"]
                 }
+                self.banlist[banmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "G", banmask, linedata["setter"], linedata["created"],
+                               linedata["duration"], ":{}".format(linedata["reason"]))
                 user.sendMessage("NOTICE", ":*** G:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
                 self.ircd.storage["glines"] = self.banlist
                 bannedUsers = {}
