@@ -21,7 +21,10 @@ class Censor(ModuleData):
         self.ircd = ircd
 
     def userCommands(self):
-        return [ ("CENSOR", 1, CensorCommand(self)) ]
+        return [ ("CENSOR", 1, UserCensorCommand(self)) ]
+
+    def serverCommands(self):
+        return [ ("CENSOR", 1, ServerCensorCommand(self))]
 
     def channelModes(self):
         return [ ("G", ModeType.NoParam, ChannelCensor(self)) ]
@@ -33,10 +36,11 @@ class Censor(ModuleData):
         return [ ("modeactioncheck-channel-G-commandmodify-PRIVMSG", 10, self.channelHasMode),
                 ("modeactioncheck-channel-G-commandmodify-NOTICE", 10, self.channelHasMode),
                 ("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
-                ("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
+                ("modeactioncheck-user-G-commandmodify-NOTICE", 10, self.userHasMode),
                 ("commandpermission-CENSOR", 1, self.restrictToOpers),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats) ]
+                ("statsruntype", 1, self.listStats),
+                ("burst", 10, self.propgateOnBurst) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-censor", users=[user]):
@@ -63,6 +67,18 @@ class Censor(ModuleData):
         if typeName == "CENSOR":
             return self.badwords
         return None
+
+    def propgateOnBurst(self, server):
+        for badword, replacement in self.badwords.iteritems():
+            server.sendMessage("CENSOR", badword, replacement, prefix=self.ircd.serverID)
+
+    def propagateBadword(self, badword, replacement):
+        serverPrefix = self.ircd.serverID
+        for server in self.ircd.servers.itervalues():
+            if replacement:
+                server.sendMessage("CENSOR", badword, replacement, prefix=serverPrefix)
+            else:
+                server.sendMessage("CENSOR", badword, prefix=serverPrefix)
 
     def load(self):
         if "badwords" not in self.ircd.storage:
@@ -118,7 +134,7 @@ class UserCensor(Mode):
                 message = re.sub(mask, replacement, message, flags=re.IGNORECASE)
             data["targetusers"][targetUser] = message
 
-class CensorCommand(Command):
+class UserCensorCommand(Command):
     implements(ICommand)
 
     def __init__(self, censor):
@@ -150,11 +166,47 @@ class CensorCommand(Command):
             replacement = data["replacement"]
             self.censor.badwords[badword] = replacement
             self.censor.ircd.storage["badwords"] = self.censor.badwords
+            self.censor.propagateBadword(badword, replacement)
             user.sendMessage(irc.RPL_BADWORDADDED, badword, ":{}".format(replacement))
         else:
             del self.censor.badwords[badword]
             self.censor.ircd.storage["badwords"] = self.censor.badwords
+            self.censor.propagateBadword(badword, None)
             user.sendMessage(irc.RPL_BADWORDREMOVED, badword, ":Badword removed")
+        return True
+
+class ServerCensorCommand(Command):
+    implements(ICommand)
+
+    def __init__(self, censor):
+        self.censor = censor
+
+    def parseParams(self, server, params, prefix, tags):
+        if len(params) == 1:
+            # Removing a badword
+            badword = params[0]
+            if badword not in self.censor.badwords:
+                return None
+            return {
+                "badword": params[0]
+            }
+        if len(params) == 2:
+            # Adding a badword
+            return {
+                "badword": params[0],
+                "replacement": params[1]
+            }
+        return None
+
+    def execute(self, server, data):
+        badword = data["badword"]
+        if "replacement" in data:
+            replacement = data["replacement"]
+            self.censor.badwords[badword] = replacement
+            self.censor.ircd.storage["badwords"] = self.censor.badwords
+        else:
+            del self.censor.badwords[badword]
+            self.censor.ircd.storage["badwords"] = self.censor.badwords
         return True
 
 censorModule = Censor()
