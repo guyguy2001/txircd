@@ -34,7 +34,9 @@ class Censor(ModuleData):
                 ("modeactioncheck-channel-G-commandmodify-NOTICE", 10, self.channelHasMode),
                 ("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
                 ("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
-                ("commandpermission-CENSOR", 1, self.restrictToOpers) ]
+                ("commandpermission-CENSOR", 1, self.restrictToOpers),
+                ("statstypename", 1, self.checkStatsType),
+                ("statsruntype", 1, self.listStats) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-censor", users=[user]):
@@ -50,6 +52,16 @@ class Censor(ModuleData):
     def userHasMode(self, user, fromUser, *params):
         if "G" in user.modes:
             return True
+        return None
+
+    def checkStatsType(self, typeName):
+        if typeName == "C":
+            return "CENSOR"
+        return None
+
+    def listStats(self, user, typeName):
+        if typeName == "CENSOR":
+            return self.badwords
         return None
 
     def load(self):
