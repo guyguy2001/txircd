@@ -25,7 +25,8 @@ class QLineCommand(ModuleData, Command):
                 ("statstypename", 1, self.checkStatsType),
                 ("statsruntype", 1, self.listStats),
                 ("addxline", 1, self.addQLine),
-                ("removexline", 1, self.removeQLine) ]
+                ("removexline", 1, self.removeQLine),
+                ("burst", 10, self.burstQLines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
@@ -115,6 +116,9 @@ class QLineCommand(ModuleData, Command):
         if linetype != "Q" or mask not in self.banlist:
             return
         del self.banlist[mask]
+
+    def burstQLines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "Q", self.banlist)
 
     def registerCheck(self, user):
         self.expireQLines()

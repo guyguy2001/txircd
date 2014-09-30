@@ -24,7 +24,8 @@ class ELineCommand(ModuleData, Command):
                 ("statstypename", 1, self.checkStatsType),
                 ("statsruntype", 1, self.listStats),
                 ("addxline", 1, self.addELine),
-                ("removexline", 1, self.removeELine) ]
+                ("removexline", 1, self.removeELine),
+                ("burst", 10, self.burstELines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
@@ -121,6 +122,9 @@ class ELineCommand(ModuleData, Command):
         if linetype != "E" or mask not in self.exceptlist:
             return
         del self.exceptlist[mask]
+
+    def burstELines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "E", self.exceptlist)
 
     def registerCheck(self, user):
         self.expireELines()

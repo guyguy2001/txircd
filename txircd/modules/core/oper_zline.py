@@ -24,7 +24,8 @@ class ZLineCommand(ModuleData, Command):
                 ("statstypename", 1, self.checkStatsType),
                 ("statsruntype", 1, self.listStats),
                 ("addxline", 1, self.addZLine),
-                ("removexline", 1, self.removeZLine) ]
+                ("removexline", 1, self.removeZLine),
+                ("burst", 10, self.burstZLines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline", users=[user]):
@@ -111,6 +112,9 @@ class ZLineCommand(ModuleData, Command):
         if linetype != "Z" or mask not in self.banlist:
             return
         del self.banlist[mask]
+
+    def burstZLines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "Z", self.banlist)
 
     def connectCheck(self, user):
         self.expireZLines()

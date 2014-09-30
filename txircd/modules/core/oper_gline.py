@@ -25,7 +25,8 @@ class GLineCommand(ModuleData, Command):
                 ("statsruntype", 1, self.listStats),
                 ("xlinerematch", 1, self.matchGLine),
                 ("addxline", 1, self.addGLine),
-                ("removexline", 1, self.removeGLine) ]
+                ("removexline", 1, self.removeGLine),
+                ("burst", 10, self.burstGLines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
@@ -114,6 +115,9 @@ class GLineCommand(ModuleData, Command):
         if linetype != "G" or mask not in self.banlist:
             return
         del self.banlist[mask]
+
+    def burstGLines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "G", self.banlist)
 
     def registerCheck(self, user):
         self.expireGLines()
