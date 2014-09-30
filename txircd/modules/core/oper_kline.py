@@ -67,9 +67,9 @@ class KLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** K:Line for {} does not currently exist; check /stats K for a list of active K:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["klines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** K:Line removed on {}".format(data["mask"]))
+                user.sendMessage("NOTICE", ":*** K:Line removed on {}".format(banmask))
         else:
             # Setting K:line
             if banmask in self.banlist:
