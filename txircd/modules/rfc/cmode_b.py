@@ -232,7 +232,8 @@ class BanMode(ModuleData, Mode):
                 actionExtban, banmask = banmask.split(";", 1)
                 # We don't care about the rest of actionExtban here
             if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
-                continue # Just let it go; the other checks will be managed by checking whether the parameter is actually set on the channel
+                validParams.append(fullBanmask)
+                continue # Just allow this; the other checks will be managed by checking whether the parameter is actually set on the channel
             # If there's no matching extban, make sure the ident and host are given
             if "!" not in banmask:
                 fullBanmask += "!*@*"
