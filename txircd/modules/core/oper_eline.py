@@ -72,7 +72,7 @@ class ELineCommand(ModuleData, Command):
                 del self.exceptlist[exceptmask]
                 self.ircd.storage["elines"] = self.exceptlist
                 self.ircd.runActionStandard("propagateremovexline", "E", exceptmask)
-                user.sendMessage("NOTICE", ":*** E:Line removed on {}".format(exceptmask))
+                user.sendMessage("NOTICE", ":*** E:Line removed on {}.".format(exceptmask))
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
                     # Clear E:line cache and rematch
@@ -89,19 +89,23 @@ class ELineCommand(ModuleData, Command):
                     u.disconnect("Banned: Exception removed ({})".format(reason))
         else:
             # Setting E:line
+            duration = data["duration"]
             if exceptmask in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
                 linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
                 self.exceptlist[exceptmask] = linedata
                 self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, linedata["setter"], linedata["created"],
-                               linedata["duration"], ":{}".format(linedata["reason"]))
-                user.sendMessage("NOTICE", ":*** E:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent E:Line added on {}.".format(exceptmask))
                 self.ircd.storage["elines"] = self.exceptlist
                 for user in self.ircd.users.itervalues():
                     if self.matchELine(user):

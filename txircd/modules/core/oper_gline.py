@@ -73,22 +73,26 @@ class GLineCommand(ModuleData, Command):
                 del self.banlist[banmask]
                 self.ircd.storage["glines"] = self.banlist
                 self.ircd.runActionStandard("propagateremovexline", "G", banmask)
-                user.sendMessage("NOTICE", ":*** G:Line removed on {}".format(banmask))
+                user.sendMessage("NOTICE", ":*** G:Line removed on {}.".format(banmask))
         else:
             # Setting G:line
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a G:Line set on {}! Check /stats G for a list of active G:Lines.".format(banmask))
             else:
                 linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
                 self.banlist[banmask] = linedata
                 self.ircd.runActionStandard("propagateaddxline", "G", banmask, linedata["setter"], linedata["created"],
-                               linedata["duration"], ":{}".format(linedata["reason"]))
-                user.sendMessage("NOTICE", ":*** G:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed G:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent G:Line added on {}.".format(banmask))
                 self.ircd.storage["glines"] = self.banlist
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():

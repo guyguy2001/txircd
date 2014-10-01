@@ -74,22 +74,26 @@ class QLineCommand(ModuleData, Command):
                 del self.banlist[banmask]
                 self.ircd.storage["qlines"] = self.banlist
                 self.ircd.runActionStandard("propagateremovexline", "Q", banmask)
-                user.sendMessage("NOTICE", ":*** Q:Line removed on {}".format(banmask))
+                user.sendMessage("NOTICE", ":*** Q:Line removed on {}.".format(banmask))
         else:
             # Setting Q:line
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a Q:Line set on {}! Check /stats Q for a list of active Q:Lines.".format(banmask))
             else:
                 linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
                 self.banlist[banmask] = linedata
                 self.ircd.runActionStandard("propagateaddxline", "Q", banmask, linedata["setter"], linedata["created"],
-                               linedata["duration"], ":{}".format(linedata["reason"]))
-                user.sendMessage("NOTICE", ":*** Q:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed Q:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent Q:Line added on {}.".format(banmask))
                 self.ircd.storage["qlines"] = self.banlist
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
