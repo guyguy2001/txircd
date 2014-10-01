@@ -119,7 +119,7 @@ class BidServ(DBService):
         return max(auction["bids"], key=lambda bid: bid["value"])
 
     def getLogFile(self, prizeID, stopped=False, extra=0):
-        path = self.getConfig().get("logDirectory", ".")
+        path = self.getConfig().get("logDirectory", "./logs")
         stop_str = "_stopped" if stopped else ""
         extra = ".{}".format(extra) if extra else ""
         return os.path.join(path, "auction{}-{}{}.log".format(stop_str, prizeID, extra))

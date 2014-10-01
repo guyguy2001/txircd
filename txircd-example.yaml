@@ -413,9 +413,9 @@ bidserv:
     # this option configures whether or not to display all new levels, or only the largest.
     showAllMadness: false
 
-    # logDirectory: string  - The path to put log files into.
+    # logDirectory: string  - The path to put log files into, relative to the install directory.
     # Log files are written with the full results of every auction, called "auction-PRIZEID.log"
     # or "auction_stopped-PRIZEID.log" if the auction was aborted. If the file already exists, it'll append
     # a ".0", ".1", ... until it finds an unused filename.
-    # Defaults to the current directory.
-    logDirectory: "."
+    # Defaults to ./logs
+    logDirectory: "./logs"
