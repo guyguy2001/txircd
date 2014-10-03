@@ -235,7 +235,7 @@ class NickServ(DBService):
             self.query(insertSuccess,
                        insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
-                       donorID, newNick)
+                       donorID, ircLower(newNick))
 
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
@@ -256,7 +256,7 @@ class NickServ(DBService):
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
                    "SELECT donor_id, nick FROM ircnicks WHERE donor_id = %s OR nick = %s",
-                   donorID, newNick)
+                   donorID, ircLower(newNick))
 
     def registerOnChange(self, user, oldNick, fromServer):
         if getDonorID(user):
