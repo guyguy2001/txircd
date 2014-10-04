@@ -58,11 +58,10 @@ class SamodeCommand(ModuleData, Command):
             user.cache["overriding-modes"] = True
             channel = data["targetchannel"]
             channel.setModes(user.uuid, data["modes"], data["params"])
+            del user.cache["overriding-modes"]
         elif "targetuser" in data:
             u = data["targetuser"]
             u.setModes(user.uuid, data["modes"], data["params"])
-        if "overriding-modes" in user.cache:
-            del user.cache["overriding-modes"]
         return True
 
 samode = SamodeCommand()
