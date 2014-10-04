@@ -18,8 +18,8 @@ class RExtbans(ModuleData):
     def actions(self):
         return [
             ("usermatchban-R", 10, self.matchUser),
-            ("user-login", 10, self.refreshUser),
-            ("user-logout", 10, self.refreshUser),
+            ("user-login", 10, self.loginUser),
+            ("user-logout", 10, self.logoutUser),
         ]
 
     def matchUser(self, user, negated, param):
@@ -29,7 +29,17 @@ class RExtbans(ModuleData):
             return user.cache.get("accountid", None) is not None
         return ircLower(param) in user.cache.get("ownedNicks", [])
 
-    def refreshUser(self, user, donorID=None):
+    def loginUser(self, user, donorID=None):
         self.ircd.runActionStandard("updateuserbancache", user)
+
+    def logoutUser(self, user, donorID=None):
+        self.ircd.runActionStandard("updateuserbancache", user)
+        changes = []
+        for channel in user.channels:
+            for rank in channel.users[user]:
+                changes.append((rank, user.nick))
+            modestr = "-{}".format("".join([mode for mode, param in changes]))
+            params = [param for mode, param in changes if param is not None]
+            channel.setModes(self.ircd.serverID, modestr, params)
 
 rextbans = RExtbans()
