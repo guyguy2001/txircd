@@ -135,7 +135,7 @@ class ServerPong(Command):
     
     def execute(self, server, data):
         if data["dest"] == self.ircd.serverID:
-            self.ircd.servers[data["source"]].cache["lastpong"] = now()
+            self.ircd.servers[data["source"]].cache["pongtime"] = now()
             return True
         self.ircd.servers[data["dest"]].sendMessage("PONG", data["source"], data["dest"], prefix=data["prefix"])
         return True

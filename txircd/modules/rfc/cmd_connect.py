@@ -19,7 +19,7 @@ class ConnectCommand(ModuleData, Command):
         return [ ("CONNECT", 1, self) ]
     
     def canConnect(self, user, command, data):
-        if not self.ircd.runActionUntilValue("userhasoperpermission", "command-connect"):
+        if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-connect", users=[user]):
             user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
         return None
