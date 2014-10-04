@@ -118,9 +118,30 @@ class ChanServ(DBService):
         channel.topic, channel.topicSetter, channel.topicTime = info["topic"]
         self.ircd.runActionStandard("topic", channel, self.ircd.serverID, oldTopic, channels=[channel])
 
+        # clear default modes set by the IRCd
+        self.clearChannelModes(channel)
+
         # restore modes
         modes = [mode for mode in self.modeCache if mode in self.ircd.channelModeTypes]
         self.restoreModes(channel, modes)
+
+    def clearChannelModes(self, channel):
+        changes = []
+        for mode, param in channel.modes.iteritems():
+            modeType = self.ircd.channelModeTypes[mode]
+            if modeType == ModeType.List:
+                for listParam, source, timestamp in param:
+                    changes.append((mode, listParam))
+            else:
+                changes.append((mode, param))
+        for user, ranks in channel.users.iteritems():
+            for rank in ranks:
+                changes.append((rank, user.nick))
+        for n in range(0, len(changes), 20):
+            sublist = changes[n:n+20]
+            modestr = "-{}".format("".join([mode for mode, param in sublist]))
+            params = [param for mode, param in sublist if param is not None]
+            channel.setModes(self.user.uuid, modestr, params)
 
     def restoreModes(self, channel, modes):
         changes = []
@@ -137,7 +158,7 @@ class ChanServ(DBService):
         for n in range(0, len(changes), 20):
             # we need to split into lots of 20 changes, since this is the max setMode allows per call
             sublist = changes[n:n+20]
-            modestr = ''.join([mode for mode, param in sublist])
+            modestr = "".join([mode for mode, param in sublist])
             params = [param for mode, param in sublist if param is not None]
             channel.setModes(self.user.uuid, modestr, params)
 
