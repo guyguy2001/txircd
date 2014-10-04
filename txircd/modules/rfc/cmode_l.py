@@ -27,7 +27,7 @@ class LimitMode(ModuleData, Mode):
     
     def checkSet(self, channel, param):
         if param.isdigit():
-            return param
+            return [param]
         return None
     
     def apply(self, actionType, channel, param, alsoChannel, user):
