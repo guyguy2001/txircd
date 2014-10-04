@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from twisted.python import log
-from txircd.module_interface import IModuleData, ModuleData
+from txircd.module_interface import IModuleData
 from txircd.user import LocalUser
 from txircd.utils import isValidNick, ircLower, SafeDefaultDict
 from zope.interface import implements
@@ -235,7 +235,7 @@ class NickServ(DBService):
             self.query(insertSuccess,
                        insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
-                       donorID, newNick)
+                       donorID, ircLower(newNick))
 
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
@@ -256,7 +256,7 @@ class NickServ(DBService):
         self.query(gotNicks,
                    self.reportError(user, genericErrorMessage),
                    "SELECT donor_id, nick FROM ircnicks WHERE donor_id = %s OR nick = %s",
-                   donorID, newNick)
+                   donorID, ircLower(newNick))
 
     def registerOnChange(self, user, oldNick, fromServer):
         if getDonorID(user):
@@ -500,36 +500,4 @@ class NickServ(DBService):
                          self.reportError(user, genericErrorMessage),
                          "SELECT 1 FROM donors WHERE email = %s", email)
 
-
-class RExtbans(ModuleData):
-    implements(IPlugin, IModuleData)
-
-    name = "RExtbans"
-
-    # R extbans take the following forms:
-    # "R:*" Match any logged in user
-    # "R:<nick>" Match the user that owns that nick (regardless of whether it is their current nick)
-
-    def hookIRCd(self, ircd):
-        self.ircd = ircd
-
-    def actions(self):
-        return [
-            ("usermatchban-R", 10, self.matchUser),
-            ("user-login", 10, self.refreshUser),
-            ("user-logout", 10, self.refreshUser),
-        ]
-
-    def matchUser(self, user, negated, param):
-        if negated:
-            return not self.matchUser(user, False, param)
-        if param == "*":
-            return getDonorID(user) is not None
-        return ircLower(param) in user.cache.get("ownedNicks", [])
-
-    def refreshUser(self, user, donorID=None):
-        self.ircd.runActionStandard("updateuserbancache", user)
-
-
-nickServ = NickServ()
-rExtbans = RExtbans()
+nickserv = NickServ()

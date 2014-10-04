@@ -21,6 +21,7 @@ class BanMode(ModuleData, Mode):
     def actions(self):
         return [ ("modeactioncheck-channel-withuser", 100, self.checkAction),
                 ("modechange-channel-b", 1, self.onChange),
+                ("modepermission-channel-b", 1, self.checkAutostatusPermission),
                 ("userbancheck", 1, self.matchBans),
                 ("join", 10, self.populateBanCache),
                 ("join", 9, self.autoStatus),
@@ -146,6 +147,18 @@ class BanMode(ModuleData, Mode):
                         matchesActions[""] = ""
             return matchesActions
         return {}
+
+    def checkAutostatusPermission(self, channel, user, adding, param):
+        if ";" not in param:
+            return None
+        actionExtban = param.split(";")[0]
+        if actionExtban not in self.ircd.channelStatuses:
+            return None
+        statusLevel = self.ircd.channelStatuses[actionExtban][1]
+        if channel.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, actionExtban, param, users=[user], channels=[channel]):
+            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have permission to modify autostatus for mode {}".format(actionExtban))
+            return False
+        return None
     
     def populateBanCache(self, channel, user):
         if "b" not in channel.modes:

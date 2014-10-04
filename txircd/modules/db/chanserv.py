@@ -40,6 +40,7 @@ class ChanServ(DBService):
 
     def actions(self):
         return super(ChanServ, self).actions() + [
+            ("channelcreate", 120, lambda channel, user: self.cacheStoredModes(channel)),
             ("channelcreate", 10, lambda channel, user: self.restoreChannel(channel)),
             ("topic", 10, lambda channel, setter, oldTopic: self.saveTopic(channel)),
             ("modechanges-channel", 10, lambda channel, source, sourceName, changing: self.saveModes(channel)),
@@ -97,6 +98,13 @@ class ChanServ(DBService):
 
         self.tellUser(user, "Channel {} has been registered.".format(channelName))
 
+    def cacheStoredModes(self, channel):
+        # We need to cache the modes we store for registered channels, otherwise they will be overwritten
+        info = self.getStore().get(ircLower(channel.name), None)
+        if not info:
+            return
+        self.modeCache = info["modes"]
+
     def restoreChannel(self, channel):
         info = self.getStore().get(ircLower(channel.name), None)
         if not info:
@@ -110,13 +118,35 @@ class ChanServ(DBService):
         channel.topic, channel.topicSetter, channel.topicTime = info["topic"]
         self.ircd.runActionStandard("topic", channel, self.ircd.serverID, oldTopic, channels=[channel])
 
+        # clear default modes set by the IRCd
+        self.clearChannelModes(channel)
+
         # restore modes
-        modes = [mode for mode in info["modes"] if mode in self.ircd.channelModeTypes]
+        modes = [mode for mode in self.modeCache if mode in self.ircd.channelModeTypes]
         self.restoreModes(channel, modes)
+
+    def clearChannelModes(self, channel):
+        changes = []
+        for mode, param in channel.modes.iteritems():
+            modeType = self.ircd.channelModeTypes[mode]
+            if modeType == ModeType.List:
+                for listParam, source, timestamp in param:
+                    changes.append((mode, listParam))
+            else:
+                changes.append((mode, param))
+        for user, ranks in channel.users.iteritems():
+            for rank in ranks:
+                changes.append((rank, user.nick))
+        for n in range(0, len(changes), 20):
+            sublist = changes[n:n+20]
+            modestr = "-{}".format("".join([mode for mode, param in sublist]))
+            params = [param for mode, param in sublist if param is not None]
+            channel.setModes(self.user.uuid, modestr, params)
 
     def restoreModes(self, channel, modes):
         changes = []
         info = self.getStore()[ircLower(channel.name)]
+        info["modes"] = self.modeCache
         for mode in modes:
             modeType = self.ircd.channelModeTypes[mode]
             value = info["modes"][mode]
@@ -128,7 +158,7 @@ class ChanServ(DBService):
         for n in range(0, len(changes), 20):
             # we need to split into lots of 20 changes, since this is the max setMode allows per call
             sublist = changes[n:n+20]
-            modestr = ''.join([mode for mode, param in sublist])
+            modestr = "".join([mode for mode, param in sublist])
             params = [param for mode, param in sublist if param is not None]
             channel.setModes(self.user.uuid, modestr, params)
 
@@ -183,6 +213,5 @@ class ChanServ(DBService):
             self.tellUser(user, "Your channel {} does not exist yet. Try JOINing it first.".format(channelName))
         channel = self.ircd.channels[channelName]
         channel.setModes(self.user.uuid, self.ircd.channelStatusOrder[0], [user.nick])
-
 
 chanServ = ChanServ()
