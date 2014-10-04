@@ -132,6 +132,12 @@ modules:
     - AutoUserModes # Automatically set certain user modes on a user when they connect
     - DenyChannels # Restrict certain channels to opers only
     - HostCloaking # User mode +x: hash the user's host so (non-oper) users can't see it
+    - SajoinCommand # SAJOIN command: Allows opers to force join any user to any channel
+    - SapartCommand # SAPART command: Allows opers to force part any user from any channel
+    - SamodeCommand # SAMODE command: Allows opers to set modes on a user or channel, overriding the usual MODE permissions
+    - SanickCommand # SANICK command: Allows opers to force change the nickname of any user
+    - SatopicCommand # SATOPIC command: Allows opers to change the topic of any channel, overriding the usual TOPIC permissions
+    - SakickCommand # SAKICK command: Allows opers to kick any user from any channel, overriding the usual KICK permissions
     - ChanServ # A service that allows channel admins to make their channels persistent
     # The following modules require a database connection to work correctly:
     - NickServ # Authenticates users and protects registered nicks. Requires HashPBKDF2.
