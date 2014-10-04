@@ -40,6 +40,7 @@ class ChanServ(DBService):
 
     def actions(self):
         return super(ChanServ, self).actions() + [
+            ("channelcreate", 120, lambda channel, user: self.cacheStoredModes(channel)),
             ("channelcreate", 10, lambda channel, user: self.restoreChannel(channel)),
             ("topic", 10, lambda channel, setter, oldTopic: self.saveTopic(channel)),
             ("modechanges-channel", 10, lambda channel, source, sourceName, changing: self.saveModes(channel)),
@@ -97,6 +98,13 @@ class ChanServ(DBService):
 
         self.tellUser(user, "Channel {} has been registered.".format(channelName))
 
+    def cacheStoredModes(self, channel):
+        # We need to cache the modes we store for registered channels, otherwise they will be overwritten
+        info = self.getStore().get(ircLower(channel.name), None)
+        if not info:
+            return
+        self.modeCache = info["modes"]
+
     def restoreChannel(self, channel):
         info = self.getStore().get(ircLower(channel.name), None)
         if not info:
@@ -111,12 +119,13 @@ class ChanServ(DBService):
         self.ircd.runActionStandard("topic", channel, self.ircd.serverID, oldTopic, channels=[channel])
 
         # restore modes
-        modes = [mode for mode in info["modes"] if mode in self.ircd.channelModeTypes]
+        modes = [mode for mode in self.modeCache if mode in self.ircd.channelModeTypes]
         self.restoreModes(channel, modes)
 
     def restoreModes(self, channel, modes):
         changes = []
         info = self.getStore()[ircLower(channel.name)]
+        info["modes"] = self.modeCache
         for mode in modes:
             modeType = self.ircd.channelModeTypes[mode]
             value = info["modes"][mode]
@@ -183,6 +192,5 @@ class ChanServ(DBService):
             self.tellUser(user, "Your channel {} does not exist yet. Try JOINing it first.".format(channelName))
         channel = self.ircd.channels[channelName]
         channel.setModes(self.user.uuid, self.ircd.channelStatusOrder[0], [user.nick])
-
 
 chanServ = ChanServ()
