@@ -253,9 +253,10 @@ whowas_max_entries: 10
 #         types: ["can_do_stuff", "can_do_other_stuff"]
 
 # oper_types: Maps oper types to the specific oper permissions they grant. Used by Oper (core).
-# Oper permissions can be broken into specific permissions that individual modules grant. An exhaustive list
-# will not be made here. An oper type is a collection of such permissions to grant to a user with that type
-# in their oper config (see above). The default is empty, here is a commented out example:
+# Oper permissions can be broken into specific permissions that individual modules grant. Refer to the
+# oper-permissions.txt document for a complete list of all available permissions. An oper type is a
+# collection of such permissions to grant to a user with that type in their oper config (see above).
+# The default is empty, here is a commented out example:
 # oper_types:
 #    does_foobarbaz:
 #        - allowed-to-foo
