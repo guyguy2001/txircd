@@ -93,6 +93,9 @@ Permission             Module               Description
 channel-denied         DenyChannels         Allows an oper to join a channel
                                             that is not allowed by the module
                                             configuration.
+command-censor         Censor               Allows the use of the CENSOR
+                                            command to disallow and replace a
+                                            given word.
 command-sajoin         SajoinCommand        Allows the use of the SAJOIN
                                             command to force join a user to a
                                             channel.
