@@ -125,6 +125,7 @@ modules:
     - HashPBKDF2 # Utilities for password hashing
     - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
     - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
+    - Censor # Channel mode +G, user mode +G, CENSOR command: Disallow certain words in messages and replace them
     - AutoJoin # Automatically JOIN a user to a channel when they connect
     - WhoisAccount # Report Account Name in WHOIS for logged in users (will do nothing without NickServ)
     - CustomPrefix # Allow the config file to specify user status modes (see below)
@@ -280,6 +281,11 @@ exempt_chanops_blockcolor: 20
 # exempt_chanops_stripcolor: int  - Used by StripColors.
 # As per exempt_chanops_blockcolor, but for the +S channel mode.
 exempt_chanops_stripcolor: 20
+
+# exempt_chanops_censor: int  - Used by Censor.
+# Any user with a status above the given level can use censored words in channels that have +G set.
+# The default is 100 (+o).
+exempt_chanops_censor: 100
 
 # cloaking_salt: string  - Used by HostCloaking to make host hashes more secure.
 # You should generate a random string and put it here.
