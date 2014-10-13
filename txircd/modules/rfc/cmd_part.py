@@ -21,10 +21,23 @@ class PartCommand(ModuleData):
     def serverCommands(self):
         return [ ("PART", 1, ServerPart(self.ircd)) ]
     
-    def sendPartMessage(self, sendUserList, channel, user, reason):
+    def sendPartMessage(self, sendUserList, channel, user, reason, fromServer):
         reason = ":{}".format(reason)
+        destServers = set()
+        destClosestServers = set()
         for destUser in sendUserList:
-            destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
+            if destUser.uuid[:3] == self.ircd.serverID:
+                destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
+            else:
+                destServers.add(self.ircd.servers[destUser.uuid[:3]])
+        for server in destServers:
+            nextHop = server
+            while nextHop.nextClosest != self.ircd.serverID:
+                nextHop = self.ircd.servers[nextHop.nextClosest]
+            destClosestServers.add(nextHop)
+        for server in destClosestServers:
+            if server != fromServer:
+                server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
         del sendUserList[:]
 
 class UserPart(Command):
@@ -54,7 +67,7 @@ class UserPart(Command):
         channel = data["channel"]
         reason = data["reason"]
         sendUserList = channel.users.keys()
-        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, users=sendUserList, channels=[channel])
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, None, users=sendUserList, channels=[channel])
         user.leaveChannel(channel)
         return True
 
@@ -82,7 +95,7 @@ class ServerPart(Command):
         channel = data["channel"]
         reason = data["reason"]
         sendUserList = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, users=sendUserList, channels=[channel])
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, server, users=sendUserList, channels=[channel])
         user.leaveChannel(channel, True)
         return True
 

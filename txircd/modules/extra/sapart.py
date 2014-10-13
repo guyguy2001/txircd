@@ -57,7 +57,7 @@ class SapartCommand(ModuleData, Command):
         channel = data["channel"]
         reason = data["reason"]
         sendUserList = channel.users.keys()
-        self.ircd.runActionProcessing("partmessage", sendUserList, channel, target, reason, users=sendUserList, channels=[channel])
+        self.ircd.runActionProcessing("partmessage", sendUserList, channel, target, reason, None, users=sendUserList, channels=[channel])
         target.leaveChannel(channel)
         return True
 
