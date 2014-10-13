@@ -63,7 +63,7 @@ class MessageCommands(ModuleData):
         self.sendChannelMsg(toUsers, toServers, "NOTICE", channel, *params, **kw)
     
     def sendRemoteMsg(self, command, targetUser, dest, message, **kw):
-        targetUser.sendMessage(command, targetUser.uuid, message, **kw)
+        self.ircd.servers[targetUser.uuid[:3]].sendMessage(command, targetUser.uuid, message, **kw)
     
     def sendRemotePrivmsg(self, targetUser, *params, **kw):
         if len(params) != 2:
