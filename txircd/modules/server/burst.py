@@ -39,6 +39,8 @@ class ServerBurst(ModuleData, Command):
         for user in self.ircd.users.itervalues():
             if user.localOnly:
                 continue
+            if not user.isRegistered():
+                continue
             signonTimestamp = str(timestamp(user.connectedSince))
             nickTimestamp = str(timestamp(user.nickSince))
             modes = []
