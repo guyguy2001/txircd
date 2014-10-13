@@ -514,7 +514,7 @@ class RemoteUser(IRCUser):
         kw["prefix"] = self._getPrefix(kw)
         if kw["prefix"] is None:
             del kw["prefix"]
-        to = self.nick
+        to = self.uuid
         if "to" in kw:
             to = kw["to"]
             del kw["to"]
