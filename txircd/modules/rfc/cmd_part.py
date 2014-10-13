@@ -94,7 +94,7 @@ class ServerPart(Command):
         user = data["user"]
         channel = data["channel"]
         reason = data["reason"]
-        sendUserList = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+        sendUserList = channel.users.keys()
         self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, server, users=sendUserList, channels=[channel])
         user.leaveChannel(channel, True)
         return True
