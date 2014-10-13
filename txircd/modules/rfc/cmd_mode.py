@@ -267,7 +267,28 @@ class ServerMode(Command):
                             break
                     else:
                         break # This one aborts the while True loop when we're done with modes
-            channel.setModes(source, data["modes"], data["params"])
+            # We'll need to transform the user parameters of status modes before we're done here
+            modes = data["modes"]
+            params = data["params"]
+            adding = True
+            currParam = 0
+            for mode in modes:
+                if mode == "+":
+                    adding = True
+                elif mode == "-":
+                    adding = False
+                else:
+                    if mode not in self.ircd.channelModeTypes:
+                        return None # Never mind, we've hit a desync
+                    modeType = self.ircd.channelModeTypes[mode]
+                    if modeType == ModeType.Status:
+                        if params[currParam] not in self.ircd.users:
+                            return None # More desyncs! :(
+                        params[currParam] = self.ircd.users[params[currParam]].nick
+                        currParam += 1
+                    elif modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
+                        currParam += 1
+            channel.setModes(source, modes, params)
             return True
         user = self.ircd.users[target]
         if targTS > timestamp(user.connectedSince):
