@@ -29,6 +29,9 @@ class CustomPrefix(ModuleData, Mode):
 
     def checkSet(self, channel, param):
         return param.split(",")
+    
+    def checkUnset(self, channel, param):
+        return param.split(",")
 
     def fullUnload(self):
         for channel in self.ircd.channels.itervalues():
