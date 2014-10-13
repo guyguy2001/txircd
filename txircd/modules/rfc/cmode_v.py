@@ -14,5 +14,8 @@ class VoiceMode(ModuleData, Mode):
     
     def checkSet(self, channel, param):
         return param.split(",")
+    
+    def checkUnset(self, channel, param):
+        return param.split(",")
 
 voiceMode = VoiceMode()

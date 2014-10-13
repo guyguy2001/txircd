@@ -14,5 +14,8 @@ class OpMode(ModuleData, Mode):
     
     def checkSet(self, chanel, param):
         return param.split(",")
+    
+    def checkUnset(self, channel, param):
+        return param.split(",")
 
 opMode = OpMode()
