@@ -34,7 +34,8 @@ class MessageCommands(ModuleData):
                 nearestServer = self.ircd.servers[nearestServer.nextClosest]
             localDestServers.add(nearestServer)
         for user in toUsers:
-            user.sendMessage(command, *params, **kw)
+            if user.uuid[:3] == self.ircd.serverID:
+                user.sendMessage(command, *params, **kw)
         if "to" in kw:
             params = (kw["to"],) + params # Prepend the destination to the parameters
         if "sourceuser" in kw:
