@@ -45,7 +45,7 @@ class ModeCommand(ModuleData):
                 log.msg("ModeCommand: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
                 self.minLevel = 100
     
-    def getOutputModes(self, modes):
+    def getOutputModes(self, modes, fixStatuses):
         addInStr = None
         modeStrList = []
         params = []
@@ -72,13 +72,15 @@ class ModeCommand(ModuleData):
             modeStrList.append(mode)
             modeLen += 1
             if param is not None:
+                if fixStatuses and self.ircd.channelModeTypes[mode] == ModeType.Status:
+                    param = self.ircd.userNicks[param]
                 params.append(param)
                 modeLen += 1 + paramLen
         modeLists.append(["".join(modeStrList)] + params)
         return modeLists
     
     def sendChannelModesToUsers(self, users, channel, source, sourceName, modes):
-        modeOuts = self.getOutputModes(modes)
+        modeOuts = self.getOutputModes(modes, False)
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
@@ -87,7 +89,7 @@ class ModeCommand(ModuleData):
         del users[:]
     
     def sendChannelModesToServers(self, channel, source, sourceName, modes):
-        modeOuts = self.getOutputModes(modes)
+        modeOuts = self.getOutputModes(modes, True)
         
         if source[:3] == self.ircd.serverID:
             fromServer = None
@@ -103,7 +105,7 @@ class ModeCommand(ModuleData):
                     server.sendMessage("MODE", channel.name, str(timestamp(channel.existedSince)), modeStr, *params, prefix=source)
     
     def sendUserModesToUsers(self, users, user, source, sourceName, modes):
-        modeOuts = self.getOutputModes(modes)
+        modeOuts = self.getOutputModes(modes, False)
         for modeOut in modeOuts:
             modeStr = modeOut[0]
             params = modeOut[1:]
@@ -112,7 +114,7 @@ class ModeCommand(ModuleData):
         del users[:]
     
     def sendUserModesToServers(self, user, source, sourceName, modes):
-        modeOuts = self.getOutputModes(modes)
+        modeOuts = self.getOutputModes(modes, False)
         
         if source[:3] == self.ircd.serverID:
             fromServer = None
