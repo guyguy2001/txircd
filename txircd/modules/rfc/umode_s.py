@@ -42,7 +42,7 @@ class ServerNoticeMode(ModuleData, Mode):
             if self.ircd.runActionUntilTrue("servernoticetype", user, param):
                 if param not in self.subscribeLists:
                     self.subscribeLists[param] = WeakSet()
-                if user not in self.subscribeLists[param] and user.uuid[:3] == self.ircd.serverID:
+                if user.uuid[:3] == self.ircd.serverID:
                     self.subscribeLists[param].add(user)
             else:
                 user.sendMessage(irc.ERR_INVALIDSNOTYPE, param, ":Invalid server notice type")
