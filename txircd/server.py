@@ -60,7 +60,7 @@ class IRCServer(IRC):
         self.disconnectedDeferred.callback(None)
     
     def disconnect(self, reason, netsplitQuitMsg = None):
-        log.msg("Disconnecting server {}: {}".format(self, reason), logLevel=logging.WARNING)
+        log.msg("Disconnecting server {}: {}".format(self.name, reason), logLevel=logging.WARNING)
         if self.bursted:
             self.ircd.runActionStandard("serverquit", self, reason)
             if netsplitQuitMsg is None:
