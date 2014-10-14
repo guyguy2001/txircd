@@ -24,6 +24,7 @@ class ServerNoticeMode(ModuleData, Mode):
 
     def actions(self):
         return [ ("modepermission-user-s", 1, self.checkModePermission),
+                ("modechange-user-s", 1, self.modeChanged),
                 ("sendservernotice", 1, self.sendServerNotice) ]
 
     def checkModePermission(self, user, settingUser, adding, param):
@@ -36,6 +37,19 @@ class ServerNoticeMode(ModuleData, Mode):
             return False
         return None
 
+    def modeChanged(self, user, source, adding, param, *params):
+        if adding:
+            if self.ircd.runActionUntilTrue("servernoticetype", user, param):
+                if param not in self.subscribeLists:
+                    self.subscribeLists[param] = WeakSet()
+                if user not in self.subscribeLists[param] and user.uuid[:3] == self.ircd.serverID:
+                    self.subscribeLists[param].add(user)
+            else:
+                user.sendMessage(irc.ERR_INVALIDSNOTYPE, param, ":Invalid server notice type")
+        else:
+            if param in self.subscribeLists and user in self.subscribeLists[param]:
+                self.subscribeLists[param].remove(user)
+
     def sendServerNotice(self, snodata):
         mask = snodata["mask"]
         if mask in self.subscribeLists:
@@ -43,29 +57,10 @@ class ServerNoticeMode(ModuleData, Mode):
                 u.sendMessage("NOTICE", ":*** {}".format(snodata["message"]))
 
     def checkSet(self, user, param):
-        params = param.split(",")
-        validparams = []
-        for par in params:
-            if self.ircd.runActionUntilTrue("servernoticetype", user, par):
-                mask = ircLower(par)
-                if mask not in self.subscribeLists:
-                    self.subscribeLists[mask] = WeakSet()
-                if user not in self.subscribeLists[mask] and user.uuid[:3] == self.ircd.serverID:
-                    self.subscribeLists[mask].add(user)
-                    validparams.append(mask)
-            else:
-                user.sendMessage(irc.ERR_INVALIDSNOTYPE, par, ":Invalid server notice type")
-        return validparams
+        return ircLower(param).split(",")
 
     def checkUnset(self, user, param):
-        params = param.split(",")
-        validparams = []
-        for par in params:
-            mask = ircLower(par)
-            if mask in self.subscribeLists and user in self.subscribeLists[mask]:
-                self.subscribeLists[mask].remove(user)
-                validparams.append(mask)
-        return validparams
+        return ircLower(param).split(",")
 
     def showListParams(self, user, target):
         if "s" in target.modes:
