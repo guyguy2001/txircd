@@ -126,6 +126,7 @@ modules:
     - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
     - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
     - Censor # Channel mode +G, user mode +G, CENSOR command: Disallow certain words in messages and replace them
+    - DccBlock # Block DCC requests between clients
     - AutoJoin # Automatically JOIN a user to a channel when they connect
     - WhoisAccount # Report Account Name in WHOIS for logged in users (will do nothing without NickServ)
     - CustomPrefix # Allow the config file to specify user status modes (see below)
