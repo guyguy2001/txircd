@@ -63,7 +63,7 @@ class WhoCommand(ModuleData, Command):
             serverName = server.name
             isOper = self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "who-display", users=[user])
             isAway = "away" in targetUser.metadata["ext"]
-            status = "" if channel is None else "".join([self.ircd.channelStatuses[level][0] for level in channel.users[targetUser]])
+            status = self.ircd.runActionUntilValue("channelstatuses", channel, targetUser, users=[targetUser], channels=[channel])
             hopcount = 0
             if user.uuid[:3] != self.ircd.serverID:
                 countingServer = server
