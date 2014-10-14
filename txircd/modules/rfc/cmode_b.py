@@ -250,7 +250,7 @@ class BanMode(ModuleData, Mode):
             # If there's no matching extban, make sure the ident and host are given
             if "!" not in banmask:
                 fullBanmask += "!*@*"
-            if "@" not in banmask:
+            elif "@" not in banmask:
                 fullBanmask += "@*"
             validParams.append(fullBanmask)
         return validParams
