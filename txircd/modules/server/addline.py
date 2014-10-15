@@ -19,10 +19,9 @@ class AddlineCommand(ModuleData, Command):
         return [ ("ADDLINE", 10, self) ]
 
     def propagateAddXLine(self, linetype, mask, setter, created, duration, reason):
-        serverPrefix = self.ircd.serverID
-        for server in self.ircd.servers:
-            if server.serverID != serverPrefix: # Probably needs more spanning tree style propagation
-                server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=serverPrefix)
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID:
+                server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=self.ircd.serverID)
 
     def burstXLines(self, server, linetype, lines):
         for mask, linedata in lines.iteritems():
@@ -32,7 +31,6 @@ class AddlineCommand(ModuleData, Command):
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
             return None
-        linetype = params[0]
         return {
             "linetype": params[0],
             "mask": params[1],
@@ -44,4 +42,7 @@ class AddlineCommand(ModuleData, Command):
 
     def execute(self, server, data):
         self.ircd.runActionStandard("addxline", data["linetype"], data["mask"], data["setter"], data["created"], data["duration"], data["reason"])
+        for remoteServer in self.ircd.servers.itervalues():
+            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
+                remoteServer.sendMessage("ADDLINE", data["linetype"], data["mask"], data["setter"], data["created"], data["duration"], data["reason"], prefix=self.ircd.serverID)
         return True

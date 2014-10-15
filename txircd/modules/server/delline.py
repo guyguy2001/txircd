@@ -18,10 +18,9 @@ class DellineCommand(ModuleData, Command):
         return [ ("DELLINE", 10, self) ]
 
     def propagateRemoveXLine(self, linetype, mask):
-        serverPrefix = self.ircd.serverID
-        for server in self.ircd.servers:
-            if server.serverID != serverPrefix: # Probably needs more spanning tree style propagation
-                server.sendMessage("DELLINE", linetype, mask, prefix=serverPrefix)
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID:
+                server.sendMessage("DELLINE", linetype, mask, prefix=self.ircd.serverID)
 
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 2:
@@ -33,4 +32,7 @@ class DellineCommand(ModuleData, Command):
 
     def execute(self, server, data):
         self.ircd.runActionStandard("removexline", data["linetype"], data["mask"])
+        for remoteServer in self.ircd.servers.itervalues():
+            if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
+                remoteServer.sendMessage("DELLINE", data["linetype"], data["mask"], prefix=self.ircd.serverID)
         return True
