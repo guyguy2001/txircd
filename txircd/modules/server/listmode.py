@@ -17,7 +17,7 @@ class ListModeSync(ModuleData, Command):
         return [ ("LISTMODE", 1, self) ]
     
     def parseParams(self, server, params, prefix, tags):
-        if len(params) != 5:
+        if len(params) != 6:
             return None
         if params[0] in self.ircd.channels:
             if params[1] not in self.ircd.channelModeTypes:
