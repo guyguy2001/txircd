@@ -20,9 +20,9 @@ class ListModeSync(ModuleData, Command):
         if len(params) != 6:
             return None
         if params[0] in self.ircd.channels:
-            if params[1] not in self.ircd.channelModeTypes:
+            if params[2] not in self.ircd.channelModeTypes:
                 return None
-            if self.ircd.channelModeTypes[params[1]] != ModeType.List:
+            if self.ircd.channelModeTypes[params[2]] != ModeType.List:
                 return None
             try:
                 return {
@@ -36,9 +36,9 @@ class ListModeSync(ModuleData, Command):
             except ValueError:
                 return None
         elif params[0] in self.ircd.users:
-            if params[1] not in self.ircd.userModeTypes:
+            if params[2] not in self.ircd.userModeTypes:
                 return None
-            if self.ircd.userModeTypes[params[1]] != ModeType.List:
+            if self.ircd.userModeTypes[params[2]] != ModeType.List:
                 return None
             try:
                 return {
