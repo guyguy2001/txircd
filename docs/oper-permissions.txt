@@ -24,7 +24,7 @@ command-kill           KillCommand          Allows the use of the KILL command
                                             to disconnect a user.
 command-kline          KLineCommand         Allows the use of the KLINE command
                                             to locally ban a user.
-command-loadmodule     LoadModuleCommand    Allows the user of the LOADMODULE
+command-loadmodule     LoadModuleCommand    Allows the use of the LOADMODULE
                                             command to load a module on the
                                             server.
 command-qline          QLineCommand         Allows the use of the QLINE command
