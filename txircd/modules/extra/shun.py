@@ -20,7 +20,10 @@ class ShunCommand(ModuleData, Command):
         return [ ("commandpermission-SHUN", 1, self.restrictToOpers),
                 ("commandpermission", 50, self.commandCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats) ]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addShun),
+                ("removexline", 1, self.removeShun),
+                ("burst", 10, self.burstShuns) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-shun", users=[user]):
@@ -66,19 +69,27 @@ class ShunCommand(ModuleData, Command):
             else:
                 del self.banlist[data["mask"]]
                 self.ircd.storage["shuns"] = self.banlist
+                self.ircd.runActionStandard("propagateremovexline", "SHUN", banmask)
                 user.sendMessage("NOTICE", ":*** Shun removed on {}".format(data["mask"]))
         else:
             # Setting shun
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a shun set on {}! Check /stats S for a list of active shuns.".format(banmask))
             else:
-                self.banlist[banmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
-                user.sendMessage("NOTICE", ":*** Shun added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                self.banlist[banmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "SHUN", banmask, linedata["setter"], linedata["created"],
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed shun added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent shun added on {}.".format(banmask))
                 self.ircd.storage["shuns"] = self.banlist
         return True
 
@@ -89,6 +100,24 @@ class ShunCommand(ModuleData, Command):
             user.sendMessage("NOTICE", ":Command {} was not processed. You have been blocked from issuing commands ({}).".format(command, result))
             return False
         return None
+
+    def addShun(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "SHUN" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeShun(self, linetype, mask):
+        if linetype != "SHUN" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
+
+    def burstShuns(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "SHUN", self.banlist)
 
     def checkStatsType(self, typeName):
         if typeName == "S":

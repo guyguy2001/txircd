@@ -22,7 +22,10 @@ class ELineCommand(ModuleData, Command):
         return [ ("commandpermission-ELINE", 1, self.restrictToOpers),
                 ("register", 50, self.registerCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addELine),
+                ("removexline", 1, self.removeELine),
+                ("burst", 10, self.burstELines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
@@ -66,9 +69,10 @@ class ELineCommand(ModuleData, Command):
             if exceptmask not in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                del self.exceptlist[data["mask"]]
+                del self.exceptlist[exceptmask]
                 self.ircd.storage["elines"] = self.exceptlist
-                user.sendMessage("NOTICE", ":*** E:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "E", exceptmask)
+                user.sendMessage("NOTICE", ":*** E:Line removed on {}.".format(exceptmask))
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
                     # Clear E:line cache and rematch
@@ -85,21 +89,46 @@ class ELineCommand(ModuleData, Command):
                     u.disconnect("Banned: Exception removed ({})".format(reason))
         else:
             # Setting E:line
+            duration = data["duration"]
             if exceptmask in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                self.exceptlist[exceptmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
-                user.sendMessage("NOTICE", ":*** E:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                self.exceptlist[exceptmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, linedata["setter"], linedata["created"],
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent E:Line added on {}.".format(exceptmask))
                 self.ircd.storage["elines"] = self.exceptlist
                 for user in self.ircd.users.itervalues():
                     if self.matchELine(user):
                         user.cache["eline_match"] = True
         return True
+
+    def addELine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "E" or mask in self.exceptlist:
+            return
+        self.exceptlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeELine(self, linetype, mask):
+        if linetype != "E" or mask not in self.exceptlist:
+            return
+        del self.exceptlist[mask]
+
+    def burstELines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "E", self.exceptlist)
 
     def registerCheck(self, user):
         self.expireELines()

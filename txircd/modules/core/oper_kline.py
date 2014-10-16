@@ -67,21 +67,25 @@ class KLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** K:Line for {} does not currently exist; check /stats K for a list of active K:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["klines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** K:Line removed on {}".format(data["mask"]))
+                user.sendMessage("NOTICE", ":*** K:Line removed on {}.".format(banmask))
         else:
             # Setting K:line
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a K:Line set on {}! Check /stats K for a list of active K:Lines.".format(banmask))
             else:
                 self.banlist[banmask] = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
-                user.sendMessage("NOTICE", ":*** K:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed K:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent K:Line added on {}.".format(banmask))
                 self.ircd.storage["klines"] = self.banlist
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():

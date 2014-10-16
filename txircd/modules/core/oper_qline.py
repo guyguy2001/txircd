@@ -23,7 +23,10 @@ class QLineCommand(ModuleData, Command):
                 ("commandpermission-NICK", 1, self.restrictNickChange),
                 ("register", 1, self.registerCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addQLine),
+                ("removexline", 1, self.removeQLine),
+                ("burst", 10, self.burstQLines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
@@ -68,21 +71,29 @@ class QLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** Q:Line for {} does not currently exist; check /stats Q for a list of active Q:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["qlines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** Q:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "Q", banmask)
+                user.sendMessage("NOTICE", ":*** Q:Line removed on {}.".format(banmask))
         else:
             # Setting Q:line
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a Q:Line set on {}! Check /stats Q for a list of active Q:Lines.".format(banmask))
             else:
-                self.banlist[banmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
-                user.sendMessage("NOTICE", ":*** Q:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                self.banlist[banmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "Q", banmask, linedata["setter"], linedata["created"],
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed Q:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent Q:Line added on {}.".format(banmask))
                 self.ircd.storage["qlines"] = self.banlist
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
@@ -94,6 +105,24 @@ class QLineCommand(ModuleData, Command):
                     u.changeNick(uid)
                     u.sendMessage("NOTICE", ":Your nickname has been changed as it is now invalid ({}).".format(reason))
         return True
+
+    def addQLine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "Q" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeQLine(self, linetype, mask):
+        if linetype != "Q" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
+
+    def burstQLines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "Q", self.banlist)
 
     def registerCheck(self, user):
         self.expireQLines()

@@ -22,7 +22,10 @@ class ZLineCommand(ModuleData, Command):
         return [ ("commandpermission-ZLINE", 1, self.restrictToOpers),
                 ("userconnect", 1, self.connectCheck),
                 ("statstypename", 1, self.checkStatsType),
-                ("statsruntype", 1, self.listStats)]
+                ("statsruntype", 1, self.listStats),
+                ("addxline", 1, self.addZLine),
+                ("removexline", 1, self.removeZLine),
+                ("burst", 10, self.burstZLines) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline", users=[user]):
@@ -64,21 +67,29 @@ class ZLineCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** Z:Line for {} does not currently exist; check /stats Z for a list of active Z:Lines.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
+                del self.banlist[banmask]
                 self.ircd.storage["zlines"] = self.banlist
-                user.sendMessage("NOTICE", ":*** Z:Line removed on {}".format(data["mask"]))
+                self.ircd.runActionStandard("propagateremovexline", "Z", banmask)
+                user.sendMessage("NOTICE", ":*** Z:Line removed on {}.".format(banmask))
         else:
             # Setting Z:line
+            duration = data["duration"]
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a Z:Line set on {}! Check /stats Z for a list of active Z:Lines.".format(banmask))
             else:
-                self.banlist[banmask] = {
+                linedata = {
                     "setter": user.hostmaskWithRealHost(),
                     "created": timestamp(now()),
-                    "duration": data["duration"],
+                    "duration": duration,
                     "reason": data["reason"]
                 }
-                user.sendMessage("NOTICE", ":*** Z:Line added on {}, to expire in {} seconds".format(data["mask"], data["duration"]))
+                self.banlist[banmask] = linedata
+                self.ircd.runActionStandard("propagateaddxline", "Z", banmask, linedata["setter"], linedata["created"],
+                               duration, ":{}".format(linedata["reason"]))
+                if duration > 0:
+                    user.sendMessage("NOTICE", ":*** Timed Z:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+                else:
+                    user.sendMessage("NOTICE", ":*** Permanent Z:Line added on {}.".format(banmask))
                 self.ircd.storage["zlines"] = self.banlist
                 bannedUsers = {}
                 for u in self.ircd.users.itervalues():
@@ -90,6 +101,24 @@ class ZLineCommand(ModuleData, Command):
                     u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
                     u.disconnect("Z:Lined: {}".format(reason))
         return True
+
+    def addZLine(self, linetype, mask, setter, created, duration, reason):
+        if linetype != "Z" or mask in self.banlist:
+            return
+        self.banlist[mask] = {
+                    "setter": setter,
+                    "created": created,
+                    "duration": duration,
+                    "reason": reason
+                }
+
+    def removeZLine(self, linetype, mask):
+        if linetype != "Z" or mask not in self.banlist:
+            return
+        del self.banlist[mask]
+
+    def burstZLines(self, server):
+        self.ircd.runActionStandard("burstxlines", server, "Z", self.banlist)
 
     def connectCheck(self, user):
         self.expireZLines()
