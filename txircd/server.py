@@ -36,13 +36,13 @@ class IRCServer(IRC):
             if data is not None:
                 break
         if data is None:
-            self.disconnect("Failed to parse command {} from {} with parameters '{}'".format(command, prefix, " ".join(params))) # If we receive a command we can't parse, also abort immediately
+            self.disconnect("Failed to parse command {} from {} with prefix '{}' and parameters {!r}".format(command, prefix, prefix, params)) # If we receive a command we can't parse, also abort immediately
             return
         for handler in handlers:
             if handler[0].execute(self, data):
                 break
         else:
-            self.disconnect("Couldn't process command {} from {} with parameters '{}'".format(command, prefix, " ".join(params))) # Also abort connection if we can't process a command
+            self.disconnect("Couldn't process command {} from {} with prefix '{}' and parameters {!r}".format(command, prefix, prefix, params)) # Also abort connection if we can't process a command
             return
     
     def endBurst(self):
