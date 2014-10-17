@@ -78,7 +78,7 @@ class ServerMetadata(ModuleData, Command):
             value = data["value"]
         else:
             value = None
-        target.setMetadata(data["namespace"], data["key"], value, server)
+        target.setMetadata(data["namespace"], data["key"], ":{}".format(value), server)
         return True
 
 serverMetadata = ServerMetadata()

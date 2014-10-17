@@ -60,7 +60,7 @@ class ServerBurst(ModuleData, Command):
                     server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
             for namespace, metadata in user.metadata.iteritems():
                 for key, value in metadata.iteritems():
-                    server.sendMessage("METADATA", user.uuid, signonTimestamp, namespace, key, value, prefix=self.ircd.serverID)
+                    server.sendMessage("METADATA", user.uuid, signonTimestamp, namespace, key, ":{}".format(value), prefix=self.ircd.serverID)
         for channel in self.ircd.channels.itervalues():
             channelTimestamp = str(timestamp(channel.existedSince))
             users = []
@@ -89,7 +89,7 @@ class ServerBurst(ModuleData, Command):
                 server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=self.ircd.serverID)
             for namespace, metadata in channel.metadata.iteritems():
                 for key, value in metadata.iteritems():
-                    server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
+                    server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, ":{}".format(value), prefix=self.ircd.serverID)
     
     def completeBurst(self, server):
         server.sendMessage("BURST", prefix=self.ircd.serverID)
