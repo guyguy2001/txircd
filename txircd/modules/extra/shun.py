@@ -70,7 +70,7 @@ class ShunCommand(ModuleData, Command):
                 del self.banlist[data["mask"]]
                 self.ircd.storage["shuns"] = self.banlist
                 self.ircd.runActionStandard("propagateremovexline", "SHUN", banmask)
-                user.sendMessage("NOTICE", ":*** Shun removed on {}".format(data["mask"]))
+                user.sendMessage("NOTICE", ":*** Shun removed on {}.".format(data["mask"]))
         else:
             # Setting shun
             duration = data["duration"]
