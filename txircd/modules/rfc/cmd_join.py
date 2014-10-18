@@ -15,9 +15,9 @@ class JoinCommand(ModuleData):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("joinmessage", 1, self.sendJoinMessage),
+        return [ ("joinmessage", 101, self.broadcastJoin),
+                ("joinmessage", 1, self.sendJoinMessage),
                 ("remotejoinrequest", 10, self.sendRJoin),
-                ("join", 10, self.broadcastJoin),
                 ("remotejoin", 10, self.propagateJoin) ]
     
     def userCommands(self):
@@ -36,7 +36,7 @@ class JoinCommand(ModuleData):
         self.ircd.servers[user.uuid[:3]].sendMessage("RJOIN", user.uuid, channel.name, prefix=self.ircd.serverID)
         return True
     
-    def broadcastJoin(self, channel, user):
+    def broadcastJoin(self, messageUsers, channel, user):
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
                 server.sendMessage("JOIN", channel.name, prefix=user.uuid)
