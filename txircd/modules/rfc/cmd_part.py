@@ -13,13 +13,20 @@ class PartCommand(ModuleData):
         self.ircd = ircd
     
     def actions(self):
-        return [ ("partmessage", 1, self.sendPartMessage) ]
+        return [ ("partmessage", 101, self.broadcastPart),
+                ("partmessage", 1, self.sendPartMessage) ]
     
     def userCommands(self):
         return [ ("PART", 1, UserPart(self.ircd)) ]
     
     def serverCommands(self):
         return [ ("PART", 1, ServerPart(self.ircd)) ]
+    
+    def broadcastPart(self, sendUserList, channel, user, reason, fromServer):
+        reason = ":{}".format(reason)
+        for server in self.ircd.servers.itervalues():
+            if server.nextClosest == self.ircd.serverID and server != fromServer:
+                server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
     
     def sendPartMessage(self, sendUserList, channel, user, reason, fromServer):
         reason = ":{}".format(reason)
@@ -28,16 +35,6 @@ class PartCommand(ModuleData):
         for destUser in sendUserList:
             if destUser.uuid[:3] == self.ircd.serverID:
                 destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
-            else:
-                destServers.add(self.ircd.servers[destUser.uuid[:3]])
-        for server in destServers:
-            nextHop = server
-            while nextHop.nextClosest != self.ircd.serverID:
-                nextHop = self.ircd.servers[nextHop.nextClosest]
-            destClosestServers.add(nextHop)
-        for server in destClosestServers:
-            if server != fromServer:
-                server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
         del sendUserList[:]
 
 class UserPart(Command):
