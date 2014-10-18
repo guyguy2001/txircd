@@ -37,8 +37,11 @@ class JoinCommand(ModuleData):
         return True
     
     def broadcastJoin(self, messageUsers, channel, user):
+        userClosest = self.ircd.servers[user.uuid[:3]]
+        while userClosest.nextClosest != self.ircd.serverID:
+            userClosest = self.ircd.servers[userClosest.nextClosest]
         for server in self.ircd.servers.itervalues():
-            if server.nextClosest == self.ircd.serverID:
+            if server.nextClosest == self.ircd.serverID and server != userClosest:
                 server.sendMessage("JOIN", channel.name, prefix=user.uuid)
     
     def propagateJoin(self, channel, user):
