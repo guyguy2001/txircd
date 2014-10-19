@@ -15,18 +15,12 @@ class SamodeCommand(ModuleData, Command):
         return [ ("SAMODE", 1, self) ]
 
     def actions(self):
-        return [ ("commandpermission-SAMODE", 1, self.restrictToOpers),
-                ("channelstatusoverride", 1, self.checkStatusOverride)]
+        return [ ("commandpermission-SAMODE", 1, self.restrictToOpers) ]
 
     def restrictToOpers(self, user, command, data):
         if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-samode", users=[user]):
             user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
             return False
-        return None
-
-    def checkStatusOverride(self, channel, user, mode, param):
-        if "overriding-modes" in user.cache:
-            return True
         return None
 
     def parseParams(self, user, params, prefix, tags):
@@ -55,13 +49,11 @@ class SamodeCommand(ModuleData, Command):
 
     def execute(self, user, data):
         if "targetchannel" in data:
-            user.cache["overriding-modes"] = True
             channel = data["targetchannel"]
-            channel.setModes(user.uuid, data["modes"], data["params"])
-            del user.cache["overriding-modes"]
+            channel.setModes(user.uuid, data["modes"], data["params"], True)
         elif "targetuser" in data:
             u = data["targetuser"]
-            u.setModes(user.uuid, data["modes"], data["params"])
+            u.setModes(user.uuid, data["modes"], data["params"], True)
         return True
 
 samode = SamodeCommand()
