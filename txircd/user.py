@@ -609,6 +609,8 @@ class RemoteUser(IRCUser):
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         if fromRemote:
+            if channel in self.channels:
+                return
             if channel.name not in self.ircd.channels:
                 self.ircd.channels[channel.name] = channel
                 self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
