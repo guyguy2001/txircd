@@ -139,6 +139,7 @@ modules:
     - SanickCommand # SANICK command: Allows opers to force change the nickname of any user
     - SatopicCommand # SATOPIC command: Allows opers to change the topic of any channel, overriding the usual TOPIC permissions
     - SakickCommand # SAKICK command: Allows opers to kick any user from any channel, overriding the usual KICK permissions
+    - RExtbans # With NickServ, enables the use of the R: extban to match registered users
     - ChanServ # A service that allows channel admins to make their channels persistent
     # The following modules require a database connection to work correctly:
     - NickServ # Authenticates users and protects registered nicks. Requires HashPBKDF2.
