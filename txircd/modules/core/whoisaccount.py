@@ -9,6 +9,7 @@ class WhoisAccount(ModuleData):
     implements(IPlugin, IModuleData)
 
     name = "WhoisAccount"
+    core = True
 
     def actions(self):
         return [ ("extrawhois", 1, self.whoisAccountName) ]
