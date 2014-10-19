@@ -261,7 +261,7 @@ class ServerMode(Command):
                             modeStrList.append(status)
                             params.append(user.nick)
                     if modeStrList:
-                        channel.setModes(source, "-{}".format("".join(modeStrList)), params)
+                        channel.setModes(source, "-{}".format("".join(modeStrList)), params, True)
                     if channel.modes: # More processing is to be done
                         continue
                     for status in channel.users.itervalues():
@@ -290,7 +290,7 @@ class ServerMode(Command):
                         currParam += 1
                     elif modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
                         currParam += 1
-            channel.setModes(source, modes, params)
+            channel.setModes(source, modes, params, True)
             return True
         user = self.ircd.users[target]
         if targTS > timestamp(user.connectedSince):
@@ -313,10 +313,10 @@ class ServerMode(Command):
                         if param is not None:
                             params.append(param)
                 if modeStrList:
-                    user.setModes(source, "-{}".format("".join(modeStrList)), params)
+                    user.setModes(source, "-{}".format("".join(modeStrList)), params, True)
                 if not user.modes:
                     break
-        user.setModes(source, data["modes"], data["params"])
+        user.setModes(source, data["modes"], data["params"], True)
         return True
 
 modeCommand = ModeCommand()
