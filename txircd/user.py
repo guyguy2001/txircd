@@ -246,11 +246,11 @@ class IRCUser(irc.IRC):
                 return
             versionWithName = "txircd-{}".format(version)
             self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
-            self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.ircd.config["network_name"], versionWithName))
+            self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.ircd.name, versionWithName))
             self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
             chanModes = "".join(["".join(modes.keys()) for modes in self.ircd.channelModes])
             chanModes += "".join(self.ircd.channelStatuses.keys())
-            self.sendMessage(irc.RPL_MYINFO, self.ircd.config["network_name"], versionWithName, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), chanModes)
+            self.sendMessage(irc.RPL_MYINFO, self.ircd.name, versionWithName, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), chanModes)
             self.sendISupport()
             self.ircd.runActionStandard("welcome", self, users=[self])
     
