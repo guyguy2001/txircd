@@ -370,7 +370,7 @@ class IRCUser(irc.IRC):
                 self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
                 del self.ircd.channels[channel.name]
     
-    def setModes(self, source, modeString, params):
+    def setModes(self, source, modeString, params, override = False):
         adding = True
         changing = []
         user = None
@@ -418,7 +418,7 @@ class IRCUser(irc.IRC):
             for param in paramList:
                 if len(changing) >= 20:
                     break
-                if user and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) is False:
+                if user and not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) is False:
                     continue
                 if adding:
                     if modeType == ModeType.List:
