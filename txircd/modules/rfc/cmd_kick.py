@@ -136,7 +136,7 @@ class ServerKick(Command):
         for remote in self.ircd.servers.itervalues():
             if remote != server and remote.nextClosest == self.ircd.serverID:
                 remote.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=sourceUser.uuid)
-        targetUser.leaveChannel(channel)
+        targetUser.leaveChannel(channel, True)
         return True
 
 kickCmd = KickCommand()
