@@ -584,19 +584,22 @@ class RemoteUser(IRCUser):
             return
         oldIdent = self.ident
         self.ident = newIdent
-        self.ircd.runActionStandard("remotechangeident", self, oldIdent, fromServer, users=[self])
+        if self.isRegistered():
+            self.ircd.runActionStandard("remotechangeident", self, oldIdent, fromServer, users=[self])
     
     def changeHost(self, newHost, fromServer = None):
         if len(newHost) > 64:
             return
         oldHost = self.host
         self.host = newHost
-        self.ircd.runActionStandard("remotechangehost", self, oldHost, fromServer, users=[self])
+        if self.isRegistered():
+            self.ircd.runActionStandard("remotechangehost", self, oldHost, fromServer, users=[self])
     
     def changeGecos(self, newGecos, fromServer = None):
         oldGecos = self.gecos
         self.gecos = newGecos
-        self.ircd.runActionStandard("remotechangegecos", self, oldGecos, fromServer, users=[self])
+        if self.isRegistered():
+            self.ircd.runActionStandard("remotechangegecos", self, oldGecos, fromServer, users=[self])
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         if fromRemote:
