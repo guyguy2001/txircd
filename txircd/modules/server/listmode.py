@@ -17,6 +17,8 @@ class ListModeSync(ModuleData, Command):
         return [ ("LISTMODE", 1, self) ]
     
     def checkForListEntry(self, target, mode, param):
+        if mode not in target.modes:
+            return False
         for paramData in target.modes[mode]:
             if paramData[0] == param:
                 return True
