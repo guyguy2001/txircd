@@ -293,7 +293,7 @@ class IRCUser(irc.IRC):
             self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
             self.ircd.runActionStandard("changenick", self, oldNick, fromServer, users=[self])
     
-    def changeIdent(self, newIdent):
+    def changeIdent(self, newIdent, fromServer = None):
         if newIdent == self.ident:
             return
         if len(newIdent) > 12:
@@ -301,9 +301,9 @@ class IRCUser(irc.IRC):
         oldIdent = self.ident
         self.ident = newIdent
         if self.isRegistered():
-            self.ircd.runActionStandard("changeident", self, oldIdent, users=[self])
+            self.ircd.runActionStandard("changeident", self, oldIdent, fromServer, users=[self])
     
-    def changeHost(self, newHost):
+    def changeHost(self, newHost, fromServer = None):
         if len(newHost) > 64:
             return
         if newHost == self.host:
@@ -311,18 +311,18 @@ class IRCUser(irc.IRC):
         oldHost = self.host
         self.host = newHost
         if self.isRegistered():
-            self.ircd.runActionStandard("changehost", self, oldHost, users=[self])
+            self.ircd.runActionStandard("changehost", self, oldHost, fromServer, users=[self])
     
     def resetHost(self):
         self.changeHost(self.realhost)
     
-    def changeGecos(self, newGecos):
+    def changeGecos(self, newGecos, fromServer = None):
         if newGecos == self.gecos:
             return
         oldGecos = self.gecos
         self.gecos = newGecos
         if self.isRegistered():
-            self.ircd.runActionStandard("changegecos", self, oldGecos, users=[self])
+            self.ircd.runActionStandard("changegecos", self, oldGecos, fromServer, users=[self])
     
     def setMetadata(self, namespace, key, value, fromServer = None):
         if namespace not in self.metadata:
