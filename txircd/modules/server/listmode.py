@@ -16,6 +16,12 @@ class ListModeSync(ModuleData, Command):
     def serverCommands(self):
         return [ ("LISTMODE", 1, self) ]
     
+    def checkForListEntry(self, target, mode, param):
+        for paramData in target.modes[mode]:
+            if paramData[0] == param:
+                return True
+        return False
+    
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
             return None
@@ -55,17 +61,19 @@ class ListModeSync(ModuleData, Command):
     
     def execute(self, server, data):
         targetTime = data["targettime"]
+        mode = data["mode"]
+        param = data["param"]
         try: # channels
             channel = data["target"]
             if targetTime <= channel.existedSince:
-                if channel.addListMode(data["mode"], data["param"], data["setter"], data["modetime"]):
+                if self.checkForListEntry(channel, mode, param) or channel.addListMode(mode, param, data["setter"], data["modetime"]):
                     return True
             else:
                 return True # We still handled it in a way that wasn't a desync
         except AttributeError:
             user = data["target"]
             if targetTime <= user.connectedSince:
-                if user.addListMode(data["mode"], data["param"], data["setter"], data["modetime"]):
+                if self.checkForListEntry(user, mode, param) or user.addListMode(mode, param, data["setter"], data["modetime"]):
                     return True
             else:
                 return True
