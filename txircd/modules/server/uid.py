@@ -70,7 +70,7 @@ class ServerUID(ModuleData, Command):
         nickTime = data["nicktime"]
         newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
         newUser.changeHost(data["displayhost"], True)
-        newUser.changeIdent(data["ident"], True)
+        newUser.changeIdent(data["ident"], server)
         newUser.changeGecos(data["gecos"], True)
         newUser.connectedSince = connectTime
         newUser.nickSince = nickTime

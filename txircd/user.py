@@ -579,33 +579,24 @@ class RemoteUser(IRCUser):
             self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
             self.ircd.runActionStandard("remotechangenick", self, oldNick, fromServer, users=[self])
     
-    def changeIdent(self, newIdent, fromRemote = False):
+    def changeIdent(self, newIdent, fromServer = None):
         if len(newIdent) > 12:
             return
-        if fromRemote:
-            oldIdent = self.ident
-            self.ident = newIdent
-            self.ircd.runActionStandard("remotechangeident", self, oldIdent, users=[self])
-        else:
-            self.ircd.runActionUntilTrue("remoteidentrequest", self, newIdent, users=[self])
+        oldIdent = self.ident
+        self.ident = newIdent
+        self.ircd.runActionStandard("remotechangeident", self, oldIdent, fromServer, users=[self])
     
-    def changeHost(self, newHost, fromRemote = False):
+    def changeHost(self, newHost, fromServer = None):
         if len(newHost) > 64:
             return
-        if fromRemote:
-            oldHost = self.host
-            self.host = newHost
-            self.ircd.runActionStandard("remotechangehost", self, oldHost, users=[self])
-        else:
-            self.ircd.runActionUntilTrue("remotehostrequest", self, newHost, users=[self])
+        oldHost = self.host
+        self.host = newHost
+        self.ircd.runActionStandard("remotechangehost", self, oldHost, fromServer, users=[self])
     
-    def changeGecos(self, newGecos, fromRemote = False):
-        if fromRemote:
-            oldGecos = self.gecos
-            self.gecos = newGecos
-            self.ircd.runActionStandard("remotechangegecos", self, oldGecos, users=[self])
-        else:
-            self.ircd.runActionUntilTrue("remotegecosrequest", self, newGecos, users=[self])
+    def changeGecos(self, newGecos, fromServer = None):
+        oldGecos = self.gecos
+        self.gecos = newGecos
+        self.ircd.runActionStandard("remotechangegecos", self, oldGecos, fromServer, users=[self])
     
     def joinChannel(self, channel, override = False, fromRemote = False):
         if fromRemote:
