@@ -25,7 +25,9 @@ class HostCloaking(ModuleData, Mode):
         return [ ("modeactioncheck-user-x-modechange-user-x", 1, self.modeChanged) ]
 
     def modeChanged(self, *params):
-        return True
+        if user.uuid[:3] == self.ircd.serverID:
+            return True
+        return None
 
     def apply(self, actionType, user, param, settingUser, uid, adding, *params, **kw):
         if adding:
