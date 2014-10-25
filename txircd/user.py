@@ -605,13 +605,16 @@ class RemoteUser(IRCUser):
         if fromRemote:
             if channel in self.channels:
                 return
+            newChannel = False
             if channel.name not in self.ircd.channels:
+                newChannel = True
                 self.ircd.channels[channel.name] = channel
-                self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
             channel.users[self] = ""
             self.channels.append(channel)
             messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
             self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, users=[self], channels=[channel])
+            if newChannel:
+                self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
             self.ircd.runActionStandard("remotejoin", channel, self, users=[self], channels=[channel])
         else:
             self.ircd.runActionUntilTrue("remotejoinrequest", self, channel, users=[self], channels=[channel])
