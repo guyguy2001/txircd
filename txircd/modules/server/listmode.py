@@ -24,6 +24,17 @@ class ListModeSync(ModuleData, Command):
                 return True
         return False
     
+    def addChanListMode(self, channel, mode, param, setter, modetime):
+        channel.addListMode(mode, param, setter, modetime)
+        for user in channel.users.iterkeys():
+            if user.uuid[:3] == self.ircd.serverID:
+                user.sendMessage("MODE", "+{}".format(mode), param, to=channel.name, prefix=setter)
+    
+    def addUserListMode(self, user, mode, param, setter, modetime):
+        user.addListMode(mode, param, setter, modetime)
+        if user.uuid[:3] == self.ircd.serverID:
+            user.sendMessage("MODE", "+{}".format(mode), param, prefix=setter)
+    
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
             return None
@@ -68,14 +79,14 @@ class ListModeSync(ModuleData, Command):
         try: # channels
             channel = data["target"]
             if targetTime <= channel.existedSince:
-                if self.checkForListEntry(channel, mode, param) or channel.addListMode(mode, param, data["setter"], data["modetime"]):
+                if self.checkForListEntry(channel, mode, param) or self.addChanListMode(channel, mode, param, data["setter"], data["modetime"]):
                     return True
             else:
                 return True # We still handled it in a way that wasn't a desync
         except AttributeError:
             user = data["target"]
             if targetTime <= user.connectedSince:
-                if self.checkForListEntry(user, mode, param) or user.addListMode(mode, param, data["setter"], data["modetime"]):
+                if self.checkForListEntry(user, mode, param) or self.addUserListMode(user, mode, param, data["setter"], data["modetime"]):
                     return True
             else:
                 return True
