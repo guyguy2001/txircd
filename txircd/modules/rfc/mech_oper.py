@@ -19,6 +19,9 @@ class Oper(ModuleData, Mode):
     def userCommands(self):
         return [ ("OPER", 1, UserOper(self.ircd)) ]
     
+    def serverCommands(self):
+        return [ ("OPER", 1, ServerOper(self.ircd)) ]
+    
     def actions(self):
         return [ ("userhasoperpermission", 1, self.operPermission),
          ("modepermission-user-o", 1, self.nope) ]
@@ -101,6 +104,36 @@ class UserOper(Command):
                     continue
                 operPermissions.update(configuredOperTypes[type])
             user.cache["oper-permissions"] = operPermissions
+            permString = " ".join(operPermissions)
+            for server in self.ircd.servers.itervalues():
+                if server.nextClosest == self.ircd.serverID:
+                    server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)
+        return True
+
+class ServerOper(Command):
+    implements(ICommand)
+    
+    def __init__(self, ircd):
+        self.ircd = ircd
+    
+    def parseParams(self, server, params, prefix, tags):
+        if not params:
+            return None
+        if params[0] not in self.ircd.users:
+            return None
+        return {
+            "user": self.ircd.users[params[0]],
+            "permissions": params[1:]
+        }
+    
+    def execute(self, server, data):
+        user = data["user"]
+        permissions = set(data["permissions"])
+        user.cache["oper-permissions"] = permissions
+        permString = " ".join(permissions)
+        for remote in self.ircd.servers.itervalues():
+            if remote.nextClosest == self.ircd.serverID and remote != server:
+                remote.sendMessage("OPER", user.uuid, permString, prefix=user.uuid[:3])
         return True
 
 oper = Oper()
