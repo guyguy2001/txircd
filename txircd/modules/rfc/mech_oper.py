@@ -24,7 +24,8 @@ class Oper(ModuleData, Mode):
     
     def actions(self):
         return [ ("userhasoperpermission", 1, self.operPermission),
-         ("modepermission-user-o", 1, self.nope) ]
+         ("modepermission-user-o", 1, self.nope),
+         ("burst", 90, self.propagatePermissions) ]
     
     def userModes(self):
         return [ ("o", ModeType.NoParam, self) ]
@@ -43,6 +44,12 @@ class Oper(ModuleData, Mode):
             user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - User mode o may not be set")
             return False
         return None
+    
+    def propagatePermissions(self, server):
+        for user in self.ircd.users.itervalues():
+            if "o" in user.modes and "oper-permissions" in user.cache:
+                permString = " ".join(user.cache["oper-permissions"])
+                server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)
 
 class UserOper(Command):
     implements(ICommand)
