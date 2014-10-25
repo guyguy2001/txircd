@@ -4,7 +4,7 @@ from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
 class Manhole(ModuleData):
-    implements(IModuleData)
+    implements(IPlugin, IModuleData)
     
     name = "Manhole"
     
