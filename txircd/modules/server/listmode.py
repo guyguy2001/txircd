@@ -25,15 +25,19 @@ class ListModeSync(ModuleData, Command):
         return False
     
     def addChanListMode(self, channel, mode, param, setter, modetime):
-        channel.addListMode(mode, param, setter, modetime)
+        if not channel.addListMode(mode, param, setter, modetime):
+            return False
         for user in channel.users.iterkeys():
             if user.uuid[:3] == self.ircd.serverID:
                 user.sendMessage("MODE", "+{}".format(mode), param, to=channel.name, prefix=setter)
+        return True
     
     def addUserListMode(self, user, mode, param, setter, modetime):
-        user.addListMode(mode, param, setter, modetime)
+        if not user.addListMode(mode, param, setter, modetime):
+            return False
         if user.uuid[:3] == self.ircd.serverID:
             user.sendMessage("MODE", "+{}".format(mode), param, prefix=setter)
+        return True
     
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
