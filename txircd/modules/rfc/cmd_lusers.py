@@ -35,7 +35,7 @@ class LUsersCommand(ModuleData, Command):
     def countStats(self):
         counts = defaultdict(lambda: 0)
         counts["users"] = len(self.ircd.users)
-        counts["servers"] = len(self.ircd.servers)
+        counts["servers"] = len(self.ircd.servers) + 1
         counts["channels"] = len(self.ircd.channels)
 
         for user in self.ircd.users.itervalues():
