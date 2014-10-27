@@ -23,7 +23,9 @@ class LUsersCommand(ModuleData, Command):
         return [ ("LUSERS", 1, self) ]
 
     def getStorage(self):
-        return self.ircd.storage.get("user_count_max", {})
+        if "user_count_max" not in self.ircd.storage:
+            self.ircd.storage["user_count_max"] = {}
+        return self.ircd.storage["user_count_max"]
     
     def updateMaxCounts(self, counts):
         maxes = self.getStorage()
