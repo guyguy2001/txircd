@@ -124,6 +124,7 @@ database:
 modules:
     - HashPBKDF2 # Utilities for password hashing
     - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
+    - BlockCTCP # Channel mode +C: blocks CTCP messages sent to the channel (except ACTION)
     - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
     - Censor # Channel mode +G, user mode +G, CENSOR command: Disallow certain words in messages and replace them
     - DccBlock # Block DCC requests between clients
