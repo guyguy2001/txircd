@@ -2,7 +2,6 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import timestamp
 from zope.interface import implements
 
 class JoinCommand(ModuleData):
