@@ -1,8 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import now, timestamp
 from zope.interface import implements
-import time
-
 
 class RateLimit(ModuleData):
     implements(IPlugin, IModuleData)
@@ -27,10 +26,10 @@ class RateLimit(ModuleData):
 
     def getPeriodData(self):
         """Returns (period as integer, time to end of period)"""
-        now = time.time()
+        nowTS = timestamp(now())
         interval = self.getConfig()["interval"]
-        period = int(now / interval)
-        timeToEnd = (period + 1) * interval - now
+        period = int(nowTS / interval)
+        timeToEnd = (period + 1) * interval - nowTS
         return period, timeToEnd
 
     def recvCommand(self, user, command, data):
