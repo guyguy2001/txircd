@@ -299,7 +299,7 @@ class ServerMode(Command):
             while True:
                 modeStrList = []
                 params = []
-                for mode, param in channel.modes.iteritems():
+                for mode, param in user.modes.iteritems():
                     if len(modeStrList) >= 20:
                         break
                     if self.ircd.userModeTypes[mode] == ModeType.List:
