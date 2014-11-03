@@ -28,7 +28,7 @@ class HashPBKDF2(ModuleData):
         if self.ircd.functionCache["compare-pbkdf2"] == self.compare:
             del self.ircd.functionCache["compare-pbkdf2"]
     
-    def hash(self, string, salt=None, iterations=1000, algorithm="sha256", bytes=24):
+    def hash(self, string, salt=None, iterations=1000, algorithm="sha256", dataBytes=24):
         possibleAlgorithms = {
             "md5": md5,
             "sha1": sha1,
@@ -59,7 +59,7 @@ class HashPBKDF2(ModuleData):
             if char not in saltGoodChars:
                 raise ValueError ("Illegal character {!r} found in salt".format(char))
         
-        hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(bytes))
+        hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(dataBytes))
         return "{}:{}:{}:{}".format(algorithm, iterations, salt, hashedStr)
     
     def makeSalt(self):
@@ -72,8 +72,8 @@ class HashPBKDF2(ModuleData):
         algorithm, iterations, salt, oldHash = compareWith.split(":", 3)
         if iterations:
             iterations = int(iterations)
-        bytes = len(b64decode(oldHash))
+        dataBytes = len(b64decode(oldHash))
         
-        return self.hash(string, salt, iterations, algorithm, bytes) == compareWith
+        return self.hash(string, salt, iterations, algorithm, dataBytes) == compareWith
 
 pbkdf2Hash = HashPBKDF2()
