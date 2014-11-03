@@ -88,6 +88,7 @@ class UserInvite(Command):
             targetUser.cache["invites"] = {}
         targetUser.cache["invites"][channel.name] = now()
         targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+        self.ircd.runActionStandard("invite", user, targetUser, channel)
         return True
 
 
@@ -125,6 +126,7 @@ class ServerInvite(Command):
             targetUser.cache["invites"] = {}
         targetUser.cache["invites"][channel.name] = now()
         targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+        self.ircd.runActionStandard("invite", user, targetUser, channel)
         return True
 
 inviteMechanism = Invite()
