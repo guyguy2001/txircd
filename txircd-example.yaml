@@ -191,6 +191,10 @@ admin_email: "No Admin <anarchy@example.com>"
 # Default modes +o is level 100, and +v is level 10, so a value of 100 means "+o or better".
 channel_minimum_level_kick: 100
 
+# channel_minimum_level_invite: int  - The minimum status level needed to invite a user to a channel.
+# Used by Invite (core). See comments on channel_minimum_level_kick above.
+channel_minimum_level_invite: 100
+
 # channel_minimum_level_mode: int  - The minimum status level needed to change a channel's modes.
 # Used by CommandMode (core). See comments on channel_minimum_level_kick above.
 channel_minimum_level_mode: 100
