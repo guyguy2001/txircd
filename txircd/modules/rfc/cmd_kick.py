@@ -111,14 +111,19 @@ class ServerKick(Command):
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 3:
             return None
-        if prefix not in self.ircd.users:
+        sourceType = None
+        if prefix in self.ircd.users:
+            sourceType = "user"
+        elif prefix in self.ircd.servers:
+            sourceType = "server"
+        else:
             return None
         if params[0] not in self.ircd.channels:
             return None
         if params[1] not in self.ircd.users:
             return None
         return {
-            "sourceuser": self.ircd.users[prefix],
+            "source{}".format(sourceType): self.ircd.users[prefix] if sourceType == "user" else self.ircd.servers[prefix],
             "channel": self.ircd.channels[params[0]],
             "targetuser": self.ircd.users[params[1]],
             "reason": params[2]
@@ -126,16 +131,30 @@ class ServerKick(Command):
     
     def execute(self, server, data):
         channel = data["channel"]
-        sourceUser = data["sourceuser"]
+        sourceUser = data["sourceuser"] if "sourceuser" in data else None
+        sourceServer = data["sourceserver"] if "sourceserver" in data else None
         targetUser = data["targetuser"]
         reason = ":{}".format(data["reason"])
         
+        if sourceUser:
+            kwargs = {
+                "sourceuser": sourceUser,
+                "to": channel.name
+            }
+            servPrefix = sourceUser.uuid
+        else:
+            kwargs = {
+                "sourceserver": sourceServer,
+                "to": channel.name
+            }
+            servPrefix = sourceServer.name
+        
         for user in channel.users.iterkeys():
             if user.uuid[:3] == self.ircd.serverID:
-                user.sendMessage("KICK", targetUser.nick, reason, sourceuser=sourceUser, to=channel.name)
+                user.sendMessage("KICK", targetUser.nick, reason, **kwargs)
         for remote in self.ircd.servers.itervalues():
             if remote != server and remote.nextClosest == self.ircd.serverID:
-                remote.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=sourceUser.uuid)
+                remote.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=servPrefix)
         targetUser.leaveChannel(channel, True)
         return True
 
