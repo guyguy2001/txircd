@@ -125,6 +125,7 @@ modules:
     - HashPBKDF2 # Utilities for password hashing
     - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
     - BlockCTCP # Channel mode +C: blocks CTCP messages sent to the channel (except ACTION)
+    - ChannelFlood # Channel mode +f: limits the number of messages a user can send to a channel in a given amount of time
     - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
     - Censor # Channel mode +G, user mode +G, CENSOR command: Disallow certain words in messages and replace them
     - DccBlock # Block DCC requests between clients
@@ -283,6 +284,10 @@ exempt_chanops_blockcolor: 20
 # exempt_chanops_stripcolor: int  - Used by StripColors.
 # As per exempt_chanops_blockcolor, but for the +S channel mode.
 exempt_chanops_stripcolor: 20
+
+# exempt_chanops_chanflood: int  - Used by ChannelFlood.
+# As per exempt_chanops_blockcolor, but for the +f channel mode.
+exempt_chanops_chanflood: 20
 
 # exempt_chanops_censor: int  - Used by Censor.
 # Any user with a status above the given level can use censored words in channels that have +G set.
