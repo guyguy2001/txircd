@@ -285,6 +285,10 @@ exempt_chanops_blockcolor: 20
 # As per exempt_chanops_blockcolor, but for the +S channel mode.
 exempt_chanops_stripcolor: 20
 
+# exempt_chanops_chanflood: int  - Used by ChannelFlood.
+# As per exempt_chanops_blockcolor, but for the +f channel mode.
+exempt_chanops_chanflood: 20
+
 # exempt_chanops_censor: int  - Used by Censor.
 # Any user with a status above the given level can use censored words in channels that have +G set.
 # The default is 100 (+o).

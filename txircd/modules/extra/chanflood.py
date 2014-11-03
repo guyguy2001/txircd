@@ -42,6 +42,9 @@ class ChannelFlood(ModuleData, Mode):
     def apply(self, actionName, channel, param, user, command, data):
         if "targetchans" not in data or channel not in data["targetchans"]:
             return
+        minAllowedRank = self.ircd.config.getWithDefault("exempt_chanops_chanflood", 20)
+        if channel.userRank(user) >= minAllowedRank:
+            return 
         if "floodhistory" not in user.cache:
             user.cache["floodhistory"] = WeakKeyDictionary()
         if channel not in user.cache["floodhistory"]:
