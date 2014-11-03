@@ -147,7 +147,7 @@ class ServerKick(Command):
                 "sourceserver": sourceServer,
                 "to": channel.name
             }
-            servPrefix = sourceServer.name
+            servPrefix = sourceServer.serverID
         
         for user in channel.users.iterkeys():
             if user.uuid[:3] == self.ircd.serverID:
