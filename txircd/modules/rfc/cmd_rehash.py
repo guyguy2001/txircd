@@ -103,10 +103,13 @@ class ServerRehash(Command):
         if source in self.ircd.users:
             user = self.ircd.users[source]
             user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehashing")
+        else:
+            user = None
         try:
             self.ircd.rehash()
         except ConfigReadError as e:
-            user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehash failed: {}".format(e))
+            if user:
+                user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehash failed: {}".format(e))
         return True
 
 rehashCmd = RehashCommand()

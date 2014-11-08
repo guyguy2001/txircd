@@ -310,23 +310,23 @@ class NickServ(DBService):
 
         # callbacks
         def timerComplete():
-            timer, owners = self.nick_checks[user, nick]
+            nsTimer, owners = self.nick_checks[user, nick]
             if owners is not None:
                 bothComplete()
 
         def queryComplete(results):
-            timer, owners = self.nick_checks[user, nick]
+            nsTimer, owners = self.nick_checks[user, nick]
             owners = [owner for owner, in results]
             if not owners or getDonorID(user) in owners:
                 # nick is not protected, or nick is owned by user
-                if timer.active():
-                    timer.cancel()
+                if nsTimer.active():
+                    nsTimer.cancel()
                 del self.nick_checks[user, nick]
                 return
-            self.nick_checks[user, nick] = timer, owners
+            self.nick_checks[user, nick] = nsTimer, owners
             self.tellUser(user, "This is a registered nick. Please use \x02/msg NickServ login EMAIL PASSWORD\x02 "
                                 "to verify your identity")
-            if not timer.active():
+            if not nsTimer.active():
                 bothComplete()
 
         def bothComplete():
@@ -334,7 +334,7 @@ class NickServ(DBService):
             # has determined that the nick is protected. We check whether the user
             # owns the nick (in case they authenticated between the query finish and the timer fire)
             # and whether they haven't changed off it, then we force a nick change.
-            timer, owners = self.nick_checks.pop((user, nick))
+            nsTimer, owners = self.nick_checks.pop((user, nick))
             if getDonorID(user) in owners:
                 return # they are owner
             if user.nick != nick:
@@ -344,9 +344,9 @@ class NickServ(DBService):
             self.forceNick(user)
 
         def queryFailed(failure):
-            timer, owners = self.nick_checks.pop((user, nick))
-            if timer.active():
-                timer.cancel()
+            nsTimer, owners = self.nick_checks.pop((user, nick))
+            if nsTimer.active():
+                nsTimer.cancel()
             if user.nick != nick:
                 return # they already changed
             if user.uuid not in self.ircd.users:
@@ -360,12 +360,12 @@ class NickServ(DBService):
             return # user switched BACK to a nick that's still being timed
 
         timeout = self.getConfig().get("nick_timeout", 30)
-        timer = reactor.callLater(timeout, timerComplete)
+        nsTimer = reactor.callLater(timeout, timerComplete)
 
         self.query(queryComplete, queryFailed,
                    "SELECT donor_id FROM ircnicks WHERE nick = %s", nick)
 
-        self.nick_checks[user, user.nick] = (timer, None)
+        self.nick_checks[user, user.nick] = (nsTimer, None)
 
     def genForceNicks(self, user):
         prefix = self.getConfig().get("guest_prefix", "Guest")
@@ -400,10 +400,10 @@ class NickServ(DBService):
             return None # PRIVMSG to nickserv and only nickserv are ok
         if command in ("PING", "PONG", "NICK", "QUIT", "NS", "NICKSERV", "ID", "IDENTIFY"):
             return None # These commands are always allowed
-        timer, owners = self.nick_checks[user, user.nick]
+        nsTimer, owners = self.nick_checks[user, user.nick]
         if owners and getDonorID(user) in owners:
             # user has authed since query returned, so let's abort the timer early
-            timer.cancel()
+            nsTimer.cancel()
             del self.nick_checks[user, user.nick]
             return None
         if owners is None:

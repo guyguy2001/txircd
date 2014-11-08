@@ -106,10 +106,10 @@ class UserOper(Command):
         if "types" in operData:
             configuredOperTypes = self.ircd.config.getWithDefault("oper_types", {})
             operPermissions = set()
-            for type in operData["types"]:
-                if type not in configuredOperTypes:
+            for operType in operData["types"]:
+                if operType not in configuredOperTypes:
                     continue
-                operPermissions.update(configuredOperTypes[type])
+                operPermissions.update(configuredOperTypes[operType])
             user.cache["oper-permissions"] = operPermissions
             permString = " ".join(operPermissions)
             for server in self.ircd.servers.itervalues():

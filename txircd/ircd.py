@@ -205,10 +205,10 @@ class IRCd(Service):
         self.runActionStandard("moduleload", module.name)
         module.load()
         
-        for type, typeSet in enumerate(newChannelModes):
+        for modeType, typeSet in enumerate(newChannelModes):
             for mode, implementation in typeSet.iteritems():
-                self.channelModeTypes[mode] = type
-                self.channelModes[type][mode] = implementation
+                self.channelModeTypes[mode] = modeType
+                self.channelModes[modeType][mode] = implementation
         for mode, data in newChannelStatuses.iteritems():
             self.channelModeTypes[mode] = ModeType.Status
             self.channelStatuses[mode] = data
@@ -219,10 +219,10 @@ class IRCd(Service):
                     break
             else:
                 self.channelStatusOrder.append(mode)
-        for type, typeSet in enumerate(newUserModes):
+        for modeType, typeSet in enumerate(newUserModes):
             for mode, implementation in typeSet.iteritems():
-                self.userModeTypes[mode] = type
-                self.userModes[type][mode] = implementation
+                self.userModeTypes[mode] = modeType
+                self.userModes[modeType][mode] = implementation
         for action, actionList in newActions.iteritems():
             if action not in self.actions:
                 self.actions[action] = []
