@@ -31,7 +31,7 @@ class IRCd(Service):
         self.userModeTypes = {}
         self.actions = {}
         self.storage = None
-        self.storage_syncer = None
+        self.storageSyncer = None
         self.dataCache = {}
         self.functionCache = {}
         
@@ -74,8 +74,8 @@ class IRCd(Service):
             raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
         log.msg("Loading storage...", logLevel=logging.INFO)
         self.storage = shelve.open(self.config.getWithDefault("datastore_path", "data.db"), writeback=True)
-        self.storage_syncer = LoopingCall(self.storage.sync)
-        self.storage_syncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
+        self.storageSyncer = LoopingCall(self.storage.sync)
+        self.storageSyncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
         log.msg("Loading modules...", logLevel=logging.INFO)
         self._loadModules()
         log.msg("Binding ports...", logLevel=logging.INFO)
@@ -108,8 +108,8 @@ class IRCd(Service):
         for module in moduleList:
             self.unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
         log.msg("Closing data storage...", logLevel=logging.INFO)
-        if self.storage_syncer.running:
-            self.storage_syncer.stop()
+        if self.storageSyncer.running:
+            self.storageSyncer.stop()
         self.storage.close() # a close() will sync() also
         log.msg("Releasing ports...", logLevel=logging.INFO)
         stopDeferreds.extend(self._unbindPorts())
