@@ -135,6 +135,7 @@ modules:
     - AutoUserModes # Automatically set certain user modes on a user when they connect
     - DenyChannels # Restrict certain channels to opers only
     - HostCloaking # User mode +x: hash the user's host so (non-oper) users can't see it
+    - Globops # GLOBOPS command: Allows opers to send a global notice to other opers
     - SajoinCommand # SAJOIN command: Allows opers to force join any user to any channel
     - SapartCommand # SAPART command: Allows opers to force part any user from any channel
     - SamodeCommand # SAMODE command: Allows opers to set modes on a user or channel, overriding the usual MODE permissions
