@@ -126,6 +126,7 @@ modules:
     - StripColors # Channel mode +S: disallow formatting characters to non-priveliged users
     - BlockCTCP # Channel mode +C: blocks CTCP messages sent to the channel (except ACTION)
     - ChannelFlood # Channel mode +f: limits the number of messages a user can send to a channel in a given amount of time
+    - Knock # Channel mode +K, KNOCK command: Allows users to knock on an invite-only channel
     - ShunCommand # SHUN command: A shun is like a ban, but only prohibits user from using certain commands
     - Censor # Channel mode +G, user mode +G, CENSOR command: Disallow certain words in messages and replace them
     - DccBlock # Block DCC requests between clients
@@ -191,6 +192,10 @@ admin_email: "No Admin <anarchy@example.com>"
 # Used by CommandKick (core).
 # Default modes +o is level 100, and +v is level 10, so a value of 100 means "+o or better".
 channel_minimum_level_kick: 100
+
+# channel_minimum_level_invite: int  - The minimum status level needed to invite a user to a channel.
+# Used by Invite (core). See comments on channel_minimum_level_kick above.
+channel_minimum_level_invite: 100
 
 # channel_minimum_level_mode: int  - The minimum status level needed to change a channel's modes.
 # Used by CommandMode (core). See comments on channel_minimum_level_kick above.
@@ -294,6 +299,11 @@ exempt_chanops_chanflood: 20
 # Any user with a status above the given level can use censored words in channels that have +G set.
 # The default is 100 (+o).
 exempt_chanops_censor: 100
+
+# knock_delay: int  - Used by Knock.
+# The number of second the user has to wait between KNOCK requests.
+# The default is 300 (5 minutes).
+knock_delay: 300
 
 # cloaking_salt: string  - Used by HostCloaking to make host hashes more secure.
 # You should generate a random string and put it here.

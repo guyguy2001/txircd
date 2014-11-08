@@ -1,14 +1,17 @@
 from twisted.plugin import IPlugin
+from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, IMode, ModuleData, Mode
 from txircd.utils import ModeType, now
 from zope.interface import implements
+import logging
 
 class Invite(ModuleData, Mode):
     implements(IPlugin, IModuleData, IMode)
     
     name = "Invite"
     core = True
+    minLevel = 100
     affectedActions = [ "joinpermission" ]
     
     def hookIRCd(self, ircd):
@@ -19,13 +22,28 @@ class Invite(ModuleData, Mode):
     
     def actions(self):
         return [ ("modeactioncheck-channel-i-joinpermission", 1, self.hasInviteMode),
-                ("join", 1, self.clearInvite) ]
+                ("join", 1, self.clearInvite),
+                ("commandpermission-INVITE", 1, self.checkInviteLevel) ]
     
     def userCommands(self):
         return [ ("INVITE", 1, UserInvite(self.ircd)) ]
     
     def serverCommands(self):
         return [ ("INVITE", 1, ServerInvite(self.ircd)) ]
+
+    def load(self):
+        self.rehash()
+
+    def rehash(self):
+        newLevel = self.ircd.config.getWithDefault("channel_minimum_level_invite", 100)
+        try:
+            self.minLevel = int(newLevel)
+        except ValueError:
+            try:
+                self.minLevel = self.ircd.channelStatuses[newLevel[0]][1]
+            except KeyError:
+                log.msg("Invite: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
+                self.minLevel = 100
     
     def hasInviteMode(self, channel, alsoChannel, user):
         if "i" in channel.modes:
@@ -37,6 +55,16 @@ class Invite(ModuleData, Mode):
             return
         if channel.name in user.cache["invites"]:
             del user.cache["invites"][channel.name]
+
+    def checkInviteLevel(self, user, command, data):
+        channel = data["channel"]
+        if user not in channel.users:
+            user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, ":You're not on that channel")
+            return False
+        if channel.userRank(user) < self.minLevel:
+            user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to invite users to {}".format(channel.name))
+            return False
+        return None
     
     def apply(self, actionName, channel, param, joiningChannel, user):
         if "invites" not in user.cache or channel.name not in user.cache["invites"]:
@@ -88,6 +116,7 @@ class UserInvite(Command):
             targetUser.cache["invites"] = {}
         targetUser.cache["invites"][channel.name] = now()
         targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+        self.ircd.runActionStandard("invite", user, targetUser, channel)
         return True
 
 
@@ -125,6 +154,7 @@ class ServerInvite(Command):
             targetUser.cache["invites"] = {}
         targetUser.cache["invites"][channel.name] = now()
         targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+        self.ircd.runActionStandard("invite", user, targetUser, channel)
         return True
 
 inviteMechanism = Invite()
