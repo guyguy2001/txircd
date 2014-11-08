@@ -71,22 +71,26 @@ class UserOper(Command):
         username = data["username"]
         if username not in configuredOpers:
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+            self.reportOper(user, "Bad username")
             return True
         operData = configuredOpers[username]
         if "password" not in operData:
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+            self.reportOper(user, "Bad password")
             return True
         password = data["password"]
         if "hash" in operData:
             compareFunc = "compare-{}".format(operData["hash"])
             if compareFunc not in self.ircd.functionCache:
                 user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+                self.reportOper(user, "Bad password")
                 return True
             passwordMatch = self.ircd.functionCache[compareFunc](password, operData["password"])
         else:
             passwordMatch = (password == operData["password"])
         if not passwordMatch:
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+            self.reportOper(user, "Bad password")
             return True
         if "host" in operData:
             operHost = ircLower(operData["host"])
@@ -97,12 +101,15 @@ class UserOper(Command):
                     userHost = ircLower("{}@{}".format(user.ident, user.ip))
                     if not fnmatch(userHost, operHost):
                         user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+                        self.reportOper(user, "Bad host")
                         return True
         if self.ircd.runActionUntilFalse("opercheck", user, username, password, operData): # Allow other modules to implement additional checks
             user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+            self.reportOper(user, "Failed additional oper checks") #TODO: Provide a standardized way for these custom checks to give a reason
             return True
         user.setModes(self.ircd.serverID, "+o", [])
         user.sendMessage(irc.RPL_YOUREOPER, ":You are now an IRC operator")
+        self.reportOper(user, None)
         if "types" in operData:
             configuredOperTypes = self.ircd.config.getWithDefault("oper_types", {})
             operPermissions = set()
@@ -116,6 +123,11 @@ class UserOper(Command):
                 if server.nextClosest == self.ircd.serverID:
                     server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)
         return True
+
+    def reportOper(self, user, reason):
+        if reason:
+            log.msg("Failed OPER attempt from {} ({})".format(user.nick, reason), logLevel=logging.WARNING)
+        self.ircd.runActionStandard("operreport", user, reason)
 
 class ServerOper(Command):
     implements(ICommand)
