@@ -8,6 +8,12 @@ class IModuleData(Interface):
         or server commands.  If the IRCd determines that the module doesn't need to be loaded
         on all servers but it actually does, it will check this value.
         """)
+    multipleModulesForServers = Attribute("""
+        If the functionality presented by this module to other servers is also represented
+        by other modules and each module will only be loaded on some of the servers, this flag
+        will prevent the autocalculation from determining that your module must be loaded on
+        all servers.
+        """)
     core = Attribute("Always false for custom modules.")
     
     def hookIRCd(ircd):
@@ -104,6 +110,7 @@ class IModuleData(Interface):
 
 class ModuleData(object):
     requiredOnAllServers = False
+    multipleModulesForServers = False
     core = False
     
     def hookIRCd(self, ircd):
