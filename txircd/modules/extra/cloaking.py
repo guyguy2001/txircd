@@ -87,6 +87,9 @@ class HostCloaking(ModuleData, Mode):
         return "{}.IP".format(".".join(hashedParts))
 
     def load(self):
+        self.rehash()
+
+    def rehash(self):
         try:
             self.cloakingSalt = self.ircd.config["cloaking_salt"]
         except KeyError:
