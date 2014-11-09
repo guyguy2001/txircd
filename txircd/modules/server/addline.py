@@ -20,6 +20,7 @@ class AddlineCommand(ModuleData, Command):
 
     def propagateAddXLine(self, linetype, mask, setter, created, duration, reason):
         created = str(created)
+        duration = str(duration)
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
                 server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=self.ircd.serverID)
@@ -27,7 +28,7 @@ class AddlineCommand(ModuleData, Command):
     def burstXLines(self, server, linetype, lines):
         for mask, linedata in lines.iteritems():
             server.sendMessage("ADDLINE", linetype, mask, linedata["setter"], str(linedata["created"]),
-                               linedata["duration"], ":{}".format(linedata["reason"]), prefix=self.ircd.serverID)
+                               str(linedata["duration"]), ":{}".format(linedata["reason"]), prefix=self.ircd.serverID)
 
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
