@@ -104,11 +104,6 @@ class ServerUID(ModuleData, Command):
                     newUser.changeNick(newUser.uuid, server)
         if newUser.nick is None: # wasn't set by above logic
             newUser.changeNick(data["nick"], server)
-        newUser.register("connection", True)
-        newUser.register("USER", True)
-        newUser.register("NICK", True)
-        connectTimestamp = str(timestamp(connectTime))
-        nickTimestamp = str(timestamp(nickTime))
         modeList = ["+"]
         params = []
         for mode, param in data["modes"].iteritems():
@@ -122,6 +117,11 @@ class ServerUID(ModuleData, Command):
                 if param is not None:
                     params.append(param)
         newUser.setModes(server.serverID, "".join(modeList), params)
+        newUser.register("connection", True)
+        newUser.register("USER", True)
+        newUser.register("NICK", True)
+        connectTimestamp = str(timestamp(connectTime))
+        nickTimestamp = str(timestamp(nickTime))
         modeString = newUser.modeString(None)
         finalGecos = ":{}".format(newUser.gecos)
         for remoteServer in self.ircd.servers.itervalues():

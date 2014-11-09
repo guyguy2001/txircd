@@ -114,6 +114,8 @@ class ModeCommand(ModuleData):
         del users[:]
     
     def sendUserModesToServers(self, user, source, sourceName, modes):
+        if not user.isRegistered():
+            return # If the user isn't registered yet, it's a remote user for whom we just received modes
         modeOuts = self.getOutputModes(modes, False)
         
         if source[:3] == self.ircd.serverID:
