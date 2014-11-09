@@ -82,8 +82,7 @@ class ELineCommand(ModuleData, Command):
                 createdTS = timestamp(now())
                 reason = data["reason"]
                 self.addELine("E", exceptmask, setter, createdTS, duration, reason)
-                self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, linedata["setter"], linedata["created"],
-                               duration, ":{}".format(linedata["reason"]))
+                self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, setter, createdTS, duration, ":{}".format(reason))
                 if duration > 0:
                     user.sendMessage("NOTICE", ":*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
                 else:
