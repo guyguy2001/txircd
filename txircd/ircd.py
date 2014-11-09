@@ -194,7 +194,7 @@ class IRCd(Service):
                 newServerCommands[command[0]] = []
             newServerCommands[command[0]].append((command[2], command[1]))
             common = True
-        if not common or multipleModulesForServers:
+        if not common or module.multipleModulesForServers:
             common = module.requiredOnAllServers
         
         self.loadedModules[module.name] = module
