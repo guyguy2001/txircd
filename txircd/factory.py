@@ -10,10 +10,7 @@ class UserFactory(Factory):
         self.ircd = ircd
     
     def buildProtocol(self, addr):
-        try:
-            return self.protocol(self.ircd, unmapIPv4(addr.host))
-        except DenyConnection:
-            return None
+        return self.protocol(self.ircd, unmapIPv4(addr.host))
 
 class ServerListenFactory(Factory):
     protocol = IRCServer
@@ -32,6 +29,3 @@ class ServerConnectFactory(ClientFactory):
     
     def buildProtocol(self, addr):
         return self.protocol(self.ircd, unmapIPv4(addr.host), False)
-
-class DenyConnection(Exception):
-    pass
