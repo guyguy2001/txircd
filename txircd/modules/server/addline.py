@@ -26,7 +26,7 @@ class AddlineCommand(ModuleData, Command):
 
     def burstXLines(self, server, linetype, lines):
         for mask, linedata in lines.iteritems():
-            server.sendMessage("ADDLINE", linetype, mask, linedata["setter"], linedata["created"],
+            server.sendMessage("ADDLINE", linetype, mask, linedata["setter"], str(linedata["created"]),
                                linedata["duration"], ":{}".format(linedata["reason"]), prefix=self.ircd.serverID)
 
     def parseParams(self, server, params, prefix, tags):
