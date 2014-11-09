@@ -5,7 +5,7 @@ from zope.interface import implements
 class StatusReport(ModuleData):
     implements(IPlugin, IModuleData)
     
-    name = "StatusReport"
+    name = "ChannelStatusReport"
     core = True
     
     def hookIRCd(self, ircd):
