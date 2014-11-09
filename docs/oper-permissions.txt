@@ -99,6 +99,15 @@ command-censor         Censor               Allows the use of the CENSOR
 command-globops        Globops              Allows the use of the GLOBOPS
                                             command to send a notice to opers
                                             who have permission to view them.
+command-gloadmodule    GlobalLoad           Allows the use of the GLOADMODULE
+                                            command to load a module on all
+                                            servers on the network.
+command-greloadmodule  GlobalLoad           Allows the use of the GRELOADMODULE
+                                            command to reload a module on all
+                                            servers on the network.
+command-gunloadmodule  GlobalLoad           Allows the use of the GUNLOADMODULE
+                                            command to unload a module on all
+                                            servers on the network.
 command-sajoin         SajoinCommand        Allows the use of the SAJOIN
                                             command to force join a user to a
                                             channel.
