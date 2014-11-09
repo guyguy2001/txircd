@@ -66,7 +66,8 @@ class Service(ModuleData):
         self.user.register("NICK")
     
     def unload(self):
-        self.user.disconnect("Unloading module")
+        if user.uuid in self.ircd.users: # If we're shutting down the IRCd, the users dict has already been emptied
+            self.user.disconnect("Unloading module")
 
     def actions(self):
         return [("localnickcollision", 20, self.handleNickCollision)]
