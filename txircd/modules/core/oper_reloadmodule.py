@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -44,7 +45,7 @@ class ReloadModuleCommand(ModuleData, Command):
             try:
                 self.ircd.reloadModule(moduleName)
                 user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, ":Module successfully reloaded")
-            except ValueError as e:
+            except ModuleLoadError as e:
                 user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":{}; module is now unloaded".format(e.message))
         return True
 
