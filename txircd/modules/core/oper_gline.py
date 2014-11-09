@@ -117,6 +117,7 @@ class GLineCommand(ModuleData, Command):
         self.ircd.storage["glines"] = self.banlist
 
     def burstGLines(self, server):
+        self.expireGLines()
         self.ircd.runActionStandard("burstxlines", server, "G", self.banlist)
 
     def registerCheck(self, user):

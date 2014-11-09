@@ -115,6 +115,7 @@ class ZLineCommand(ModuleData, Command):
         self.ircd.storage["zlines"] = self.banlist
 
     def burstZLines(self, server):
+        self.expireZLines()
         self.ircd.runActionStandard("burstxlines", server, "Z", self.banlist)
 
     def connectCheck(self, user):

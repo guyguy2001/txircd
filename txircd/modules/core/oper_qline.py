@@ -118,6 +118,7 @@ class QLineCommand(ModuleData, Command):
         self.ircd.storage["qlines"] = self.banlist
 
     def burstQLines(self, server):
+        self.expireQLines()
         self.ircd.runActionStandard("burstxlines", server, "Q", self.banlist)
 
     def registerCheck(self, user):

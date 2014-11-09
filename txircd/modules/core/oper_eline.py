@@ -124,6 +124,7 @@ class ELineCommand(ModuleData, Command):
                 u.disconnect("Banned: Exception removed ({})".format(reason))
 
     def burstELines(self, server):
+        self.expireELines()
         self.ircd.runActionStandard("burstxlines", server, "E", self.exceptlist)
 
     def registerCheck(self, user):

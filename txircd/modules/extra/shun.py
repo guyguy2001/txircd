@@ -113,6 +113,7 @@ class ShunCommand(ModuleData, Command):
         self.ircd.storage["shuns"] = self.banlist
 
     def burstShuns(self, server):
+        self.expireShuns()
         self.ircd.runActionStandard("burstxlines", server, "SHUN", self.banlist)
 
     def checkStatsType(self, typeName):
