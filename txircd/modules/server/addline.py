@@ -46,3 +46,5 @@ class AddlineCommand(ModuleData, Command):
             if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
                 remoteServer.sendMessage("ADDLINE", data["linetype"], data["mask"], data["setter"], data["created"], data["duration"], data["reason"], prefix=self.ircd.serverID)
         return True
+
+addlineCmd = AddlineCommand()

@@ -36,3 +36,5 @@ class DellineCommand(ModuleData, Command):
             if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
                 remoteServer.sendMessage("DELLINE", data["linetype"], data["mask"], prefix=self.ircd.serverID)
         return True
+
+dellineCmd = DellineCommand()
