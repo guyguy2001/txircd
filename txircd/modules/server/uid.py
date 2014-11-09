@@ -109,6 +109,19 @@ class ServerUID(ModuleData, Command):
         newUser.register("NICK", True)
         connectTimestamp = str(timestamp(connectTime))
         nickTimestamp = str(timestamp(nickTime))
+        modeList = ["+"]
+        params = []
+        for mode, param in data["modes"].iteritems():
+            modeType = self.ircd.userModeTypes[mode]
+            if modeType == ModeType.List:
+                for p in param:
+                    modeList.append(mode)
+                    params.append(param[0])
+            else:
+                modeList.append(mode)
+                if param is not None:
+                    params.append(param)
+        user.setModes(server.serverID, "".join(modeList), params)
         modeString = newUser.modeString(None)
         finalGecos = ":{}".format(newUser.gecos)
         for remoteServer in self.ircd.servers.itervalues():
