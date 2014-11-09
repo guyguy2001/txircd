@@ -121,7 +121,7 @@ class ServerUID(ModuleData, Command):
                 modeList.append(mode)
                 if param is not None:
                     params.append(param)
-        user.setModes(server.serverID, "".join(modeList), params)
+        newUser.setModes(server.serverID, "".join(modeList), params)
         modeString = newUser.modeString(None)
         finalGecos = ":{}".format(newUser.gecos)
         for remoteServer in self.ircd.servers.itervalues():
