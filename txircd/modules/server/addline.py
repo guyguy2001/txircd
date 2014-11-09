@@ -19,6 +19,7 @@ class AddlineCommand(ModuleData, Command):
         return [ ("ADDLINE", 10, self) ]
 
     def propagateAddXLine(self, linetype, mask, setter, created, duration, reason):
+        created = str(created)
         for server in self.ircd.servers.itervalues():
             if server.nextClosest == self.ircd.serverID:
                 server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=self.ircd.serverID)
