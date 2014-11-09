@@ -69,47 +69,25 @@ class ELineCommand(ModuleData, Command):
             if exceptmask not in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                del self.exceptlist[exceptmask]
-                self.ircd.storage["elines"] = self.exceptlist
+                self.removeELine("E", exceptmask)
                 self.ircd.runActionStandard("propagateremovexline", "E", exceptmask)
                 user.sendMessage("NOTICE", ":*** E:Line removed on {}.".format(exceptmask))
-                bannedUsers = {}
-                for u in self.ircd.users.itervalues():
-                    # Clear E:line cache and rematch
-                    if "eline_match" in u.cache:
-                        del u.cache["eline_match"]
-                    if self.matchELine(u):
-                        u.cache["eline_match"] = True
-                    result = self.ircd.runActionUntilValue("xlinerematch", user)
-                    if result:
-                        bannedUsers[u.uuid] = result
-                for uid, reason in bannedUsers.iteritems():
-                    u = self.ircd.users[uid]
-                    u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
-                    u.disconnect("Banned: Exception removed ({})".format(reason))
         else:
             # Setting E:line
             duration = data["duration"]
             if exceptmask in self.exceptlist:
                 user.sendMessage("NOTICE", ":*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
             else:
-                linedata = {
-                    "setter": user.hostmaskWithRealHost(),
-                    "created": timestamp(now()),
-                    "duration": duration,
-                    "reason": data["reason"]
-                }
-                self.exceptlist[exceptmask] = linedata
+                setter = user.hostmaskWithRealHost()
+                createdTS = timestamp(now())
+                reason = data["reason"]
+                self.addELine("E", exceptmask, setter, createdTS, duration, reason)
                 self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, linedata["setter"], linedata["created"],
                                duration, ":{}".format(linedata["reason"]))
                 if duration > 0:
                     user.sendMessage("NOTICE", ":*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
                 else:
                     user.sendMessage("NOTICE", ":*** Permanent E:Line added on {}.".format(exceptmask))
-                self.ircd.storage["elines"] = self.exceptlist
-                for user in self.ircd.users.itervalues():
-                    if self.matchELine(user):
-                        user.cache["eline_match"] = True
         return True
 
     def addELine(self, linetype, mask, setter, created, duration, reason):
@@ -121,11 +99,30 @@ class ELineCommand(ModuleData, Command):
                     "duration": duration,
                     "reason": reason
                 }
+        self.ircd.storage["elines"] = self.exceptlist
+        for user in self.ircd.users.itervalues():
+            if self.matchELine(user):
+                user.cache["eline_match"] = True
 
     def removeELine(self, linetype, mask):
         if linetype != "E" or mask not in self.exceptlist:
             return
         del self.exceptlist[mask]
+        self.ircd.storage["elines"] = self.exceptlist
+        bannedUsers = {}
+        for u in self.ircd.users.itervalues():
+            # Clear E:line cache and rematch
+            if "eline_match" in u.cache:
+                del u.cache["eline_match"]
+            if self.matchELine(u):
+                u.cache["eline_match"] = True
+            result = self.ircd.runActionUntilValue("xlinerematch", user)
+            if result:
+                bannedUsers[u] = result
+        for u, reason in bannedUsers.iteritems():
+            if u.uuid[:3] == self.ircd.serverID:
+                u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+                u.disconnect("Banned: Exception removed ({})".format(reason))
 
     def burstELines(self, server):
         self.ircd.runActionStandard("burstxlines", server, "E", self.exceptlist)

@@ -67,8 +67,7 @@ class ShunCommand(ModuleData, Command):
             if banmask not in self.banlist:
                 user.sendMessage("NOTICE", ":*** Shun for {} does not currently exist; check /stats S for a list of active shuns.".format(banmask))
             else:
-                del self.banlist[data["mask"]]
-                self.ircd.storage["shuns"] = self.banlist
+                self.removeShun("SHUN", banmask)
                 self.ircd.runActionStandard("propagateremovexline", "SHUN", banmask)
                 user.sendMessage("NOTICE", ":*** Shun removed on {}.".format(data["mask"]))
         else:
@@ -77,20 +76,15 @@ class ShunCommand(ModuleData, Command):
             if banmask in self.banlist:
                 user.sendMessage("NOTICE", ":*** There's already a shun set on {}! Check /stats S for a list of active shuns.".format(banmask))
             else:
-                linedata = {
-                    "setter": user.hostmaskWithRealHost(),
-                    "created": timestamp(now()),
-                    "duration": duration,
-                    "reason": data["reason"]
-                }
-                self.banlist[banmask] = linedata
-                self.ircd.runActionStandard("propagateaddxline", "SHUN", banmask, linedata["setter"], linedata["created"],
-                               duration, ":{}".format(linedata["reason"]))
+                setter = user.hostmaskWithRealHost()
+                createdTS = timestamp(now())
+                reason = data["reason"]
+                self.addShun("SHUN", banmask, setter, createdTS, duration, reason)
+                self.ircd.runActionStandard("propagateaddxline", "SHUN", banmask, setter, createdTS, duration, ":{}".format(reason))
                 if duration > 0:
                     user.sendMessage("NOTICE", ":*** Timed shun added on {}, to expire in {} seconds.".format(banmask, duration))
                 else:
                     user.sendMessage("NOTICE", ":*** Permanent shun added on {}.".format(banmask))
-                self.ircd.storage["shuns"] = self.banlist
         return True
 
     def commandCheck(self, user, command, data):
@@ -110,11 +104,13 @@ class ShunCommand(ModuleData, Command):
                     "duration": duration,
                     "reason": reason
                 }
+        self.ircd.storage["shuns"] = self.banlist
 
     def removeShun(self, linetype, mask):
         if linetype != "SHUN" or mask not in self.banlist:
             return
         del self.banlist[mask]
+        self.ircd.storage["shuns"] = self.banlist
 
     def burstShuns(self, server):
         self.ircd.runActionStandard("burstxlines", server, "SHUN", self.banlist)
