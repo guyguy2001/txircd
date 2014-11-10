@@ -33,20 +33,32 @@ class AddlineCommand(ModuleData, Command):
     def parseParams(self, server, params, prefix, tags):
         if len(params) != 6:
             return None
-        return {
-            "linetype": params[0],
-            "mask": params[1],
-            "setter": params[2],
-            "created": params[3],
-            "duration": params[4],
-            "reason": params[5]
-        }
+        try:
+            return {
+                "linetype": params[0],
+                "mask": params[1],
+                "setter": params[2],
+                "created": int(params[3]),
+                "duration": int(params[4]),
+                "reason": params[5]
+            }
+        except ValueError:
+            return None
 
     def execute(self, server, data):
-        self.ircd.runActionStandard("addxline", data["linetype"], data["mask"], data["setter"], data["created"], data["duration"], data["reason"])
+        lineType = data["linetype"]
+        mask = data["mask"]
+        setter = data["setter"]
+        createdTS = data["created"]
+        duration = data["duration"]
+        reason = data["reason"]
+        self.ircd.runActionStandard("addxline", lineType, mask, setter, createdTS, duration, reason)
+        createdTS = str(createdTS)
+        duration = str(duration)
+        reason = ":{}".format(reason)
         for remoteServer in self.ircd.servers.itervalues():
             if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-                remoteServer.sendMessage("ADDLINE", data["linetype"], data["mask"], data["setter"], data["created"], data["duration"], ":{}".format(data["reason"]), prefix=self.ircd.serverID)
+                remoteServer.sendMessage("ADDLINE", lineType, mask, setter, createdTS, duration, reason, prefix=self.ircd.serverID)
         return True
 
 addlineCmd = AddlineCommand()
