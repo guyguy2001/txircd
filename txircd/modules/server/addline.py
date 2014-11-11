@@ -5,7 +5,7 @@ from zope.interface import implements
 class AddlineCommand(ModuleData, Command):
     implements(IPlugin, IModuleData, ICommand)
 
-    name = "AddlineCommand"
+    name = "ServerAddline"
     core = True
 
     def hookIRCd(self, ircd):

@@ -5,7 +5,7 @@ from zope.interface import implements
 class DellineCommand(ModuleData, Command):
     implements(IPlugin, IModuleData, ICommand)
 
-    name = "DellineCommand"
+    name = "ServerDelline"
     core = True
 
     def hookIRCd(self, ircd):
