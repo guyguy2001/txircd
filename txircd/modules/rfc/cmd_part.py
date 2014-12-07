@@ -50,10 +50,13 @@ class UserPart(Command):
         if params[0] not in self.ircd.channels:
             user.sendSingleError("PartCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
             return None
+        channel = self.ircd.channels[params[0]]
+        if user not in channel.users:
+            return None
         reason = params[1] if len(params) > 1 else ""
         reason = reason[:self.ircd.config.getWithDefault("part_message_length", 300)]
         return {
-            "channel": self.ircd.channels[params[0]],
+            "channel": channel,
             "reason": reason
         }
     
