@@ -37,6 +37,8 @@ class WhoCommand(ModuleData, Command):
         mask = data["mask"]
         if mask in ("0", "*"):
             for targetUser in self.ircd.users.itervalues():
+                if not targetUser.isRegistered():
+                    continue
                 if not set(user.channels).intersection(targetUser.channels) and self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is not False:
                     matchingUsers.append(targetUser)
         elif mask in self.ircd.channels:
