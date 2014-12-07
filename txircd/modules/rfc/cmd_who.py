@@ -46,6 +46,8 @@ class WhoCommand(ModuleData, Command):
                     matchingUsers.append(targetUser)
         else:
             for targetUser in self.ircd.users.itervalues():
+                if not targetUser.isRegistered():
+                    continue # We should exclude all unregistered users from this search
                 if self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is False:
                     continue
                 lowerMask = ircLower(mask)
