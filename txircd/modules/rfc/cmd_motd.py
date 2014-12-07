@@ -44,7 +44,7 @@ class MessageOfTheDay(ModuleData, Command):
         if not self.motd:
             user.sendMessage(irc.ERR_NOMOTD, ":Message of the day file is missing.")
         else:
-            user.sendMessage(irc.RPL_MOTDSTART, ":{} Message of the Day".format(self.ircd.config["network_name"]))
+            user.sendMessage(irc.RPL_MOTDSTART, ":{} Message of the Day".format(self.ircd.name))
             for line in self.motd:
                 user.sendMessage(irc.RPL_MOTD, ":{}".format(line))
             user.sendMessage(irc.RPL_ENDOFMOTD, ":End of message of the day")
