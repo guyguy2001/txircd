@@ -212,9 +212,10 @@ class NickServ(DBService):
             # Note that throughout this service we treat a nick as possibly having multiple owners,
             # even though we don't allow this. This is because it is technically possible in the database,
             # and we should try to act correctly no matter what the data says.
+            newLowerNick = ircLower(newNick)
             myNicks = [nick for donor, nick in results if donor == donorID]
-            nickOwners = [donor for donor, nick in results if nick == newNick]
-            if newNick in myNicks:
+            nickOwners = [donor for donor, nick in results if nick == newLowerNick]
+            if newLowerNick in myNicks:
                 if not quiet:
                     self.tellUser(user, "The nick {} is already registered to your account.".format(newNick))
                 return
@@ -235,7 +236,7 @@ class NickServ(DBService):
             self.query(insertSuccess,
                        insertFail,
                        "INSERT INTO ircnicks(donor_id, nick) VALUES (%s, %s)",
-                       donorID, ircLower(newNick))
+                       donorID, newLowerNick)
 
         def insertSuccess(result):
             self.tellUser(user, ("Nickname {} is now registered to your account "
