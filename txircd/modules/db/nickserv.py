@@ -60,18 +60,20 @@ class NickServ(DBService):
             "ID": (self.handleLogin, False, "This is an alias for IDENTIFY",
                    "USAGE: \x02ID email password\n"
                    "ALTERNATE: \x02ID email:password\n"
-                   "This command is an alias for LOGIN, for compatibility with some clients."),
+                   "This command is an alias for IDENTIFY."),
             "LOGIN": (self.handleLogin, False, "This is an alias for IDENTIFY",
                          "USAGE: \x02LOGIN email password\n"
                          "ALTERNATE: \x02LOGIN email:password\n"
-                         "This command is an alias for IDENTIFY, for compatibility with some clients."),
+                         "This command is an alias for IDENTIFY, for backwards compatibility.\n"
+                         "The LOGIN command is deprecated; use the IDENTIFY command instead."),
             "IDENTIFY": (self.handleLogin, False, "Log into your donor account",
                       "USAGE: \x02IDENTIFY email password\n"
                       "ALTERNATE: \x02IDENTIFY email:password\n"
                       "Log into the donor account specified by email with the given password. "
                       "The first form (with a space) is preferred, the other form is available "
-                      "for compatability with some clients. If it isn't already, your current nick "
-                      "will be associated with the account and protected from impersonation."),
+                      "for compatibility with some clients in the NickServ password field of the "
+                      "server settings. If it isn't already, your current nick will be associated "
+                      "with the account and protected from impersonation."),
             "LOGOUT": (self.handleLogout, False, "Log out of your donor account",
                        "USAGE: \x02LOGOUT\x02\n"
                        "Log out of whatever account you're currently logged in to. "
@@ -128,7 +130,7 @@ class NickServ(DBService):
             else:
                 email, password = params[:2]
         except ValueError:
-            self.tellUser(user, "USAGE: \x02LOGIN email password")
+            self.tellUser(user, "USAGE: \x02IDENTIFY email password")
             return
 
         if getDonorID(user):
@@ -325,7 +327,7 @@ class NickServ(DBService):
                 del self.nick_checks[user, nick]
                 return
             self.nick_checks[user, nick] = nsTimer, owners
-            self.tellUser(user, "This is a registered nick. Please use \x02/msg NickServ login EMAIL PASSWORD\x02 "
+            self.tellUser(user, "This is a registered nick. Please use \x02/msg NickServ identify EMAIL PASSWORD\x02 "
                                 "to verify your identity")
             if not nsTimer.active():
                 bothComplete()
