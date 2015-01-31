@@ -3,23 +3,23 @@ from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
 class AutoUserModes(ModuleData):
-    implements(IPlugin, IModuleData)
+	implements(IPlugin, IModuleData)
 
-    name = "AutoUserModes"
+	name = "AutoUserModes"
 
-    def hookIRCd(self, ircd):
-        self.ircd = ircd
+	def hookIRCd(self, ircd):
+		self.ircd = ircd
 
-    def actions(self):
-        return [ ("welcome", 50, self.autoSetUserModes) ]
+	def actions(self):
+		return [ ("welcome", 50, self.autoSetUserModes) ]
 
-    def autoSetUserModes(self, user):
-        try:
-            modes = self.ircd.config["client_umodes_on_connect"]
-            params = modes.split()
-            modes = params.pop(0)
-            user.setModes(self.ircd.serverID, modes, params)
-        except KeyError:
-            pass # No umodes defined. No action required.
+	def autoSetUserModes(self, user):
+		try:
+			modes = self.ircd.config["client_umodes_on_connect"]
+			params = modes.split()
+			modes = params.pop(0)
+			user.setModes(self.ircd.serverID, modes, params)
+		except KeyError:
+			pass # No umodes defined. No action required.
 
 autoUserModes = AutoUserModes()

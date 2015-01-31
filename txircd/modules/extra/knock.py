@@ -13,106 +13,106 @@ irc.ERR_CHANOPEN = "713"
 irc.ERR_KNOCKONCHAN = "714"
 
 class Knock(ModuleData):
-    implements(IPlugin, IModuleData)
+	implements(IPlugin, IModuleData)
 
-    name = "Knock"
+	name = "Knock"
 
-    def hookIRCd(self, ircd):
-        self.ircd = ircd
+	def hookIRCd(self, ircd):
+		self.ircd = ircd
 
-    def actions(self):
-        return [ ("modeactioncheck-channel-K-commandpermission-KNOCK", 10, self.channelHasMode),
-                ("invite", 1, self.clearKnocksOnInvite) ]
+	def actions(self):
+		return [ ("modeactioncheck-channel-K-commandpermission-KNOCK", 10, self.channelHasMode),
+				("invite", 1, self.clearKnocksOnInvite) ]
 
-    def userCommands(self):
-        return [ ("KNOCK", 1, KnockCommand(self.ircd)) ]
+	def userCommands(self):
+		return [ ("KNOCK", 1, KnockCommand(self.ircd)) ]
 
-    def channelModes(self):
-        return [ ("K", ModeType.NoParam, NoKnockMode()) ]
+	def channelModes(self):
+		return [ ("K", ModeType.NoParam, NoKnockMode()) ]
 
-    def fullUnload(self):
-        for channel in self.ircd.channels.itervalues():
-            if "K" in channel.modes:
-                channel.setModes(self.ircd.serverID, "-K", [])
+	def fullUnload(self):
+		for channel in self.ircd.channels.itervalues():
+			if "K" in channel.modes:
+				channel.setModes(self.ircd.serverID, "-K", [])
 
-    def channelHasMode(self, channel, user, command, data):
-        if "K" in channel.modes:
-            return ""
-        return None
+	def channelHasMode(self, channel, user, command, data):
+		if "K" in channel.modes:
+			return ""
+		return None
 
-    def clearKnocksOnInvite(self, user, targetUser, channel):
-        if "knocks" in targetUser.cache and channel in targetUser.cache["knocks"]:
-            del targetUser.cache["knocks"][channel]
+	def clearKnocksOnInvite(self, user, targetUser, channel):
+		if "knocks" in targetUser.cache and channel in targetUser.cache["knocks"]:
+			del targetUser.cache["knocks"][channel]
 
 class KnockCommand(Command):
-    implements(ICommand)
+	implements(ICommand)
 
-    def __init__(self, ircd):
-        self.ircd = ircd
+	def __init__(self, ircd):
+		self.ircd = ircd
 
-    def parseParams(self, user, params, prefix, tags):
-        self.expireKnocks(user)
-        if not params:
-            user.sendSingleError("KnockParams", irc.ERR_NEEDMOREPARAMS, "KNOCK", ":Not enough paramters")
-            return None
-        if params[0] not in self.ircd.channels:
-            user.sendSingleError("KnockParams", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
-            return None
-        channel = self.ircd.channels[params[0]]
-        if user in channel.users:
-            user.sendSingleError("KnockParams", irc.ERR_KNOCKONCHAN, params[0], ":Can't KNOCK on {}, you are already on that channel".format(params[0]))
-            return None
-        if "i" not in channel.modes:
-            user.sendSingleError("KnockParams", irc.ERR_CHANOPEN, params[0], ":Can't KNOCK on {}, channel is open".format(params[0]))
-            return None
-        if "knocks" in user.cache and channel in user.cache["knocks"]:
-            user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, params[0], ":Can't KNOCK on {}, (only one KNOCK per {} seconds allowed)".format(params[0], self.ircd.config.getWithDefault("knock_delay", 300)))
-            return None
-        return {
-            "channel": channel,
-            "reason": " ".join(params[1:]) if len(params) > 1 else "has asked for an invite"
-        }
+	def parseParams(self, user, params, prefix, tags):
+		self.expireKnocks(user)
+		if not params:
+			user.sendSingleError("KnockParams", irc.ERR_NEEDMOREPARAMS, "KNOCK", ":Not enough paramters")
+			return None
+		if params[0] not in self.ircd.channels:
+			user.sendSingleError("KnockParams", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+			return None
+		channel = self.ircd.channels[params[0]]
+		if user in channel.users:
+			user.sendSingleError("KnockParams", irc.ERR_KNOCKONCHAN, params[0], ":Can't KNOCK on {}, you are already on that channel".format(params[0]))
+			return None
+		if "i" not in channel.modes:
+			user.sendSingleError("KnockParams", irc.ERR_CHANOPEN, params[0], ":Can't KNOCK on {}, channel is open".format(params[0]))
+			return None
+		if "knocks" in user.cache and channel in user.cache["knocks"]:
+			user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, params[0], ":Can't KNOCK on {}, (only one KNOCK per {} seconds allowed)".format(params[0], self.ircd.config.getWithDefault("knock_delay", 300)))
+			return None
+		return {
+			"channel": channel,
+			"reason": " ".join(params[1:]) if len(params) > 1 else "has asked for an invite"
+		}
 
-    def execute(self, user, data):
-        channel = data["channel"]
-        inviteLevel = self.ircd.config.getWithDefault("channel_minimum_level_invite", 100)
-        try:
-            inviteLevel = int(inviteLevel)
-        except ValueError:
-            try:
-                inviteLevel = self.ircd.channelStatuses[inviteLevel[0]][1]
-            except KeyError:
-                inviteLevel = 100
-        if "knocks" not in user.cache:
-            user.cache["knocks"] = WeakKeyDictionary()
-        user.cache["knocks"][channel] = timestamp(now())
-        for targetUser in channel.users:
-            if channel.userRank(targetUser) >= inviteLevel:
-                targetUser.sendMessage(irc.RPL_KNOCK, channel.name, user.nick, ":{}".format(data["reason"]))
-        user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
-        return True
+	def execute(self, user, data):
+		channel = data["channel"]
+		inviteLevel = self.ircd.config.getWithDefault("channel_minimum_level_invite", 100)
+		try:
+			inviteLevel = int(inviteLevel)
+		except ValueError:
+			try:
+				inviteLevel = self.ircd.channelStatuses[inviteLevel[0]][1]
+			except KeyError:
+				inviteLevel = 100
+		if "knocks" not in user.cache:
+			user.cache["knocks"] = WeakKeyDictionary()
+		user.cache["knocks"][channel] = timestamp(now())
+		for targetUser in channel.users:
+			if channel.userRank(targetUser) >= inviteLevel:
+				targetUser.sendMessage(irc.RPL_KNOCK, channel.name, user.nick, ":{}".format(data["reason"]))
+		user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
+		return True
 
-    def affectedChannels(self, user, data):
-        return [data["channel"]]
+	def affectedChannels(self, user, data):
+		return [data["channel"]]
 
-    def expireKnocks(self, user):
-        if "knocks" not in user.cache:
-            return
-        expiredKnocks = []
-        nowTS = timestamp(now())
-        for channel, knockTime in user.cache["knocks"].iteritems():
-            if knockTime + self.ircd.config.getWithDefault("knock_delay", 300) <= nowTS:
-                expiredKnocks.append(channel)
-        for channel in expiredKnocks:
-            del user.cache["knocks"][channel]
+	def expireKnocks(self, user):
+		if "knocks" not in user.cache:
+			return
+		expiredKnocks = []
+		nowTS = timestamp(now())
+		for channel, knockTime in user.cache["knocks"].iteritems():
+			if knockTime + self.ircd.config.getWithDefault("knock_delay", 300) <= nowTS:
+				expiredKnocks.append(channel)
+		for channel in expiredKnocks:
+			del user.cache["knocks"][channel]
 
 class NoKnockMode(Mode):
-    implements(IMode)
+	implements(IMode)
 
-    affectedActions = [ "commandpermission-KNOCK" ]
+	affectedActions = [ "commandpermission-KNOCK" ]
 
-    def apply(self, actionName, channel, param, user, command, data):
-        user.sendMessage(irc.ERR_CANNOTKNOCK, channel.name, ":Can't KNOCK on {}, +K is set".format(channel.name))
-        return False
+	def apply(self, actionName, channel, param, user, command, data):
+		user.sendMessage(irc.ERR_CANNOTKNOCK, channel.name, ":Can't KNOCK on {}, +K is set".format(channel.name))
+		return False
 
 knock = Knock()
