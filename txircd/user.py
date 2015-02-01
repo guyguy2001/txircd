@@ -213,9 +213,6 @@ class IRCUser(IRCBase):
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=[self] + userSendList)
 		self.ircd.runActionStandard("quit", self, reason, users=self)
-		channelList = copy(self.channels)
-		for channel in channelList:
-			self.leaveChannel(channel)
 		self.transport.loseConnection()
 	
 	def _timeoutRegistration(self):

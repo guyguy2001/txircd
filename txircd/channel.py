@@ -1,11 +1,12 @@
 from twisted.words.protocols import irc
 from txircd.utils import ModeType, now
+from weakref import WeakKeyDictionary
 
 class IRCChannel(object):
 	def __init__(self, ircd, name):
 		self.ircd = ircd
 		self.name = name[:64]
-		self.users = {}
+		self.users = WeakKeyDictionary()
 		self.modes = {}
 		self.existedSince = now()
 		self.topic = ""
