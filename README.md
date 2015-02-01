@@ -1,12 +1,10 @@
 Twisted IRC Deamon
 ==================
 
-A modular IRC deamon written in Python Twisted
+A modular IRC deamon written in Python using the Twisted library.
 
-If you wanna hack around with it do the following:
+To install, see the INSTALL file.
 
-* Clone the repo
-* Make a virtualenv
-* Install the requirements (`pip install -r requirements.txt` after virtualenv activation)
-* Run `twistd txircd`
-* Connect to the IRC Daemon
+This is a development version, and not everything is guaranteed to work yet.
+Please report bugs to our Github bug tracker or talk to us about txircd at
+irc.desertbus.org.
