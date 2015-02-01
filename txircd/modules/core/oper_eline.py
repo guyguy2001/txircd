@@ -12,9 +12,6 @@ class ELineCommand(ModuleData, Command):
 	core = True
 	exceptlist = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("ELINE", 1, self) ]
 
@@ -29,13 +26,13 @@ class ELineCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:
-			user.sendSingleError("ElineParams", irc.ERR_NEEDMOREPARAMS, "ELINE", ":Not enough parameters")
+			user.sendSingleError("ElineParams", irc.ERR_NEEDMOREPARAMS, "ELINE", "Not enough parameters")
 			return None
 		else:
 			exceptmask = params[0]
@@ -67,26 +64,26 @@ class ELineCommand(ModuleData, Command):
 		if "reason" not in data:
 			# Unsetting E:line
 			if exceptmask not in self.exceptlist:
-				user.sendMessage("NOTICE", ":*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
+				user.sendMessage("NOTICE", "*** E:Line for {} does not currently exist; check /stats E for a list of active E:Lines.".format(exceptmask))
 			else:
 				self.removeELine("E", exceptmask)
 				self.ircd.runActionStandard("propagateremovexline", "E", exceptmask)
-				user.sendMessage("NOTICE", ":*** E:Line removed on {}.".format(exceptmask))
+				user.sendMessage("NOTICE", "*** E:Line removed on {}.".format(exceptmask))
 		else:
 			# Setting E:line
 			duration = data["duration"]
 			if exceptmask in self.exceptlist:
-				user.sendMessage("NOTICE", ":*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
+				user.sendMessage("NOTICE", "*** There's already a E:Line set on {}! Check /stats E for a list of active E:Lines.".format(exceptmask))
 			else:
 				setter = user.hostmaskWithRealHost()
 				createdTS = timestamp(now())
 				reason = data["reason"]
 				self.addELine("E", exceptmask, setter, createdTS, duration, reason)
-				self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, setter, createdTS, duration, ":{}".format(reason))
+				self.ircd.runActionStandard("propagateaddxline", "E", exceptmask, setter, createdTS, duration, reason)
 				if duration > 0:
-					user.sendMessage("NOTICE", ":*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
+					user.sendMessage("NOTICE", "*** Timed E:Line added on {}, to expire in {} seconds.".format(exceptmask, duration))
 				else:
-					user.sendMessage("NOTICE", ":*** Permanent E:Line added on {}.".format(exceptmask))
+					user.sendMessage("NOTICE", "*** Permanent E:Line added on {}.".format(exceptmask))
 		return True
 
 	def addELine(self, linetype, mask, setter, created, duration, reason):
@@ -120,7 +117,7 @@ class ELineCommand(ModuleData, Command):
 				bannedUsers[u] = result
 		for u, reason in bannedUsers.iteritems():
 			if u.uuid[:3] == self.ircd.serverID:
-				u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+				u.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@xyz.com for help."))
 				u.disconnect("Banned: Exception removed ({})".format(reason))
 
 	def burstELines(self, server):

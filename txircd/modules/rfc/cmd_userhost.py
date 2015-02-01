@@ -9,15 +9,12 @@ class UserhostCommand(ModuleData, Command):
 	name = "UserhostCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("USERHOST", 1, self) ]
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("UserhostParams", irc.ERR_NEEDMOREPARAMS, "USERHOST", ":Not enough parameters")
+			user.sendSingleError("UserhostParams", irc.ERR_NEEDMOREPARAMS, "USERHOST", "Not enough parameters")
 			return None
 		return {
 			"nicks": params[:5]
@@ -39,7 +36,7 @@ class UserhostCommand(ModuleData, Command):
 				output += "+"
 			output += "{}@{}".format(targetUser.ident, targetUser.host)
 			userHosts.append(output)
-		user.sendMessage(irc.RPL_USERHOST, ":{}".format(" ".join(userHosts)))
+		user.sendMessage(irc.RPL_USERHOST, " ".join(userHosts))
 		return True
 
 userhostCmd = UserhostCommand()

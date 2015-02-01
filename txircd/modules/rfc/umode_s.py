@@ -16,9 +16,6 @@ class ServerNoticeMode(ModuleData, Mode):
 	core = True
 	subscribeLists = {}
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userModes(self):
 		return [ ("s", ModeType.List, self) ]
 
@@ -33,7 +30,7 @@ class ServerNoticeMode(ModuleData, Mode):
 				return True
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "servernotice-type-{}".format(ircLower(param)), users=[user]):
 				return True
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -45,7 +42,7 @@ class ServerNoticeMode(ModuleData, Mode):
 				if user.uuid[:3] == self.ircd.serverID:
 					self.subscribeLists[param].add(user)
 			else:
-				user.sendMessage(irc.ERR_INVALIDSNOTYPE, param, ":Invalid server notice type")
+				user.sendMessage(irc.ERR_INVALIDSNOTYPE, param, "Invalid server notice type")
 		else:
 			if param in self.subscribeLists and user in self.subscribeLists[param]:
 				self.subscribeLists[param].remove(user)
@@ -54,7 +51,7 @@ class ServerNoticeMode(ModuleData, Mode):
 		mask = snodata["mask"]
 		if mask in self.subscribeLists:
 			for u in self.subscribeLists[mask]:
-				u.sendMessage("NOTICE", ":*** {}".format(snodata["message"]))
+				u.sendMessage("NOTICE", "*** {}".format(snodata["message"]))
 
 	def checkSet(self, user, param):
 		return ircLower(param).split(",")
@@ -66,6 +63,6 @@ class ServerNoticeMode(ModuleData, Mode):
 		if "s" in target.modes:
 			for mask in target.modes["s"]:
 				target.sendMessage(irc.RPL_LISTMODE, "s", mask[0], mask[1], str(timestamp(mask[2])))
-		target.sendMessage(irc.RPL_ENDOFLISTMODE, ":End of server notice type list")
+		target.sendMessage(irc.RPL_ENDOFLISTMODE, "End of server notice type list")
 
 snoMode = ServerNoticeMode()

@@ -12,9 +12,6 @@ class QLineCommand(ModuleData, Command):
 	core = True
 	banlist = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("QLINE", 1, self) ]
 
@@ -30,22 +27,22 @@ class QLineCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:
-			user.sendSingleError("GlineParams", irc.ERR_NEEDMOREPARAMS, "QLINE", ":Not enough parameters")
+			user.sendSingleError("GlineParams", irc.ERR_NEEDMOREPARAMS, "QLINE", "Not enough parameters")
 			return None
 		else:
 			banmask = params[0]
 			bancheck = banmask.replace("*", "")
 			if not bancheck or ("*" in banmask and bancheck == "?"):
-				user.sendSingleError("QlineParams", "NOTICE", ":*** That Q:Line will match all nicks! Please check your nick mask and try again.")
+				user.sendSingleError("QlineParams", "NOTICE", "*** That Q:Line will match all nicks! Please check your nick mask and try again.")
 				return None
 			if not isValidNick(banmask):
-				user.sendSingleError("QlineParams", "NOTICE", ":*** That isn't a valid nick mask and won't match any nicks. Please check your nick mask and try again.")
+				user.sendSingleError("QlineParams", "NOTICE", "*** That isn't a valid nick mask and won't match any nicks. Please check your nick mask and try again.")
 				return None
 			banmask = ircLower(banmask)
 			self.expireQLines()
@@ -69,26 +66,26 @@ class QLineCommand(ModuleData, Command):
 		if "reason" not in data:
 			# Unsetting Q:line
 			if banmask not in self.banlist:
-				user.sendMessage("NOTICE", ":*** Q:Line for {} does not currently exist; check /stats Q for a list of active Q:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** Q:Line for {} does not currently exist; check /stats Q for a list of active Q:Lines.".format(banmask))
 			else:
 				self.removeQLine("Q", banmask)
 				self.ircd.runActionStandard("propagateremovexline", "Q", banmask)
-				user.sendMessage("NOTICE", ":*** Q:Line removed on {}.".format(banmask))
+				user.sendMessage("NOTICE", "*** Q:Line removed on {}.".format(banmask))
 		else:
 			# Setting Q:line
 			duration = data["duration"]
 			if banmask in self.banlist:
-				user.sendMessage("NOTICE", ":*** There's already a Q:Line set on {}! Check /stats Q for a list of active Q:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** There's already a Q:Line set on {}! Check /stats Q for a list of active Q:Lines.".format(banmask))
 			else:
 				setter = user.hostmaskWithRealHost()
 				createdTS = timestamp(now())
 				reason = data["reason"]
 				self.addQLine("Q", banmask, setter, createdTS, duration, reason)
-				self.ircd.runActionStandard("propagateaddxline", "Q", banmask, setter, createdTS, duration, ":{}".format(reason))
+				self.ircd.runActionStandard("propagateaddxline", "Q", banmask, setter, createdTS, duration, reason)
 				if duration > 0:
-					user.sendMessage("NOTICE", ":*** Timed Q:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+					user.sendMessage("NOTICE", "*** Timed Q:Line added on {}, to expire in {} seconds.".format(banmask, duration))
 				else:
-					user.sendMessage("NOTICE", ":*** Permanent Q:Line added on {}.".format(banmask))
+					user.sendMessage("NOTICE", "*** Permanent Q:Line added on {}.".format(banmask))
 		return True
 
 	def addQLine(self, linetype, mask, setter, created, duration, reason):
@@ -109,7 +106,7 @@ class QLineCommand(ModuleData, Command):
 		for u, reason in bannedUsers.iteritems():
 			if u.uuid[:3] == self.ircd.serverID:
 				u.changeNick(uid)
-				u.sendMessage("NOTICE", ":Your nickname has been changed as it is now invalid ({}).".format(reason))
+				u.sendMessage("NOTICE", "Your nickname has been changed as it is now invalid ({}).".format(reason))
 
 	def removeQLine(self, linetype, mask):
 		if linetype != "Q" or mask not in self.banlist:
@@ -125,7 +122,7 @@ class QLineCommand(ModuleData, Command):
 		self.expireQLines()
 		result = self.matchQLine(user)
 		if result:
-			user.sendMessage("NOTICE", ":The nickname you chose was invalid ({}).".format(result))
+			user.sendMessage("NOTICE", "The nickname you chose was invalid ({}).".format(result))
 			user.changeNick(user.uuid)
 			return None
 		return True
@@ -150,7 +147,7 @@ class QLineCommand(ModuleData, Command):
 			lowerNick = ircLower(data["nick"])
 			for mask, linedata in self.banlist.iteritems():
 				if fnmatch(lowerNick, mask):
-					user.sendMessage(irc.ERR_ERRONEUSNICKNAME, data["nick"], ":Invalid nickname: {}".format(linedata["reason"]))
+					user.sendMessage(irc.ERR_ERRONEUSNICKNAME, data["nick"], "Invalid nickname: {}".format(linedata["reason"]))
 					return False
 		return None
 

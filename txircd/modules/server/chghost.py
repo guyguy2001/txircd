@@ -8,9 +8,6 @@ class ServerChgHost(ModuleData, Command):
 	name = "ServerChangeHost"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("changehost", 10, self.propagateChangeHost),
 				("remotechangehost", 10, self.propagateChangeHost) ]

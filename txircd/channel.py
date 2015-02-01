@@ -97,7 +97,7 @@ class IRCChannel(object):
 				continue
 			if mode not in self.ircd.channelModeTypes:
 				if user:
-					user.sendMessage(irc.ERR_UNKNOWNMODE, mode, ":is unknown mode char to me")
+					user.sendMessage(irc.ERR_UNKNOWNMODE, mode, "is unknown mode char to me")
 				continue
 			modeType = self.ircd.channelModeTypes[mode]
 			param = None
@@ -140,7 +140,7 @@ class IRCChannel(object):
 							continue
 						statusLevel = self.ircd.channelStatuses[mode][1]
 						if user and not override and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, mode, param, users=[user], channels=[self]):
-							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, ":You do not have permission to set channel mode +{}".format(mode))
+							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, "You do not have permission to set channel mode +{}".format(mode))
 							continue
 						for index, rank in enumerate(self.users[targetUser]):
 							if self.ircd.channelStatuses[rank][1] < statusLevel:
@@ -167,7 +167,7 @@ class IRCChannel(object):
 							continue
 						statusLevel = self.ircd.channelStatuses[mode][1]
 						if user and not override and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, mode, param, users=[user], channels=[self]):
-							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, ":You do not have permission to set channel mode -{}".format(mode))
+							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, "You do not have permission to set channel mode -{}".format(mode))
 							continue
 						self.users[targetUser] = self.users[targetUser].replace(mode, "")
 					elif modeType == ModeType.List:
@@ -212,9 +212,9 @@ class IRCChannel(object):
 			if not self.modes[mode]:
 				del self.modes[mode]
 			return False
-		if len(self.modes[mode]) > self.ircd.config.getWithDefault("channel_list_limit", 100):
+		if len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 100):
 			if settingUser:
-				settingUser.sendMessage(irc.ERR_BANLISTFULL, self.name, param, ":Channel +{} list is full".format(mode))
+				settingUser.sendMessage(irc.ERR_BANLISTFULL, self.name, param, "Channel +{} list is full".format(mode))
 			if not self.modes[mode]: # The config limit really shouldn't be this low, but it's possible
 				del self.modes[mode]
 			return False

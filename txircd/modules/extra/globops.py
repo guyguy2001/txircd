@@ -8,9 +8,6 @@ class GlobopsCommand(Command, ModuleData):
 
 	name = "Globops"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("commandpermission-GLOBOPS", 1, self.restrictToOpers) ]
 
@@ -19,13 +16,13 @@ class GlobopsCommand(Command, ModuleData):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-globops", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("GlobopsParams", irc.ERR_NEEDMOREPARAMS, "GLOBOPS", ":Not enough parameters")
+			user.sendSingleError("GlobopsParams", irc.ERR_NEEDMOREPARAMS, "GLOBOPS", "Not enough parameters")
 		return {
 			"message": " ".join(params)
 		}
@@ -36,7 +33,7 @@ class GlobopsCommand(Command, ModuleData):
 				continue
 			if not self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "view-globops", users=[user]):
 				continue
-			targetUser.sendMessage("NOTICE", ":*** GLOBOPS from {}: {}".format(user.nick, data["message"]))
+			targetUser.sendMessage("NOTICE", "*** GLOBOPS from {}: {}".format(user.nick, data["message"]))
 		return True
 
 globops = GlobopsCommand()

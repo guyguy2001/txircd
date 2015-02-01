@@ -9,9 +9,6 @@ class PartCommand(ModuleData):
 	name = "PartCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("partmessage", 101, self.broadcastPart),
 				("partmessage", 1, self.sendPartMessage) ]
@@ -23,13 +20,11 @@ class PartCommand(ModuleData):
 		return [ ("PART", 1, ServerPart(self.ircd)) ]
 	
 	def broadcastPart(self, sendUserList, channel, user, reason, fromServer):
-		reason = ":{}".format(reason)
 		for server in self.ircd.servers.itervalues():
 			if server.nextClosest == self.ircd.serverID and server != fromServer:
 				server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
 	
 	def sendPartMessage(self, sendUserList, channel, user, reason, fromServer):
-		reason = ":{}".format(reason)
 		destServers = set()
 		destClosestServers = set()
 		for destUser in sendUserList:
@@ -45,16 +40,16 @@ class UserPart(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params or not params[0]:
-			user.sendSingleError("PartCmd", irc.ERR_NEEDMOREPARAMS, "PART", ":Not enough parameters")
+			user.sendSingleError("PartCmd", irc.ERR_NEEDMOREPARAMS, "PART", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.channels:
-			user.sendSingleError("PartCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+			user.sendSingleError("PartCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
 		channel = self.ircd.channels[params[0]]
 		if user not in channel.users:
 			return None
 		reason = params[1] if len(params) > 1 else ""
-		reason = reason[:self.ircd.config.getWithDefault("part_message_length", 300)]
+		reason = reason[:self.ircd.config.get("part_message_length", 300)]
 		return {
 			"channel": channel,
 			"reason": reason

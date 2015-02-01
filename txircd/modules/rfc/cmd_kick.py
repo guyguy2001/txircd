@@ -12,9 +12,6 @@ class KickCommand(ModuleData):
 	core = True
 	minLevel = 100
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("commandpermission-KICK", 10, self.checkKickLevel) ]
 	
@@ -28,7 +25,7 @@ class KickCommand(ModuleData):
 		self.rehash()
 	
 	def rehash(self):
-		newLevel = self.ircd.config.getWithDefault("channel_minimum_level_kick", 100)
+		newLevel = self.ircd.config.get("channel_minimum_level_kick", 100)
 		try:
 			self.minLevel = int(newLevel)
 		except ValueError:
@@ -41,13 +38,13 @@ class KickCommand(ModuleData):
 	def checkKickLevel(self, user, command, data):
 		channel = data["channel"]
 		if user not in channel.users:
-			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, ":You're not on that channel")
+			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
 			return False
 		if channel.userRank(user) < self.minLevel:
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick users from {}".format(channel.name))
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to kick users from {}".format(channel.name))
 			return False
 		if channel.userRank(user) < channel.userRank(data["user"]):
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to kick this user")
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to kick this user")
 			return False
 		return None
 
@@ -60,18 +57,18 @@ class UserKick(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("KickCmd", irc.ERR_NEEDMOREPARAMS, "KICK", ":Not enough parameters")
+			user.sendSingleError("KickCmd", irc.ERR_NEEDMOREPARAMS, "KICK", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.channels:
-			user.sendSingleError("KickCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+			user.sendSingleError("KickCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
 		if params[1] not in self.ircd.userNicks:
-			user.sendSingleError("KickCmd", irc.ERR_NOSUCHNICK, params[1], ":No such nick")
+			user.sendSingleError("KickCmd", irc.ERR_NOSUCHNICK, params[1], "No such nick")
 			return None
 		channel = self.ircd.channels[params[0]]
 		targetUser = self.ircd.users[self.ircd.userNicks[params[1]]]
 		if targetUser not in channel.users:
-			user.sendSingleError("KickCmd", irc.ERR_USERNOTINCHANNEL, targetUser.nick, channel.name, ":They are not on that channel")
+			user.sendSingleError("KickCmd", irc.ERR_USERNOTINCHANNEL, targetUser.nick, channel.name, "They are not on that channel")
 			return None
 		reason = user.nick
 		if len(params) > 2:
@@ -91,7 +88,7 @@ class UserKick(Command):
 	def execute(self, user, data):
 		channel = data["channel"]
 		targetUser = data["user"]
-		reason = ":{}".format(data["reason"])
+		reason = data["reason"]
 		for u in channel.users.iterkeys():
 			if u.uuid[:3] == self.ircd.serverID:
 				u.sendMessage("KICK", targetUser.nick, reason, sourceuser=user, to=channel.name)
@@ -134,7 +131,7 @@ class ServerKick(Command):
 		sourceUser = data["sourceuser"] if "sourceuser" in data else None
 		sourceServer = data["sourceserver"] if "sourceserver" in data else None
 		targetUser = data["targetuser"]
-		reason = ":{}".format(data["reason"])
+		reason = data["reason"]
 		
 		if sourceUser:
 			kwargs = {

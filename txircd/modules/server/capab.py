@@ -8,9 +8,6 @@ class CapabCommand(ModuleData, Command):
 	name = "CapabCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def serverCommands(self):
 		return [ ("CAPAB", 1, self) ]
 	
@@ -57,7 +54,7 @@ class CapabCommand(ModuleData, Command):
 		if subcmd == "END":
 			if server.receivedConnection:
 				server.sendMessage("CAPAB", "START", "300", prefix=self.ircd.serverID)
-				server.sendMessage("CAPAB", "MODULES", ":{}".format(" ".join(self.ircd.loadedModules.keys())), prefix=self.ircd.serverID)
+				server.sendMessage("CAPAB", "MODULES", " ".join(self.ircd.loadedModules.keys()), prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			self.ircd.runActionStandard("burst", server)
 			return True

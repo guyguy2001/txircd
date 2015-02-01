@@ -8,9 +8,6 @@ class SnoConnect(ModuleData):
 	name = "ServerNoticeConnect"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("register", 1, self.sendConnectNotice),
 				("servernoticetype", 1, self.checkSnoType)]

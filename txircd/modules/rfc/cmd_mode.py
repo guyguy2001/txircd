@@ -15,9 +15,6 @@ class ModeCommand(ModuleData):
 	core = True
 	minLevel = 100
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
 				("modechanges-channel", 1, self.sendChannelModesToServers),
@@ -35,7 +32,7 @@ class ModeCommand(ModuleData):
 		self.rehash()
 	
 	def rehash(self):
-		newLevel = self.ircd.config.getWithDefault("channel_minimum_level_mode", 100)
+		newLevel = self.ircd.config.get("channel_minimum_level_mode", 100)
 		try:
 			self.minLevel = int(newLevel)
 		except ValueError:
@@ -142,7 +139,7 @@ class ModeCommand(ModuleData):
 				return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
 		channel = data["channel"]
 		if channel.userRank(user) < self.minLevel:
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to set channel modes")
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to set channel modes")
 			return False
 		return None
 
@@ -154,17 +151,17 @@ class UserMode(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params or not params[0]:
-			user.sendSingleError("ModeCmd", irc.ERR_NEEDMOREPARAMS, "MODE", ":Not enough parameters")
+			user.sendSingleError("ModeCmd", irc.ERR_NEEDMOREPARAMS, "MODE", "Not enough parameters")
 			return None
 		channel = None
 		if params[0] in self.ircd.channels:
 			channel = self.ircd.channels[params[0]]
 		elif params[0] in self.ircd.userNicks:
 			if self.ircd.userNicks[params[0]] != user.uuid:
-				user.sendSingleError("ModeCmd", irc.ERR_USERSDONTMATCH, ":Can't operate on modes for other users")
+				user.sendSingleError("ModeCmd", irc.ERR_USERSDONTMATCH, "Can't operate on modes for other users")
 				return None
 		else:
-			user.sendSingleError("ModeCmd", irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+			user.sendSingleError("ModeCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick/channel")
 			return None
 		if len(params) == 1:
 			if channel:

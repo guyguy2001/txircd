@@ -7,9 +7,6 @@ class DccBlock(ModuleData):
 
 	name = "DccBlock"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("commandpermission-PRIVMSG", 1, self.blockDCC),
 				("commandpermission-NOTICE", 1, self.blockDCC) ]
@@ -23,6 +20,6 @@ class DccBlock(ModuleData):
 					del data["targetusers"][targetUser]
 					dccBlocked = True
 			if dccBlocked:
-				user.sendMessage("NOTICE", ":DCC is not allowed on this server.")
+				user.sendMessage("NOTICE", "DCC is not allowed on this server.")
 
 dccBlock = DccBlock()

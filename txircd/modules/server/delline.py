@@ -8,9 +8,6 @@ class DellineCommand(ModuleData, Command):
 	name = "ServerDelline"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("propagateremovexline", 1, self.propagateRemoveXLine) ]
 

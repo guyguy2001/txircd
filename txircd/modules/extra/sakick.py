@@ -8,9 +8,6 @@ class SakickCommand(ModuleData, Command):
 
 	name = "SakickCommand"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("SAKICK", 1, self) ]
 
@@ -19,7 +16,7 @@ class SakickCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-sakick", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -31,18 +28,18 @@ class SakickCommand(ModuleData, Command):
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("SakickCmd", irc.ERR_NEEDMOREPARAMS, "SAKICK", ":Not enough parameters")
+			user.sendSingleError("SakickCmd", irc.ERR_NEEDMOREPARAMS, "SAKICK", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.channels:
-			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
 		if params[1] not in self.ircd.userNicks:
-			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHNICK, params[1], ":No such nick/channel")
+			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHNICK, params[1], "No such nick/channel")
 			return None
 		channel = self.ircd.channels[params[0]]
 		target = self.ircd.users[self.ircd.userNicks[params[1]]]
 		if target not in channel.users:
-			user.sendSingleError("SakickCmd", irc.ERR_USERNOTINCHANNEL, params[1], ":They are not on that channel")
+			user.sendSingleError("SakickCmd", irc.ERR_USERNOTINCHANNEL, params[1], "They are not on that channel")
 			return None
 		reason = user.nick
 		if len(params) > 2:
@@ -56,7 +53,7 @@ class SakickCommand(ModuleData, Command):
 	def execute(self, user, data):
 		channel = data["channel"]
 		targetUser = data["target"]
-		reason = ":{}".format(data["reason"])
+		reason = data["reason"]
 		for u in channel.users.iterkeys():
 			if u.uuid[:3] == self.ircd.serverID:
 				u.sendMessage("KICK", targetUser.nick, reason, sourceuser=user, to=channel.name)

@@ -11,9 +11,6 @@ class ChannelFlood(ModuleData, Mode):
 	name = "ChannelFlood"
 	affectedActions = [ "commandextra-PRIVMSG", "commandextra-NOTICE" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("f", ModeType.Param, self) ]
 	
@@ -42,7 +39,7 @@ class ChannelFlood(ModuleData, Mode):
 	def apply(self, actionName, channel, param, user, command, data):
 		if "targetchans" not in data or channel not in data["targetchans"]:
 			return
-		minAllowedRank = self.ircd.config.getWithDefault("exempt_chanops_chanflood", 20)
+		minAllowedRank = self.ircd.config.get("exempt_chanops_chanflood", 20)
 		if channel.userRank(user) >= minAllowedRank:
 			return 
 		if "floodhistory" not in user.cache:
@@ -68,10 +65,10 @@ class ChannelFlood(ModuleData, Mode):
 		if len(floodHistory) > maxLines:
 			for server in self.ircd.servers.itervalues():
 				if server.nextClosest == self.ircd.serverID:
-					server.sendMessage("KICK", channel.name, user.uuid, ":Channel flood limit reached", prefix=self.ircd.serverID)
+					server.sendMessage("KICK", channel.name, user.uuid, "Channel flood limit reached", prefix=self.ircd.serverID)
 			for u in channel.users.iterkeys():
 				if u.uuid[:3] == self.ircd.serverID:
-					u.sendMessage("KICK", user.nick, ":Channel flood limit reached", to=channel.name)
+					u.sendMessage("KICK", user.nick, "Channel flood limit reached", to=channel.name)
 			user.leaveChannel(channel)
 
 chanFlood = ChannelFlood()

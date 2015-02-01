@@ -13,9 +13,6 @@ class UnloadModuleCommand(ModuleData, Command):
 	name = "UnloadModuleCommand"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("commandpermission-UNLOADMODULE", 1, self.restrictToOpers) ]
 
@@ -24,13 +21,13 @@ class UnloadModuleCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-unloadmodule", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("UnloadModuleCmd", irc.ERR_NEEDMOREPARAMS, "UNLOADMODULE", ":Not enough parameters")
+			user.sendSingleError("UnloadModuleCmd", irc.ERR_NEEDMOREPARAMS, "UNLOADMODULE", "Not enough parameters")
 			return None
 		return {
 			"modulename": params[0]
@@ -39,13 +36,13 @@ class UnloadModuleCommand(ModuleData, Command):
 	def execute(self, user, data):
 		moduleName = data["modulename"]
 		if moduleName not in self.ircd.loadedModules:
-			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":No such module")
+			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "No such module")
 		else:
 			try:
 				self.ircd.unloadModule(moduleName)
-				user.sendMessage(irc.RPL_UNLOADEDMODULE, moduleName, ":Module successfully unloaded")
+				user.sendMessage(irc.RPL_UNLOADEDMODULE, moduleName, "Module successfully unloaded")
 			except ValueError as e:
-				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":{}".format(e.message))
+				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, e.message)
 		return True
 
 unloadmoduleCommand = UnloadModuleCommand()

@@ -73,9 +73,9 @@ class IRCd(Service):
 		if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
 			raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
 		log.msg("Loading storage...", logLevel=logging.INFO)
-		self.storage = shelve.open(self.config.getWithDefault("datastore_path", "data.db"), writeback=True)
+		self.storage = shelve.open(self.config.get("datastore_path", "data.db"), writeback=True)
 		self.storageSyncer = LoopingCall(self.storage.sync)
-		self.storageSyncer.start(self.config.getWithDefault("storage_sync_interval", 5), now=False)
+		self.storageSyncer.start(self.config.get("storage_sync_interval", 5), now=False)
 		log.msg("Loading modules...", logLevel=logging.INFO)
 		self._loadModules()
 		log.msg("Binding ports...", logLevel=logging.INFO)
@@ -389,7 +389,7 @@ class IRCd(Service):
 	def connectServer(self, name):
 		if name in self.serverNames:
 			return None
-		if name not in self.config.getWithDefault("links", {}):
+		if name not in self.config.get("links", {}):
 			return None
 		serverConfig = self.config["links"][name]
 		if "connect_descriptor" not in serverConfig:

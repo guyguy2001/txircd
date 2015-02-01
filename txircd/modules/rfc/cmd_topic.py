@@ -13,9 +13,6 @@ class TopicCommand(ModuleData):
 	name = "TopicCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("topic", 1, self.onTopic),
 				("join", 2, self.sendChannelTopic) ]
@@ -29,25 +26,25 @@ class TopicCommand(ModuleData):
 	def onTopic(self, channel, setter, oldTopic):
 		for user in channel.users.iterkeys():
 			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage("TOPIC", ":{}".format(channel.topic), to=channel.name, prefix=channel.topicSetter)
+				user.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter)
 		sourceServer = None
 		if setter in self.ircd.users and setter[:3] == self.ircd.serverID:
 			settingUser = self.ircd.users[setter]
 			if settingUser not in channel.users:
-				settingUser.sendMessage("TOPIC", ":{}".format(channel.topic), to=channel.name, prefix=channel.topicSetter)
+				settingUser.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter)
 		elif setter != self.ircd.serverID:
 			sourceServer = self.ircd.servers[setter[:3]]
 			while sourceServer.nextClosest != self.ircd.serverID:
 				sourceServer = self.ircd.servers[sourceServer.nextClosest]
 		for server in self.ircd.servers.itervalues():
 			if server != sourceServer and server.nextClosest == self.ircd.serverID:
-				server.sendMessage("TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=setter)
+				server.sendMessage("TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), channel.topic, prefix=setter)
 	
 	def sendChannelTopic(self, channel, user):
 		if not channel.topic:
-			user.sendMessage(irc.RPL_NOTOPIC, channel.name, ":No topic is set")
+			user.sendMessage(irc.RPL_NOTOPIC, channel.name, "No topic is set")
 		else:
-			user.sendMessage(irc.RPL_TOPIC, channel.name, ":{}".format(channel.topic))
+			user.sendMessage(irc.RPL_TOPIC, channel.name, channel.topic)
 			user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, str(timestamp(channel.topicTime)))
 
 class UserTopic(Command):
@@ -59,17 +56,17 @@ class UserTopic(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("TopicCmd", irc.ERR_NEEDMOREPARAMS, "TOPIC", ":Not enough parameters")
+			user.sendSingleError("TopicCmd", irc.ERR_NEEDMOREPARAMS, "TOPIC", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.channels:
-			user.sendSingleError("TopicCmd", irc.ERR_NOSUCHCHANNEL, params[0], ":No such channel")
+			user.sendSingleError("TopicCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
 		channel = self.ircd.channels[params[0]]
 		if len(params) == 1:
 			return {
 				"channel": channel
 			}
-		topic = params[1][:self.ircd.config.getWithDefault("topic_length",326)]
+		topic = params[1][:self.ircd.config.get("topic_length",326)]
 		return {
 			"channel": channel,
 			"topic": topic

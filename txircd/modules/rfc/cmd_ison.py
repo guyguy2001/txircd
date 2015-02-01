@@ -9,15 +9,12 @@ class IsonCommand(ModuleData, Command):
 	name = "IsonCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("ISON", 1, self) ]
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("IsonParams", irc.ERR_NEEDMOREPARAMS, "ISON", ":Not enough parameters")
+			user.sendSingleError("IsonParams", irc.ERR_NEEDMOREPARAMS, "ISON", "Not enough parameters")
 			return None
 		return {
 			"nicks": params[:5]
@@ -29,7 +26,7 @@ class IsonCommand(ModuleData, Command):
 			if nick not in self.ircd.userNicks:
 				continue
 			onUsers.append(self.ircd.users[self.ircd.userNicks[nick]].nick)
-		user.sendMessage(irc.RPL_ISON, ":{}".format(" ".join(onUsers)))
+		user.sendMessage(irc.RPL_ISON, " ".join(onUsers))
 		return True
 
 isonCmd = IsonCommand()

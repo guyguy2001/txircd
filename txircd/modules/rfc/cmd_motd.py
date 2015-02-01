@@ -11,9 +11,6 @@ class MessageOfTheDay(ModuleData, Command):
 	core = True
 	motd = []
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("welcome", 5, self.showMOTD),
 				("sendremoteusermessage-372", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_MOTD, *params, **kw)),
@@ -38,20 +35,20 @@ class MessageOfTheDay(ModuleData, Command):
 					for outputLine in splitMessage(line, 400):
 						self.motd.append(outputLine)
 		except (IOError, KeyError):
-			pass # The MOTD list is already in the condition such that it will be reported as "no MOTD", so we're fine here
+			pass # The MOTD list is already in the condition such that it will be reported as "no MOTD," so we're fine here
 	
 	def showMOTD(self, user):
 		if not self.motd:
-			user.sendMessage(irc.ERR_NOMOTD, ":Message of the day file is missing.")
+			user.sendMessage(irc.ERR_NOMOTD, "Message of the day file is missing.")
 		else:
-			user.sendMessage(irc.RPL_MOTDSTART, ":{} Message of the Day".format(self.ircd.name))
+			user.sendMessage(irc.RPL_MOTDSTART, "{} Message of the Day".format(self.ircd.name))
 			for line in self.motd:
-				user.sendMessage(irc.RPL_MOTD, ":{}".format(line))
-			user.sendMessage(irc.RPL_ENDOFMOTD, ":End of message of the day")
+				user.sendMessage(irc.RPL_MOTD, line)
+			user.sendMessage(irc.RPL_ENDOFMOTD, "End of message of the day")
 	
 	def pushMessage(self, user, numeric, *params, **kw):
 		server = self.ircd.servers[user.uuid[:3]]
-		server.sendMessage("PUSH", user.uuid, "::{} {} {}".format(self.ircd.name, numeric, " ".join(params)), prefix=self.ircd.serverID)
+		server.sendMessage("PUSH", user.uuid, ":{} {} {}".format(self.ircd.name, numeric, " ".join(params)), prefix=self.ircd.serverID)
 		return True
 
 class UserMOTD(Command):
@@ -64,7 +61,7 @@ class UserMOTD(Command):
 	def parseParams(self, user, params, prefix, tags):
 		if params and params[0] != self.ircd.name:
 			if params[0] not in self.ircd.serverNames:
-				user.sendSingleError("MOTDServer", irc.ERR_NOSUCHSERVER, params[0], ":No such server")
+				user.sendSingleError("MOTDServer", irc.ERR_NOSUCHSERVER, params[0], "No such server")
 				return None
 			return {
 				"server": self.ircd.servers[self.ircd.serverNames[params[0]]]

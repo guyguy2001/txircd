@@ -11,9 +11,6 @@ class ModeratedMode(ModuleData, Mode):
 	core = True
 	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("m", ModeType.NoParam, self) ]
 	
@@ -29,6 +26,6 @@ class ModeratedMode(ModuleData, Mode):
 	def apply(self, actionName, channel, param, user, command, data):
 		if channel.userRank(user) < 10 and channel in data["targetchans"]:
 			del data["targetchans"][channel]
-			user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send to channel (+m)")
+			user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Cannot send to channel (+m)")
 
 moderatedMode = ModeratedMode()

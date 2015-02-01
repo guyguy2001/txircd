@@ -10,9 +10,6 @@ class ServerBurst(ModuleData, Command):
 	core = True
 	forRegistered = False
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("burst", 100, self.startBurst),
 				("burst", 1, self.completeBurst) ]
@@ -35,7 +32,7 @@ class ServerBurst(ModuleData, Command):
 		for hopCount in range(1, len(serversByHopcount) + 1):
 			strHopCount = str(hopCount)
 			for remoteServer in serversByHopcount[hopCount - 1]:
-				server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, ":{}".format(remoteServer.description), prefix=self.ircd.serverID)
+				server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, remoteServer.description, prefix=self.ircd.serverID)
 		for user in self.ircd.users.itervalues():
 			if user.localOnly:
 				continue
@@ -54,13 +51,13 @@ class ServerBurst(ModuleData, Command):
 					if param is not None:
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-			server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realhost, user.host, user.ident, user.ip, nickTimestamp, modeStr, ":{}".format(user.gecos), prefix=self.ircd.serverID)
+			server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realhost, user.host, user.ident, user.ip, nickTimestamp, modeStr, user.gecos, prefix=self.ircd.serverID)
 			for mode, paramList in listModes.iteritems():
 				for param, setter, time in paramList:
 					server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
 			for namespace, metadata in user.metadata.iteritems():
 				for key, value in metadata.iteritems():
-					server.sendMessage("METADATA", user.uuid, signonTimestamp, namespace, key, ":{}".format(value), prefix=self.ircd.serverID)
+					server.sendMessage("METADATA", user.uuid, signonTimestamp, namespace, key, value, prefix=self.ircd.serverID)
 		for channel in self.ircd.channels.itervalues():
 			channelTimestamp = str(timestamp(channel.existedSince))
 			users = []
@@ -81,15 +78,15 @@ class ServerBurst(ModuleData, Command):
 					if param is not None:
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-			server.sendMessage("FJOIN", channel.name, channelTimestamp, modeStr, ":{}".format(" ".join(users)), prefix=self.ircd.serverID)
+			server.sendMessage("FJOIN", channel.name, channelTimestamp, modeStr, " ".join(users), prefix=self.ircd.serverID)
 			for mode, params in listModes.iteritems():
 				for param, setter, time in params:
 					server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
 			if channel.topic:
-				server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), ":{}".format(channel.topic), prefix=self.ircd.serverID)
+				server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), channel.topic, prefix=self.ircd.serverID)
 			for namespace, metadata in channel.metadata.iteritems():
 				for key, value in metadata.iteritems():
-					server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, ":{}".format(value), prefix=self.ircd.serverID)
+					server.sendMessage("METADATA", channel.name, channelTimestamp, namespace, key, value, prefix=self.ircd.serverID)
 	
 	def completeBurst(self, server):
 		server.sendMessage("BURST", prefix=self.ircd.serverID)

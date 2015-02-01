@@ -10,9 +10,6 @@ class TimeCommand(ModuleData):
 	name = "TimeCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("sendremoteusermessage-391", 1, self.pushTime) ]
 	
@@ -23,11 +20,11 @@ class TimeCommand(ModuleData):
 		return [ ("USERTIME", 1, ServerTime(self.ircd, self.sendTime)) ]
 	
 	def pushTime(self, user, *params, **kw):
-		self.ircd.servers[user.uuid[:3]].sendMessage("PUSH", user.uuid[:3], "::{} {} {}".format(kw["prefix"], irc.RPL_TIME, " ".join(params)), prefix=self.ircd.serverID)
+		self.ircd.servers[user.uuid[:3]].sendMessage("PUSH", user.uuid[:3], ":{} {} {}".format(kw["prefix"], irc.RPL_TIME, " ".join(params)), prefix=self.ircd.serverID)
 		return True
 	
 	def sendTime(self, user):
-		user.sendMessage(irc.RPL_TIME, self.ircd.name, ":{}".format(now()))
+		user.sendMessage(irc.RPL_TIME, self.ircd.name, str(now()))
 
 class UserTime(Command):
 	implements(ICommand)
@@ -42,7 +39,7 @@ class UserTime(Command):
 		if params[0] == self.ircd.name:
 			return {}
 		if params[0] not in self.ircd.serverNames:
-			user.sendSingleError("TimeServer", irc.ERR_NOSUCHSERVER, params[0], ":No such server")
+			user.sendSingleError("TimeServer", irc.ERR_NOSUCHSERVER, params[0], "No such server")
 			return None
 		return {
 			"server": self.ircd.servers[self.ircd.serverNames[params[0]]]

@@ -10,9 +10,6 @@ class NamesCommand(ModuleData, Command):
 	name = "NamesCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("NAMES", 1, self) ]
 	
@@ -29,7 +26,7 @@ class NamesCommand(ModuleData, Command):
 			if chanName in self.ircd.channels:
 				channels.append(self.ircd.channels[chanName])
 			else:
-				user.sendMessage(irc.ERR_NOSUCHCHANNEL, chanName, ":No such channel")
+				user.sendMessage(irc.ERR_NOSUCHCHANNEL, chanName, "No such channel")
 		return {
 			"channels": channels
 		}
@@ -37,7 +34,7 @@ class NamesCommand(ModuleData, Command):
 	def execute(self, user, data):
 		chanList = data["channels"]
 		if not chanList:
-			user.sendMessage(irc.RPL_ENDOFNAMES, "*", ":End of /NAMES list")
+			user.sendMessage(irc.RPL_ENDOFNAMES, "*", "End of /NAMES list")
 			return True
 		for channel in chanList:
 			showChannelUsers = []
@@ -51,8 +48,8 @@ class NamesCommand(ModuleData, Command):
 			if showChannelUsers:
 				userLines = splitMessage(" ".join(showChannelUsers), 300)
 				for line in userLines:
-					user.sendMessage(irc.RPL_NAMREPLY, "=", channel.name, ":{}".format(line))
-			user.sendMessage(irc.RPL_ENDOFNAMES, channel.name, ":End of /NAMES list")
+					user.sendMessage(irc.RPL_NAMREPLY, "=", channel.name, line)
+			user.sendMessage(irc.RPL_ENDOFNAMES, channel.name, "End of /NAMES list")
 		return True
 
 namesCmd = NamesCommand()

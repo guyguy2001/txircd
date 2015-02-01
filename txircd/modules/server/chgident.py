@@ -8,9 +8,6 @@ class ServerChgIdent(ModuleData, Command):
 	name = "ServerChangeIdent"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("changeident", 10, self.propagateIdentChange),
 				("remotechangeident", 10, self.propagateIdentChange) ]

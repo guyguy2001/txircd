@@ -9,9 +9,6 @@ class ServerCommand(ModuleData, Command):
 	name = "ServerCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("initiateserverconnection", 1, self.introduceSelf),
 				("serverconnect", 10, self.propagateServer) ]
@@ -20,7 +17,7 @@ class ServerCommand(ModuleData, Command):
 		return [ ("SERVER", 1, self) ]
 	
 	def introduceSelf(self, server):
-		server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
+		server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, self.ircd.config["server_description"], prefix=self.ircd.serverID)
 	
 	def propagateServer(self, server):
 		hopCount = 1
@@ -29,10 +26,9 @@ class ServerCommand(ModuleData, Command):
 			hopCount += 1
 			closestServer = self.ircd.servers[closestServer.nextClosest]
 		sendHopCount = str(hopCount)
-		sendDescription = ":{}".format(server.description)
 		for remoteServer in self.ircd.servers.itervalues():
 			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != closestServer:
-				remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, sendDescription, prefix=server.nextClosest)
+				remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, server.description, prefix=server.nextClosest)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 5:
@@ -72,9 +68,9 @@ class ServerCommand(ModuleData, Command):
 		newServer.nextClosest = nextClosest
 		if hopCount == 0: # The connecting server is the server being introduced, so let's start the connection going
 			if server.receivedConnection:
-				server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, ":{}".format(self.ircd.config["server_description"]), prefix=self.ircd.serverID)
+				server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", server.serverID, self.ircd.config["server_description"], prefix=self.ircd.serverID)
 				return True
-			linkData = self.ircd.config.getWithDefault("links", {})
+			linkData = self.ircd.config.get("links", {})
 			if server.name not in linkData:
 				server.disconnect("No link block for server {}".format(server.name))
 				return True
@@ -82,7 +78,7 @@ class ServerCommand(ModuleData, Command):
 				password = linkData[server.name]["out_password"]
 			else:
 				password = ""
-			server.sendMessage("PASS", ":{}".format(password), prefix=self.ircd.serverID)
+			server.sendMessage("PASS", password, prefix=self.ircd.serverID)
 			return True
 		newServer.register()
 		return True

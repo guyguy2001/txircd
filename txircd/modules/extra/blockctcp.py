@@ -10,9 +10,6 @@ class BlockCTCP(ModuleData, Mode):
 	name = "BlockCTCP"
 	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("C", ModeType.NoParam, self) ]
 	
@@ -41,7 +38,7 @@ class BlockCTCP(ModuleData, Mode):
 				else:
 					if message[index+1:index+8] != "ACTION ":
 						del data["targetchans"][channel]
-						user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Can't send CTCP to channel")
+						user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Can't send CTCP to channel")
 						return
 					inCTCP = True
 	

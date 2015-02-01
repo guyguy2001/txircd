@@ -11,9 +11,6 @@ class RehashCommand(ModuleData):
 	name = "RehashCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("commandpermission-REHASH", 1, self.restrictRehashToOpers),
 				("sendremoteusermessage-382", 1, self.pushRehashMessage) ]
@@ -26,7 +23,7 @@ class RehashCommand(ModuleData):
 	
 	def restrictRehashToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-rehash", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
@@ -52,7 +49,7 @@ class UserRehash(Command):
 			if fnmatch(server.name, serverMask):
 				servers.append(server)
 		if not servers:
-			user.sendSingleError("RehashServer", irc.ERR_NOSUCHSERVER, params[0], ":No matching servers")
+			user.sendSingleError("RehashServer", irc.ERR_NOSUCHSERVER, params[0], "No matching servers")
 			return None
 		return {
 			"servers": servers
@@ -70,11 +67,11 @@ class UserRehash(Command):
 		return True
 	
 	def rehashSelf(self, user):
-		user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehashing")
+		user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehashing")
 		try:
 			self.ircd.rehash()
 		except ConfigReadError as e:
-			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehash failed: {}".format(e))
+			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehash failed: {}".format(e))
 
 class ServerRehash(Command):
 	implements(ICommand)
@@ -102,14 +99,14 @@ class ServerRehash(Command):
 		source = data["source"]
 		if source in self.ircd.users:
 			user = self.ircd.users[source]
-			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehashing")
+			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehashing")
 		else:
 			user = None
 		try:
 			self.ircd.rehash()
 		except ConfigReadError as e:
 			if user:
-				user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, ":Rehash failed: {}".format(e))
+				user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehash failed: {}".format(e))
 		return True
 
 rehashCmd = RehashCommand()

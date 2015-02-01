@@ -9,9 +9,6 @@ class LinksCommand(ModuleData, Command):
 	name = "LinksCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("LINKS", 1, self) ]
 	
@@ -29,9 +26,9 @@ class LinksCommand(ModuleData, Command):
 				nextClosestName = self.ircd.name
 			else:
 				nextClosestName = self.ircd.servers[server.nextClosest].name
-			user.sendMessage(irc.RPL_LINKS, server.name, nextClosestName, ":{} {}".format(hopCount, server.description))
-		user.sendMessage(irc.RPL_LINKS, self.ircd.name, self.ircd.name, ":0 {}".format(self.ircd.config["server_description"]))
-		user.sendMessage(irc.RPL_ENDOFLINKS, "*", ":End of /LINKS list.")
+			user.sendMessage(irc.RPL_LINKS, server.name, nextClosestName, "{} {}".format(hopCount, server.description))
+		user.sendMessage(irc.RPL_LINKS, self.ircd.name, self.ircd.name, "0 {}".format(self.ircd.config["server_description"]))
+		user.sendMessage(irc.RPL_ENDOFLINKS, "*", "End of /LINKS list.")
 		return True
 
 linksCmd = LinksCommand()

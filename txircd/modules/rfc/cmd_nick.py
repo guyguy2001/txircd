@@ -11,9 +11,6 @@ class NickCommand(ModuleData):
 	name = "NickCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("changenickmessage", 1, self.sendNickMessage),
 				("changenick", 1, self.broadcastNickChange),
@@ -48,15 +45,15 @@ class NickUserCommand(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params or not params[0]:
-			user.sendSingleError("NickCmd", irc.ERR_NEEDMOREPARAMS, "NICK", ":Not enough parameters")
+			user.sendSingleError("NickCmd", irc.ERR_NEEDMOREPARAMS, "NICK", "Not enough parameters")
 			return None
 		if not isValidNick(params[0]):
-			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], ":Erroneous nickname")
+			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
 		if params[0] in self.ircd.userNicks:
 			otherUserID = self.ircd.userNicks[params[0]]
 			if user.uuid != otherUserID:
-				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, params[0], ":Nickname is already in use")
+				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, params[0], "Nickname is already in use")
 				return None
 		return {
 			"nick": params[0]

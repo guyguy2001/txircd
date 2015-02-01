@@ -10,9 +10,6 @@ class ShunCommand(ModuleData, Command):
 
 	name = "ShunCommand"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("SHUN", 1, self) ]
 
@@ -27,13 +24,13 @@ class ShunCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-shun", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:
-			user.sendSingleError("ShunParams", irc.ERR_NEEDMOREPARAMS, "SHUN", ":Not enough parameters")
+			user.sendSingleError("ShunParams", irc.ERR_NEEDMOREPARAMS, "SHUN", "Not enough parameters")
 			return None
 		else:
 			banmask = params[0]
@@ -65,33 +62,33 @@ class ShunCommand(ModuleData, Command):
 		if "reason" not in data:
 			# Unsetting shun
 			if banmask not in self.banlist:
-				user.sendMessage("NOTICE", ":*** Shun for {} does not currently exist; check /stats S for a list of active shuns.".format(banmask))
+				user.sendMessage("NOTICE", "*** Shun for {} does not currently exist; check /stats S for a list of active shuns.".format(banmask))
 			else:
 				self.removeShun("SHUN", banmask)
 				self.ircd.runActionStandard("propagateremovexline", "SHUN", banmask)
-				user.sendMessage("NOTICE", ":*** Shun removed on {}.".format(data["mask"]))
+				user.sendMessage("NOTICE", "*** Shun removed on {}.".format(data["mask"]))
 		else:
 			# Setting shun
 			duration = data["duration"]
 			if banmask in self.banlist:
-				user.sendMessage("NOTICE", ":*** There's already a shun set on {}! Check /stats S for a list of active shuns.".format(banmask))
+				user.sendMessage("NOTICE", "*** There's already a shun set on {}! Check /stats S for a list of active shuns.".format(banmask))
 			else:
 				setter = user.hostmaskWithRealHost()
 				createdTS = timestamp(now())
 				reason = data["reason"]
 				self.addShun("SHUN", banmask, setter, createdTS, duration, reason)
-				self.ircd.runActionStandard("propagateaddxline", "SHUN", banmask, setter, createdTS, duration, ":{}".format(reason))
+				self.ircd.runActionStandard("propagateaddxline", "SHUN", banmask, setter, createdTS, duration, reason)
 				if duration > 0:
-					user.sendMessage("NOTICE", ":*** Timed shun added on {}, to expire in {} seconds.".format(banmask, duration))
+					user.sendMessage("NOTICE", "*** Timed shun added on {}, to expire in {} seconds.".format(banmask, duration))
 				else:
-					user.sendMessage("NOTICE", ":*** Permanent shun added on {}.".format(banmask))
+					user.sendMessage("NOTICE", "*** Permanent shun added on {}.".format(banmask))
 		return True
 
 	def commandCheck(self, user, command, data):
 		self.expireShuns()
 		result = self.matchShun(user)
-		if result and command not in self.ircd.config.getWithDefault("shun_whitelist", ["JOIN", "PART", "QUIT", "PING", "PONG"]):
-			user.sendMessage("NOTICE", ":Command {} was not processed. You have been blocked from issuing commands ({}).".format(command, result))
+		if result and command not in self.ircd.config.get("shun_whitelist", ["JOIN", "PART", "QUIT", "PING", "PONG"]):
+			user.sendMessage("NOTICE", "Command {} was not processed. You have been blocked from issuing commands ({}).".format(command, result))
 			return False
 		return None
 

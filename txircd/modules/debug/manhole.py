@@ -10,15 +10,12 @@ class Manhole(ModuleData):
 	
 	manhole = None
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def load(self):
 		self.manhole = makeService({
 			"namespace": { "ircd": self.ircd },
-			"passwd": self.ircd.config.getWithDefault("manhole_passwd", "manhole.passwd"),
-			"telnetPort": self.ircd.config.getWithDefault("manhole_bind_telnet", None),
-			"sshPort": self.ircd.config.getWithDefault("manhole_bind_ssh", None)
+			"passwd": self.ircd.config.get("manhole_passwd", "manhole.passwd"),
+			"telnetPort": self.ircd.config.get("manhole_bind_telnet", None),
+			"sshPort": self.ircd.config.get("manhole_bind_ssh", None)
 		})
 		self.manhole.startService()
 	

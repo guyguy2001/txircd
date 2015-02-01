@@ -11,12 +11,9 @@ class CustomPrefix(ModuleData, Mode):
 	name = "CustomPrefix"
 	prefixes = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def channelModes(self):
 		modes = []
-		self.prefixes = self.ircd.config.getWithDefault("custom_prefixes", { "h": { "level": 50, "char": "%" }, "a": { "level": 150, "char": "&" }, "q" : { "level": 200, "char": "~" } })
+		self.prefixes = self.ircd.config.get("custom_prefixes", { "h": { "level": 50, "char": "%" }, "a": { "level": 150, "char": "&" }, "q" : { "level": 200, "char": "~" } })
 		for prefix, prefixValue in self.prefixes.iteritems():
 			try:
 				statusLevel = int(prefixValue["level"])

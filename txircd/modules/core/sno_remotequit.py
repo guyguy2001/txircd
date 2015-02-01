@@ -8,9 +8,6 @@ class SnoRemoteQuit(ModuleData):
 	name = "ServerNoticeRemoteQuit"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("remotequit", 1, self.sendRemoteQuitNotice),
 				("servernoticetype", 1, self.checkSnoType)]

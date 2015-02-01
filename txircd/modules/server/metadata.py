@@ -10,9 +10,6 @@ class ServerMetadata(ModuleData, Command):
 	name = "ServerMetadata"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.propagateUserMetadata),
 				("channelmetadataupdate", 10, self.propagateChannelMetadata) ]
@@ -27,7 +24,7 @@ class ServerMetadata(ModuleData, Command):
 				if value is None:
 					server.sendMessage("METADATA", targetID, targetTime, namespace, key, prefix=serverPrefix)
 				else:
-					server.sendMessage("METADATA", targetID, targetTime, namespace, key, ":{}".format(value), prefix=serverPrefix)
+					server.sendMessage("METADATA", targetID, targetTime, namespace, key, value, prefix=serverPrefix)
 	
 	def propagateUserMetadata(self, user, namespace, key, oldValue, value, fromServer):
 		self.propagateMetadata(user.uuid, str(timestamp(user.connectedSince)), namespace, key, value, fromServer)
@@ -78,7 +75,7 @@ class ServerMetadata(ModuleData, Command):
 			value = data["value"]
 		else:
 			value = None
-		target.setMetadata(data["namespace"], data["key"], ":{}".format(value), server)
+		target.setMetadata(data["namespace"], data["key"], value, server)
 		return True
 
 serverMetadata = ServerMetadata()

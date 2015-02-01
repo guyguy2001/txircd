@@ -17,9 +17,6 @@ class Censor(ModuleData):
 	exemptLevel = 100
 	badwords = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("CENSOR", 1, UserCensorCommand(self)) ]
 
@@ -44,7 +41,7 @@ class Censor(ModuleData):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-censor", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -76,7 +73,7 @@ class Censor(ModuleData):
 		for server in self.ircd.servers.itervalues():
 			if server.nextClosest == self.ircd.serverID:
 				if replacement:
-					server.sendMessage("CENSOR", badword, ":{}".format(replacement), prefix=self.ircd.serverID)
+					server.sendMessage("CENSOR", badword, replacement, prefix=self.ircd.serverID)
 				else:
 					server.sendMessage("CENSOR", badword, prefix=self.ircd.serverID)
 
@@ -92,7 +89,7 @@ class Censor(ModuleData):
 				channel.setModes(self.ircd.serverID, "-G", [])
 
 	def rehash(self):
-		newLevel = self.ircd.config.getWithDefault("exempt_chanops_censor", 100)
+		newLevel = self.ircd.config.get("exempt_chanops_censor", 100)
 		try:
 			self.exemptLevel = int(newLevel)
 		except ValueError:
@@ -167,12 +164,12 @@ class UserCensorCommand(Command):
 			self.censor.badwords[badword] = replacement
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
 			self.censor.propagateBadword(badword, replacement)
-			user.sendMessage(irc.RPL_BADWORDADDED, badword, ":{}".format(replacement))
+			user.sendMessage(irc.RPL_BADWORDADDED, badword, replacement)
 		else:
 			del self.censor.badwords[badword]
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
 			self.censor.propagateBadword(badword, None)
-			user.sendMessage(irc.RPL_BADWORDREMOVED, badword, ":Badword removed")
+			user.sendMessage(irc.RPL_BADWORDREMOVED, badword, "Badword removed")
 		return True
 
 class ServerCensorCommand(Command):
@@ -206,7 +203,7 @@ class ServerCensorCommand(Command):
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
 			for remoteServer in self.censor.ircd.servers.itervalues():
 				if remoteServer.nextClosest == self.censor.ircd.serverID and remoteServer != server:
-					remoteServer.sendMessage("CENSOR", badword, ":{}".format(replacement), prefix=self.censor.ircd.serverID)
+					remoteServer.sendMessage("CENSOR", badword, replacement, prefix=self.censor.ircd.serverID)
 		else:
 			del self.censor.badwords[badword]
 			self.censor.ircd.storage["badwords"] = self.censor.badwords

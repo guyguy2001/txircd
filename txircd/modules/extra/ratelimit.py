@@ -7,10 +7,6 @@ class RateLimit(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "RateLimit"
-	core = True
-
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
 
 	def actions(self):
 		return [("commandpermission", 100, self.recvCommand)]
@@ -21,7 +17,7 @@ class RateLimit(ModuleData):
 			"kill_limit": 500, # disconnect the user after this many
 			"interval": 60,
 		}
-		config.update(self.ircd.config.getWithDefault("ratelimit", {}))
+		config.update(self.ircd.config.get("ratelimit", {}))
 		return config
 
 	def getPeriodData(self):
@@ -47,7 +43,7 @@ class RateLimit(ModuleData):
 		if rateData["messages"] > self.getConfig()["limit"]:
 			# only send notice once per period
 			if not rateData["noticeSent"]:
-				user.sendMessage("NOTICE", (":You are sending too many messages (limit is {limit}/{interval:.2f}s). "
+				user.sendMessage("NOTICE", ("You are sending too many messages (limit is {limit}/{interval:.2f}s). "
 											"You cannot send any more messages for {timeToEnd:.2f} seconds."
 										).format(timeToEnd=timeToEnd, **self.getConfig()))
 				rateData["noticeSent"] = True

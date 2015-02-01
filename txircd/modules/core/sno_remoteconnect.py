@@ -8,9 +8,6 @@ class SnoRemoteConnect(ModuleData):
 	name = "ServerNoticeRemoteConnect"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("remoteregister", 1, self.sendRemoteConnectNotice),
 				("servernoticetype", 1, self.checkSnoType)]

@@ -8,9 +8,6 @@ class AddlineCommand(ModuleData, Command):
 	name = "ServerAddline"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("propagateaddxline", 1, self.propagateAddXLine),
 				("burstxlines", 10, self.burstXLines) ]
@@ -23,12 +20,12 @@ class AddlineCommand(ModuleData, Command):
 		duration = str(duration)
 		for server in self.ircd.servers.itervalues():
 			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, ":{}".format(reason), prefix=self.ircd.serverID)
+				server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, reason, prefix=self.ircd.serverID)
 
 	def burstXLines(self, server, linetype, lines):
 		for mask, linedata in lines.iteritems():
 			server.sendMessage("ADDLINE", linetype, mask, linedata["setter"], str(linedata["created"]),
-							str(linedata["duration"]), ":{}".format(linedata["reason"]), prefix=self.ircd.serverID)
+							str(linedata["duration"]), linedata["reason"], prefix=self.ircd.serverID)
 
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 6:
@@ -55,7 +52,6 @@ class AddlineCommand(ModuleData, Command):
 		self.ircd.runActionStandard("addxline", lineType, mask, setter, createdTS, duration, reason)
 		createdTS = str(createdTS)
 		duration = str(duration)
-		reason = ":{}".format(reason)
 		for remoteServer in self.ircd.servers.itervalues():
 			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
 				remoteServer.sendMessage("ADDLINE", lineType, mask, setter, createdTS, duration, reason, prefix=self.ircd.serverID)

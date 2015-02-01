@@ -8,9 +8,6 @@ class SamodeCommand(ModuleData, Command):
 
 	name = "SamodeCommand"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("SAMODE", 1, self) ]
 
@@ -19,13 +16,13 @@ class SamodeCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-samode", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("SamodeCmd", irc.ERR_NEEDMOREPARAMS, "SAMODE", ":Not enough parameters")
+			user.sendSingleError("SamodeCmd", irc.ERR_NEEDMOREPARAMS, "SAMODE", "Not enough parameters")
 			return None
 		if params[0] in self.ircd.channels:
 			return {
@@ -39,7 +36,7 @@ class SamodeCommand(ModuleData, Command):
 				"modes": params[1],
 				"params": params[2:]
 			}
-		user.sendSingleError("SamodeCmd", irc.ERR_NOSUCHNICK, ":No such nick/channel")
+		user.sendSingleError("SamodeCmd", irc.ERR_NOSUCHNICK, "No such nick/channel")
 		return None
 
 	def affectedChannels(self, user, data):

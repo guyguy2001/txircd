@@ -12,9 +12,6 @@ class KLineCommand(ModuleData, Command):
 	core = True
 	banlist = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("KLINE", 1, self) ]
 
@@ -27,13 +24,13 @@ class KLineCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kline", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:
-			user.sendSingleError("KlineParams", irc.ERR_NEEDMOREPARAMS, "KLINE", ":Not enough parameters")
+			user.sendSingleError("KlineParams", irc.ERR_NEEDMOREPARAMS, "KLINE", "Not enough parameters")
 			return None
 		else:
 			banmask = params[0]
@@ -65,16 +62,16 @@ class KLineCommand(ModuleData, Command):
 		if "reason" not in data:
 			# Unsetting K:line
 			if banmask not in self.banlist:
-				user.sendMessage("NOTICE", ":*** K:Line for {} does not currently exist; check /stats K for a list of active K:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** K:Line for {} does not currently exist; check /stats K for a list of active K:Lines.".format(banmask))
 			else:
 				del self.banlist[banmask]
 				self.ircd.storage["klines"] = self.banlist
-				user.sendMessage("NOTICE", ":*** K:Line removed on {}.".format(banmask))
+				user.sendMessage("NOTICE", "*** K:Line removed on {}.".format(banmask))
 		else:
 			# Setting K:line
 			duration = data["duration"]
 			if banmask in self.banlist:
-				user.sendMessage("NOTICE", ":*** There's already a K:Line set on {}! Check /stats K for a list of active K:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** There's already a K:Line set on {}! Check /stats K for a list of active K:Lines.".format(banmask))
 			else:
 				self.banlist[banmask] = {
 					"setter": user.hostmaskWithRealHost(),
@@ -83,9 +80,9 @@ class KLineCommand(ModuleData, Command):
 					"reason": data["reason"]
 				}
 				if duration > 0:
-					user.sendMessage("NOTICE", ":*** Timed K:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+					user.sendMessage("NOTICE", "*** Timed K:Line added on {}, to expire in {} seconds.".format(banmask, duration))
 				else:
-					user.sendMessage("NOTICE", ":*** Permanent K:Line added on {}.".format(banmask))
+					user.sendMessage("NOTICE", "*** Permanent K:Line added on {}.".format(banmask))
 				self.ircd.storage["klines"] = self.banlist
 				bannedUsers = {}
 				for u in self.ircd.users.itervalues():
@@ -94,7 +91,7 @@ class KLineCommand(ModuleData, Command):
 						bannedUsers[u.uuid] = result
 				for uid, reason in bannedUsers.iteritems():
 					u = self.ircd.users[uid]
-					u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+					u.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@xyz.com for help."))
 					u.disconnect("K:Lined: {}".format(reason))
 		return True
 
@@ -102,7 +99,7 @@ class KLineCommand(ModuleData, Command):
 		self.expireKLines()
 		result = self.matchKLine(user)
 		if result:
-			user.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+			user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@xyz.com for help."))
 			user.disconnect("K:Lined: {}".format(result))
 			return None
 		return True

@@ -10,9 +10,6 @@ class ListModeSync(ModuleData, Command):
 	name = "ListModeSync"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def serverCommands(self):
 		return [ ("LISTMODE", 1, self) ]
 	

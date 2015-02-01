@@ -9,9 +9,6 @@ class KillCommand(ModuleData):
 	name = "KillCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("commandpermission-KILL", 1, self.restrictToOpers) ]
 	
@@ -23,7 +20,7 @@ class KillCommand(ModuleData):
 	
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kill", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -35,10 +32,10 @@ class UserKill(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("KillParams", irc.ERR_NEEDMOREPARAMS, "KILL", ":Not enough parameters")
+			user.sendSingleError("KillParams", irc.ERR_NEEDMOREPARAMS, "KILL", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("KillTarget", irc.ERR_NOSUCHNICK, params[0], ":No such nick")
+			user.sendSingleError("KillTarget", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
 		return {
 			"user": self.ircd.users[self.ircd.userNicks[params[0]]],
@@ -54,7 +51,7 @@ class UserKill(Command):
 			targetUser.disconnect("Killed by {}: {}".format(user.nick, data["reason"]))
 			return True
 		toServer = self.ircd.servers[targetUser.uuid[:3]]
-		toServer.sendMessage("KILL", targetUser.uuid, ":{}".format(data["reason"]), prefix=user.uuid)
+		toServer.sendMessage("KILL", targetUser.uuid, data["reason"], prefix=user.uuid)
 		return True
 
 class ServerKill(Command):
@@ -87,7 +84,7 @@ class ServerKill(Command):
 			user.disconnect("Killed by {}: {}".format(fromName, data["reason"]))
 			return True
 		toServer = self.ircd.servers[user.uuid[:3]]
-		toServer.sendMessage("KILL", user.uuid, ":{}".format(data["reason"]), prefix=data["source"])
+		toServer.sendMessage("KILL", user.uuid, data["reason"], prefix=data["source"])
 		return True
 
 killCmd = KillCommand()

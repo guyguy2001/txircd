@@ -12,9 +12,6 @@ class AdminCommand(ModuleData):
 	name = "AdminCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("sendremoteusermessage-256", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINME, *params, **kw)),
 				("sendremoteusermessage-257", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINLOC1, *params, **kw)),
@@ -28,32 +25,23 @@ class AdminCommand(ModuleData):
 		return [ ("ADMINREQ", 1, ServerAdmin(self.ircd, self.sendAdminData)) ]
 	
 	def sendAdminData(self, user, serverName):
-		user.sendMessage(irc.RPL_ADMINME, serverName, ":Administrative info for {}".format(serverName))
-		try:
-			adminData = self.ircd.config["admin_server"]
-		except KeyError:
-			adminData = ""
+		user.sendMessage(irc.RPL_ADMINME, serverName, "Administrative info for {}".format(serverName))
+		adminData = self.ircd.config.get("admin_server", "")
 		if not adminData: # If the line is blank, let's provide a default value
 			adminData = "This server has no admins. Anarchy!"
-		user.sendMessage(irc.RPL_ADMINLOC1, ":{}".format(adminData))
-		try:
-			adminData = self.ircd.config["admin_admin"]
-		except KeyError:
-			adminData = ""
+		user.sendMessage(irc.RPL_ADMINLOC1, adminData)
+		adminData = self.ircd.config.get("admin_admin", "")
 		if not adminData:
 			adminData = "Nobody configured the second line of this."
-		user.sendMessage(irc.RPL_ADMINLOC2, ":{}".format(adminData))
-		try:
-			adminEmail = self.ircd.config["admin_email"]
-		except KeyError:
-			adminEmail = ""
+		user.sendMessage(irc.RPL_ADMINLOC2, adminData)
+		adminEmail = self.ircd.config.get("admin_email", "")
 		if not adminEmail:
 			adminEmail = "No Admin <anarchy@example.com>"
-		user.sendMessage(irc.RPL_ADMINEMAIL, ":{}".format(adminEmail))
+		user.sendMessage(irc.RPL_ADMINEMAIL, adminEmail)
 	
 	def pushMessage(self, user, numeric, *params, **kw):
 		server = self.ircd.servers[user.uuid[:3]]
-		server.sendMessage("PUSH", user.uuid, "::{} {} {}".format(kw["prefix"], numeric, " ".join(params)), prefix=self.ircd.serverID)
+		server.sendMessage("PUSH", user.uuid, ":{} {} {}".format(kw["prefix"], numeric, " ".join(params)), prefix=self.ircd.serverID)
 		return True
 
 class UserAdmin(Command):
@@ -69,7 +57,7 @@ class UserAdmin(Command):
 		if params[0] == self.ircd.name:
 			return {}
 		if params[0] not in self.ircd.serverNames:
-			user.sendSingleError("AdminServer", irc.ERR_NOSUCHSERVER, params[0], ":No such server")
+			user.sendSingleError("AdminServer", irc.ERR_NOSUCHSERVER, params[0], "No such server")
 			return None
 		return {
 			"server": self.ircd.servers[self.ircd.serverNames[params[0]]]

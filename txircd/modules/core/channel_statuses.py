@@ -8,9 +8,6 @@ class StatusReport(ModuleData):
 	name = "ChannelStatusReport"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("channelstatuses", 1, self.statuses) ]
 	

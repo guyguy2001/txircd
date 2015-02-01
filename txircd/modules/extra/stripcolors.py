@@ -9,9 +9,6 @@ class StripColors(ModuleData, Mode):
 	name = "StripColors"
 	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def channelModes(self):
 		return [ ("S", ModeType.NoParam, self) ]
 
@@ -25,7 +22,7 @@ class StripColors(ModuleData, Mode):
 		return None
 
 	def apply(self, actionName, channel, param, user, command, data):
-		minAllowedRank = self.ircd.config.getWithDefault("exempt_chanops_stripcolor", 20)
+		minAllowedRank = self.ircd.config.get("exempt_chanops_stripcolor", 20)
 		if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
 			message = data["targetchans"][channel]
 			data["targetchans"][channel] = stripFormatting(message)

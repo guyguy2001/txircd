@@ -11,9 +11,6 @@ class ListCommand(ModuleData, Command):
 	name = "ListCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("LIST", 1, self) ]
 	
@@ -43,7 +40,7 @@ class ListCommand(ModuleData, Command):
 		else:
 			channels = self.ircd.channels.values()
 		
-		user.sendMessage(irc.RPL_LISTSTART, "Channel", ":Users Name")
+		user.sendMessage(irc.RPL_LISTSTART, "Channel", "Users Name")
 		for channel in channels:
 			displayData = {
 				"name": channel.name,
@@ -53,8 +50,8 @@ class ListCommand(ModuleData, Command):
 			self.ircd.runActionProcessing("displaychannel", displayData, channel, user, users=[user], channels=[channel])
 			if "name" not in displayData or "usercount" not in displayData or "modestopic" not in displayData:
 				continue
-			user.sendMessage(irc.RPL_LIST, displayData["name"], str(displayData["usercount"]), ":{}".format(displayData["modestopic"]))
-		user.sendMessage(irc.RPL_LISTEND, ":End of channel list")
+			user.sendMessage(irc.RPL_LIST, displayData["name"], str(displayData["usercount"]), displayData["modestopic"])
+		user.sendMessage(irc.RPL_LISTEND, "End of channel list")
 		return True
 
 listCmd = ListCommand()

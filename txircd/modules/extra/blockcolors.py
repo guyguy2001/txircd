@@ -10,9 +10,6 @@ class BlockColors(ModuleData, Mode):
 	name = "BlockColors"
 	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def channelModes(self):
 		return [ ("c", ModeType.NoParam, self) ]
 
@@ -26,12 +23,12 @@ class BlockColors(ModuleData, Mode):
 		return None
 
 	def apply(self, actionName, channel, param, user, command, data):
-		minAllowedRank = self.ircd.config.getWithDefault("exempt_chanops_blockcolor", 20)
+		minAllowedRank = self.ircd.config.get("exempt_chanops_blockcolor", 20)
 		if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
 			message = data["targetchans"][channel]
 			if any(c in message for c in "\x02\x1f\x16\x1d\x0f\x03"):
 				del data["targetchans"][channel]
-				user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, ":Cannot send colors to channel (+c)")
+				user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Cannot send colors to channel (+c)")
 
 	def fullUnload(self):
 		for channel in self.ircd.channels.itervalues():

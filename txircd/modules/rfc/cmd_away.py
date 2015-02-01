@@ -9,9 +9,6 @@ class AwayCommand(ModuleData, Command):
 	name = "AwayCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("AWAY", 1, self) ]
 	
@@ -25,11 +22,11 @@ class AwayCommand(ModuleData, Command):
 			return
 		for u in data["targetusers"].iterkeys():
 			if "away" in u.metadata["ext"]:
-				user.sendMessage(irc.RPL_AWAY, u.nick, ":{}".format(u.metadata["ext"]["away"]))
+				user.sendMessage(irc.RPL_AWAY, u.nick, u.metadata["ext"]["away"])
 	
 	def addWhois(self, user, targetUser):
 		if "away" in targetUser.metadata["ext"]:
-			user.sendMessage(irc.RPL_AWAY, targetUser.nick, ":{}".format(targetUser.metadata["ext"]["away"]))
+			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadata["ext"]["away"])
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
@@ -41,10 +38,10 @@ class AwayCommand(ModuleData, Command):
 	def execute(self, user, data):
 		if "message" in data and data["message"]:
 			user.setMetadata("ext", "away", data["message"])
-			user.sendMessage(irc.RPL_NOWAWAY, ":You have been marked as being away")
+			user.sendMessage(irc.RPL_NOWAWAY, "You have been marked as being away")
 		else:
 			user.setMetadata("ext", "away", None)
-			user.sendMessage(irc.RPL_UNAWAY, ":You are no longer marked as being away")
+			user.sendMessage(irc.RPL_UNAWAY, "You are no longer marked as being away")
 		return True
 
 awayCommand = AwayCommand()

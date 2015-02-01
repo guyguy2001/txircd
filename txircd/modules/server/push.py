@@ -8,9 +8,6 @@ class ServerPush(ModuleData, Command):
 	name = "ServerPush"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def serverCommands(self):
 		return [ ("PUSH", 1, self) ]
 	
@@ -31,7 +28,7 @@ class ServerPush(ModuleData, Command):
 			user.sendLine(data["line"])
 			return True
 		toServer = self.ircd.servers[user.uuid[:3]]
-		toServer.sendMessage("PUSH", user.uuid, "{}".format(data["line"]), prefix=data["source"])
+		toServer.sendMessage("PUSH", user.uuid, data["line"], prefix=data["source"])
 		return True
 
 serverPush = ServerPush()

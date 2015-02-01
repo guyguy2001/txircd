@@ -10,9 +10,6 @@ class PingPong(ModuleData):
 	name = "PingPong"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("pinguser", 10, self.pingUser),
 				("pingserver", 10, self.pingServer) ]
@@ -36,7 +33,7 @@ class PingPong(ModuleData):
 			user.cache["pingtime"] = now()
 			user.cache["pongtime"] = now()
 			return
-		user.sendMessage("PING", ":{}".format(self.ircd.name), to=None, prefix=None)
+		user.sendMessage("PING", self.ircd.name, to=None, prefix=None)
 		user.cache["pingtime"] = now()
 	
 	def pingServer(self, server):
@@ -60,14 +57,14 @@ class UserPing(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("PingCmd", irc.ERR_NEEDMOREPARAMS, "PING", ":Not enough parameters")
+			user.sendSingleError("PingCmd", irc.ERR_NEEDMOREPARAMS, "PING", "Not enough parameters")
 			return None
 		return {
 			"data": params[0]
 		}
 	
 	def execute(self, user, data):
-		user.sendMessage("PONG", ":{}".format(data["data"]), to=self.ircd.name)
+		user.sendMessage("PONG", data["data"], to=self.ircd.name)
 		return True
 
 class UserPong(Command):
@@ -78,7 +75,7 @@ class UserPong(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("PongCmd", irc.ERR_NEEDMOREPARAMS, "PONG", ":Not enough parameters")
+			user.sendSingleError("PongCmd", irc.ERR_NEEDMOREPARAMS, "PONG", "Not enough parameters")
 			return None
 		return {
 			"data": params[0]

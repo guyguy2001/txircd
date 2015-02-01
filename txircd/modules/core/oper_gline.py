@@ -12,9 +12,6 @@ class GLineCommand(ModuleData, Command):
 	core = True
 	banlist = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("GLINE", 1, self) ]
 
@@ -30,13 +27,13 @@ class GLineCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:
-			user.sendSingleError("GlineParams", irc.ERR_NEEDMOREPARAMS, "GLINE", ":Not enough parameters")
+			user.sendSingleError("GlineParams", irc.ERR_NEEDMOREPARAMS, "GLINE", "Not enough parameters")
 			return None
 		else:
 			banmask = params[0]
@@ -68,26 +65,26 @@ class GLineCommand(ModuleData, Command):
 		if "reason" not in data:
 			# Unsetting G:line
 			if banmask not in self.banlist:
-				user.sendMessage("NOTICE", ":*** G:Line for {} does not currently exist; check /stats G for a list of active G:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** G:Line for {} does not currently exist; check /stats G for a list of active G:Lines.".format(banmask))
 			else:
 				self.removeGLine("G", banmask)
 				self.ircd.runActionStandard("propagateremovexline", "G", banmask)
-				user.sendMessage("NOTICE", ":*** G:Line removed on {}.".format(banmask))
+				user.sendMessage("NOTICE", "*** G:Line removed on {}.".format(banmask))
 		else:
 			# Setting G:line
 			duration = data["duration"]
 			if banmask in self.banlist:
-				user.sendMessage("NOTICE", ":*** There's already a G:Line set on {}! Check /stats G for a list of active G:Lines.".format(banmask))
+				user.sendMessage("NOTICE", "*** There's already a G:Line set on {}! Check /stats G for a list of active G:Lines.".format(banmask))
 			else:
 				setter = user.hostmaskWithRealHost()
 				createdTS = timestamp(now())
 				reason = data["reason"]
 				self.addGLine("G", banmask, setter, createdTS, duration, reason)
-				self.ircd.runActionStandard("propagateaddxline", "G", banmask, setter, createdTS, duration, ":{}".format(reason))
+				self.ircd.runActionStandard("propagateaddxline", "G", banmask, setter, createdTS, duration, reason)
 				if duration > 0:
-					user.sendMessage("NOTICE", ":*** Timed G:Line added on {}, to expire in {} seconds.".format(banmask, duration))
+					user.sendMessage("NOTICE", "*** Timed G:Line added on {}, to expire in {} seconds.".format(banmask, duration))
 				else:
-					user.sendMessage("NOTICE", ":*** Permanent G:Line added on {}.".format(banmask))
+					user.sendMessage("NOTICE", "*** Permanent G:Line added on {}.".format(banmask))
 		return True
 
 	def addGLine(self, linetype, mask, setter, created, duration, reason):
@@ -107,7 +104,7 @@ class GLineCommand(ModuleData, Command):
 				bannedUsers[u] = result
 		for u, reason in bannedUsers.iteritems():
 			if u.uuid[:3] == self.ircd.serverID:
-				u.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+				u.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@xyz.com for help."))
 				u.disconnect("G:Lined: {}".format(reason))
 
 	def removeGLine(self, linetype, mask):
@@ -124,7 +121,7 @@ class GLineCommand(ModuleData, Command):
 		self.expireGLines()
 		result = self.matchGLine(user)
 		if result:
-			user.sendMessage("NOTICE", ":{}".format(self.ircd.config.getWithDefault("client_ban_msg", "You're banned! Email abuse@xyz.com for help.")))
+			user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@xyz.com for help."))
 			user.disconnect("G:Lined: {}".format(result))
 			return None
 		return True

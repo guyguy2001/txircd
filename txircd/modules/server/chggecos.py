@@ -8,9 +8,6 @@ class ServerChgGecos(ModuleData, Command):
 	name = "ServerChangeGecos"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("changegecos", 10, self.propagateGecosChange),
 				("remotechangegecos", 10, self.propagateGecosChange) ]
@@ -21,7 +18,7 @@ class ServerChgGecos(ModuleData, Command):
 	def propagateGecosChange(self, user, oldGecos, fromServer = None):
 		for server in self.ircd.servers.itervalues():
 			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("CHGGECOS", user.uuid, ":{}".format(user.gecos), prefix=self.ircd.serverID)
+				server.sendMessage("CHGGECOS", user.uuid, user.gecos, prefix=self.ircd.serverID)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:

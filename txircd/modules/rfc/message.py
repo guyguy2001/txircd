@@ -9,9 +9,6 @@ class MessageCommands(ModuleData):
 	name = "MessageCommands"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("sendchannelmessage-PRIVMSG", 1, self.sendChannelPrivmsg),
 				("sendchannelmessage-NOTICE", 1, self.sendChannelNotice),
@@ -88,7 +85,7 @@ class MessageCommands(ModuleData):
 			elif target in self.ircd.userNicks:
 				users.append(self.ircd.users[self.ircd.userNicks[target]])
 			else:
-				user.sendBatchedError("MsgCmd", irc.ERR_NOSUCHNICK, target, ":No such nick/channel")
+				user.sendBatchedError("MsgCmd", irc.ERR_NOSUCHNICK, target, "No such nick/channel")
 		message = params[1]
 		chanMessages = {target: message for target in channels}
 		userMessages = {target: message for target in users}
@@ -107,18 +104,18 @@ class MessageCommands(ModuleData):
 		if "targetusers" in data:
 			for target, message in data["targetusers"].iteritems():
 				if message:
-					target.sendMessage(command, ":{}".format(message), sourceuser=user)
+					target.sendMessage(command, message, sourceuser=user)
 					sentAMessage = True
 				elif not sentNoTextError:
-					user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
+					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
 					sentNoTextError = True
 		if "targetchans" in data:
 			for target, message in data["targetchans"].iteritems():
 				if message:
-					target.sendMessage(command, ":{}".format(message), to=target.name, sourceuser=user, skipusers=[user])
+					target.sendMessage(command, message, to=target.name, sourceuser=user, skipusers=[user])
 					sentAMessage = True
 				elif not sentNoTextError:
-					user.sendMessage(irc.ERR_NOTEXTTOSEND, ":No text to send")
+					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
 					sentNoTextError = True
 		if not sentAMessage:
 			return None
@@ -147,9 +144,9 @@ class MessageCommands(ModuleData):
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage(command, ":{}".format(data["message"]), sourceuser=data["from"])
+				user.sendMessage(command, data["message"], sourceuser=data["from"])
 			else:
-				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, ":{}".format(data["message"]), prefix=data["from"].uuid)
+				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
 		if "tochan" in data:
 			chan = data["tochan"]
@@ -157,7 +154,7 @@ class MessageCommands(ModuleData):
 			nearServer = self.ircd.servers[fromUser.uuid[:3]]
 			while nearServer.nextClosest != self.ircd.serverID:
 				nearServer = self.ircd.servers[nearServer.nextClosest]
-			chan.sendMessage(command, ":{}".format(data["message"]), sourceuser=data["from"], skipservers=[nearServer])
+			chan.sendMessage(command, data["message"], sourceuser=data["from"], skipservers=[nearServer])
 			return True
 		return None
 
@@ -169,7 +166,7 @@ class UserPrivmsg(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("PrivMsgCmd", irc.ERR_NEEDMOREPARAMS, "PRIVMSG", ":Not enough parameters")
+			user.sendSingleError("PrivMsgCmd", irc.ERR_NEEDMOREPARAMS, "PRIVMSG", "Not enough parameters")
 			return None
 		return self.module.cmdParseParams(user, params, prefix, tags)
 	
@@ -194,7 +191,7 @@ class UserNotice(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("NoticeCmd", irc.ERR_NEEDMOREPARAMS, "NOTICE", ":Not enough parameters")
+			user.sendSingleError("NoticeCmd", irc.ERR_NEEDMOREPARAMS, "NOTICE", "Not enough parameters")
 			return None
 		return self.module.cmdParseParams(user, params, prefix, tags)
 	

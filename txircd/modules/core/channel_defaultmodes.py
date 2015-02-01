@@ -9,14 +9,11 @@ class DefaultModes(ModuleData):
 	name = "DefaultModes"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("channelcreate", 110, self.setDefaults) ]
 	
 	def setDefaults(self, channel, user):
-		modes = self.ircd.config.getWithDefault("channel_default_modes", "ont")
+		modes = self.ircd.config.get("channel_default_modes", "ont")
 		statusModes = set()
 		params = modes.split(" ")
 		modeList = list(params.pop(0))

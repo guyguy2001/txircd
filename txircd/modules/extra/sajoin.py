@@ -9,9 +9,6 @@ class SajoinCommand(ModuleData, Command):
 
 	name = "SajoinCommand"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("SAJOIN", 1, self) ]
 
@@ -20,16 +17,16 @@ class SajoinCommand(ModuleData, Command):
 
 	def restrictToOpers(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-sajoin", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("SajoinCmd", irc.ERR_NEEDMOREPARAMS, "SAJOIN", ":Not enough parameters")
+			user.sendSingleError("SajoinCmd", irc.ERR_NEEDMOREPARAMS, "SAJOIN", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("SajoinCmd", irc.ERR_NOSUCHNICK, params[0], ":No such nick/channel")
+			user.sendSingleError("SajoinCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick/channel")
 			return None
 		channame = params[1]
 		if channame[0] != "#":

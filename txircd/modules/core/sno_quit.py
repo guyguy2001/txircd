@@ -8,9 +8,6 @@ class SnoQuit(ModuleData):
 	name = "ServerNoticeQuit"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("quit", 1, self.sendQuitNotice),
 				("servernoticetype", 1, self.checkSnoType)]

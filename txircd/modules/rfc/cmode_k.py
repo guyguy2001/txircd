@@ -11,9 +11,6 @@ class ChannelKeyMode(ModuleData, Mode):
 	core = True
 	affectedActions = [ "commandmodify-JOIN" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("k", ModeType.ParamOnUnset, self) ]
 	
@@ -43,7 +40,7 @@ class ChannelKeyMode(ModuleData, Mode):
 		except ValueError:
 			return
 		if data["keys"][keyIndex] != param:
-			user.sendMessage(irc.ERR_BADCHANNELKEY, channel.name, ":Cannot join channel (Incorrect channel key)")
+			user.sendMessage(irc.ERR_BADCHANNELKEY, channel.name, "Cannot join channel (Incorrect channel key)")
 			del data["channels"][keyIndex]
 			del data["keys"][keyIndex]
 	

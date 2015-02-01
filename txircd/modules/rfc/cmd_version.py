@@ -10,9 +10,6 @@ class VersionCommand(ModuleData, Command):
 	name = "VersionCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("VERSION", 1, self) ]
 	
@@ -20,7 +17,7 @@ class VersionCommand(ModuleData, Command):
 		return {}
 	
 	def execute(self, user, data):
-		user.sendMessage(irc.RPL_VERSION, ":txircd-{} {}".format(version, self.ircd.name))
+		user.sendMessage(irc.RPL_VERSION, "txircd-{} {}".format(version, self.ircd.name))
 		user.sendISupport()
 		return True
 

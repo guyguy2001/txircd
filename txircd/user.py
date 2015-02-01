@@ -5,6 +5,7 @@ from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.words.protocols import irc
 from txircd import version
+from txircd.ircbase import IRCBase
 from txircd.utils import ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
@@ -13,7 +14,7 @@ import logging
 
 irc.ERR_ALREADYREGISTERED = "462"
 
-class IRCUser(irc.IRC):
+class IRCUser(IRCBase):
 	def __init__(self, ircd, ip, uuid = None, host = None):
 		self.ircd = ircd
 		self.uuid = ircd.createUUID() if uuid is None else uuid
@@ -55,7 +56,7 @@ class IRCUser(irc.IRC):
 		self.localOnly = False
 		self.secureConnection = False
 		self._pinger = LoopingCall(self._ping)
-		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("user_registration_timeout", 10), self._timeoutRegistration)
+		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("user_registration_timeout", 10), self._timeoutRegistration)
 	
 	def connectionMade(self):
 		# We need to callLater the connect action call because the connection isn't fully set up yet,
@@ -99,9 +100,9 @@ class IRCUser(irc.IRC):
 			to = kw["to"]
 			del kw["to"]
 		if to:
-			irc.IRC.sendMessage(self, command, to, *args, **kw)
+			IRCBase.sendMessage(self, command, to, *args, **kw)
 		else:
-			irc.IRC.sendMessage(self, command, *args, **kw)
+			IRCBase.sendMessage(self, command, *args, **kw)
 	
 	def _getPrefix(self, msgKeywords):
 		if "sourceuser" in msgKeywords:
@@ -115,7 +116,7 @@ class IRCUser(irc.IRC):
 			return msgKeywords["prefix"]
 		return self.ircd.name
 	
-	def handleCommand(self, command, prefix, params):
+	def handleCommand(self, command, prefix, params, tags):
 		if self.uuid not in self.ircd.users:
 			return # we have been disconnected - ignore all further commands
 		if command in self.ircd.userCommands:
@@ -219,7 +220,7 @@ class IRCUser(irc.IRC):
 	
 	def _timeoutRegistration(self):
 		if self.isRegistered():
-			self._pinger.start(self.ircd.config.getWithDefault("user_ping_frequency", 60), False)
+			self._pinger.start(self.ircd.config.get("user_ping_frequency", 60), False)
 			return
 		self.disconnect("Registration timeout")
 	
@@ -245,9 +246,9 @@ class IRCUser(irc.IRC):
 				self.transport.loseConnection()
 				return
 			versionWithName = "txircd-{}".format(version)
-			self.sendMessage(irc.RPL_WELCOME, ":Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
-			self.sendMessage(irc.RPL_YOURHOST, ":Your host is {}, running version {}".format(self.ircd.name, versionWithName))
-			self.sendMessage(irc.RPL_CREATED, ":This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
+			self.sendMessage(irc.RPL_WELCOME, "Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
+			self.sendMessage(irc.RPL_YOURHOST, "Your host is {}, running version {}".format(self.ircd.name, versionWithName))
+			self.sendMessage(irc.RPL_CREATED, "This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
 			chanModes = "".join(["".join(modes.keys()) for modes in self.ircd.channelModes])
 			chanModes += "".join(self.ircd.channelStatuses.keys())
 			self.sendMessage(irc.RPL_MYINFO, self.ircd.name, versionWithName, "".join(["".join(modes.keys()) for modes in self.ircd.userModes]), chanModes)
@@ -258,7 +259,7 @@ class IRCUser(irc.IRC):
 		isupportList = self.ircd.generateISupportList()
 		isupportMsgList = splitMessage(" ".join(isupportList), 350)
 		for line in isupportMsgList:
-			self.sendMessage(irc.RPL_ISUPPORT, line, ":are supported by this server")
+			self.sendMessage(irc.RPL_ISUPPORT, line, "are supported by this server")
 	
 	def addRegisterHold(self, holdName):
 		if not self._registerHolds:
@@ -394,7 +395,7 @@ class IRCUser(irc.IRC):
 				continue
 			if mode not in self.ircd.userModeTypes:
 				if user:
-					user.sendMessage(irc.ERR_UMODEUNKNOWNFLAG, mode, ":is unknown mode char to me")
+					user.sendMessage(irc.ERR_UMODEUNKNOWNFLAG, mode, "is unknown mode char to me")
 				continue
 			param = None
 			modeType = self.ircd.userModeTypes[mode]
@@ -472,9 +473,9 @@ class IRCUser(irc.IRC):
 			if not self.modes[mode]:
 				del self.modes[mode]
 			return False
-		if len(self.modes[mode]) > self.ircd.config.getWithDefault("user_list_limit", 100):
+		if len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 100):
 			if settingUser:
-				settingUser.sendMessage(irc.ERR_BANLISTFULL, self.nick, param, ":User +{} list is full".format(mode))
+				settingUser.sendMessage(irc.ERR_BANLISTFULL, self.nick, param, "User +{} list is full".format(mode))
 			if not self.modes[mode]: # The config limit really shouldn't be this low, but it's possible
 				del self.modes[mode]
 			return False

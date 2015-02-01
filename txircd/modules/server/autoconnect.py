@@ -13,12 +13,9 @@ class ServerAutoconnect(ModuleData):
 	core = True
 	connector = None
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def load(self):
 		self.connector = LoopingCall(self.runConnections)
-		self.connector.start(durationToSeconds(self.ircd.config.getWithDefault("autoconnect_period", 60)), False)
+		self.connector.start(durationToSeconds(self.ircd.config.get("autoconnect_period", 60)), False)
 	
 	def unload(self):
 		if self.connector.running:
@@ -27,10 +24,10 @@ class ServerAutoconnect(ModuleData):
 	def rehash(self):
 		if self.connector.running:
 			self.connector.stop()
-		self.connector.start(durationToSeconds(self.ircd.config.getWithDefault("autoconnect_period", 60)), False)
+		self.connector.start(durationToSeconds(self.ircd.config.get("autoconnect_period", 60)), False)
 	
 	def runConnections(self):
-		autoconnectServers = self.ircd.config.getWithDefault("autoconnect", [])
+		autoconnectServers = self.ircd.config.get("autoconnect", [])
 		for serverName in autoconnectServers:
 			if serverName in self.ircd.serverNames:
 				continue

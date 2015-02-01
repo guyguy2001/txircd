@@ -15,9 +15,6 @@ class HostCloaking(ModuleData, Mode):
 	cloakingSalt = None
 	cloakingPrefix = None
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userModes(self):
 		return [ ("x", ModeType.NoParam, self) ]
 
@@ -95,7 +92,7 @@ class HostCloaking(ModuleData, Mode):
 		except KeyError:
 			self.cloakingSalt = ""
 			log.msg("No cloaking salt was found in the config. Host cloaks will be insecure!", logLevel=logging.WARNING)
-		self.cloakingPrefix = self.ircd.config.getWithDefault("cloaking_prefix", "txircd")
+		self.cloakingPrefix = self.ircd.config.get("cloaking_prefix", "txircd")
 
 	def fullUnload(self):
 		for user in self.ircd.users.itervalues():

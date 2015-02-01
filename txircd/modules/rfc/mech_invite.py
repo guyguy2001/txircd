@@ -14,9 +14,6 @@ class Invite(ModuleData, Mode):
 	minLevel = 100
 	affectedActions = [ "joinpermission" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("i", ModeType.NoParam, self) ]
 	
@@ -35,7 +32,7 @@ class Invite(ModuleData, Mode):
 		self.rehash()
 
 	def rehash(self):
-		newLevel = self.ircd.config.getWithDefault("channel_minimum_level_invite", 100)
+		newLevel = self.ircd.config.get("channel_minimum_level_invite", 100)
 		try:
 			self.minLevel = int(newLevel)
 		except ValueError:
@@ -59,21 +56,21 @@ class Invite(ModuleData, Mode):
 	def checkInviteLevel(self, user, command, data):
 		channel = data["channel"]
 		if user not in channel.users:
-			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, ":You're not on that channel")
+			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
 			return False
 		if channel.userRank(user) < self.minLevel:
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You don't have permission to invite users to {}".format(channel.name))
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to invite users to {}".format(channel.name))
 			return False
 		return None
 	
 	def apply(self, actionName, channel, param, joiningChannel, user):
 		if "invites" not in user.cache or channel.name not in user.cache["invites"]:
-			user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
+			user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, "Cannot join channel (Invite only)")
 			return False
 		if user.cache["invites"][channel.name] < channel.existedSince:
 			# The invite is older than the channel, so the channel was destroyed and recreated since the invite occurred
 			del user.cache["invites"][channel.name]
-			user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, ":Cannot join channel (Invite only)")
+			user.sendMessage(irc.ERR_INVITEONLYCHAN, joiningChannel.name, "Cannot join channel (Invite only)")
 			return False
 		return None
 
@@ -86,13 +83,13 @@ class UserInvite(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("InviteCmd", irc.ERR_NEEDMOREPARAMS, "INVITE", ":Not enough parameters")
+			user.sendSingleError("InviteCmd", irc.ERR_NEEDMOREPARAMS, "INVITE", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("InviteCmd", irc.ERR_NOSUCHNICK, params[0], ":No such nick")
+			user.sendSingleError("InviteCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
 		if params[1] not in self.ircd.channels:
-			user.sendSingleError("InviteCmd", irc.ERR_NOSUCHCHANNEL, params[1], ":No such channel")
+			user.sendSingleError("InviteCmd", irc.ERR_NOSUCHCHANNEL, params[1], "No such channel")
 			return None
 		return {
 			"invitee": self.ircd.users[self.ircd.userNicks[params[0]]],
@@ -106,7 +103,7 @@ class UserInvite(Command):
 		targetUser = data["invitee"]
 		channel = data["channel"]
 		if targetUser in channel.users:
-			user.sendMessage(irc.ERR_USERONCHANNEL, targetUser.nick, channel.name, ":is already on channel")
+			user.sendMessage(irc.ERR_USERONCHANNEL, targetUser.nick, channel.name, "is already on channel")
 			return True
 		user.sendMessage(irc.RPL_INVITING, targetUser.nick, channel.name)
 		if targetUser.uuid[:3] != self.ircd.serverID:

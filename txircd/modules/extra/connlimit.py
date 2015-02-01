@@ -8,9 +8,6 @@ class ConnectionLimit(ModuleData):
 	name = "ConnectionLimit"
 	peerConnections = {}
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("userconnect", 100, self.handleLocalConnect),
 				("remoteregister", 100, self.handleRemoteConnect),
@@ -19,7 +16,7 @@ class ConnectionLimit(ModuleData):
 
 	def handleLocalConnect(self, user, *params):
 		ip = user.ip
-		if self.addToConnections(ip) and self.peerConnections[ip] > self.ircd.config.getWithDefault("connlimit_globmax", 3):
+		if self.addToConnections(ip) and self.peerConnections[ip] > self.ircd.config.get("connlimit_globmax", 3):
 			user.disconnect("No more connections allowed from your IP ({})".format(ip))
 			return None
 		return True
@@ -35,7 +32,7 @@ class ConnectionLimit(ModuleData):
 				del self.peerConnections[ip]
 
 	def addToConnections(self, ip):
-		if ip in self.ircd.config.getWithDefault("connlimit_whitelist", []):
+		if ip in self.ircd.config.get("connlimit_whitelist", []):
 			return False
 		if ip in self.peerConnections:
 			self.peerConnections[ip] += 1

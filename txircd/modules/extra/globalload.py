@@ -10,9 +10,6 @@ class GlobalLoad(ModuleData):
 	
 	name = "GlobalLoad"
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("commandpermission-GLOADMODULE", 1, self.restrictGLoad),
 				("commandpermission-GUNLOADMODULE", 1, self.restrictGUnload),
@@ -30,19 +27,19 @@ class GlobalLoad(ModuleData):
 	
 	def restrictGLoad(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gloadmodule"):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
 	def restrictGUnload(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gunloadmodule"):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
 	def restrictGReload(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-greloadmodule"):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -54,7 +51,7 @@ class UserLoad(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GLOADMODULE", ":Not enough parameters")
+			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GLOADMODULE", "Not enough parameters")
 			return None
 		return {
 			"module": params[0]
@@ -63,19 +60,19 @@ class UserLoad(Command):
 	def execute(self, user, data):
 		moduleName = data["module"]
 		if moduleName in self.ircd.loadedModules:
-			user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, ":Module is already loaded")
+			user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, "Module is already loaded")
 		else:
 			try:
 				self.ircd.loadModule(moduleName)
 				if moduleName in self.ircd.loadedModules:
-					user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, ":Module successfully loaded")
+					user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, "Module successfully loaded")
 					for server in self.ircd.servers.itervalues():
 						if server.nextClosest == self.ircd.serverID:
 							server.sendMessage("LOADMODULE", moduleName, prefix=user.uuid)
 				else:
-					user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, ":No such module")
+					user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, "No such module")
 			except ModuleLoadError as e:
-				user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, ":{}".format(e.message))
+				user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, e.message)
 		return True
 
 class UserUnload(Command):
@@ -86,7 +83,7 @@ class UserUnload(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GUNLOADMODULE", ":Not enough parameters")
+			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GUNLOADMODULE", "Not enough parameters")
 			return None
 		return {
 			"module": params[0]
@@ -95,16 +92,16 @@ class UserUnload(Command):
 	def execute(self, user, data):
 		moduleName = data["module"]
 		if moduleName not in self.ircd.loadedModules:
-			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":No such module")
+			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "No such module")
 		else:
 			try:
 				self.ircd.unloadModule(moduleName)
-				user.sendMessage(irc.RPL_UNLOADEDMODULE, moduleName, ":Module successfully unloaded")
+				user.sendMessage(irc.RPL_UNLOADEDMODULE, moduleName, "Module successfully unloaded")
 				for server in self.ircd.servers.itervalues():
 					if server.nextClosest == self.ircd.serverID:
 						server.sendMessage("UNLOADMODULE", moduleName, prefix=user.uuid)
 			except ValueError as e:
-				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":{}".format(e.message))
+				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, e.message)
 		return True
 
 class UserReload(Command):
@@ -115,7 +112,7 @@ class UserReload(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GRELOADMODULE", ":Not enough parameters")
+			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GRELOADMODULE", "Not enough parameters")
 			return None
 		return {
 			"module": params[0]
@@ -124,16 +121,16 @@ class UserReload(Command):
 	def execute(self, user, data):
 		moduleName = data["module"]
 		if moduleName not in self.ircd.loadedModules:
-			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":No such module")
+			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "No such module")
 		else:
 			try:
 				self.ircd.reloadModule(moduleName)
-				user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, ":Module successfully reloaded")
+				user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, "Module successfully reloaded")
 				for server in self.ircd.servers.itervalues():
 					if server.nextClosest == self.ircd.serverID:
 						server.sendMessage("RELOADMODULE", moduleName, prefix=user.uuid)
 			except ModuleLoadError as e:
-				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, ":{}; module is now unloaded".format(e.message))
+				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "{}; module is now unloaded".format(e.message))
 		return True
 
 class ServerLoad(Command):

@@ -8,9 +8,6 @@ class SnoOper(ModuleData):
 	name = "ServerNoticeOper"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("operreport", 1, self.sendOperNotice),
 				("servernoticetype", 1, self.checkSnoType) ]

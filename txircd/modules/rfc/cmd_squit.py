@@ -10,9 +10,6 @@ class ServerQuit(ModuleData):
 	name = "ServerQuit"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("serverquit", 1, self.sendSQuit),
 				("commandpermission-SQUIT", 1, self.restrictSQuit) ]
@@ -32,11 +29,11 @@ class ServerQuit(ModuleData):
 			if closestHop == otherServer:
 				continue
 			if otherServer.nextClosest == self.ircd.serverID:
-				otherServer.sendMessage("SQUIT", server.serverID, ":{}".format(reason), prefix=server.nextClosest)
+				otherServer.sendMessage("SQUIT", server.serverID, reason, prefix=server.nextClosest)
 	
 	def restrictSQuit(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-squit"):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
@@ -48,14 +45,14 @@ class UserSQuit(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("SQuitParams", irc.ERR_NEEDMOREPARAMS, "SQUIT", ":Not enough parameters")
+			user.sendSingleError("SQuitParams", irc.ERR_NEEDMOREPARAMS, "SQUIT", "Not enough parameters")
 			return None
 		source = self.ircd.serverID
 		if params[0] not in self.ircd.serverNames:
 			if ircLower(params[0]) == ircLower(self.ircd.name):
-				user.sendSingleError("SQuitTarget", irc.ERR_NOSUCHSERVER, self.ircd.name, ":You can't unlink this server from itself")
+				user.sendSingleError("SQuitTarget", irc.ERR_NOSUCHSERVER, self.ircd.name, "You can't unlink this server from itself")
 				return None
-			user.sendSingleError("SQuitTarget", irc.ERR_NOSUCHSERVER, params[0], ":No such server")
+			user.sendSingleError("SQuitTarget", irc.ERR_NOSUCHSERVER, params[0], "No such server")
 			return None
 		return {
 			"source": source,
@@ -69,10 +66,10 @@ class UserSQuit(Command):
 		
 		if targetServer.nextClosest == self.ircd.serverID:
 			targetServer.disconnect(reason)
-			user.sendMessage("NOTICE", ":*** Disconnected {}".format(targetServer.name))
+			user.sendMessage("NOTICE", "*** Disconnected {}".format(targetServer.name))
 		else:
-			targetServer.sendMessage("RSQUIT", targetServer.serverID, ":{}".format(reason), prefix=self.ircd.serverID)
-			user.sendMessage("NOTICE", ":*** Sent remote SQUIT for {}".format(targetServer.name))
+			targetServer.sendMessage("RSQUIT", targetServer.serverID, reason, prefix=self.ircd.serverID)
+			user.sendMessage("NOTICE", "*** Sent remote SQUIT for {}".format(targetServer.name))
 		return True
 
 class ServerSQuit(Command):
@@ -116,7 +113,7 @@ class RemoteSQuit(Command):
 		if targetServer.nextClosest == self.ircd.serverID:
 			targetServer.disconnect(data["reason"])
 			return True
-		targetServer.sendMessage("RSQUIT", targetServer.serverID, ":{}".format(data["reason"]), prefix=targetServer.nextClosest)
+		targetServer.sendMessage("RSQUIT", targetServer.serverID, data["reason"], prefix=targetServer.nextClosest)
 		return True
 
 squit = ServerQuit()

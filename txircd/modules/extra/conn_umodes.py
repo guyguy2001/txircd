@@ -7,9 +7,6 @@ class AutoUserModes(ModuleData):
 
 	name = "AutoUserModes"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("welcome", 50, self.autoSetUserModes) ]
 

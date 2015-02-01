@@ -12,9 +12,6 @@ class TopicLockMode(ModuleData, Mode):
 	affectedActions = [ "commandpermission-TOPIC" ]
 	chanLevel = 100
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("t", ModeType.NoParam, self) ]
 	
@@ -25,7 +22,7 @@ class TopicLockMode(ModuleData, Mode):
 		self.rehash()
 	
 	def rehash(self):
-		newLevel = self.ircd.config.getWithDefault("channel_minimum_level_+t", 100)
+		newLevel = self.ircd.config.get("channel_minimum_level_+t", 100)
 		try:
 			self.chanLevel = int(newLevel)
 		except ValueError:
@@ -41,7 +38,7 @@ class TopicLockMode(ModuleData, Mode):
 	
 	def apply(self, actionType, channel, param, user, command, data):
 		if channel.userRank(user) < self.chanLevel:
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have access to change the topic on this channel")
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to change the topic on this channel")
 			return False
 		return None
 

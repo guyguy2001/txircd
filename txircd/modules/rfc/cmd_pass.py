@@ -10,9 +10,6 @@ class PassCommand(ModuleData, Command):
 	core = True
 	forRegistered = False
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("register", 10, self.matchPassword) ]
 	
@@ -21,7 +18,7 @@ class PassCommand(ModuleData, Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("PassCmd", irc.ERR_NEEDMOREPARAMS, "PASS", ":Not enough parameters")
+			user.sendSingleError("PassCmd", irc.ERR_NEEDMOREPARAMS, "PASS", "Not enough parameters")
 			return None
 		return {
 			"password": params[0]
@@ -37,7 +34,7 @@ class PassCommand(ModuleData, Command):
 		except KeyError:
 			return True
 		if "password" not in user.cache or serverPass != user.cache["password"]:
-			user.sendMessage("ERROR", ":Closing Link: {}@{} [Access Denied]".format(user.ident, user.host), to=None, prefix=None)
+			user.sendMessage("ERROR", "Closing Link: {}@{} [Access Denied]".format(user.ident, user.host), to=None, prefix=None)
 			return False
 		return True
 

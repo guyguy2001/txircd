@@ -11,9 +11,6 @@ class WhoCommand(ModuleData, Command):
 	name = "WhoCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("WHO", 1, self) ]
 	
@@ -75,8 +72,8 @@ class WhoCommand(ModuleData, Command):
 				while countingServer.nextClosest != self.ircd.serverID:
 					countingServer = self.ircd.servers[countingServer.nextClosest]
 					hopcount += 1
-			user.sendMessage(irc.RPL_WHOREPLY, mask, targetUser.ident, targetUser.host, serverName, targetUser.nick, "{}{}{}".format("G" if isAway else "H", "*" if isOper else "", status), ":{} {}".format(hopcount, targetUser.gecos))
-		user.sendMessage(irc.RPL_ENDOFWHO, mask, ":End of /WHO list")
+			user.sendMessage(irc.RPL_WHOREPLY, mask, targetUser.ident, targetUser.host, serverName, targetUser.nick, "{}{}{}".format("G" if isAway else "H", "*" if isOper else "", status), "{} {}".format(hopcount, targetUser.gecos))
+		user.sendMessage(irc.RPL_ENDOFWHO, mask, "End of /WHO list")
 		return True
 
 whoCommand = WhoCommand()

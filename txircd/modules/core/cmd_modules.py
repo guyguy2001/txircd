@@ -13,9 +13,6 @@ class ModulesCommand(ModuleData, Command):
 	name = "ModulesCommand"
 	core = True
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def userCommands(self):
 		return [ ("MODULES", 1, self) ]
 
@@ -24,8 +21,8 @@ class ModulesCommand(ModuleData, Command):
 
 	def execute(self, user, data):
 		for module in sorted(self.ircd.loadedModules.keys()):
-			user.sendMessage(irc.RPL_MODLIST, ":{}".format(module))
-		user.sendMessage(irc.RPL_ENDOFMODLIST, ":End of MODULES list")
+			user.sendMessage(irc.RPL_MODLIST, module)
+		user.sendMessage(irc.RPL_ENDOFMODLIST, "End of MODULES list")
 		return True
 
 modulesCommand = ModulesCommand()

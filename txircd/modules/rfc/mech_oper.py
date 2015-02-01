@@ -13,9 +13,6 @@ class Oper(ModuleData, Mode):
 	name = "Oper"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def userCommands(self):
 		return [ ("OPER", 1, UserOper(self.ircd)) ]
 	
@@ -41,7 +38,7 @@ class Oper(ModuleData, Mode):
 	
 	def nope(self, user, settingUser, adding, param):
 		if adding:
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - User mode o may not be set")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - User mode o may not be set")
 			return False
 		return None
 	
@@ -59,7 +56,7 @@ class UserOper(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("OperCmd", irc.ERR_NEEDMOREPARAMS, "OPER", ":Not enough parameters")
+			user.sendSingleError("OperCmd", irc.ERR_NEEDMOREPARAMS, "OPER", "Not enough parameters")
 			return None
 		return {
 			"username": params[0],
@@ -67,29 +64,29 @@ class UserOper(Command):
 		}
 	
 	def execute(self, user, data):
-		configuredOpers = self.ircd.config.getWithDefault("opers", {})
+		configuredOpers = self.ircd.config.get("opers", {})
 		username = data["username"]
 		if username not in configuredOpers:
-			user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			self.reportOper(user, "Bad username")
 			return True
 		operData = configuredOpers[username]
 		if "password" not in operData:
-			user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			self.reportOper(user, "Bad password")
 			return True
 		password = data["password"]
 		if "hash" in operData:
 			compareFunc = "compare-{}".format(operData["hash"])
 			if compareFunc not in self.ircd.functionCache:
-				user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+				user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 				self.reportOper(user, "Bad password")
 				return True
 			passwordMatch = self.ircd.functionCache[compareFunc](password, operData["password"])
 		else:
 			passwordMatch = (password == operData["password"])
 		if not passwordMatch:
-			user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			self.reportOper(user, "Bad password")
 			return True
 		if "host" in operData:
@@ -100,18 +97,18 @@ class UserOper(Command):
 				if not fnmatch(userHost, operHost):
 					userHost = ircLower("{}@{}".format(user.ident, user.ip))
 					if not fnmatch(userHost, operHost):
-						user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+						user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 						self.reportOper(user, "Bad host")
 						return True
 		if self.ircd.runActionUntilFalse("opercheck", user, username, password, operData): # Allow other modules to implement additional checks
-			user.sendMessage(irc.ERR_NOOPERHOST, ":Invalid oper credentials")
+			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			self.reportOper(user, "Failed additional oper checks") #TODO: Provide a standardized way for these custom checks to give a reason
 			return True
 		user.setModes(self.ircd.serverID, "+o", [])
-		user.sendMessage(irc.RPL_YOUREOPER, ":You are now an IRC operator")
+		user.sendMessage(irc.RPL_YOUREOPER, "You are now an IRC operator")
 		self.reportOper(user, None)
 		if "types" in operData:
-			configuredOperTypes = self.ircd.config.getWithDefault("oper_types", {})
+			configuredOperTypes = self.ircd.config.get("oper_types", {})
 			operPermissions = set()
 			for operType in operData["types"]:
 				if operType not in configuredOperTypes:

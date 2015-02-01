@@ -11,9 +11,6 @@ class WhowasCommand(ModuleData, Command):
 	name = "WhowasCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("quit", 10, self.addUserToWhowas),
 				("remotequit", 10, self.addUserToWhowas),
@@ -27,8 +24,8 @@ class WhowasCommand(ModuleData, Command):
 			self.ircd.storage["whowas"] = {}
 	
 	def removeOldEntries(self, whowasEntries):
-		expireDuration = durationToSeconds(self.ircd.config.getWithDefault("whowas_duration", "1d"))
-		maxCount = self.ircd.config.getWithDefault("whowas_max_entries", 10)
+		expireDuration = durationToSeconds(self.ircd.config.get("whowas_duration", "1d"))
+		maxCount = self.ircd.config.get("whowas_max_entries", 10)
 		while whowasEntries and len(whowasEntries) > maxCount:
 			whowasEntries.pop(0)
 		expireTime = timestamp(now()) - expireDuration
@@ -65,12 +62,12 @@ class WhowasCommand(ModuleData, Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("WhowasCmd", irc.ERR_NEEDMOREPARAMS, "WHOWAS", ":Not enough parameters")
+			user.sendSingleError("WhowasCmd", irc.ERR_NEEDMOREPARAMS, "WHOWAS", "Not enough parameters")
 			return None
 		lowerParam = ircLower(params[0])
 		if lowerParam not in self.ircd.storage["whowas"]:
 			print("Nick not found in whowas.")
-			user.sendSingleError("WhowasNick", irc.ERR_WASNOSUCHNICK, params[0], ":There was no such nickname")
+			user.sendSingleError("WhowasNick", irc.ERR_WASNOSUCHNICK, params[0], "There was no such nickname")
 			return None
 		return {
 			"nick": lowerParam,
@@ -87,15 +84,15 @@ class WhowasCommand(ModuleData, Command):
 		if not whowasEntries:
 			del allWhowas[nick]
 			self.ircd.storage["whowas"] = allWhowas
-			user.sendMessage(irc.ERR_WASNOSUCHNICK, data["param"], ":There was no such nickname")
+			user.sendMessage(irc.ERR_WASNOSUCHNICK, data["param"], "There was no such nickname")
 			return True
 		allWhowas[nick] = whowasEntries # Save back to the list excluding the removed entries
 		self.ircd.storage["whowas"] = allWhowas
 		for entry in whowasEntries:
 			entryNick = entry["nick"]
-			user.sendMessage(irc.RPL_WHOWASUSER, entryNick, entry["ident"], entry["host"], "*", ":{}".format(entry["gecos"]))
-			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], ":{}".format(datetime.utcfromtimestamp(entry["when"])))
-		user.sendMessage(irc.RPL_ENDOFWHOWAS, nick, ":End of WHOWAS")
+			user.sendMessage(irc.RPL_WHOWASUSER, entryNick, entry["ident"], entry["host"], "*", entry["gecos"])
+			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], datetime.utcfromtimestamp(entry["when"]))
+		user.sendMessage(irc.RPL_ENDOFWHOWAS, nick, "End of WHOWAS")
 		return True
 
 whowasCmd = WhowasCommand()

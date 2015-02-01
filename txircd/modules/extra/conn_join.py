@@ -8,14 +8,11 @@ class AutoJoin(ModuleData):
 
 	name = "AutoJoin"
 
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-
 	def actions(self):
 		return [ ("welcome", 1, self.autoJoinChannels) ]
 
 	def autoJoinChannels(self, user):
-		for chanName in self.ircd.config.getWithDefault("client_join_on_connect", []):
+		for chanName in self.ircd.config.get("client_join_on_connect", []):
 			if chanName[0] != "#":
 				chanName = "#{}".format(chanName)
 			if chanName in self.ircd.channels:

@@ -2,10 +2,10 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from twisted.python import log
-from twisted.words.protocols.irc import IRC
+from txircd.ircbase import IRCBase
 import logging
 
-class IRCServer(IRC):
+class IRCServer(IRCBase):
 	def __init__(self, ircd, ip, received):
 		self.ircd = ircd
 		self.serverID = None
@@ -18,9 +18,9 @@ class IRCServer(IRC):
 		self.disconnectedDeferred = Deferred()
 		self.receivedConnection = received
 		self._pinger = LoopingCall(self._ping)
-		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.getWithDefault("server_registration_timeout", 10), self._timeoutRegistration)
+		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("server_registration_timeout", 10), self._timeoutRegistration)
 	
-	def handleCommand(self, command, prefix, params):
+	def handleCommand(self, command, prefix, params, tags):
 		if command not in self.ircd.serverCommands:
 			self.disconnect("Unknown command {}".format(command)) # If we receive a command we don't recognize, abort immediately to avoid a desync
 			return
@@ -85,7 +85,7 @@ class IRCServer(IRC):
 	
 	def _timeoutRegistration(self):
 		if self.serverID and self.name:
-			self._pinger.start(self.ircd.config.getWithDefault("server_ping_frequency", 60))
+			self._pinger.start(self.ircd.config.get("server_ping_frequency", 60))
 			return
 		log.msg("Disconnecting unregistered server", logLevel=logging.INFO)
 		self.disconnect("Registration timeout")

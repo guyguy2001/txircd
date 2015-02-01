@@ -9,9 +9,6 @@ class ConnectCommand(ModuleData, Command):
 	name = "ConnectCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def actions(self):
 		return [ ("commandpermission-CONNECT", 1, self.canConnect) ]
 	
@@ -20,13 +17,13 @@ class ConnectCommand(ModuleData, Command):
 	
 	def canConnect(self, user, command, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-connect", users=[user]):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, ":Permission denied - You do not have the correct operator privileges")
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("ConnectParams", irc.ERR_NEEDMOREPARAMS, "CONNECT", ":Not enough parameters")
+			user.sendSingleError("ConnectParams", irc.ERR_NEEDMOREPARAMS, "CONNECT", "Not enough parameters")
 			return None
 		return {
 			"server": params[0]
@@ -35,11 +32,11 @@ class ConnectCommand(ModuleData, Command):
 	def execute(self, user, data):
 		serverName = data["server"]
 		if serverName in self.ircd.serverNames:
-			user.sendMessage("NOTICE", ":*** Server {} is already on the network".format(serverName))
+			user.sendMessage("NOTICE", "*** Server {} is already on the network".format(serverName))
 		elif self.ircd.connectServer(serverName):
-			user.sendMessage("NOTICE", ":*** Connecting to {}".format(serverName))
+			user.sendMessage("NOTICE", "*** Connecting to {}".format(serverName))
 		else:
-			user.sendMessage("NOTICE", ":*** Failed to connect to {}".format(serverName))
+			user.sendMessage("NOTICE", "*** Failed to connect to {}".format(serverName))
 		return True
 
 connectCmd = ConnectCommand()

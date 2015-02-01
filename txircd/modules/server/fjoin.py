@@ -11,9 +11,6 @@ class FJoinCommand(ModuleData, Command):
 	name = "FJoinCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def serverCommands(self):
 		return [ ("FJOIN", 1, self) ]
 	

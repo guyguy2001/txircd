@@ -8,9 +8,6 @@ class PassCommand(ModuleData, Command):
 	name = "ServerPassCommand"
 	core = True
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def serverCommands(self):
 		return [ ("PASS", 1, self) ]
 	
@@ -24,7 +21,7 @@ class PassCommand(ModuleData, Command):
 	def execute(self, server, data):
 		if not server.name:
 			return None
-		serverLinks = self.ircd.config.getWithDefault("links", {})
+		serverLinks = self.ircd.config.get("links", {})
 		if server.name not in serverLinks:
 			return None
 		receivedPassword = data["password"]
@@ -33,10 +30,10 @@ class PassCommand(ModuleData, Command):
 			server.cache["authenticated"] = True
 			if server.receivedConnection:
 				sendPassword = serverLinks[server.name]["out_password"] if "out_password" in serverLinks[server.name] else ""
-				server.sendMessage("PASS", ":{}".format(sendPassword), prefix=self.ircd.serverID)
+				server.sendMessage("PASS", sendPassword, prefix=self.ircd.serverID)
 			else:
 				server.sendMessage("CAPAB", "START", "300", prefix=self.ircd.serverID)
-				server.sendMessage("CAPAB", "MODULES", ":{}".format(" ".join(self.ircd.loadedModules.keys())), prefix=self.ircd.serverID)
+				server.sendMessage("CAPAB", "MODULES", " ".join(self.ircd.loadedModules.keys()), prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			return True
 		server.disconnect("Incorrect password")

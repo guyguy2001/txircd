@@ -12,9 +12,6 @@ class BanMode(ModuleData, Mode):
 	core = True
 	affectedActions = [ "joinpermission" ]
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def channelModes(self):
 		return [ ("b", ModeType.List, self) ]
 	
@@ -156,7 +153,7 @@ class BanMode(ModuleData, Mode):
 			return None
 		statusLevel = self.ircd.channelStatuses[actionExtban][1]
 		if channel.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, actionExtban, param, users=[user], channels=[channel]):
-			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, ":You do not have permission to modify autostatus for mode {}".format(actionExtban))
+			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have permission to modify autostatus for mode {}".format(actionExtban))
 			return False
 		return None
 	
@@ -265,16 +262,16 @@ class BanMode(ModuleData, Mode):
 			if ";" in param:
 				continue # Ignore entries with action extbans
 			if self.banMatchesUser(user, param):
-				user.sendMessage(irc.ERR_BANNEDFROMCHAN, channel.name, ":Cannot join channel (You're banned)")
+				user.sendMessage(irc.ERR_BANNEDFROMCHAN, channel.name, "Cannot join channel (You're banned)")
 				return False
 		return None
 	
 	def showListParams(self, user, channel):
 		if user not in channel.users or "b" not in channel.modes:
-			user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, ":End of channel ban list")
+			user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, "End of channel ban list")
 			return
 		for paramData in channel.modes["b"]:
 			user.sendMessage(irc.RPL_BANLIST, channel.name, paramData[0], paramData[1], str(timestamp(paramData[2])))
-		user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, ":End of channel ban list")
+		user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, "End of channel ban list")
 
 banMode = BanMode()

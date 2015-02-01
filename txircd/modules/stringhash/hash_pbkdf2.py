@@ -15,9 +15,6 @@ class HashPBKDF2(ModuleData):
 	
 	name = "HashPBKDF2"
 	
-	def hookIRCd(self, ircd):
-		self.ircd = ircd
-	
 	def load(self):
 		self.ircd.functionCache["hash-pbkdf2"] = self.hash
 		self.ircd.functionCache["compare-pbkdf2"] = self.compare
