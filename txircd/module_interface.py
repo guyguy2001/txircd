@@ -114,7 +114,7 @@ class ModuleData(object):
 	core = False
 	
 	def hookIRCd(self, ircd):
-		pass
+		self.ircd = ircd
 	
 	def channelModes(self):
 		return []
