@@ -1,4 +1,4 @@
-twisted==14.0.2
+twisted==15.0.0
 pyopenssl==0.13.1
 pyyaml==3.11
 pbkdf2
