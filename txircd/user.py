@@ -132,7 +132,7 @@ class IRCUser(IRCBase):
 					if (handler[0].forRegistered is True and not self.isRegistered()) or (handler[0].forRegistered is False and self.isRegistered()):
 						continue
 				spewRegWarning = False
-				data = handler[0].parseParams(self, params, prefix, {})
+				data = handler[0].parseParams(self, params, prefix, tags)
 				if data is not None:
 					affectedUsers = handler[0].affectedUsers(self, data)
 					affectedChannels = handler[0].affectedChannels(self, data)
