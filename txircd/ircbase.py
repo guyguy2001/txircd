@@ -60,7 +60,7 @@ class IRCBase(LineOnlyReceiver):
 			prefix = kw["prefix"]
 		else:
 			prefix = None
-		if " " in params[-1]:
+		if " " in params[-1] or params[-1][0] == ":":
 			params[-1] = ":{}".format(params[-1])
 		lineToSend = ""
 		if tags:
