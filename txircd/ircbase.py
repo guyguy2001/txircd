@@ -10,6 +10,7 @@ class IRCBase(LineOnlyReceiver):
 				self.handleCommand(command, params, prefix, tags)
 	
 	def _parseLine(self, line):
+		line = line.replace("\0", "")
 		if " :" in line:
 			linePart, lastParam = line.split(" :", 1)
 		else:
