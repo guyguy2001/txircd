@@ -607,7 +607,7 @@ class RemoteUser(IRCUser):
 			if channel.name not in self.ircd.channels:
 				newChannel = True
 				self.ircd.channels[channel.name] = channel
-			channel.users[self] = ""
+			channel.users[self] = { "status": "" }
 			self.channels.append(channel)
 			messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
 			self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, users=[self], channels=[channel])
