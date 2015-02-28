@@ -357,9 +357,11 @@ class IRCUser(IRCBase):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("join", channel, self, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel):
+	def leaveChannel(self, channel, type = "PART", typeData = {}):
 		if channel not in self.channels:
 			return
+		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, type, typeData)
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
