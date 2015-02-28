@@ -272,6 +272,27 @@ class IRCd(Service):
 				unloadDeferreds.append(d)
 		
 		for modeData in moduleData["channelmodes"]:
+			if fullUnload: # Unset modes on full unload
+				if modeData[1] == ModeType.Status:
+					for channel in self.ircd.channels.itervalues():
+						removeFromChannel = []
+						for channel in self.ircd.channels.itervalues():
+							for user, userData in channel.user.iteritems():
+								if modeData[0] in userData["status"]:
+									removeFromChannel.append((False, modeData[0], user.uuid))
+						channel.setModes(removeFromChannel, self.serverID)
+				elif modeData[1] == ModeType.List:
+					for channel in self.ircd.channels.itervalues():
+						if modeData[0] in channel.modes:
+							removeFromChannel = []
+							for paramData in channel.modes[modeData[0]]:
+								removeFromChannel.append((False, modeData[0], paramData[0]))
+							channel.setModes(removeFromChannel, self.serverID)
+				else:
+					for channel in self.ircd.channels.itervalues():
+						if modeData[0] in channel.modes:
+							channel.setModes([(False, modeData[0], channel.modes[modeData[0]])], self.serverID)
+			
 			if modeData[1] == ModeType.Status:
 				del self.channelStatuses[modeData[0]]
 				del self.channelStatusSymbols[modeData[4]]
@@ -280,6 +301,19 @@ class IRCd(Service):
 				del self.channelModes[modeData[1]][modeData[0]]
 			del self.channelModeTypes[modeData[0]]
 		for modeData in moduleData["usermodes"]:
+			if fullUnload: # Unset modes on full unload
+				if modeData[1] == ModeType.List:
+					for user in self.ircd.users.itervalues():
+						if modeData[0] in user.modes:
+							removeFromUser = []
+							for paramData in user.modes[modeData[0]]:
+								removeFromUser.append((False, modeData[0], paramData[0]))
+							user.setModes(removeFromUser, self.serverID)
+				else:
+					for user in self.ircd.users.itervalues():
+						if modeData[0] in user.modes:
+							user.setModes([(False, modeData[0], user.modes[modeData[0]])], self.serverID)
+			
 			del self.userModes[modeData[1]][modeData[0]]
 			del self.userModeTypes[modeData[0]]
 		for actionData in moduleData["actions"]:
