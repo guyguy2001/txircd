@@ -86,9 +86,49 @@ class IRCChannel(object):
 			self.metadata[namespace][key] = value
 		self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value, channels=[self])
 	
-	def setModes(self, modes, source, override = False):
-		modeChanges = self._applyModes(modes, source)
-		self._notifyModeChanges(modeChanges, source, self._sourceName(source))
+	def setModes(self, modes, defaultSource, override = False):
+		modeChanges = []
+		defaultSourceName = self._sourceName(defaultSource)
+		if defaultSourceName is None:
+			raise ValueError ("Source must be a valid user or server ID.")
+		for modeData in modes:
+			mode = modeData[1]
+			if mode not in self.ircd.channelModeTypes:
+				continue
+			modeType = self.ircd.channelModeTypes[mode]
+			adding = modeData[0]
+			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param, ModeType.Status):
+				param = modeData[2]
+			else:
+				param = None
+			if modeType == ModeType.List:
+				dataCount = len(modeData)
+				if dataCount >= 4:
+					setBy = modeData[3]
+				else:
+					setBy = defaultSourceName
+				if dataCount >= 5:
+					setTime = modeData[4]
+				else:
+					setTime = now()
+			if modeType == ModeType.Status:
+				if adding:
+					paramList = self.ircd.channelStatuses[mode][2].checkSet(self, param)
+				else:
+					paramList = self.ircd.channelStatuses[mode][2].checkUnset(self, param)
+			else:
+				if adding:
+					paramList = self.ircd.channelModes[modeType][mode].checkSet(self, param)
+				else:
+					paramList = self.ircd.channelModes[modeType][mode].checkUnset(self, param)
+			if paramList is None:
+				continue
+			
+			for parameter in paramList:
+				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
+					modeChanges.append((adding, mode, parameter, setBy, setTime))
+		
+		self._notifyModeChanges(modeChanges, defaultSource, defaultSourceName)
 		return modeChanges
 	
 	def setModesByUser(self, user, modes, params, override = False):
@@ -168,49 +208,6 @@ class IRCChannel(object):
 				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
 					changes.append((adding, mode, parameter, setBy, setTime))
 		self._notifyModeChanges(changes, user.uuid, setBy)
-		return changes
-	
-	def _applyModes(self, modes, defaultSource):
-		changes = []
-		defaultSourceName = self._sourceName(defaultSource)
-		if defaultSourceName is None:
-			raise ValueError ("Source must be a valid user or server ID.")
-		for modeData in modes:
-			if modeData[1] not in self.ircd.channelModeTypes:
-				continue
-			mode = modeData[1]
-			modeType = self.ircd.channelModeTypes[mode]
-			adding = modeData[0]
-			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param, ModeType.Status):
-				param = modeData[2]
-			else:
-				param = None
-			if modeType == ModeType.List:
-				dataCount = len(modeData)
-				if dataCount >= 4:
-					setBy = modeData[3]
-				else:
-					setBy = defaultSourceName
-				if dataCount >= 5:
-					setTime = modeData[4]
-				else:
-					setTime = now()
-			if modeType == ModeType.Status:
-				if adding:
-					paramList = self.ircd.channelStatuses[mode][2].checkSet(self, param)
-				else:
-					paramList = self.ircd.channelStatuses[mode][2].checkUnset(self, param)
-			else:
-				if adding:
-					paramList = self.ircd.channelModes[modeType][mode].checkSet(self, param)
-				else:
-					paramList = self.ircd.channelModes[modeType][mode].checkUnset(self, param)
-			if paramList is None:
-				continue
-			
-			for parameter in paramList:
-				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
-					changes.append((adding, mode, parameter, setBy, setTime))
 		return changes
 	
 	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
