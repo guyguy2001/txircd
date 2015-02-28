@@ -370,21 +370,52 @@ class IRCUser(IRCBase):
 				self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
 				del self.ircd.channels[channel.name]
 	
-	def setModes(self, source, modeString, params, override = False):
-		adding = True
-		changing = []
-		user = None
-		if source in self.ircd.users:
-			user = self.ircd.users[source]
-			sourceName = user.hostmask()
-		elif source == self.ircd.serverID:
-			sourceName = self.ircd.name
-		elif source in self.ircd.servers:
-			sourceName = self.ircd.servers[source].name
-		else:
+	def setModes(self, modes, defaultSource, override = False):
+		modeChanges = []
+		defaultSourceName = self._sourceName(defaultSource)
+		if defaultSourceName is None:
 			raise ValueError ("Source must be a valid user or server ID.")
-		for mode in modeString:
-			if len(changing) >= 20:
+		for modeData in modes:
+			mode = modeData[1]
+			if mode not in self.ircd.userModeTypes:
+				continue
+			modeType = self.ircd.userModeTypes[mode]
+			adding = modeData[0]
+			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param):
+				param = modeData[2]
+			else:
+				param = None
+			if modeType == ModeType.List:
+				dataCount = len(modeData)
+				if dataCount >= 4:
+					setBy = modeData[3]
+				else:
+					setBy = defaultSourceName
+				if dataCount >= 5:
+					setTime = modeData[4]
+				else:
+					setTime = now()
+			if adding:
+				paramList = self.ircd.userModes[modeType][mode].checkSet(self, param)
+			else:
+				paramList = self.ircd.userModes[modeType][mode].checkUnset(self, param)
+			if paramList is None:
+				continue
+			
+			for parameter in paramList:
+				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
+					modeChanges.append((adding, mode, parameter, setBy, setTime))
+		
+		self._notifyModeChanges(modeChanges, defaultSource, defaultSourceName)
+		return modeChanges
+	
+	def setModesByUser(self, user, modes, params, override = False):
+		adding = True
+		changes = []
+		setBy = self._sourceName(user.uuid)
+		setTime = now()
+		for mode in modes:
+			if len(changes) >= 20:
 				break
 			if mode == "+":
 				adding = True
@@ -393,93 +424,102 @@ class IRCUser(IRCBase):
 				adding = False
 				continue
 			if mode not in self.ircd.userModeTypes:
-				if user:
-					user.sendMessage(irc.ERR_UMODEUNKNOWNFLAG, mode, "is unknown mode char to me")
+				user.sendMessage(irc.ERR_UNKNOWNMODE, mode, "is unknown mode char to me")
 				continue
-			param = None
 			modeType = self.ircd.userModeTypes[mode]
-			if modeType in (ModeType.List, ModeType.ParamOnUnset) or (modeType == ModeType.Param and adding):
+			param = None
+			if modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
 				try:
 					param = params.pop(0)
 				except IndexError:
-					if modeType == ModeType.List and user:
+					if modeType == ModeType.List:
 						self.ircd.userModes[modeType][mode].showListParams(user, self)
 					continue
-			paramList = [param]
-			if param:
-				if adding:
-					paramList = self.ircd.userModes[modeType][mode].checkSet(self, param)
-				else:
-					paramList = self.ircd.userModes[modeType][mode].checkUnset(self, param)
+			if adding:
+				paramList = self.ircd.userModes[modeType][mode].checkSet(self, param)
+			else:
+				paramList = self.ircd.userModes[modeType][mode].checkUnset(self, param)
 			if paramList is None:
 				continue
-			del param # We use this later
 			
-			for param in paramList:
+			for parameter in paramList:
 				if len(changing) >= 20:
 					break
-				if user and not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, param, users=[self, user]) is False:
+				if not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, parameter, users=[self, user]) is False:
 					continue
 				if adding:
 					if modeType == ModeType.List:
-						if not self.addListMode(mode, param, sourceName, now(), user):
+						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
 							continue
-					else:
-						if mode in self.modes and self.modes[mode] == param:
-							continue
-						self.modes[mode] = param
-				else:
-					if mode not in self.modes:
-						continue
-					if modeType == ModeType.List:
-						for index, data in enumerate(self.modes[mode]):
-							if data[0] == param:
-								del self.modes[mode][index]
-								break
-						else:
-							continue
-					else:
-						if mode in self.modes:
-							del self.modes[mode]
-						else:
-							continue
-				changing.append((adding, mode, param))
-				self.ircd.runActionStandard("modechange-user-{}".format(mode), self, source, adding, param, users=[self])
-		if changing:
-			users = []
-			if user and user.uuid[:3] == self.ircd.serverID:
-				users.append(user)
-			if self.uuid[:3] == self.ircd.serverID:
-				users.append(self)
-			if users:
-				self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, changing, users=[self])
-			self.ircd.runActionStandard("modechanges-user", self, source, sourceName, changing, users=[self])
-		return changing
+				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
+					changes.append((adding, mode, parameter, setBy, setTime))
+		self._notifyModeChanges(changes, user.uuid, setBy)
+		return changes
 	
-	def addListMode(self, mode, param, sourceName, time, settingUser = None):
+	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
+		if len(parameter) > 255:
+			return False
+		
+		if adding:
+			if modeType == ModeType.List:
+				if mode in self.modes:
+					if len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+						return False
+					for paramData in self.modes[mode]:
+						if parameter == paramData[0]:
+							return False
+				else:
+					self.modes[mode] = []
+				self.modes[mode].append((parameter, setBy, setTime))
+				return True
+			if mode in self.modes and self.modes[mode] == parameter:
+				return False
+			self.modes[mode] = parameter
+			return True
+		
+		if modeType == ModeType.List:
+			if mode not in self.modes:
+				return False
+			for index, paramData in self.modes[mode]:
+				if paramData[0] == parameter:
+					del self.modes[mode][index]
+					break
+			else:
+				return False
+			if not self.modes[mode]:
+				del self.modes[mode]
+			return True
 		if mode not in self.modes:
-			self.modes[mode] = []
-		found = False
-		for data in self.modes[mode]:
-			if data[0] == param:
-				found = True
-				break
-		if found:
-			if not self.modes[mode]:
-				del self.modes[mode]
 			return False
-		if len(param) > 250: # Set a max limit on param length
-			if not self.modes[mode]:
-				del self.modes[mode]
+		if modeType == ModeType.ParamOnUnset and parameter != self.modes[mode]:
 			return False
-		if len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 100):
-			if settingUser:
-				settingUser.sendMessage(irc.ERR_BANLISTFULL, self.nick, param, "User +{} list is full".format(mode))
-			if not self.modes[mode]: # The config limit really shouldn't be this low, but it's possible
-				del self.modes[mode]
-			return False
-		self.modes[mode].append((param, sourceName, time))
+		del self.modes[mode]
 		return True
+	
+	def _notifyModeChanges(self, modeChanges, source, sourceName):
+		if not modeChanges:
+			return 
+		for change in modeChanges:
+			self.ircd.runActionStandard("modechange-user-{}".format(change[1]), self, change[3], change[0], change[2], users=[self])
+		
+		users = []
+		if source in self.ircd.users and source[:3] == self.ircd.serverID:
+			users.append(self.ircd.users[source])
+		if self.uuid[:3] == self.ircd.serverID:
+			users.append(self)
+		if users:
+			self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, modeChanges, users=users)
+		self.ircd.runActionStandard("modechanges-user", self, source, sourceName, modeChanges, users=[self])
+	
+	def _sourceName(self, source):
+		if source in self.ircd.users:
+			return self.ircd.users[source].hostmask()
+		if source == self.ircd.serverID:
+			return self.ircd.name
+		if source in self.ircd.servers:
+			return self.ircd.servers[source].name
+		return None
 	
 	def modeString(self, toUser):
 		modeStr = ["+"]
