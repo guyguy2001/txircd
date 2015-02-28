@@ -173,12 +173,12 @@ class IRCChannel(object):
 			for parameter in paramList:
 				if len(changing) >= 20:
 					break
-				if not override and self.ircd.runActionUntilValue("modepermission-channel-{}".format(mode), self, user, adding, param, users=[user], channels=[self]) is False:
+				if not override and self.ircd.runActionUntilValue("modepermission-channel-{}".format(mode), self, user, adding, parameter, users=[user], channels=[self]) is False:
 					continue
 				if adding:
 					if modeType == ModeType.Status:
 						try:
-							targetUser = self.ircd.users[self.ircd.userNicks[param]]
+							targetUser = self.ircd.users[self.ircd.userNicks[parameter]]
 						except KeyError:
 							continue
 						if targetUser not in self.users:
@@ -196,7 +196,7 @@ class IRCChannel(object):
 				else:
 					if modeType == ModeType.Status:
 						try:
-							targetUser = self.ircd.users[self.ircd.userNicks[param]]
+							targetUser = self.ircd.users[self.ircd.userNicks[parameter]]
 						except KeyError:
 							continue
 						if mode not in self.users[targetUser]:
