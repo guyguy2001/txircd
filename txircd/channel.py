@@ -86,7 +86,7 @@ class IRCChannel(object):
 			self.metadata[namespace][key] = value
 		self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value, channels=[self])
 	
-	def setModes(self, modes, defaultSource, override = False):
+	def setModes(self, modes, defaultSource):
 		modeChanges = []
 		defaultSourceName = self._sourceName(defaultSource)
 		if defaultSourceName is None:

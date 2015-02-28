@@ -370,7 +370,7 @@ class IRCUser(IRCBase):
 				self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
 				del self.ircd.channels[channel.name]
 	
-	def setModes(self, modes, defaultSource, override = False):
+	def setModes(self, modes, defaultSource):
 		modeChanges = []
 		defaultSourceName = self._sourceName(defaultSource)
 		if defaultSourceName is None:
