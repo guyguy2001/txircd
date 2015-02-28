@@ -21,28 +21,40 @@ class IRCChannel(object):
 		}
 		self.cache = {}
 	
-	def sendMessage(self, command, *params, **kw):
+	def sendUserMessage(self, command, *params, **kw):
 		if "to" not in kw:
 			kw["to"] = self.name
 		if kw["to"] is None:
 			del kw["to"]
-		userList = self.users.keys()
-		if "skipusers" in kw:
-			for u in kw["skipusers"]:
+		userList = [u for u in self.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+		if "skip" in kw:
+			for u in kw["skip"]:
 				if u in userList:
 					userList.remove(u)
+		kw["users"] = userList
+		kw["channels"] = [self]
+		for user in userList:
+			user.sendMessage(command, *params, **kw)
+	
+	def sendServerMessage(self, command, *params, **kw):
 		servers = set()
 		for user in self.users.iterkeys():
 			if user.uuid[:3] != self.ircd.serverID:
 				servers.add(self.ircd.servers[user.uuid[:3]])
-		if "skipservers" in kw:
-			servers = servers.difference(kw["skipservers"])
-		servers = list(servers)
-		kw["users"] = userList
-		kw["channels"] = [self]
-		self.ircd.runActionProcessingMultiple("sendchannelmessage-{}".format(command), (userList, servers), self, *params, **kw)
-		if userList or servers:
-			self.ircd.runActionProcessingMultiple("sendchannelmessage", (userList, servers), self, command, *params, **kw)
+		if "skipall" in kw:
+			for s in kw["skipall"]:
+				servers.discard(s)
+		localServers = set()
+		for server in servers:
+			nearHop = server
+			while nearHop.nextClosest != self.ircd.serverID:
+				nearHop = self.ircd.servers[nearHop.nextClosest]
+			localServers.add(nearHop)
+		if "skiplocal" in kw:
+			for s in kw["skiplocal"]:
+				localServers.discard(s)
+		for server in localServers:
+			server.sendMessage(command, *params, **kw)
 	
 	def setTopic(self, topic, setter):
 		if setter in self.ircd.users:
