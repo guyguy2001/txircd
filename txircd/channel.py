@@ -190,7 +190,7 @@ class IRCChannel(object):
 							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, "You do not have permission to set channel mode +{}".format(mode))
 							continue
 					elif modeType == ModeType.List:
-						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 100):
+						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 128):
 							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
 							continue
 				else:
