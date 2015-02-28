@@ -189,6 +189,7 @@ class IRCChannel(object):
 						if not override and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, mode, parameter, users=[user], channels=[self]):
 							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, "You do not have permission to set channel mode +{}".format(mode))
 							continue
+						parameter = targetUser.uuid
 					elif modeType == ModeType.List:
 						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 128):
 							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
@@ -205,6 +206,7 @@ class IRCChannel(object):
 						if not override and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, mode, parameter, users=[user], channels=[self]):
 							user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, self.name, "You do not have permission to set channel mode -{}".format(mode))
 							continue
+						parameter = targetUser.uuid
 				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
 					changes.append((adding, mode, parameter, setBy, setTime))
 		self._notifyModeChanges(changes, user.uuid, setBy)
