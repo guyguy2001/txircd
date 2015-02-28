@@ -93,7 +93,7 @@ class UserOper(Command):
 			operHost = ircLower(operData["host"])
 			userHost = ircLower("{}@{}".format(user.ident, user.host))
 			if not fnmatch(userHost, operHost):
-				userHost = ircLower("{}@{}".format(user.ident, user.realhost))
+				userHost = ircLower("{}@{}".format(user.ident, user.realHost))
 				if not fnmatch(userHost, operHost):
 					userHost = ircLower("{}@{}".format(user.ident, user.ip))
 					if not fnmatch(userHost, operHost):

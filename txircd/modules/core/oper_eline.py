@@ -38,7 +38,7 @@ class ELineCommand(ModuleData, Command):
 			exceptmask = params[0]
 			for u in self.ircd.users.itervalues():
 				if exceptmask == u.nick:
-					exceptmask = "{}@{}".format(u.ident, u.realhost)
+					exceptmask = "{}@{}".format(u.ident, u.realHost)
 					break
 			if "@" not in exceptmask:
 				exceptmask = "*@{}".format(exceptmask)
@@ -149,7 +149,7 @@ class ELineCommand(ModuleData, Command):
 		if "eline_match" in user.cache:
 			return user.cache["eline_match"]
 		self.expireELines()
-		toMatch = ircLower("{}@{}".format(user.ident, user.realhost))
+		toMatch = ircLower("{}@{}".format(user.ident, user.realHost))
 		for mask, linedata in self.exceptlist.iteritems():
 			if fnmatch(toMatch, mask):
 				user.cache["eline_match"] = linedata["reason"]

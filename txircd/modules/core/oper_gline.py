@@ -39,7 +39,7 @@ class GLineCommand(ModuleData, Command):
 			banmask = params[0]
 			for u in self.ircd.users.itervalues():
 				if banmask == u.nick:
-					banmask = "{}@{}".format(u.ident, u.realhost)
+					banmask = "{}@{}".format(u.ident, u.realHost)
 					break
 			if "@" not in banmask:
 				banmask = "*@{}".format(banmask)
@@ -146,7 +146,7 @@ class GLineCommand(ModuleData, Command):
 		if "gline_match" in user.cache:
 			return user.cache["gline_match"]
 		self.expireGLines()
-		toMatch = ircLower("{}@{}".format(user.ident, user.realhost))
+		toMatch = ircLower("{}@{}".format(user.ident, user.realHost))
 		for mask, linedata in self.banlist.iteritems():
 			if fnmatch(toMatch, mask):
 				user.cache["gline_match"] = linedata["reason"]

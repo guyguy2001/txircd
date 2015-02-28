@@ -36,7 +36,7 @@ class ShunCommand(ModuleData, Command):
 			banmask = params[0]
 			for u in self.ircd.users.itervalues():
 				if banmask == u.nick:
-					banmask = "{}@{}".format(u.ident, u.realhost)
+					banmask = "{}@{}".format(u.ident, u.realHost)
 					break
 			if "@" not in banmask:
 				banmask = "*@{}".format(banmask)
@@ -131,7 +131,7 @@ class ShunCommand(ModuleData, Command):
 		if "eline_match" in user.cache:
 			return None
 		self.expireShuns()
-		toMatch = ircLower("{}@{}".format(user.ident, user.realhost))
+		toMatch = ircLower("{}@{}".format(user.ident, user.realHost))
 		for mask, linedata in self.banlist.iteritems():
 			if fnmatch(toMatch, mask):
 				return linedata["reason"]

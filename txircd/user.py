@@ -32,7 +32,7 @@ class IRCUser(IRCBase):
 			except (herror, gaierror):
 				host = ip
 		self.host = host
-		self.realhost = host
+		self.realHost = host
 		self.ip = ip
 		self.gecos = None
 		self.metadata = {
@@ -267,7 +267,7 @@ class IRCUser(IRCBase):
 		return "{}!{}@{}".format(self.nick, self.ident, self.host)
 	
 	def hostmaskWithRealHost(self):
-		return "{}!{}@{}".format(self.nick, self.ident, self.realhost)
+		return "{}!{}@{}".format(self.nick, self.ident, self.realHost)
 	
 	def hostmaskWithIP(self):
 		return "{}!{}@{}".format(self.nick, self.ident, self.ip)
@@ -312,7 +312,7 @@ class IRCUser(IRCBase):
 			self.ircd.runActionStandard("changehost", self, oldHost, fromServer, users=[self])
 	
 	def resetHost(self):
-		self.changeHost(self.realhost)
+		self.changeHost(self.realHost)
 	
 	def changeGecos(self, newGecos, fromServer = None):
 		if newGecos == self.gecos:
