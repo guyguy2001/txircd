@@ -36,7 +36,7 @@ class IRCBase(LineOnlyReceiver):
 			params = []
 		if lastParam:
 			params.append(lastParam)
-		return command, params, prefix, tags
+		return command.upper(), params, prefix, tags
 	
 	def _parseTags(self, tagLine):
 		tags = {}
