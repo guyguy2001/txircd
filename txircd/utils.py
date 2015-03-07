@@ -44,38 +44,6 @@ class CaseInsensitiveDictionary(MutableMapping):
 		self._data[ircLower(key)] = value
 
 
-class SafeDefaultDict(MutableMapping):
-	"""A defaultdict that can only take a constant as a default, not a callable.
-	It auto-deletes keys whenever the value is set equal to the default."""
-	def __init__(self, default, *args, **kwargs):
-		self._default = default
-		self._data = dict(*args, **kwargs)
-
-	def __repr__(self):
-		return "{self.__class__.__name__}({self.default!r}, {self._data!r})".format(self=self)
-
-	def __getitem__(self, key):
-		return self._data.get(key, self._default)
-
-	def __setitem__(self, key, value):
-		self._data[key] = value
-		if value == self._default:
-			del self[key]
-
-	def __delitem__(self, key):
-		if key in self._data:
-			del self._data[key]
-
-	def __iter__(self):
-		return iter(self._data)
-
-	def __len__(self):
-		return len(self._data)
-
-	def __eq__(self, other):
-		return self._data == other
-
-
 def now():
 	return datetime.utcnow().replace(microsecond=0)
 
