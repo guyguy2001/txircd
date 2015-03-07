@@ -365,10 +365,6 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
-		if not channel.users:
-			if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel, channels=[channel]):
-				self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
-				del self.ircd.channels[channel.name]
 	
 	def setModes(self, modes, defaultSource):
 		modeChanges = []
@@ -664,10 +660,6 @@ class RemoteUser(IRCUser):
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
-		if not channel.users:
-			if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel, channels=[channel]):
-				self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
-				del self.ircd.channels[channel.name]
 
 class LocalUser(IRCUser):
 	"""
