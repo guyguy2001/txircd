@@ -18,9 +18,7 @@ class AddlineCommand(ModuleData, Command):
 	def propagateAddXLine(self, linetype, mask, setter, created, duration, reason):
 		created = str(created)
 		duration = str(duration)
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("ADDLINE", linetype, mask, setter, created, duration, reason, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "ADDLINE", linetype, mask, setter, created, duration, reason, prefix=self.ircd.serverID)
 
 	def burstXLines(self, server, linetype, lines):
 		for mask, linedata in lines.iteritems():
@@ -52,9 +50,7 @@ class AddlineCommand(ModuleData, Command):
 		self.ircd.runActionStandard("addxline", lineType, mask, setter, createdTS, duration, reason)
 		createdTS = str(createdTS)
 		duration = str(duration)
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-				remoteServer.sendMessage("ADDLINE", lineType, mask, setter, createdTS, duration, reason, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(server, "ADDLINE", lineType, mask, setter, createdTS, duration, reason, prefix=self.ircd.serverID)
 		return True
 
 addlineCmd = AddlineCommand()

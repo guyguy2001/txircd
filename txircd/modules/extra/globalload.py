@@ -66,9 +66,7 @@ class UserLoad(Command):
 				self.ircd.loadModule(moduleName)
 				if moduleName in self.ircd.loadedModules:
 					user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, "Module successfully loaded")
-					for server in self.ircd.servers.itervalues():
-						if server.nextClosest == self.ircd.serverID:
-							server.sendMessage("LOADMODULE", moduleName, prefix=user.uuid)
+					self.ircd.broadcastToServers(None, "LOADMODULE", moduleName, prefix=user.uuid)
 				else:
 					user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, "No such module")
 			except ModuleLoadError as e:
@@ -97,9 +95,7 @@ class UserUnload(Command):
 			try:
 				self.ircd.unloadModule(moduleName)
 				user.sendMessage(irc.RPL_UNLOADEDMODULE, moduleName, "Module successfully unloaded")
-				for server in self.ircd.servers.itervalues():
-					if server.nextClosest == self.ircd.serverID:
-						server.sendMessage("UNLOADMODULE", moduleName, prefix=user.uuid)
+				self.ircd.broadcastToServers(None, "UNLOADMODULE", moduleName, prefix=user.uuid)
 			except ValueError as e:
 				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, e.message)
 		return True
@@ -126,9 +122,7 @@ class UserReload(Command):
 			try:
 				self.ircd.reloadModule(moduleName)
 				user.sendMessage(irc.RPL_LOADEDMODULE, moduleName, "Module successfully reloaded")
-				for server in self.ircd.servers.itervalues():
-					if server.nextClosest == self.ircd.serverID:
-						server.sendMessage("RELOADMODULE", moduleName, prefix=user.uuid)
+				self.ircd.broadcastToServers(None, "RELOADMODULE", moduleName, prefix=user.uuid)
 			except ModuleLoadError as e:
 				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "{}; module is now unloaded".format(e.message))
 		return True
@@ -156,9 +150,7 @@ class ServerLoad(Command):
 			return None
 		if moduleName not in self.ircd.loadedModules: # We want to log a message, but this shouldn't break the servers
 			log.msg("Tried to globally load nonexistent module {}".format(moduleName), logLevel=logging.WARNING)
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-				remoteServer.sendMessage("LOADMODULE", moduleName, prefix=fromPrefix)
+		self.ircd.broadcastToServers(server, "LOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
 class ServerUnload(Command):
@@ -182,9 +174,7 @@ class ServerUnload(Command):
 			self.ircd.unloadModule(moduleName)
 		except ValueError:
 			return None
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-				remoteServer.sendMessage("UNLOADMODULE", moduleName, prefix=fromPrefix)
+		self.ircd.broadcastToServers(server, "UNLOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
 class ServerReload(Command):
@@ -208,9 +198,7 @@ class ServerReload(Command):
 			self.ircd.reloadModule(moduleName)
 		except ModuleLoadError:
 			return None
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-				remoteServer.sendMessage("RELOADMODULE", moduleName, prefix=fromPrefix)
+		self.ircd.broadcastToServers(server, "RELOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
 globalLoad = GlobalLoad()

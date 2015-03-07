@@ -97,9 +97,7 @@ class ModeCommand(ModuleData):
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
-			for server in self.ircd.servers.itervalues():
-				if server.nextClosest == self.ircd.serverID and server != fromServer:
-					server.sendMessage("MODE", channel.name, str(timestamp(channel.existedSince)), modeStr, *params, prefix=source)
+			self.ircd.broadcastToServers(fromServer, "MODE", channel.name, str(timestamp(channel.existedSince)), modeStr, *params, prefix=source)
 	
 	def sendUserModesToUsers(self, users, user, source, sourceName, modes):
 		modeOuts = self.getOutputModes(modes, False)
@@ -124,10 +122,7 @@ class ModeCommand(ModuleData):
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
-			for server in self.ircd.servers.itervalues():
-				if server.nextClosest == self.ircd.serverID and server != fromServer:
-					server.sendMessage("MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
-	
+			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)	
 	def restrictUse(self, user, command, data):
 		if "channel" not in data or "modes" not in data:
 			return None

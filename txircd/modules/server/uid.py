@@ -120,17 +120,10 @@ class ServerUID(ModuleData, Command):
 		connectTimestamp = str(timestamp(connectTime))
 		nickTimestamp = str(timestamp(nickTime))
 		modeString = newUser.modeString(None)
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != server:
-				remoteServer.sendMessage("UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user):
-		modeStr = user.modeString(None)
-		signonTimestamp = str(timestamp(user.connectedSince))
-		nickTimestamp = str(timestamp(user.nickSince))
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realHost, user.host, user.ident, user.ip, nickTimestamp, modeStr, user.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host, user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()

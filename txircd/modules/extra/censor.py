@@ -70,12 +70,10 @@ class Censor(ModuleData):
 			server.sendMessage("CENSOR", badword, replacement, prefix=self.ircd.serverID)
 
 	def propagateBadword(self, badword, replacement):
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				if replacement:
-					server.sendMessage("CENSOR", badword, replacement, prefix=self.ircd.serverID)
-				else:
-					server.sendMessage("CENSOR", badword, prefix=self.ircd.serverID)
+		if replacement:
+			self.ircd.broadcastToServers(None, "CENSOR", badword, replacement, prefix=self.ircd.serverID)
+		else:
+			self.ircd.broadcastToServers(None, "CENSOR", badword, prefix=self.ircd.serverID)
 
 	def load(self):
 		if "badwords" not in self.ircd.storage:

@@ -19,12 +19,10 @@ class ServerMetadata(ModuleData, Command):
 	
 	def propagateMetadata(self, targetID, targetTime, namespace, key, value, fromServer):
 		serverPrefix = fromServer.serverID if fromServer else self.ircd.serverID
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				if value is None:
-					server.sendMessage("METADATA", targetID, targetTime, namespace, key, prefix=serverPrefix)
-				else:
-					server.sendMessage("METADATA", targetID, targetTime, namespace, key, value, prefix=serverPrefix)
+		if value is None:
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, namespace, key, prefix=serverPrefix)
+		else:
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, namespace, key, value, prefix=serverPrefix)
 	
 	def propagateUserMetadata(self, user, namespace, key, oldValue, value, fromServer):
 		self.propagateMetadata(user.uuid, str(timestamp(user.connectedSince)), namespace, key, value, fromServer)

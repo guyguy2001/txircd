@@ -25,10 +25,7 @@ class ServerCommand(ModuleData, Command):
 		while closestServer.nextClosest != self.ircd.serverID:
 			hopCount += 1
 			closestServer = self.ircd.servers[closestServer.nextClosest]
-		sendHopCount = str(hopCount)
-		for remoteServer in self.ircd.servers.itervalues():
-			if remoteServer.nextClosest == self.ircd.serverID and remoteServer != closestServer:
-				remoteServer.sendMessage("SERVER", server.name, server.serverID, sendHopCount, server.nextClosest, server.description, prefix=server.nextClosest)
+		self.ircd.broadcastToServers(closestServer, "SERVER", server.name, server.serverID, str(hopCount), server.nextClosest, server.description, prefix=server.nextClosest)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 5:

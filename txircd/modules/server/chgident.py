@@ -16,9 +16,7 @@ class ServerChgIdent(ModuleData, Command):
 		return [ ("CHGIDENT", 1, self) ]
 	
 	def propagateIdentChange(self, user, oldIdent, fromServer = None):
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("CHGIDENT", user.uuid, user.ident, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "CHGIDENT", user.uuid, user.ident, prefix=self.ircd.serverID)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:

@@ -16,9 +16,7 @@ class ServerChgHost(ModuleData, Command):
 		return [ ("CHGHOST", 1, self) ]
 	
 	def propagateChangeHost(self, user, oldHost, fromServer = None):
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("CHGHOST", user.uuid, user.host, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "CHGHOST", user.uuid, user.host, prefix=self.ircd.serverID)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:

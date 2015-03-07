@@ -16,9 +16,7 @@ class ServerChgGecos(ModuleData, Command):
 		return [ ("CHGGECOS", 1, self) ]
 	
 	def propagateGecosChange(self, user, oldGecos, fromServer = None):
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("CHGGECOS", user.uuid, user.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "CHGGECOS", user.uuid, user.gecos, prefix=self.ircd.serverID)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:

@@ -73,9 +73,7 @@ class KickCommand(ModuleData):
 		reason = sourceUser.nick if byUser else sourceServer.name
 		if "reason" in typeData:
 			reason = typeData["reason"]
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("KICK", channel.name, user.uuid, reason, prefix=prefix)
+		self.ircd.broadcastToServers(fromServer, "KICK", channel.name, user.uuid, reason, prefix=prefix)
 	
 	def sendKickMessage(self, sendUserList, channel, user, type, typeData, fromServer):
 		if type != "KICK":

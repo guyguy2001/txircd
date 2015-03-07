@@ -47,9 +47,7 @@ class UserWallops(Command):
 		for u in self.ircd.users.itervalues():
 			if u.uuid[:3] == self.ircd.serverID and "w" in u.modes:
 				u.sendMessage("WALLOPS", message, sourceuser=user, to=None)
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("WALLOPS", message, prefix=user.uuid)
+		self.ircd.broadcastToServers(None, "WALLOPS", message, prefix=user.uuid)
 		return True
 
 class ServerWallops(Command):
@@ -74,9 +72,7 @@ class ServerWallops(Command):
 		for user in self.ircd.users.itervalues():
 			if user.uuid[:3] == self.ircd.serverID and "w" in user.modes:
 				user.sendMessage("WALLOPS", message, sourceuser=fromUser, to=None)
-		for s in self.ircd.servers.itervalues():
-			if s.nextClosest == self.ircd.serverID and s != server:
-				s.sendMessage("WALLOPS", message, prefix=fromUser.uuid)
+		self.ircd.broadcastToServers(server, "WALLOPS", message, prefix=fromUser.uuid)
 		return True
 
 wallops = Wallops()

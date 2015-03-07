@@ -32,17 +32,13 @@ class QuitCommand(ModuleData, Command):
 	
 	def broadcastQuit(self, user, reason):
 		if user.isRegistered():
-			for server in self.ircd.servers.itervalues():
-				if server.nextClosest == self.ircd.serverID:
-					server.sendMessage("QUIT", reason, prefix=user.uuid)
+			self.ircd.broadcastToServers(None, "QUIT", reason, prefix=user.uuid)
 	
 	def propagateQuit(self, user, reason):
 		fromServer = self.ircd.servers[user.uuid[:3]]
 		while fromServer.nextClosest != self.ircd.serverID:
 			fromServer = self.ircd.servers[fromServer.nextClosest]
-		for server in self.ircd.servers.itervalues():
-			if server != fromServer and server.nextClosest == self.ircd.serverID:
-				server.sendMessage("QUIT", reason, prefix=user.uuid)
+		self.ircd.broadcastToServers(fromServer, "QUIT", reason, prefix=user.uuid)
 
 class UserQuit(Command):
 	implements(ICommand)

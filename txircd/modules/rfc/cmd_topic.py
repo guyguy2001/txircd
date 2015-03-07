@@ -36,9 +36,7 @@ class TopicCommand(ModuleData):
 			sourceServer = self.ircd.servers[setter[:3]]
 			while sourceServer.nextClosest != self.ircd.serverID:
 				sourceServer = self.ircd.servers[sourceServer.nextClosest]
-		for server in self.ircd.servers.itervalues():
-			if server != sourceServer and server.nextClosest == self.ircd.serverID:
-				server.sendMessage("TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), channel.topic, prefix=setter)
+		self.ircd.broadcastToServers(sourceServer, "TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), channel.topic, prefix=setter)
 	
 	def sendChannelTopic(self, channel, user):
 		if not channel.topic:

@@ -115,10 +115,7 @@ class UserOper(Command):
 					continue
 				operPermissions.update(configuredOperTypes[operType])
 			user.cache["oper-permissions"] = operPermissions
-			permString = " ".join(operPermissions)
-			for server in self.ircd.servers.itervalues():
-				if server.nextClosest == self.ircd.serverID:
-					server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)
+			self.ircd.broadcastToServers(None, "OPER", user.uuid, *operPermissions, prefix=self.ircd.serverID)
 		return True
 
 	def reportOper(self, user, reason):
@@ -146,10 +143,7 @@ class ServerOper(Command):
 		user = data["user"]
 		permissions = set(data["permissions"])
 		user.cache["oper-permissions"] = permissions
-		permString = " ".join(permissions)
-		for remote in self.ircd.servers.itervalues():
-			if remote.nextClosest == self.ircd.serverID and remote != server:
-				remote.sendMessage("OPER", user.uuid, permString, prefix=user.uuid[:3])
+		self.ircd.broadcastToServers(server, "OPER", user.uuid, *permissions, prefix=user.uuid[:3])
 		return True
 
 oper = Oper()

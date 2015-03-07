@@ -25,9 +25,7 @@ class PartCommand(ModuleData):
 		reason = ""
 		if "reason" in typeData:
 			reason = typeData["reason"]
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID and server != fromServer:
-				server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
+		self.ircd.broadcastToServers(fromServer, "PART", channel.name, reason, prefix=user.uuid)
 	
 	def sendPartMessage(self, sendUserList, channel, user, type, typeData, fromServer):
 		if type != "PART":
