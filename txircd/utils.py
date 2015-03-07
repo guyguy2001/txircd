@@ -16,8 +16,8 @@ def ircLower(string):
 	return string.lower().replace("[", "{").replace("]", "}").replace("\\", "|")
 
 class CaseInsensitiveDictionary(MutableMapping):
-	def __init__(self):
-		self._data = {}
+	def __init__(self, dictType = dict):
+		self._data = dictType()
 
 	def __repr__(self):
 		return repr(self._data)
