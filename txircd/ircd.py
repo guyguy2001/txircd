@@ -452,8 +452,6 @@ class IRCd(Service):
 			channels = kw["channels"]
 			del kw["channels"]
 		
-		# Python is dumb and doesn't capture variables in lambdas properly
-		# So we have to force static capture by wrapping the lambdas
 		checkGenericAction = "modeactioncheck-user-{}".format(actionName)
 		checkGenericWithAction = "modeactioncheck-user-withchannel-{}".format(actionName)
 		userApplyModes = {}
@@ -463,6 +461,8 @@ class IRCd(Service):
 					if actionName not in modeClass.affectedActions:
 						continue
 					actionList = []
+					# Python is dumb and doesn't capture variables in lambdas properly
+					# So we have to force static capture by wrapping the lambdas
 					if "modeactioncheck-user" in self.actions:
 						for action in self.actions["modeactioncheck-user"]:
 							actionList.append(((lambda action, actionName, mode: lambda user, *params, **kw: action[0](actionName, mode, user, *params, **kw))(action, actionName, mode), action[1]))
