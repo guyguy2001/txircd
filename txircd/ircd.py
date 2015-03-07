@@ -437,6 +437,11 @@ class IRCd(Service):
 		log.msg("Connected to server {}".format(name), logLevel=logging.INFO)
 		self.runActionStandard("initiateserverconnection", result)
 	
+	def broadcastToServers(self, fromServer, command, *params, **kw):
+		for server in self.servers.itervalues():
+			if server.nextClosest == self.serverID and server != fromServer:
+				server.sendMessage(command, *params, **kw)
+	
 	def _getActionModes(self, actionName, kw, *params):
 		users = []
 		channels = []
