@@ -10,6 +10,7 @@ from txircd.config import Config
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
+from weakref import WeakValueDictionary
 import importlib, logging, random, shelve, string, txircd.modules
 
 class IRCd(Service):
@@ -49,7 +50,7 @@ class IRCd(Service):
 		
 		self.users = {}
 		self.userNicks = CaseInsensitiveDictionary()
-		self.channels = CaseInsensitiveDictionary()
+		self.channels = CaseInsensitiveDictionary(WeakValueDictionary)
 		self.servers = {}
 		self.serverNames = CaseInsensitiveDictionary()
 		
