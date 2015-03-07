@@ -10,8 +10,8 @@ class PartCommand(ModuleData):
 	core = True
 	
 	def actions(self):
-		return [ ("partmessage", 101, self.broadcastPart),
-				("partmessage", 1, self.sendPartMessage) ]
+		return [ ("leavemessage", 101, self.broadcastPart),
+		        ("leavemessage", 1, self.sendPartMessage) ]
 	
 	def userCommands(self):
 		return [ ("PART", 1, UserPart(self.ircd)) ]
@@ -19,14 +19,23 @@ class PartCommand(ModuleData):
 	def serverCommands(self):
 		return [ ("PART", 1, ServerPart(self.ircd)) ]
 	
-	def broadcastPart(self, sendUserList, channel, user, reason, fromServer):
+	def broadcastPart(self, sendUserList, channel, user, type, typeData, fromServer):
+		if type != "PART":
+			return
+		reason = ""
+		if "reason" in typeData:
+			reason = typeData["reason"]
 		for server in self.ircd.servers.itervalues():
 			if server.nextClosest == self.ircd.serverID and server != fromServer:
 				server.sendMessage("PART", channel.name, reason, prefix=user.uuid)
 	
-	def sendPartMessage(self, sendUserList, channel, user, reason, fromServer):
+	def sendPartMessage(self, sendUserList, channel, user, type, typeData, fromServer):
+		if type != "PART":
+			return
+		reason = ""
+		if "reason" in typeData:
+			reason = typeData["reason"]
 		destServers = set()
-		destClosestServers = set()
 		for destUser in sendUserList:
 			if destUser.uuid[:3] == self.ircd.serverID:
 				destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
@@ -62,8 +71,7 @@ class UserPart(Command):
 		channel = data["channel"]
 		reason = data["reason"]
 		sendUserList = channel.users.keys()
-		self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, None, users=sendUserList, channels=[channel])
-		user.leaveChannel(channel)
+		user.leaveChannel(channel, "PART", { "reason": reason })
 		return True
 
 class ServerPart(Command):
@@ -89,9 +97,7 @@ class ServerPart(Command):
 		user = data["user"]
 		channel = data["channel"]
 		reason = data["reason"]
-		sendUserList = channel.users.keys()
-		self.ircd.runActionProcessing("partmessage", sendUserList, channel, user, reason, server, users=sendUserList, channels=[channel])
-		user.leaveChannel(channel, True)
+		user.leaveChannel(channel, "PART", { "reason": reason }, server)
 		return True
 
 partCommand = PartCommand()

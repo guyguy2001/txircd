@@ -63,12 +63,6 @@ class ChannelFlood(ModuleData, Mode):
 				break
 		user.cache["floodhistory"][channel] = floodHistory
 		if len(floodHistory) > maxLines:
-			for server in self.ircd.servers.itervalues():
-				if server.nextClosest == self.ircd.serverID:
-					server.sendMessage("KICK", channel.name, user.uuid, "Channel flood limit reached", prefix=self.ircd.serverID)
-			for u in channel.users.iterkeys():
-				if u.uuid[:3] == self.ircd.serverID:
-					u.sendMessage("KICK", user.nick, "Channel flood limit reached", to=channel.name)
-			user.leaveChannel(channel)
+			user.leaveChannel(channel, "KICK", { "byuser": False, "server": self.ircd, "reason": "Channel flood limit reached" })
 
 chanFlood = ChannelFlood()

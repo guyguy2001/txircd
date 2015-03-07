@@ -54,13 +54,7 @@ class SakickCommand(ModuleData, Command):
 		channel = data["channel"]
 		targetUser = data["target"]
 		reason = data["reason"]
-		for u in channel.users.iterkeys():
-			if u.uuid[:3] == self.ircd.serverID:
-				u.sendMessage("KICK", targetUser.nick, reason, sourceuser=user, to=channel.name)
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=user.uuid)
-		targetUser.leaveChannel(channel)
+		targetUser.leaveChannel(channel, "KICK", { "byuser": True, "user": user, "reason": reason })
 		return True
 
 sakick = SakickCommand()

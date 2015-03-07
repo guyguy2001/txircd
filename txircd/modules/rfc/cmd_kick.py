@@ -13,7 +13,9 @@ class KickCommand(ModuleData):
 	minLevel = 100
 	
 	def actions(self):
-		return [ ("commandpermission-KICK", 10, self.checkKickLevel) ]
+		return [ ("commandpermission-KICK", 10, self.checkKickLevel),
+		         ("leavemessage", 101, self.broadcastKick),
+		         ("leavemessage", 1, self.sendKickMessage) ]
 	
 	def userCommands(self):
 		return [ ("KICK", 1, UserKick(self.ircd)) ]
@@ -47,6 +49,61 @@ class KickCommand(ModuleData):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to kick this user")
 			return False
 		return None
+	
+	def broadcastKick(self, sendUserList, channel, user, type, typeData, fromServer):
+		if type != "KICK":
+			return
+		byUser = True
+		if "byuser" in typeData:
+			byUser = typeData["byuser"]
+		
+		sourceUser = None
+		sourceServer = None
+		if byUser:
+			if "user" not in typeData:
+				return
+			sourceUser = typeData["user"]
+			prefix = sourceUser.uuid
+		else:
+			if "server" not in typeData:
+				return
+			sourceServer = typeData["server"]
+			prefix = sourceServer.serverID
+		
+		reason = sourceUser.nick if byUser else sourceServer.name
+		if "reason" in typeData:
+			reason = typeData["reason"]
+		for server in self.ircd.servers.itervalues():
+			if server.nextClosest == self.ircd.serverID and server != fromServer:
+				server.sendMessage("KICK", channel.name, user.uuid, reason, prefix=prefix)
+	
+	def sendKickMessage(self, sendUserList, channel, user, type, typeData, fromServer):
+		if type != "KICK":
+			return
+		byUser = True
+		if "byuser" in typeData:
+			byUser = typeData["byuser"]
+		
+		sourceUser = None
+		sourceServer = None
+		kwArgs = { "to": channel.name }
+		if byUser:
+			if "user" not in typeData:
+				return
+			sourceUser = typeData["user"]
+			kwArgs["sourceuser"] = sourceUser
+		else:
+			if "server" not in typeData:
+				return
+			sourceServer = typeData["server"]
+			kwArgs["sourceserver"] = sourceServer
+		
+		reason = sourceUser.nick if byUser else sourceServer.name
+		if "reason" in typeData:
+			reason = typeData["reason"]
+		for user in sendUserList:
+			user.sendMessage("KICK", user.nick, reason, **kwArgs)
+		del sendUserList[:]
 
 
 class UserKick(Command):
@@ -89,13 +146,7 @@ class UserKick(Command):
 		channel = data["channel"]
 		targetUser = data["user"]
 		reason = data["reason"]
-		for u in channel.users.iterkeys():
-			if u.uuid[:3] == self.ircd.serverID:
-				u.sendMessage("KICK", targetUser.nick, reason, sourceuser=user, to=channel.name)
-		for server in self.ircd.servers.itervalues():
-			if server.nextClosest == self.ircd.serverID:
-				server.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=user.uuid)
-		targetUser.leaveChannel(channel)
+		targetUser.leaveChannel(channel, "KICK", { "byuser": True, "user": user, "reason": reason })
 		return True
 
 
@@ -133,26 +184,15 @@ class ServerKick(Command):
 		targetUser = data["targetuser"]
 		reason = data["reason"]
 		
+		leaveTypeData = { "reason": reason }
 		if sourceUser:
-			kwargs = {
-				"sourceuser": sourceUser,
-				"to": channel.name
-			}
-			servPrefix = sourceUser.uuid
+			leaveTypeData["byuser"] = True
+			leaveTypeData["user"] = sourceUser
 		else:
-			kwargs = {
-				"sourceserver": sourceServer,
-				"to": channel.name
-			}
-			servPrefix = sourceServer.serverID
+			leaveTypeData["byuser"] = False
+			leaveTypeData["server"] = sourceServer
 		
-		for user in channel.users.iterkeys():
-			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage("KICK", targetUser.nick, reason, **kwargs)
-		for remote in self.ircd.servers.itervalues():
-			if remote != server and remote.nextClosest == self.ircd.serverID:
-				remote.sendMessage("KICK", channel.name, targetUser.uuid, reason, prefix=servPrefix)
-		targetUser.leaveChannel(channel, True)
+		targetUser.leaveChannel(channel, "KICK", leaveTypeData, server)
 		return True
 
 kickCmd = KickCommand()

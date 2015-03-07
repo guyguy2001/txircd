@@ -357,11 +357,11 @@ class IRCUser(IRCBase):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("join", channel, self, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, type = "PART", typeData = {}):
+	def leaveChannel(self, channel, type = "PART", typeData = {}, fromServer = None):
 		if channel not in self.channels:
 			return
 		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, type, typeData)
+		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, type, typeData, fromServer, users=[self], channels=[channel])
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
@@ -659,17 +659,15 @@ class RemoteUser(IRCUser):
 		else:
 			self.ircd.runActionUntilTrue("remotejoinrequest", self, channel, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, fromRemote = False):
-		if fromRemote:
-			self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
-			self.channels.remove(channel)
-			del channel.users[self]
-			if not channel.users:
-				if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel, channels=[channel]):
-					self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
-					del self.ircd.channels[channel.name]
-		else:
-			self.ircd.runActionUntilTrue("remoteleaverequest", self, channel, users=[self], channels=[channel])
+	def leaveChannel(self, channel, type = "PART", typeData = {}, fromRemote = None):
+		self.ircd.runActionProcessing("leavemessage", channel, self, type, typeData, fromRemote, users=[self], channels=[channel])
+		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
+		self.channels.remove(channel)
+		del channel.users[self]
+		if not channel.users:
+			if not self.ircd.runActionUntilTrue("channeldestroyorkeep", channel, channels=[channel]):
+				self.ircd.runActionStandard("channeldestroy", channel, channels=[channel])
+				del self.ircd.channels[channel.name]
 
 class LocalUser(IRCUser):
 	"""
