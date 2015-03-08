@@ -41,10 +41,5 @@ class BlockCTCP(ModuleData, Mode):
 						user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Can't send CTCP to channel")
 						return
 					inCTCP = True
-	
-	def fullUnload(self):
-		for channel in self.ircd.channels:
-			if "C" in channel.modes:
-				channel.setModes(self.ircd.serverID, "-C", [])
 
 blockCTCP = BlockCTCP()

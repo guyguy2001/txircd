@@ -27,11 +27,6 @@ class Knock(ModuleData):
 	def channelModes(self):
 		return [ ("K", ModeType.NoParam, NoKnockMode()) ]
 
-	def fullUnload(self):
-		for channel in self.ircd.channels.itervalues():
-			if "K" in channel.modes:
-				channel.setModes(self.ircd.serverID, "-K", [])
-
 	def channelHasMode(self, channel, user, command, data):
 		if "K" in channel.modes:
 			return ""

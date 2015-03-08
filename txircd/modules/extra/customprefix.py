@@ -30,11 +30,4 @@ class CustomPrefix(ModuleData, Mode):
 	def checkUnset(self, channel, param):
 		return param.split(",")
 
-	def fullUnload(self):
-		for channel in self.ircd.channels.itervalues():
-			for user, rank in channel.users.iteritems():
-				for prefix in self.prefixes.iterkeys():
-					if prefix in rank:
-						channel.setModes(self.ircd.serverID, "-{}".format(prefix), [user.nick])
-
 customPrefix = CustomPrefix()

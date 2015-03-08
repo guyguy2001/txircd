@@ -101,19 +101,15 @@ class ServerUID(ModuleData, Command):
 					newUser.changeNick(newUser.uuid, server)
 		if newUser.nick is None: # wasn't set by above logic
 			newUser.changeNick(data["nick"], server)
-		modeList = ["+"]
-		params = []
+		modeList = []
 		for mode, param in data["modes"].iteritems():
 			modeType = self.ircd.userModeTypes[mode]
 			if modeType == ModeType.List:
-				for p in param:
-					modeList.append(mode)
-					params.append(param[0])
+				for paramData in param:
+					modeList.append((True, mode, paramData[0]))
 			else:
-				modeList.append(mode)
-				if param is not None:
-					params.append(param)
-		newUser.setModes(server.serverID, "".join(modeList), params)
+				modeList.append((True, mode, param))
+		newUser.setModes(modeList, server.serverID)
 		newUser.register("connection", True)
 		newUser.register("USER", True)
 		newUser.register("NICK", True)

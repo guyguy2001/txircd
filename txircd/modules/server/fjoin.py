@@ -74,59 +74,30 @@ class FJoinCommand(ModuleData, Command):
 		for user, ranks in data["users"].iteritems():
 			user.joinChannel(channel, False, True)
 			for rank in ranks:
-				remoteStatuses.append((user.nick, rank))
+				remoteStatuses.append((user.uuid, rank))
 		if time < channel.existedSince:
-			localModes = []
-			localModeParams = []
+			modeUnsetList = []
 			for mode, param in channel.modes.iteritems():
 				modeType = self.ircd.channelModeTypes[mode]
 				if modeType == ModeType.List:
 					for paramData in param:
-						localModes.append(mode)
-						localModeParams.append(paramData[0])
-						if len(localModes) == 20:
-							channel.setModes(self.ircd.serverID, "-{}".format("".join(localModes)), localModeParams)
-							localModes = []
-							localModeParams = []
+						modeUnsetList.append((False, mode, paramData[0]))
 				else:
-					localModes.append(mode)
-					if param is not None:
-						localModeParams.append(param)
-					if len(localModes) == 20:
-						channel.setModes(self.ircd.serverID, "-{}".format("".join(localModes)), localModeParams)
-						localModes = []
-						localModeParams = []
-			for user, ranks in channel.users.iteritems():
-				for rank in ranks:
-					localModes.append(rank)
-					localModeParams.append(user.nick)
-					if len(localModes) == 20:
-						channel.setModes(self.ircd.serverID, "-{}".format("".join(localModes)), localModeParams)
-						localModes = []
-						localModeParams = []
-			if localModes:
-				channel.setModes(self.ircd.serverID, "-{}".format("".join(localModes)), localModeParams)
+					modeUnsetList.append((False, mode, param))
+			for user, data in channel.users.iteritems():
+				for rank in data["status"]:
+					modeUnsetList.append((False, rank, user.uuid))
+			if modeUnsetList:
+				channel.setModes(modeUnsetList, self.ircd.serverID)
 			channel.existedSince = time
 		if time == channel.existedSince:
-			newModes = []
-			newModeParams = []
+			modeSetList = []
 			for mode, param in remoteModes.iteritems():
-				newModes.append(mode)
-				if param is not None:
-					newModeParams.append(param)
-				if len(newModes) == 20:
-					channel.setModes(self.ircd.serverID, "+{}".format("".join(newModes)), newModeParams)
-					newModes = []
-					newModeParams = []
+				modeSetList.append((True, mode, param))
 			for status in remoteStatuses:
-				newModes.append(status[1])
-				newModeParams.append(status[0])
-				if len(newModes) == 20:
-					channel.setModes(self.ircd.serverID, "+{}".format("".join(newModes)), newModeParams)
-					newModes = []
-					newModeParams = []
-			if newModes:
-				channel.setModes(self.ircd.serverID, "+{}".format("".join(newModes)), newModeParams)
+				modeSetList.append((True, status[1], status[0]))
+			if modeSetList:
+				channel.setModes(modeSetList, self.ircd.serverID)
 		return True
 
 fjoinCmd = FJoinCommand()

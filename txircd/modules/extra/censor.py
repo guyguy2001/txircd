@@ -81,11 +81,6 @@ class Censor(ModuleData):
 		self.badwords = self.ircd.storage["badwords"]
 		self.rehash()
 
-	def fullUnload(self):
-		for channel in self.ircd.channels.itervalues():
-			if "G" in channel.modes:
-				channel.setModes(self.ircd.serverID, "-G", [])
-
 	def rehash(self):
 		newLevel = self.ircd.config.get("exempt_chanops_censor", 100)
 		try:

@@ -15,7 +15,16 @@ class AutoUserModes(ModuleData):
 			modes = self.ircd.config["client_umodes_on_connect"]
 			params = modes.split()
 			modes = params.pop(0)
-			user.setModes(self.ircd.serverID, modes, params)
+			parsedModes = []
+			for mode in modes:
+				if mode not in self.ircd.userModeTypes:
+					continue
+				modeType = self.ircd.userModeTypes[mode]
+				if modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
+					parsedModes.append((True, mode, params.pop(0)))
+				else:
+					parsedModes.append((True, mode, None))
+			user.setModes(parsedModes, self.ircd.serverID)
 		except KeyError:
 			pass # No umodes defined. No action required.
 

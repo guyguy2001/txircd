@@ -193,9 +193,9 @@ class UserMode(Command):
 			return True
 		if "channel" in data:
 			channel = data["channel"]
-			channel.setModes(user.uuid, data["modes"], data["params"])
+			channel.setModesByUser(user.uuid, data["modes"], data["params"])
 			return True
-		user.setModes(user.uuid, data["modes"], data["params"])
+		user.setModesByUser(user.uuid, data["modes"], data["params"])
 		return True
 
 class ServerMode(Command):
@@ -211,13 +211,36 @@ class ServerMode(Command):
 			return None # It's safe to say other servers shouldn't be sending modes sourced from us. That's our job!
 		if params[0] not in self.ircd.users and params[0] not in self.ircd.channels:
 			return None
+		
+		modes = params[2]
+		parameters = params[3]
+		parsedModes = []
+		modeTypes = {}
+		if params[0] in self.ircd.channels:
+			modeTypes = self.ircd.channelModeTypes
+		else:
+			modeTypes = self.ircd.userModeTypes
+		adding = True
+		for mode in modes:
+			if mode == "+":
+				adding = True
+			elif mode == "-":
+				adding = False
+			else:
+				if mode not in modeTypes:
+					return None # Uh oh, a desync!
+				modeType = modeTypes[mode]
+				parameter = None
+				if modeType in (ModeType.Status, ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
+					parameter = params.pop(0)
+				parsedModes.append((adding, mode, parameter))
+		
 		try:
 			return {
 				"source": prefix,
 				"target": params[0],
 				"timestamp": int(params[1]),
-				"modes": params[2],
-				"params": params[3:]
+				"modes": parsedModes
 			}
 		except ValueError:
 			return None
@@ -232,85 +255,35 @@ class ServerMode(Command):
 				return True
 			if targTS < timestamp(channel.existedSince):
 				# We need to remove all of the channel's modes
-				while True: # Make a point to continue back to
-					modeStrList = []
-					params = []
-					for mode, param in channel.modes.iteritems():
-						if len(modeStrList) >= 20:
-							break
-						if self.ircd.channelModeTypes[mode] == ModeType.List:
-							for paramData in param:
-								modeStrList.append(mode)
-								params.append(paramData[0])
-								if len(modeStrList) >= 20:
-									break
-						else:
-							modeStrList.append(mode)
-							if param is not None:
-								params.append(param)
-					for user, statusList in channel.users.iteritems():
-						for status in statusList:
-							if len(modeStrList) >= 20:
-								break
-							modeStrList.append(status)
-							params.append(user.nick)
-					if modeStrList:
-						channel.setModes(source, "-{}".format("".join(modeStrList)), params, True)
-					if channel.modes: # More processing is to be done
-						continue
-					for status in channel.users.itervalues():
-						if status:
-							break
+				modeUnsetList = []
+				for mode, param, in channel.modes.iteritems():
+					if self.ircd.channelModeTypes[mode] == ModeType.List:
+						for paramData in param:
+							modeUnsetList.append((False, mode, paramData[0]))
 					else:
-						break # This one aborts the while True loop when we're done with modes
+						modeUnsetList.append((False, mode, param))
+				for user, data in channel.users.iteritems():
+					for status in data["status"]:
+						modeUnsetList.append((False, mode, user.uuid))
+				if modeUnsetList:
+					channel.setModes(modeUnsetList, source)
 			# We'll need to transform the user parameters of status modes before we're done here
-			modes = data["modes"]
-			params = data["params"]
-			adding = True
-			currParam = 0
-			for mode in modes:
-				if mode == "+":
-					adding = True
-				elif mode == "-":
-					adding = False
-				else:
-					if mode not in self.ircd.channelModeTypes:
-						return None # Never mind, we've hit a desync
-					modeType = self.ircd.channelModeTypes[mode]
-					if modeType == ModeType.Status:
-						if params[currParam] not in self.ircd.users:
-							return None # More desyncs! :(
-						params[currParam] = self.ircd.users[params[currParam]].nick
-						currParam += 1
-					elif modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
-						currParam += 1
-			channel.setModes(source, modes, params, True)
+			channel.setModes(data["modes"], source)
 			return True
 		user = self.ircd.users[target]
 		if targTS > timestamp(user.connectedSince):
 			return True
 		if targTS < timestamp(user.connectedSince):
-			while True:
-				modeStrList = []
-				params = []
-				for mode, param in user.modes.iteritems():
-					if len(modeStrList) >= 20:
-						break
-					if self.ircd.userModeTypes[mode] == ModeType.List:
-						for paramData in param:
-							modeStrList.append(mode)
-							params.append(paramData[0])
-							if len(modeStrList) >= 20:
-								break
-					else:
-						modeStrList.append(mode)
-						if param is not None:
-							params.append(param)
-				if modeStrList:
-					user.setModes(source, "-{}".format("".join(modeStrList)), params, True)
-				if not user.modes:
-					break
-		user.setModes(source, data["modes"], data["params"], True)
+			modeUnsetList = []
+			for mode, param in user.modes.iteritems():
+				if self.ircd.userModeTypes[mode] == ModeType.List:
+					for paramData in param:
+						modeUnsetList.append((False, mode, paramData[0]))
+				else:
+					modeUnsetList.append((False, mode, param))
+			if modeUnsetList:
+				user.setModes(modeUnsetList, source)
+		user.setModes(data["modes"], source)
 		return True
 
 modeCommand = ModeCommand()

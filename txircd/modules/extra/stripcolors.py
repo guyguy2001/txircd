@@ -27,9 +27,4 @@ class StripColors(ModuleData, Mode):
 			message = data["targetchans"][channel]
 			data["targetchans"][channel] = stripFormatting(message)
 
-	def fullUnload(self):
-		for channel in self.ircd.channels.itervalues():
-			if "S" in channel.modes:
-				channel.setModes(self.ircd.serverID, "-S", [])
-
 stripColors = StripColors()

@@ -17,16 +17,17 @@ class DefaultModes(ModuleData):
 		statusModes = set()
 		params = modes.split(" ")
 		modeList = list(params.pop(0))
+		settingModes = []
 		for mode in modeList:
 			if mode not in self.ircd.channelModeTypes:
 				continue
-			if self.ircd.channelModeTypes[mode] == ModeType.Status:
-				statusModes.add(mode)
-		for mode in statusModes:
-			modeList.remove(mode)
-		for mode in statusModes:
-			modeList.append(mode)
-			params.append(user.nick)
-		channel.setModes(self.ircd.serverID, "".join(modeList), params)
+			modeType = self.ircd.channelModeTypes[mode]
+			if modeType == ModeType.Status:
+				settingModes.append((True, mode, user.uuid))
+			elif modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param):
+				settingModes.append((True, mode, params.pop(0)))
+			else:
+				settingModes.append((True, mode, None))
+		channel.setModes(settingModes, self.ircd.serverID)
 
 defaultModes = DefaultModes()

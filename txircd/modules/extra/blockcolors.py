@@ -30,9 +30,4 @@ class BlockColors(ModuleData, Mode):
 				del data["targetchans"][channel]
 				user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Cannot send colors to channel (+c)")
 
-	def fullUnload(self):
-		for channel in self.ircd.channels.itervalues():
-			if "c" in channel.modes:
-				channel.setModes(self.ircd.serverID, "-c", [])
-
 blockColors = BlockColors()

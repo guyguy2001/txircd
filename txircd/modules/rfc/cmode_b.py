@@ -184,9 +184,9 @@ class BanMode(ModuleData, Mode):
 		applyModes = []
 		for mode in self.ircd.channelStatusOrder:
 			if mode in user.cache["bans"][channel]:
-				applyModes.append(mode)
+				applyModes.append((True, mode, user.uuid))
 		if applyModes:
-			channel.setModes(self.ircd.serverID, "+{}".format("".join(applyModes)), [user.nick for i in applyModes])
+			channel.setModes(applyModes, self.ircd.serverID)
 	
 	def clearBanCache(self, channel, user):
 		if "bans" in user.cache and channel in user.cache["bans"]:

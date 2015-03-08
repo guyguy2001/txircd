@@ -107,7 +107,7 @@ class UserOper(Command):
 			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			self.reportOper(user, "Failed additional oper checks") #TODO: Provide a standardized way for these custom checks to give a reason
 			return True
-		user.setModes(self.ircd.serverID, "+o", [])
+		user.setModes([(True, "o", None)], self.ircd.serverID)
 		user.sendMessage(irc.RPL_YOUREOPER, "You are now an IRC operator")
 		self.reportOper(user, None)
 		if "types" in operData:

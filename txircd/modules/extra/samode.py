@@ -47,10 +47,10 @@ class SamodeCommand(ModuleData, Command):
 	def execute(self, user, data):
 		if "targetchannel" in data:
 			channel = data["targetchannel"]
-			channel.setModes(user.uuid, data["modes"], data["params"], True)
+			channel.setModesByUser(user.uuid, data["modes"], data["params"], True)
 		elif "targetuser" in data:
 			u = data["targetuser"]
-			u.setModes(user.uuid, data["modes"], data["params"], True)
+			u.setModesByUser(user.uuid, data["modes"], data["params"], True)
 		return True
 
 samode = SamodeCommand()

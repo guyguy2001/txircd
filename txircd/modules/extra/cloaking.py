@@ -94,9 +94,4 @@ class HostCloaking(ModuleData, Mode):
 			log.msg("No cloaking salt was found in the config. Host cloaks will be insecure!", logLevel=logging.WARNING)
 		self.cloakingPrefix = self.ircd.config.get("cloaking_prefix", "txircd")
 
-	def fullUnload(self):
-		for user in self.ircd.users.itervalues():
-			if user.uuid[:3] == self.ircd.serverID and "x" in user.modes:
-				user.setModes(self.ircd.serverID, "-x", [])
-
 hostCloaking = HostCloaking()
