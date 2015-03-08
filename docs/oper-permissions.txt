@@ -75,12 +75,6 @@ remoteconnect          RemoteConnect        on themselves and grants permission
 servernotice-type-     ServerNotice         Allows an oper to set usermode +s
 remotequit             RemoteQuit           on themselves and grants permission
                                             for remote quit notices.
-who-display            WhoCommand           Allows opers to be marked as opers
-                                            in the WHO display. They will also
-                                            be able to view WHO data that's
-                                            exclusive to opers.
-whois-display          WhoisCommand         Allows an oper to be marked as oper
-                                            in the WHOIS display.
 whois-host             WhoisCommand         Allows an oper to see the real host
                                             and IP address of any user.
 
