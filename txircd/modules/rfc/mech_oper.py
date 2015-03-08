@@ -31,6 +31,9 @@ class Oper(ModuleData, Mode):
 		if "o" not in user.modes:
 			# Maybe the user de-opered or something, but if they did they're clearly not an oper now
 			return False
+		# If the client code is just generally querying whether the user has any oper permissions, just tell it yes if the user has +o
+		if not permissionType:
+			return True
 		# Check for oper permissions in the user's permission storage
 		if "oper-permissions" not in user.cache:
 			return False
