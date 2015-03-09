@@ -149,11 +149,9 @@ class IRCUser(IRCBase):
 					self._dispatchErrorBatch()
 				return
 			self._clearErrorBatch()
-			if self.ircd.runActionUntilValue("commandpermission-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) is False:
+			if self.ircd.runComboActionUntilValue((("commandpermission-{}".format(command), self, data), ("commandpermission", self, command, data)), users=affectedUsers, channels=affectedChannels) is False:
 				return
-			if self.ircd.runActionUntilValue("commandpermission".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) is False: # Also check the generic commandpermission action
-				return
-			self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
+			self.ircd.runComboActionStandard((("commandmodify-{}".format(command), self, data), ("commandmodify", self, command, data)), users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
 			for handler in handlers:
 				if handler[0].execute(self, data):
 					if handler[0].resetsIdleTime:
@@ -161,7 +159,7 @@ class IRCUser(IRCBase):
 					break # If the command executor returns True, it was handled
 			else:
 				return # Don't process commandextra if it wasn't handled
-			self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels)
+			self.ircd.runComboActionStandard((("commandextra-{}".format(command), self, data), ("commandextra", self, command, data)), users=affectedUsers, channels=affectedChannels)
 		else:
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
@@ -559,8 +557,7 @@ class RemoteUser(IRCUser):
 		else:
 			paramList = params
 		kw["users"] = [self]
-		if not self.ircd.runActionUntilTrue("sendremoteusermessage-{}".format(command), self, *paramList, **kw):
-			self.ircd.runActionUntilTrue("sendremoteusermessage", self, command, *paramList, **kw)
+		self.ircd.runComboActionUntilTrue((("sendremoteusermessage-{}".format(command), self) + paramList, ("sendremoteusermessage", self, command) + paramList), **kw)
 	
 	def _getPrefix(self, msgKeywords):
 		if "sourceuser" in msgKeywords:
@@ -700,7 +697,7 @@ class LocalUser(IRCUser):
 				break
 		if data is None:
 			return
-		self.ircd.runActionStandard("commandmodify-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
+		self.ircd.runComboActionStandard((("commandmodify-{}".format(command), self, data), ("commandmodify", self, command, data)), users=affectedUsers, channels=affectedChannels)
 		for handler in handlers:
 			if handler[0].execute(self, data):
 				if handler[0].resetsIdleTime:
@@ -708,7 +705,7 @@ class LocalUser(IRCUser):
 				break
 		else:
 			return
-		self.ircd.runActionStandard("commandextra-{}".format(command), self, command, data, users=affectedUsers, channels=affectedChannels)
+		self.ircd.runComboActionStandard((("commandextra-{}".format(command), self, data), ("commandextra", self, command, data)), users=affectedUsers, channels=affectedChannels)
 	
 	def disconnect(self, reason):
 		del self.ircd.users[self.uuid]
