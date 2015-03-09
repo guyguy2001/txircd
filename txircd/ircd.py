@@ -443,288 +443,162 @@ class IRCd(Service):
 			if server.nextClosest == self.serverID and server != fromServer:
 				server.sendMessage(command, *params, **kw)
 	
-	def _getActionModes(self, actionName, kw, *params):
+	def _getActionModes(self, actionName, *params, **kw):
 		users = []
 		channels = []
 		if "users" in kw:
 			users = kw["users"]
-			del kw["users"]
 		if "channels" in kw:
 			channels = kw["channels"]
-			del kw["channels"]
 		
-		checkGenericAction = "modeactioncheck-user-{}".format(actionName)
-		checkGenericWithAction = "modeactioncheck-user-withchannel-{}".format(actionName)
-		userApplyModes = {}
+		functionList = []
+		
 		if users:
+			genericUserActionName = "modeactioncheck-user-{}".format(actionName)
+			genericUserActionNameWithChannel = "modeactioncheck-user-withchannel-{}".format(actionName)
 			for modeType in self.userModes:
-				for mode, modeClass in modeType.iteritems():
-					if actionName not in modeClass.affectedActions:
+				for mode, modeObj in modeType.iteritems():
+					if actionName not in modeObj.affectedActions:
 						continue
+					priority = modeObj.affectedActions[actionName]
 					actionList = []
-					# Python is dumb and doesn't capture variables in lambdas properly
-					# So we have to force static capture by wrapping the lambdas
-					if "modeactioncheck-user" in self.actions:
-						for action in self.actions["modeactioncheck-user"]:
-							actionList.append(((lambda action, actionName, mode: lambda user, *params, **kw: action[0](actionName, mode, user, *params, **kw))(action, actionName, mode), action[1]))
-					if "modeactioncheck-user-withchannel" in self.actions:
-						for action in self.actions["modeactioncheck-user-withchannel"]:
-							for channel in channels:
-								actionList.append(((lambda action, actionName, mode, channel: lambda user, *params, **kw: action[0](actionName, mode, user, channel, *params, **kw))(action, actionName, mode, channel), action[1]))
-					if checkGenericAction in self.actions:
-						for action in self.actions[checkGenericAction]:
-							actionList.append(((lambda action, mode: lambda user, *params, **kw: action[0](mode, user, *params, **kw))(action, mode), action[1]))
-					if checkGenericWithAction in self.actions:
-						for action in self.actions[checkGenericWithAction]:
-							for channel in channels:
-								actionList.append(((lambda action, mode, channel: lambda user, *params, **kw: action[0](mode, user, channel, *params, **kw))(action, mode, channel), action[1]))
-					checkWithAction = "modeactioncheck-user-withchannel-{}-{}".format(mode, actionName)
-					if checkWithAction in self.actions:
-						for action in self.actions[checkWithAction]:
-							for channel in channels:
-								actionList.append(((lambda action, channel: lambda user, *params, **kw: action[0](user, channel, *params, **kw))(action, channel), action[1]))
-					checkAction = "modeactioncheck-user-{}-{}".format(mode, actionName)
-					actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
+					# Because Python doesn't properly capture variables in lambdas, we have to force static capture
+					# by wrapping lambdas in more lambdas.
+					# I wish Python wasn't this gross.
+					for action in self.actions.get("modeactioncheck-user", []):
+						actionList.append(((lambda action, actionName, mode: lambda user, *params: action[0](actionName, mode, user, *params))(action, actionName, mode), action[1]))
+					for action in self.actions.get("modeactioncheck-user-withchannel", []):
+						for channel in channels:
+							actionList.append(((lambda action, actionName, mode, channel: lambda user, *params: action[0](actionName, mode, user, channel, *params))(action, actionName, mode, channel), action[1]))
+					for action in self.actions.get(genericUserActionName, []):
+						actionList.append(((lambda action, mode: lambda user, *params: action[0](mode, user, *params))(action, mode), action[1]))
+					for action in self.actions.get(genericUserActionNameWithChannel, []):
+						for channel in channels:
+							actionList.append(((lambda action, mode, channel: lambda user, *params: action[0](mode, user, channel, *params))(action, mode, channel), action[1]))
+					modeUserActionName = "modeactioncheck-user-{}-{}".format(mode, actionName)
+					modeUserActionNameWithChannel = "modeactioncheck-user-withchannel-{}-{}".format(mode, actionName)
+					for action in self.actions.get(modeUserActionNameWithChannel, []):
+						for channel in channels:
+							actionList.append(((lambda action, channel: lambda user, *params: action[0](user, channel, *params))(action, channel), action[1]))
+					actionList = sorted(self.actions.get(modeUserActionName, []) + actionList, key=lambda action: action[1], reverse=True)
 					applyUsers = []
 					for user in users:
 						for action in actionList:
-							param = action[0](user, *params, **kw)
+							param = action[0](user, *params)
 							if param is not None:
 								if param is not False:
 									applyUsers.append((user, param))
 								break
-					if applyUsers:
-						userApplyModes[modeClass] = applyUsers
-		checkGenericAction = "modeactioncheck-channel-{}".format(actionName)
-		checkGenericWithAction = "modeactioncheck-channel-withuser-{}".format(actionName)
-		channelApplyModes = {}
+					for user, param in applyUsers:
+						functionList.append(((lambda modeObj, actionName, user, param: lambda *params: modeObj.apply(actionName, user, param, *params))(modeObj, actionName, user, param), priority))
+		
 		if channels:
+			genericChannelActionName = "modeactioncheck-channel-{}".format(actionName)
+			genericChannelActionNameWithUser = "modeactioncheck-channel-withuser-{}".format(actionName)
 			for modeType in self.channelModes:
-				for mode, modeClass in modeType.iteritems():
-					if actionName not in modeClass.affectedActions:
+				for mode, modeObj in modeType.iteritems():
+					if actionName not in modeObj.affectedActions:
 						continue
+					priority = modeObj.affectedActions[actionName]
 					actionList = []
-					if "modeactioncheck-channel" in self.actions:
-						for action in self.actions["modeactioncheck-channel"]:
-							actionList.append(((lambda action, actionName, mode: lambda channel, *params, **kw: action[0](actionName, mode, channel, *params, **kw))(action, actionName, mode), action[1]))
-					if "modeactioncheck-channel-withuser" in self.actions:
-						for action in self.actions["modeactioncheck-channel-withuser"]:
-							for user in users:
-								actionList.append(((lambda action, actionName, mode, user: lambda channel, *params, **kw: action[0](actionName, mode, channel, user, *params, **kw))(action, actionName, mode, user), action[1]))
-					if checkGenericAction in self.actions:
-						for action in self.actions[checkGenericAction]:
-							actionList.append(((lambda action, mode: lambda channel, *params, **kw: action[0](mode, channel, *params, **kw))(action, mode), action[1]))
-					if checkGenericWithAction in self.actions:
-						for action in self.actions[checkGenericWithAction]:
-							for user in users:
-								actionList.append(((lambda action, mode, user: lambda channel, *params, **kw: action[0](mode, channel, user, *params, **kw))(action, mode, user), action[1]))
-					checkWithAction = "modeactioncheck-channel-withuser-{}-{}".format(mode, actionName)
-					if checkWithAction in self.actions:
-						for action in self.actions[checkWithAction]:
-							for user in users:
-								actionList.append(((lambda action, user: lambda channel, *params, **kw: action[0](channel, user, *params, **kw))(action, user), action[1]))
-					checkAction = "modeactioncheck-channel-{}-{}".format(mode, actionName)
-					actionList = sorted((self.actions[checkAction] if checkAction in self.actions else []) + actionList, key=lambda action: action[1], reverse=True)
+					for action in self.actions.get("modeactioncheck-channel", []):
+						actionList.append(((lambda action, actionName, mode: lambda channel, *params: action[0](actionName, mode, channel, *params))(action, actionName, mode), action[1]))
+					for action in self.actions.get("modeactioncheck-channel-withuser", []):
+						for user in users:
+							actionList.append(((lambda action, actionName, mode, user: lambda channel, *params: action[0](actionName, mode, channel, user, *params))(action, actionName, mode, user), action[1]))
+					for action in self.actions.get(genericChannelActionName, []):
+						actionList.append(((lambda action, mode: lambda channel, *params: action[0](mode, channel, *params))(action, mode), action[1]))
+					for action in self.actions.get(genericChannelActionNameWithUser, []):
+						for user in users:
+							actionList.append(((lambda action, mode, user: lambda channel, *params: action[0](mode, channel, user, *params))(action, mode, user), action[1]))
+					modeChannelActionName = "modeactioncheck-channel-{}-{}".format(mode, actionName)
+					modeChannelActionNameWithUser = "modeactioncheck-channel-withuser-{}-{}".format(mode, actionName)
+					for action in self.actions.get(modeChannelActionNameWithUser, []):
+						for user in users:
+							actionList.append(((lambda action, user: lambda channel, *params: action[0](channel, user, *params))(action, user), action[1]))
+					actionList = sorted(self.actions.get(modeChannelActionName, []) + actionList, key=lambda action: action[1], reverse=True)
 					applyChannels = []
 					for channel in channels:
 						for action in actionList:
-							param = action[0](channel, *params, **kw)
+							param = action[0](channel, *params)
 							if param is not None:
 								if param is not False:
 									applyChannels.append((channel, param))
 								break
-					if applyChannels:
-						channelApplyModes[modeClass] = applyChannels
-		return userApplyModes, channelApplyModes
+					for channel, param in applyChannels:
+						functionList.append(((lambda modeObj, actionName, channel, param: lambda *params: modeObj.apply(actionName, channel, param, *params))(modeObj, actionName, user, param), priority))
+		return functionList
+	
+	def _getActionFunctionList(self, actionName, *params, **kw):
+		functionList = self.actions.get(actionName, [])
+		functionList += self._getActionModes(actionName, *params, **kw)
+		return sorted(functionList, key=lambda action: action[1], reverse=True)
+	
+	def _combineActionFunctionLists(self, actionLists):
+		"""
+		Combines multiple lists of action functions into one.
+		Assumes all lists are sorted.
+		Takes a dict mapping action names to their action function lists.
+		Returns a list in priority order (highest to lowest) of (actionName, function) tuples.
+		"""
+		fullActionList = []
+		for actionName, actionList in actionLists.iteritems():
+			insertPos = 0
+			for action in actionList:
+				try:
+					while fullActionList[insertPos][1] > action[1]:
+						insertPos += 1
+					fullActionList.insert(insertPos, (actionName, action[0]))
+				except IndexError:
+					fullActionList.append(action)
+				insertPos += 1
+		return fullActionList
 	
 	def runActionStandard(self, actionName, *params, **kw):
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			action[0](*params, **kw)
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				mode.apply(actionName, user, param, *params, **kw)
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				mode.apply(actionName, channel, param, *params, **kw)
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			action[0](*params, **kw)
+			action[0](*params)
 	
 	def runActionUntilTrue(self, actionName, *params, **kw):
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			if action[0](*params, **kw):
-				return True
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				if mode.apply(actionName, user, param, *params, **kw):
-					return True
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				if mode.apply(actionName, channel, param, *params, **kw):
-					return True
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			if action[0](*params, **kw):
+			if action[0](*params):
 				return True
 		return False
 	
 	def runActionUntilFalse(self, actionName, *params, **kw):
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			if not action[0](*params, **kw):
-				return True
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				if not mode.apply(actionName, user, param, *params, **kw):
-					return True
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				if not mode.apply(actionName, channel, param, *params, **kw):
-					return True
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			if not action[0](*params, **kw):
+			if not action[0](*params):
 				return True
 		return False
 	
 	def runActionUntilValue(self, actionName, *params, **kw):
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			value = action[0](*params, **kw)
-			if value is not None:
-				return value
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				value = mode.apply(actionName, user, param, *params, **kw)
-				if value is not None:
-					return value
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				value = mode.apply(actionName, channel, param, *params, **kw)
-				if value is not None:
-					return value
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			value = action[0](*params, **kw)
+			value = action[0](*params)
 			if value is not None:
 				return value
 		return None
 	
 	def runActionFlagTrue(self, actionName, *params, **kw):
 		oneIsTrue = False
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			if action[0](*params, **kw):
-				oneIsTrue = True
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				if mode.apply(actionName, user, param, *params, **kw):
-					oneIsTrue = True
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				if mode.apply(actionName, channel, param, *params, **kw):
-					oneIsTrue = True
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			if action[0](*params, **kw):
+			if action[0](*params):
 				oneIsTrue = True
 		return oneIsTrue
 	
 	def runActionFlagFalse(self, actionName, *params, **kw):
 		oneIsFalse = False
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *params)
-		for action in actionsHighPriority:
-			if not action[0](*params, **kw):
-				oneIsFalse = True
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				if not mode.apply(actionName, user, param, *params, **kw):
-					oneIsFalse = True
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				if not mode.apply(actionName, channel, param, *params, **kw):
-					oneIsFalse = True
+		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
-			if not action[0](*params, **kw):
+			if action[0](*params):
 				oneIsFalse = True
 		return oneIsFalse
 	
 	def runActionProcessing(self, actionName, data, *params, **kw):
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, data, *params)
-		for action in actionsHighPriority:
-			action[0](data, *params, **kw)
-			if not data:
-				return
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				mode.apply(actionName, user, param, data, *params, **kw)
-				if not data:
-					return
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				mode.apply(actionName, channel, param, data, *params, **kw)
-				if not data:
-					return
+		actionList = self._getActionFunctionList(actionName, data, *params, **kw)
 		for action in actionList:
 			action[0](data, *params, **kw)
 			if not data:
@@ -732,41 +606,117 @@ class IRCd(Service):
 	
 	def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
 		paramList = dataList + params
-		actionsHighPriority = []
-		actionList = []
-		if actionName in self.actions:
-			for action in self.actions[actionName]:
-				if action[1] >= 100:
-					actionsHighPriority.append(action)
-				else:
-					break
-			actionList = self.actions[actionName][len(actionsHighPriority):]
-		userModes, channelModes = self._getActionModes(actionName, kw, *paramList)
-		for action in actionsHighPriority:
-			action[0](*paramList, **kw)
+		actionList = self._getActionFunctionList(actionName, *paramList, **kw)
+		for action in actionList:
+			action[0](*paramList)
 			for data in dataList:
 				if data:
 					break
 			else:
 				return
-		for mode, users in userModes.iteritems():
-			for user, param in users:
-				mode.apply(actionName, user, param, *paramList, **kw)
-				for data in dataList:
-					if data:
-						break
-				else:
-					return
-		for mode, channels in channelModes.iteritems():
-			for channel, param in channels:
-				mode.apply(actionName, channel, param, *paramList, **kw)
-				for data in dataList:
-					if data:
-						break
-				else:
-					return
+	
+	def runComboActionStandard(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
 		for action in actionList:
-			action[0](*paramList, **kw)
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			actionFunc(*actionParameters[actionName])
+	
+	def runComboActionUntilTrue(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			if actionFunc(*actionParameters[actionName]):
+				return True
+		return False
+	
+	def runComboActionUntilFalse(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			if not actionFunc(*actionParameters[actionName]):
+				return True
+		return False
+	
+	def runComboActionUntilValue(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			value = actionFunc(*actionParameters[actionName])
+			if value is not None:
+				return value
+		return None
+	
+	def runComboActionFlagTrue(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		oneIsTrue = False
+		for actionName, actionFunc in funcList:
+			if actionFunc(*actionParameters[actionName]):
+				oneIsTrue = True
+		return oneIsTrue
+	
+	def runComboActionFlagFalse(self, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		oneIsFalse = False
+		for actionName, actionFunc in funcList:
+			if not actionFunc(*actionParameters[actionName]):
+				oneIsFalse = True
+		return oneIsFalse
+	
+	def runComboActionProcessing(self, data, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = [data] + action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			actionFunc(*actionParameters[actionName])
+			if not data:
+				break
+	
+	def runComboActionProcessingMultiple(self, dataList, actionList, **kw):
+		actionFuncLists = {}
+		actionParameters = {}
+		for action in actionList:
+			parameters = dataList + action[1:]
+			actionParameters[action[0]] = parameters
+			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
+		funcList = self._combineActionFunctionLists(actionFuncLists)
+		for actionName, actionFunc in funcList:
+			actionFunc(*actionParameters[actionName])
 			for data in dataList:
 				if data:
 					break
