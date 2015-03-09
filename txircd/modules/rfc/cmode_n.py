@@ -9,7 +9,10 @@ class NoExtMsgMode(ModuleData, Mode):
 	
 	name = "NoExtMsgMode"
 	core = True
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 	
 	def channelModes(self):
 		return [ ("n", ModeType.NoParam, self) ]

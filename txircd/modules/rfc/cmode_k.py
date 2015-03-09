@@ -9,7 +9,7 @@ class ChannelKeyMode(ModuleData, Mode):
 	
 	name = "ChannelKeyMode"
 	core = True
-	affectedActions = [ "commandmodify-JOIN" ]
+	affectedActions = { "commandmodify-JOIN": 10 }
 	
 	def channelModes(self):
 		return [ ("k", ModeType.ParamOnUnset, self) ]

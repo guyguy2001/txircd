@@ -95,12 +95,17 @@ class Censor(ModuleData):
 class ChannelCensor(Mode):
 	implements(IMode)
 
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 
 	def __init__(self, censor):
 		self.censor = censor
 
 	def apply(self, actionName, channel, param, user, command, data):
+		if "targetchans" not in data:
+			return
 		if channel.userRank(user) < self.censor.exemptLevel and channel in data["targetchans"]:
 			message = data["targetchans"][channel]
 			for mask, replacement in self.censor.badwords.iteritems():
@@ -110,13 +115,16 @@ class ChannelCensor(Mode):
 class UserCensor(Mode):
 	implements(IMode)
 
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 
 	def __init__(self, censor):
 		self.censor = censor
 
 	def apply(self, actionName, targetUser, param, user, command, data):
-		if "targetusers" not in data: # This can apparently trigger if a user with +G set on themselves sends a channel message
+		if "targetusers" not in data:
 			return
 		if targetUser in data["targetusers"]: 
 			message = data["targetusers"][targetUser]

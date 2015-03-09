@@ -9,7 +9,7 @@ class TopicLockMode(ModuleData, Mode):
 	
 	name = "TopicLockMode"
 	core = True
-	affectedActions = [ "commandpermission-TOPIC" ]
+	affectedActions = { "commandpermission-TOPIC": 10 }
 	chanLevel = 100
 	
 	def channelModes(self):

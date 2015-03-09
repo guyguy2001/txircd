@@ -201,7 +201,10 @@ class Command(object):
 
 
 class IMode(Interface):
-	affectedActions = Attribute("A list of action types for which to trigger the mode handler.")
+	affectedActions = Attribute("""
+		A dict of action types for which to trigger the mode handler. Each action type in
+		the dict maps to a priority.
+		""")
 	
 	def checkSet(target, param):
 		"""

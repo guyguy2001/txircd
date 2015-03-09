@@ -8,7 +8,7 @@ class PrivateMode(ModuleData, Mode):
 	
 	name = "PrivateMode"
 	core = True
-	affectedActions = [ "displaychannel" ]
+	affectedActions = { "displaychannel": 20 }
 	
 	def channelModes(self):
 		return [ ("p", ModeType.NoParam, self) ]

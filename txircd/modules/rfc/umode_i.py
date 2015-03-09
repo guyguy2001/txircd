@@ -8,7 +8,10 @@ class InvisibleMode(ModuleData, Mode):
 	
 	name = "InvisibleMode"
 	core = True
-	affectedActions = [ "showchanneluser", "showuser" ]
+	affectedActions = {
+		"showchanneluser": 1,
+		"showuser": 1
+	}
 	
 	def actions(self):
 		return [ ("modeactioncheck-user-i-showchanneluser", 1, self.isInvisibleChan),

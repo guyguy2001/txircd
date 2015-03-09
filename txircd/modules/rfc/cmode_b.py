@@ -10,7 +10,7 @@ class BanMode(ModuleData, Mode):
 	
 	name = "BanMode"
 	core = True
-	affectedActions = [ "joinpermission" ]
+	affectedActions = { "joinpermission": 10 }
 	
 	def channelModes(self):
 		return [ ("b", ModeType.List, self) ]

@@ -102,7 +102,7 @@ class KnockCommand(Command):
 class NoKnockMode(Mode):
 	implements(IMode)
 
-	affectedActions = [ "commandpermission-KNOCK" ]
+	affectedActions = { "commandpermission-KNOCK": 10 }
 
 	def apply(self, actionName, channel, param, user, command, data):
 		user.sendMessage(irc.ERR_CANNOTKNOCK, channel.name, "Can't KNOCK on {}, +K is set".format(channel.name))

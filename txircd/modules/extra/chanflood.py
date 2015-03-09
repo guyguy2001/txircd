@@ -9,7 +9,10 @@ class ChannelFlood(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
 	
 	name = "ChannelFlood"
-	affectedActions = [ "commandextra-PRIVMSG", "commandextra-NOTICE" ]
+	affectedActions = {
+		"commandextra-PRIVMSG": 10,
+		"commandextra-NOTICE": 10
+	}
 	
 	def channelModes(self):
 		return [ ("f", ModeType.Param, self) ]

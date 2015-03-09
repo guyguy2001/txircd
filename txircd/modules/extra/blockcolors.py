@@ -8,7 +8,10 @@ class BlockColors(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
 
 	name = "BlockColors"
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 
 	def channelModes(self):
 		return [ ("c", ModeType.NoParam, self) ]

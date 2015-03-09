@@ -8,7 +8,10 @@ class BlockCTCP(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
 	
 	name = "BlockCTCP"
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 	
 	def channelModes(self):
 		return [ ("C", ModeType.NoParam, self) ]

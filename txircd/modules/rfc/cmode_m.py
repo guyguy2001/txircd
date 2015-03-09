@@ -9,7 +9,10 @@ class ModeratedMode(ModuleData, Mode):
 	
 	name = "ModeratedMode"
 	core = True
-	affectedActions = [ "commandmodify-PRIVMSG", "commandmodify-NOTICE" ]
+	affectedActions = {
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 	
 	def channelModes(self):
 		return [ ("m", ModeType.NoParam, self) ]

@@ -9,7 +9,7 @@ class LimitMode(ModuleData, Mode):
 	
 	name = "LimitMode"
 	core = True
-	affectedActions = [ "joinpermission" ]
+	affectedActions = { "joinpermission": 10 }
 	
 	def channelModes(self):
 		return [ ("l", ModeType.Param, self) ]

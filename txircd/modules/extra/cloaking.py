@@ -11,7 +11,7 @@ class HostCloaking(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
 
 	name = "HostCloaking"
-	affectedActions = [ "modechange-user-x" ]
+	affectedActions = { "modechange-user-x": 10 }
 	cloakingSalt = None
 	cloakingPrefix = None
 

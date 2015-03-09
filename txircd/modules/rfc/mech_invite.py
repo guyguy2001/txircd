@@ -12,7 +12,7 @@ class Invite(ModuleData, Mode):
 	name = "Invite"
 	core = True
 	minLevel = 100
-	affectedActions = [ "joinpermission" ]
+	affectedActions = { "joinpermission": 10 }
 	
 	def channelModes(self):
 		return [ ("i", ModeType.NoParam, self) ]
