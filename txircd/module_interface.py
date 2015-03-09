@@ -220,7 +220,7 @@ class IMode(Interface):
 		For non-parameter modes, return an empty list.
 		"""
 	
-	def apply(actionType, target, param, *params, **kw):
+	def apply(actionType, target, param, *params):
 		"""
 		Affect the mode should have.
 		This is similar binding the appropriate actions directly, except that the IRCd will automatically determine
