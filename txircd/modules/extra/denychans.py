@@ -12,7 +12,7 @@ class DenyChannels(ModuleData):
 	name = "DenyChannels"
 	
 	def actions(self):
-		return [ ("joinpermission", 10, self.blockNonDenied) ]
+		return [ ("joinpermission", 50, self.blockNonDenied) ]
 	
 	def blockNonDenied(self, channel, user):
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "channel-denied") is True:
