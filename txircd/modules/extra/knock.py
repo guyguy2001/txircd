@@ -67,20 +67,12 @@ class KnockCommand(Command):
 
 	def execute(self, user, data):
 		channel = data["channel"]
-		inviteLevel = self.ircd.config.get("channel_minimum_level_invite", 100)
-		try:
-			inviteLevel = int(inviteLevel)
-		except ValueError:
-			try:
-				inviteLevel = self.ircd.channelStatuses[inviteLevel[0]][1]
-			except KeyError:
-				inviteLevel = 100
 		if "knocks" not in user.cache:
 			user.cache["knocks"] = WeakKeyDictionary()
 		user.cache["knocks"][channel] = timestamp(now())
 		reason = data["reason"]
 		for targetUser in channel.users:
-			if channel.userRank(targetUser) >= inviteLevel:
+			if self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user):
 				targetUser.sendMessage(irc.RPL_KNOCK, channel.name, user.nick, reason)
 		user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
 		return True

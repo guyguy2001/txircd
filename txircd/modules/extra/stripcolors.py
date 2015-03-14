@@ -25,8 +25,7 @@ class StripColors(ModuleData, Mode):
 		return None
 
 	def apply(self, actionName, channel, param, user, data):
-		minAllowedRank = self.ircd.config.get("exempt_chanops_stripcolor", 20)
-		if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
+		if channel in data["targetchans"] not self.ircd.runActionUntilValue("checkexemptchanops", "stripcolor", channel, user):
 			message = data["targetchans"][channel]
 			data["targetchans"][channel] = stripFormatting(message)
 

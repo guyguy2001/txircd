@@ -13,7 +13,6 @@ class ModeCommand(ModuleData):
 	
 	name = "ModeCommand"
 	core = True
-	minLevel = 100
 	
 	def actions(self):
 		return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
@@ -27,20 +26,6 @@ class ModeCommand(ModuleData):
 	
 	def serverCommands(self):
 		return [ ("MODE", 1, ServerMode(self.ircd)) ]
-	
-	def load(self):
-		self.rehash()
-	
-	def rehash(self):
-		newLevel = self.ircd.config.get("channel_minimum_level_mode", 100)
-		try:
-			self.minLevel = int(newLevel)
-		except ValueError:
-			try:
-				self.minLevel = self.ircd.channelStatuses[newLevel[0]][1]
-			except KeyError:
-				log.msg("ModeCommand: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
-				self.minLevel = 100
 	
 	def getOutputModes(self, modes, fixStatuses):
 		addInStr = None
@@ -134,7 +119,7 @@ class ModeCommand(ModuleData):
 			else:
 				return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
 		channel = data["channel"]
-		if channel.userRank(user) < self.minLevel:
+		if not self.ircd.runActionUntilValue("checkchannellevel", "mode", channel, user):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to set channel modes")
 			return False
 		return None

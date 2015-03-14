@@ -79,18 +79,6 @@ class Censor(ModuleData):
 		if "badwords" not in self.ircd.storage:
 			self.ircd.storage["badwords"] = {}
 		self.badwords = self.ircd.storage["badwords"]
-		self.rehash()
-
-	def rehash(self):
-		newLevel = self.ircd.config.get("exempt_chanops_censor", 100)
-		try:
-			self.exemptLevel = int(newLevel)
-		except ValueError:
-			try:
-				self.exemptLevel = self.ircd.channelStatuses[newLevel[0]][1]
-			except KeyError:
-				log.msg("Censor: No valid exempt level found; defaulting to 100", logLevel=logging.WARNING)
-				self.exemptLevel = 100
 
 class ChannelCensor(Mode):
 	implements(IMode)
@@ -102,11 +90,12 @@ class ChannelCensor(Mode):
 
 	def __init__(self, censor):
 		self.censor = censor
+		self.ircd = censor.ircd
 
 	def apply(self, actionName, channel, param, user, data):
 		if "targetchans" not in data:
 			return
-		if channel.userRank(user) < self.censor.exemptLevel and channel in data["targetchans"]:
+		if channel in data["targetchans"] and not self.ircd.runActionUntilValue("checkexemptchanops", "censor", channel, user):
 			message = data["targetchans"][channel]
 			for mask, replacement in self.censor.badwords.iteritems():
 				message = re.sub(mask, replacement, message, flags=re.IGNORECASE)

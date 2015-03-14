@@ -26,8 +26,7 @@ class BlockColors(ModuleData, Mode):
 		return None
 
 	def apply(self, actionName, channel, param, user, data):
-		minAllowedRank = self.ircd.config.get("exempt_chanops_blockcolor", 20)
-		if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
+		if channel in data["targetchans"] and not self.ircd.runActionUntilValue("checkexemptchanops", "blockcolor", channel, user):
 			message = data["targetchans"][channel]
 			if any(c in message for c in "\x02\x1f\x16\x1d\x0f\x03"):
 				del data["targetchans"][channel]

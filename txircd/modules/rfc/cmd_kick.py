@@ -10,7 +10,6 @@ class KickCommand(ModuleData):
 	
 	name = "KickCommand"
 	core = True
-	minLevel = 100
 	
 	def actions(self):
 		return [ ("commandpermission-KICK", 10, self.checkKickLevel),
@@ -23,26 +22,12 @@ class KickCommand(ModuleData):
 	def serverCommands(self):
 		return [ ("KICK", 1, ServerKick(self.ircd)) ]
 	
-	def load(self):
-		self.rehash()
-	
-	def rehash(self):
-		newLevel = self.ircd.config.get("channel_minimum_level_kick", 100)
-		try:
-			self.minLevel = int(newLevel)
-		except ValueError:
-			try:
-				self.minLevel = self.ircd.channelStatuses[newLevel[0]][1]
-			except KeyError:
-				log.msg("KickCommand: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
-				self.minLevel = 100
-	
 	def checkKickLevel(self, user, data):
 		channel = data["channel"]
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
 			return False
-		if channel.userRank(user) < self.minLevel:
+		if not self.ircd.runActionUntilValue("checkchannellevel", "kick", channel, user):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to kick users from {}".format(channel.name))
 			return False
 		if channel.userRank(user) < channel.userRank(data["user"]):
