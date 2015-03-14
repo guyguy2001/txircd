@@ -4,37 +4,32 @@ from txircd.utils import ModeType
 from zope.interface import implements
 from datetime import datetime
 
-class ListModeSync(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
+class ListModeSync(ModuleData):
+	implements(IPlugin, IModuleData)
 	
 	name = "ListModeSync"
 	core = True
+	modeCache = {}
 	
 	def serverCommands(self):
-		return [ ("LISTMODE", 1, self) ]
+		return [ ("LISTMODE", 1, ListModeCmd(self)),
+		         ("ENDLISTMODE", 1, EndListModeCmd(self)) ]
 	
-	def checkForListEntry(self, target, mode, param):
-		if mode not in target.modes:
-			return False
-		for paramData in target.modes[mode]:
-			if paramData[0] == param:
-				return True
-		return False
+	def addListMode(self, target, modeData):
+		if target not in self.modeCache:
+			self.modeCache[target] = []
+		self.modeCache[target].append(modeData)
 	
-	def addChanListMode(self, channel, mode, param, setter, modetime):
-		if not channel.addListMode(mode, param, setter, modetime):
-			return False
-		for user in channel.users.iterkeys():
-			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage("MODE", "+{}".format(mode), param, to=channel.name, prefix=setter)
-		return True
+	def setModes(self, target):
+		target.setModes(self.modeCache[target])
+		del self.modeCache[target]
+
+class ListModeCmd(Command):
+	implements(ICommand)
 	
-	def addUserListMode(self, user, mode, param, setter, modetime):
-		if not user.addListMode(mode, param, setter, modetime):
-			return False
-		if user.uuid[:3] == self.ircd.serverID:
-			user.sendMessage("MODE", "+{}".format(mode), param, prefix=setter)
-		return True
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 6:
@@ -55,7 +50,7 @@ class ListModeSync(ModuleData, Command):
 				}
 			except ValueError:
 				return None
-		elif params[0] in self.ircd.users:
+		if params[0] in self.ircd.users:
 			if params[2] not in self.ircd.userModeTypes:
 				return None
 			if self.ircd.userModeTypes[params[2]] != ModeType.List:
@@ -75,22 +70,36 @@ class ListModeSync(ModuleData, Command):
 	
 	def execute(self, server, data):
 		targetTime = data["targettime"]
+		target = data["target"]
 		mode = data["mode"]
 		param = data["param"]
-		try: # channels
-			channel = data["target"]
-			if targetTime <= channel.existedSince:
-				if self.checkForListEntry(channel, mode, param) or self.addChanListMode(channel, mode, param, data["setter"], data["modetime"]):
-					return True
-			else:
-				return True # We still handled it in a way that wasn't a desync
-		except AttributeError:
-			user = data["target"]
-			if targetTime <= user.connectedSince:
-				if self.checkForListEntry(user, mode, param) or self.addUserListMode(user, mode, param, data["setter"], data["modetime"]):
-					return True
-			else:
+		try: # Check channel timestamp
+			if targetTime > target.existedSince:
+				return True # We handled it such that it's not a desync
+		except AttributeError: # Check user timestamp
+			if targetTime > target.connectedSince:
 				return True
-		return None
+		self.module.addListMode(target, (True, mode, param, data["setter"], data["modetime"]))
+		return True
+
+class EndListModeCmd(Command):
+	implements(ICommand)
+	
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, server, params, prefix, tags):
+		if len(params) != 1:
+			return None
+		if params[0] not in self.ircd.channels and params[0] not in self.ircd.users:
+			return None
+		return {
+			"target": params[0]
+		}
+	
+	def execute(self, server, data):
+		self.module.setModes(data["target"])
+		return True
 
 listModeSync = ListModeSync()
