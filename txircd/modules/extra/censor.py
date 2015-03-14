@@ -39,13 +39,13 @@ class Censor(ModuleData):
 				("statsruntype", 1, self.listStats),
 				("burst", 10, self.propgateOnBurst) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-censor", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "G" in channel.modes:
 			return True
 		return None
@@ -103,7 +103,7 @@ class ChannelCensor(Mode):
 	def __init__(self, censor):
 		self.censor = censor
 
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		if "targetchans" not in data:
 			return
 		if channel.userRank(user) < self.censor.exemptLevel and channel in data["targetchans"]:
@@ -123,7 +123,7 @@ class UserCensor(Mode):
 	def __init__(self, censor):
 		self.censor = censor
 
-	def apply(self, actionName, targetUser, param, user, command, data):
+	def apply(self, actionName, targetUser, param, user, data):
 		if "targetusers" not in data:
 			return
 		if targetUser in data["targetusers"]: 

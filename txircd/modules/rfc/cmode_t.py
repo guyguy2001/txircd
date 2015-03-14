@@ -31,12 +31,12 @@ class TopicLockMode(ModuleData, Mode):
 			except KeyError:
 				self.chanLevel = 100
 	
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "t" in channel.modes:
 			return ""
 		return None
 	
-	def apply(self, actionType, channel, param, user, command, data):
+	def apply(self, actionType, channel, param, user, data):
 		if channel.userRank(user) < self.chanLevel:
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to change the topic on this channel")
 			return False

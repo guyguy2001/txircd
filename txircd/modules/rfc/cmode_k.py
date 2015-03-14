@@ -17,7 +17,7 @@ class ChannelKeyMode(ModuleData, Mode):
 	def actions(self):
 		return [ ("modeactioncheck-channel-k-commandmodify-JOIN", 1, self.channelPassword) ]
 	
-	def channelPassword(self, channel, user, command, data):
+	def channelPassword(self, channel, user, data):
 		if "k" in channel.modes:
 			return channel.modes["k"]
 		return None
@@ -34,7 +34,7 @@ class ChannelKeyMode(ModuleData, Mode):
 			return None
 		return [param]
 	
-	def apply(self, actionType, channel, param, user, command, data):
+	def apply(self, actionType, channel, param, user, data):
 		try:
 			keyIndex = data["channels"].index(channel)
 		except ValueError:

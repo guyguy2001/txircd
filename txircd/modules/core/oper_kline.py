@@ -22,7 +22,7 @@ class KLineCommand(ModuleData, Command):
 				("statsruntype", 1, self.listStats),
 				("xlinerematch", 1, self.matchKLine)]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

@@ -17,7 +17,7 @@ class RestartCommand(ModuleData, Command):
 	def userCommands(self):
 		return [ ("RESTART", 1, self) ]
 	
-	def checkRestartPermission(self, user, command, data):
+	def checkRestartPermission(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-restart", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

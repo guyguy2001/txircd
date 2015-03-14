@@ -14,7 +14,7 @@ class SatopicCommand(ModuleData, Command):
 	def actions(self):
 		return [ ("commandpermission-SATOPIC", 1, self.restrictToOpers) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-satopic", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

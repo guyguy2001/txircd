@@ -16,7 +16,7 @@ class DieCommand(ModuleData, Command):
 	def userCommands(self):
 		return [ ("DIE", 1, self) ]
 	
-	def checkCommandPermission(self, user, command, data):
+	def checkCommandPermission(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-die", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

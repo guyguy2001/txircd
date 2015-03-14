@@ -20,12 +20,12 @@ class BlockColors(ModuleData, Mode):
 		return [ ("modeactioncheck-channel-c-commandmodify-PRIVMSG", 10, self.channelHasMode),
 				("modeactioncheck-channel-c-commandmodify-NOTICE", 10, self.channelHasMode) ]
 
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "c" in channel.modes:
 			return ""
 		return None
 
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		minAllowedRank = self.ircd.config.get("exempt_chanops_blockcolor", 20)
 		if channel.userRank(user) < minAllowedRank and channel in data["targetchans"]:
 			message = data["targetchans"][channel]

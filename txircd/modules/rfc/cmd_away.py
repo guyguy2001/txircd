@@ -17,7 +17,7 @@ class AwayCommand(ModuleData, Command):
 				("commandextra-NOTICE", 10, self.notifyAway),
 				("extrawhois", 10, self.addWhois) ]
 	
-	def notifyAway(self, user, command, data):
+	def notifyAway(self, user, data):
 		if "targetusers" not in data:
 			return
 		for u in data["targetusers"].iterkeys():

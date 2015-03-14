@@ -21,12 +21,12 @@ class ModeratedMode(ModuleData, Mode):
 		return [ ("modeactioncheck-channel-m-commandmodify-PRIVMSG", 10, self.channelHasMode),
 				("modeactioncheck-channel-m-commandmodify-NOTICE", 10, self.channelHasMode) ]
 	
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "m" in channel.modes:
 			return ""
 		return None
 	
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		if channel.userRank(user) < 10 and channel in data["targetchans"]:
 			del data["targetchans"][channel]
 			user.sendMessage(irc.ERR_CANNOTSENDTOCHAN, channel.name, "Cannot send to channel (+m)")

@@ -21,7 +21,7 @@ class ChannelFlood(ModuleData, Mode):
 		return [ ("modeactioncheck-channel-f-commandextra-PRIVMSG", 10, self.channelHasMode),
 				("modeactioncheck-channel-f-commandextra-NOTICE", 10, self.channelHasMode) ]
 	
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "f" in channel.modes:
 			return channel.modes["f"]
 		return None
@@ -39,7 +39,7 @@ class ChannelFlood(ModuleData, Mode):
 			return None
 		return [param]
 	
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		if "targetchans" not in data or channel not in data["targetchans"]:
 			return
 		minAllowedRank = self.ircd.config.get("exempt_chanops_chanflood", 20)

@@ -53,7 +53,7 @@ class Invite(ModuleData, Mode):
 		if channel.name in user.cache["invites"]:
 			del user.cache["invites"][channel.name]
 
-	def checkInviteLevel(self, user, command, data):
+	def checkInviteLevel(self, user, data):
 		channel = data["channel"]
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")

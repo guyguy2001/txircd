@@ -20,7 +20,7 @@ class ReloadModuleCommand(ModuleData, Command):
 	def userCommands(self):
 		return [ ("RELOADMODULE", 1, self) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-reloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

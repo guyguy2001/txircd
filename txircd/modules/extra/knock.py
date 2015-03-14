@@ -27,7 +27,7 @@ class Knock(ModuleData):
 	def channelModes(self):
 		return [ ("K", ModeType.NoParam, NoKnockMode()) ]
 
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "K" in channel.modes:
 			return ""
 		return None
@@ -104,7 +104,7 @@ class NoKnockMode(Mode):
 
 	affectedActions = { "commandpermission-KNOCK": 10 }
 
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		user.sendMessage(irc.ERR_CANNOTKNOCK, channel.name, "Can't KNOCK on {}, +K is set".format(channel.name))
 		return False
 

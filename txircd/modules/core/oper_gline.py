@@ -25,7 +25,7 @@ class GLineCommand(ModuleData, Command):
 				("removexline", 1, self.removeGLine),
 				("burst", 10, self.burstGLines) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

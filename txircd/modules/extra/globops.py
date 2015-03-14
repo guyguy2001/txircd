@@ -14,7 +14,7 @@ class GlobopsCommand(Command, ModuleData):
 	def userCommands(self):
 		return [ ("GLOBOPS", 1, self) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-globops", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

@@ -122,8 +122,9 @@ class ModeCommand(ModuleData):
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
-			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)	
-	def restrictUse(self, user, command, data):
+			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
+	
+	def restrictUse(self, user, data):
 		if "channel" not in data or "modes" not in data:
 			return None
 		if not data["params"]:

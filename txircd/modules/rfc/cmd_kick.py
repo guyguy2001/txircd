@@ -37,7 +37,7 @@ class KickCommand(ModuleData):
 				log.msg("KickCommand: No valid minimum level found; defaulting to 100", logLevel=logging.WARNING)
 				self.minLevel = 100
 	
-	def checkKickLevel(self, user, command, data):
+	def checkKickLevel(self, user, data):
 		channel = data["channel"]
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")

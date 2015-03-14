@@ -20,12 +20,12 @@ class BlockCTCP(ModuleData, Mode):
 		return [ ("modeactioncheck-channel-C-commandmodify-PRIVMSG", 10, self.channelHasMode),
 				("modeactioncheck-channel-C-commandmodify-NOTICE", 10, self.channelHasMode) ]
 	
-	def channelHasMode(self, channel, user, command, data):
+	def channelHasMode(self, channel, user, data):
 		if "C" in channel.modes:
 			return ""
 		return None
 	
-	def apply(self, actionName, channel, param, user, command, data):
+	def apply(self, actionName, channel, param, user, data):
 		if "targetchans" not in data:
 			return
 		if channel not in data["targetchans"]:

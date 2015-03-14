@@ -27,7 +27,7 @@ class ServerQuit(ModuleData):
 			closestHop = self.ircd.servers[closestHop.nextClosest]
 		self.ircd.broadcastToServers(closestHop, "SQUIT", server.serverID, reason, prefix=server.nextClosest)
 	
-	def restrictSQuit(self, user, command, data):
+	def restrictSQuit(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-squit"):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False

@@ -25,7 +25,7 @@ class QLineCommand(ModuleData, Command):
 				("removexline", 1, self.removeQLine),
 				("burst", 10, self.burstQLines) ]
 
-	def restrictToOpers(self, user, command, data):
+	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
