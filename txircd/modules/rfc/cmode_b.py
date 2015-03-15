@@ -22,7 +22,6 @@ class BanMode(ModuleData, Mode):
 				("userbancheck", 1, self.matchBans),
 				("join", 10, self.populateBanCache),
 				("join", 9, self.autoStatus),
-				("leave", 10, self.clearBanCache),
 				("updateuserbancache", 1, self.updateUserCaches)
 		]
 	
@@ -56,9 +55,9 @@ class BanMode(ModuleData, Mode):
 			if "b" in channel.modes:
 				return "" # We'll handle the iteration
 			return None
-		if "bans" in user.cache and channel in user.cache["bans"]:
-			if mode in user.cache["bans"][channel]:
-				return user.cache["bans"][channel]
+		if user in channel.users and "bans" in channel.users[user]:
+			if mode in channel.users[user]["bans"]:
+				return channel.users[user]["bans"][mode]
 			return None
 		for paramData in channel.modes["b"]:
 			param = paramData[0]
@@ -96,13 +95,13 @@ class BanMode(ModuleData, Mode):
 		else:
 			matchingExtban = ""
 			matchNegated = None
-		for user in channel.users:
-			if "bans" not in user.cache:
-				user.cache["bans"] = {}
-			if channel not in user.cache["bans"]:
-				user.cache["bans"][channel] = {}
-			if (actionExtban in user.cache["bans"][channel]) == adding:
+		for user, cache in channel.users.iteritems():
+			if "bans" not in cache:
+				cache["bans"] = {}
+			if not (actionExtban in cache["bans"]) and not adding:
 				continue # If it didn't affect them before, it won't now, so let's skip the mongo processing we're about to do to them
+			if (actionExtban in cache["bans"]) and adding and actionParam == cache["bans"][actionExtban]:
+				continue
 			if matchingExtban:
 				matchesUser = self.ircd.runActionUntilTrue("usermatchban-{}".format(matchingExtban), user, matchNegated, banmask)
 			else:
@@ -110,13 +109,13 @@ class BanMode(ModuleData, Mode):
 			if not matchesUser:
 				continue
 			if adding:
-				user.cache["bans"][channel][actionExtban] = actionParam
+				cache["bans"][actionExtban] = actionParam
 			else:
-				del user.cache["bans"][channel][actionExtban]
+				del cache["bans"][actionExtban]
 	
 	def matchBans(self, user, channel):
-		if user in channel.users and "bans" in user.cache and channel in user.cache["bans"]:
-			return user.cache["bans"][channel]
+		if user in channel.users and "bans" in channel.users[user]:
+			return channel.users[user]["bans"]
 		if "b" in channel.modes:
 			matchesActions = {}
 			for paramData in channel.modes["b"]:
@@ -160,9 +159,8 @@ class BanMode(ModuleData, Mode):
 	def populateBanCache(self, channel, user):
 		if "b" not in channel.modes:
 			return
-		if "bans" not in user.cache:
-			user.cache["bans"] = {}
-		user.cache["bans"][channel] = {}
+		if "bans" not in channel.users[user]:
+			channel.users[user]["bans"] = {}
 		for paramData in channel.modes["b"]:
 			param = paramData[0]
 			actionExtban = ""
@@ -171,26 +169,20 @@ class BanMode(ModuleData, Mode):
 				actionExtban, param = param.split(";", 1)
 				if ":" in actionExtban:
 					actionExtban, actionParam = actionExtban.split(":", 1)
-			if actionExtban in user.cache["bans"][channel]:
+			if actionExtban in channel.users[user]["bans"]:
 				continue
 			if self.banMatchesUser(user, param):
-				user.cache["bans"][channel][actionExtban] = actionParam
+				channel.users[user]["bans"][actionExtban] = actionParam
 	
 	def autoStatus(self, channel, user):
-		if "bans" not in user.cache:
-			return
-		if channel not in user.cache["bans"]:
+		if "bans" not in channel.users[user]:
 			return
 		applyModes = []
 		for mode in self.ircd.channelStatusOrder:
-			if mode in user.cache["bans"][channel]:
+			if mode in channel.users[user]["bans"]:
 				applyModes.append((True, mode, user.uuid))
 		if applyModes:
 			channel.setModes(applyModes, self.ircd.serverID)
-	
-	def clearBanCache(self, channel, user):
-		if "bans" in user.cache and channel in user.cache["bans"]:
-			del user.cache["bans"][channel]
 
 	def updateUserCaches(self, user):
 		for channel in user.channels:

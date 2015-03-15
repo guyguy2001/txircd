@@ -44,26 +44,24 @@ class ChannelFlood(ModuleData, Mode):
 			return
 		if self.ircd.runActionUntilValue("checkexemptchanops", "chanflood", channel, user):
 			return 
-		if "floodhistory" not in user.cache:
-			user.cache["floodhistory"] = WeakKeyDictionary()
-		if channel not in user.cache["floodhistory"]:
-			user.cache["floodhistory"][channel] = []
+		if "floodhistory" not in channel.users[user]:
+			channel.users[user]["floodhistory"] = []
 		
 		currentTime = now()
-		user.cache["floodhistory"][channel].append((data["targetchans"][channel], currentTime))
+		channel.users[user]["floodhistory"].append((data["targetchans"][channel], currentTime))
 		maxLines, seconds = param.split(":")
 		maxLines = int(maxLines)
 		seconds = int(seconds)
 		duration = timedelta(seconds=seconds)
 		floodTime = currentTime - duration
-		floodHistory = user.cache["floodhistory"][channel]
+		floodHistory = channel.users[user]["floodhistory"]
 		
 		while floodHistory:
 			if floodHistory[0][1] <= floodTime:
 				del floodHistory[0]
 			else:
 				break
-		user.cache["floodhistory"][channel] = floodHistory
+		channel.users[user]["floodhistory"] = floodHistory
 		if len(floodHistory) > maxLines:
 			user.leaveChannel(channel, "KICK", { "byuser": False, "server": self.ircd, "reason": "Channel flood limit reached" })
 
