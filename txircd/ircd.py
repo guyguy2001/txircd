@@ -20,6 +20,7 @@ class IRCd(Service):
 		self.boundPorts = {}
 		self.loadedModules = {}
 		self._loadedModuleData = {}
+		self._unloadingModules = {}
 		self.commonModules = set()
 		self.userCommands = {}
 		self.serverCommands = {}
@@ -127,11 +128,18 @@ class IRCd(Service):
 				log.msg("The module {} failed to load.".format(moduleName), logLevel=logging.WARNING)
 	
 	def loadModule(self, moduleName):
+		if moduleName in self._unloadingModules:
+			deferList = self._unloadingModules[moduleName]
+			deferList.addCallback(self._tryLoadAgain, moduleName)
+			return deferList
 		for module in getPlugins(IModuleData, txircd.modules):
 			if module.name == moduleName:
 				rebuild(importlib.import_module(module.__module__)) # getPlugins doesn't recompile modules, so let's do that ourselves.
 				self._loadModuleData(module)
 				break
+	
+	def _tryLoadAgain(self, _, moduleName):
+		self.loadModule(moduleName)
 	
 	def _loadModuleData(self, module):
 		if not IModuleData.providedBy(module):
@@ -330,14 +338,21 @@ class IRCd(Service):
 		self.runActionStandard("moduleunload", module.name)
 		
 		if unloadDeferreds:
-			return DeferredList(unloadDeferreds)
+			deferList = DeferredList(unloadDeferreds)
+			self._unloadingModules[moduleName] = deferList
+			deferList.addCallback(self._removeFromUnloadingList, moduleName)
+			return deferList
+	
+	def _removeFromUnloadingList(self, _, moduleName):
+		del self._unloadingModules[moduleName]
 	
 	def reloadModule(self, moduleName):
-		d = self.unloadModule(moduleName, False)
-		if d is None:
-			self.loadModule(moduleName)
+		deferList = self.unloadModule(moduleName, False)
+		if deferList is None:
+			deferList = self.loadModule(moduleName)
 		else:
-			d.addCallback(lambda result: self.loadModule(moduleName))
+			deferList.addCallback(lambda result: self.loadModule(moduleName))
+		return deferList
 	
 	def rehash(self):
 		log.msg("Rehashing...", logLevel=logging.INFO)
