@@ -341,7 +341,7 @@ class IRCUser(IRCBase):
 		if not override:
 			if self.ircd.runActionUntilValue("joinpermission", channel, self, users=[self], channels=[channel]) is False:
 				return
-		channel.users[self] = ""
+		channel.users[self] = { "status": "" }
 		self.channels.append(channel)
 		newChannel = False
 		if channel.name not in self.ircd.channels:
