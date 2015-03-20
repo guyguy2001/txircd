@@ -125,6 +125,5 @@ command-shun           ShunCommand          Allows the use of the SHUN command
                                             commands.
 info-type-shuns        ShunCommand          Allows an oper to view STATS/XINFO
                                             topic SHUNS.
-service-admin-bidserv  BidServ              Allows an oper to manage auctions.
 view-globops           Globops              Allows an oper to see GLOBOPS
                                             messages.
