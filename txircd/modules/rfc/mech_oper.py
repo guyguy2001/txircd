@@ -21,8 +21,8 @@ class Oper(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("userhasoperpermission", 1, self.operPermission),
-		("modepermission-user-o", 1, self.nope),
-		("burst", 90, self.propagatePermissions) ]
+		         ("modepermission-user-o", 1, self.nope),
+		         ("burst", 90, self.propagatePermissions) ]
 	
 	def userModes(self):
 		return [ ("o", ModeType.NoParam, self) ]
@@ -36,6 +36,11 @@ class Oper(ModuleData, Mode):
 			return True
 		# Check for oper permissions in the user's permission storage
 		if "oper-permissions" not in user.cache:
+			return False
+		if "*" in permissionType or "?" in permissionType:
+			for operPerm in user.cache["oper-permissions"]:
+				if fnmatch(operPerm, permissionType):
+					return True
 			return False
 		return permissionType in user.cache["oper-permissions"]
 	
