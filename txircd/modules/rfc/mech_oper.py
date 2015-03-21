@@ -96,16 +96,21 @@ class UserOper(Command):
 			self.reportOper(user, "Bad password")
 			return True
 		if "host" in operData:
-			operHost = ircLower(operData["host"])
-			userHost = ircLower("{}@{}".format(user.ident, user.host))
-			if not fnmatchcase(userHost, operHost):
+			hosts = ircLower(operData["host"]).split(" ")
+			for operHost in hosts:
+				userHost = ircLower("{}@{}".format(user.ident, user.host))
+				if fnmatchcase(userHost, operHost):
+					break
 				userHost = ircLower("{}@{}".format(user.ident, user.realHost))
-				if not fnmatchcase(userHost, operHost):
-					userHost = ircLower("{}@{}".format(user.ident, user.ip))
-					if not fnmatchcase(userHost, operHost):
-						user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
-						self.reportOper(user, "Bad host")
-						return True
+				if fnmatchcase(userHost, operHost):
+					break
+				userHost = ircLower("{}@{}".format(user.ident, user.ip))
+				if fnmatchcase(userHost, operHost):
+					break
+			else:
+				user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
+				self.reportOper(user, "Bad host")
+				return True
 		if self.ircd.runActionUntilFalse("opercheck", user, username, password, operData): # Allow other modules to implement additional checks
 			user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 			if "error" in operData:
