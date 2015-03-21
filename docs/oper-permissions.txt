@@ -48,31 +48,29 @@ command-wallops        Wallops              Allows the use of the WALLOPS
                                             command to send a WALLOPS message.
 command-zline          ZLineCommand         Allows the use of the ZLINE command
                                             to globally ban an IP address.
-info-all               StatsCommand         Allows an oper to view all STATS/
-                                            XINFO topics.
-info-type-elines       ELineCommand         Allows an oper to view STATS/XINFO
+info-elines            ELineCommand         Allows an oper to view STATS/XINFO
                                             topic ELINES.
-info-type-klines       KLineCommand         Allows an oper to view STATS/XINFO
+info-klines            KLineCommand         Allows an oper to view STATS/XINFO
                                             topic KLINES.
-info-type-glines       GLineCommand         Allows an oper to view STATS/XINFO
+info-glines            GLineCommand         Allows an oper to view STATS/XINFO
                                             topic GLINES.
-info-type-qlines       QLineCommand         Allows an oper to view STATS/XINFO
+info-qlines            QLineCommand         Allows an oper to view STATS/XINFO
                                             topic QLINES.
-info-type-zlines       ZLineCommand         Allows an oper to view STATS/XINFO
+info-zlines            ZLineCommand         Allows an oper to view STATS/XINFO
                                             topic ZLINES.
-servernotice-all       ServerNoticeMode     Allows an oper to set usermode +s
+servernotice-connect   ServerNoticeConnect  Allows an oper to set usermode +s
                                             on themselves and grants permission
-                                            for all available notice types.
-servernotice-type-     ServerNoticeConnect  Allows an oper to set usermode +s
-connect                                     on themselves and grants permission
                                             for local connect notices.
-servernotice-type-     ServerNoticeQuit     Allows an oper to set usermode +s
-quit                                        on themselves and grants permission
+servernotice-oper      ServerNoticeOper     Allows an oper to set usermode +s
+                                            on themselves and grants permission
+                                            for oper notices.
+servernotice-quit      ServerNoticeQuit     Allows an oper to set usermode +s
+                                            on themselves and grants permission
                                             for local quit notices.
-servernotice-type-     ServerNotice         Allows an oper to set usermode +s
+servernotice-          ServerNotice         Allows an oper to set usermode +s
 remoteconnect          RemoteConnect        on themselves and grants permission
                                             for remote connect notices.
-servernotice-type-     ServerNotice         Allows an oper to set usermode +s
+servernotice-          ServerNotice         Allows an oper to set usermode +s
 remotequit             RemoteQuit           on themselves and grants permission
                                             for remote quit notices.
 whois-host             WhoisCommand         Allows an oper to see the real host
@@ -123,7 +121,7 @@ command-satopic        SatopicCommand       Allows the use of the SATOPIC
 command-shun           ShunCommand          Allows the use of the SHUN command
                                             to ban a user from sending most
                                             commands.
-info-type-shuns        ShunCommand          Allows an oper to view STATS/XINFO
+info-shuns             ShunCommand          Allows an oper to view STATS/XINFO
                                             topic SHUNS.
 view-globops           Globops              Allows an oper to see GLOBOPS
                                             messages.
