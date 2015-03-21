@@ -663,12 +663,21 @@ class LocalUser(IRCUser):
 	LocalUser is a fake user created by a module, which is not
 	propagated to other servers.
 	"""
-	def __init__(self, ircd, ip, host = None):
+	def __init__(self, ircd, nick, ident, host, ip, gecos):
 		IRCUser.__init__(self, ircd, ip, None, host)
 		self.localOnly = True
 		self._sendMsgFunc = lambda self, command, *args, **kw: None
 		self._registrationTimeoutTimer.cancel()
-		self._registerHolds = set(("NICK",))
+		del self._registerHolds
+		self._pinger = None
+		self.nick = nick
+		self.ident = ident
+		self.gecos = gecos
+		self.ircd.runActionStandard("localregister", self, users=[self])
+		self.ircd.userNicks[self.nick] = self.uuid
+	
+	def register(self, holdName):
+		pass
 	
 	def setSendMsgFunc(self, func):
 		self._sendMsgFunc = func
@@ -717,17 +726,6 @@ class LocalUser(IRCUser):
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 		self.ircd.runActionStandard("localquit", self, reason, users=[self])
-		channelList = copy(self.channels)
-		for channel in channelList:
-			self.leaveChannel(channel)
-	
-	def register(self, holdName):
-		if holdName not in self._registerHolds:
-			return
-		self._registerHolds.remove(holdName)
-		if not self._registerHolds:
-			self.ircd.runActionStandard("localregister", self, users=[self])
-			self.ircd.userNicks[self.nick] = self.uuid
 	
 	def joinChannel(self, channel, override = False):
 		IRCUser.joinChannel(self, channel, True)
