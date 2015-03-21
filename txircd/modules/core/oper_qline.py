@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, durationToSeconds, ircLower, isValidNick, now, timestamp
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class QLineCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -146,7 +146,7 @@ class QLineCommand(ModuleData, Command):
 		if user.isRegistered():
 			lowerNick = ircLower(data["nick"])
 			for mask, linedata in self.banlist.iteritems():
-				if fnmatch(lowerNick, mask):
+				if fnmatchcase(lowerNick, mask):
 					user.sendMessage(irc.ERR_ERRONEUSNICKNAME, data["nick"], "Invalid nickname: {}".format(linedata["reason"]))
 					return False
 		return None
@@ -155,7 +155,7 @@ class QLineCommand(ModuleData, Command):
 		self.expireQLines()
 		lowerNick = ircLower(user.nick)
 		for mask, linedata in self.banlist.iteritems():
-			if fnmatch(lowerNick, mask):
+			if fnmatchcase(lowerNick, mask):
 				return linedata["reason"]
 
 	def expireQLines(self):

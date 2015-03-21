@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, durationToSeconds, ircLower, now, timestamp
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class ZLineCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -141,7 +141,7 @@ class ZLineCommand(ModuleData, Command):
 	def matchZLine(self, user):
 		self.expireZLines()
 		for mask, linedata in self.banlist.iteritems():
-			if fnmatch(user.ip, mask): # TODO: Normalize IPv6?
+			if fnmatchcase(user.ip, mask): # TODO: Normalize IPv6?
 				return linedata["reason"]
 
 	def expireZLines(self):

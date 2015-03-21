@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigReadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class RehashCommand(ModuleData):
 	implements(IPlugin, IModuleData)
@@ -43,10 +43,10 @@ class UserRehash(Command):
 			return {}
 		servers = []
 		serverMask = params[0]
-		if fnmatch(self.ircd.name, serverMask):
+		if fnmatchcase(self.ircd.name, serverMask):
 			servers.append(None)
 		for server in self.ircd.servers.itervalues():
-			if fnmatch(server.name, serverMask):
+			if fnmatchcase(server.name, serverMask):
 				servers.append(server)
 		if not servers:
 			user.sendSingleError("RehashServer", irc.ERR_NOSUCHSERVER, params[0], "No matching servers")

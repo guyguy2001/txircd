@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, durationToSeconds, ircLower, now, timestamp
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class ELineCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -151,12 +151,12 @@ class ELineCommand(ModuleData, Command):
 		self.expireELines()
 		toMatch = ircLower("{}@{}".format(user.ident, user.realHost))
 		for mask, linedata in self.exceptlist.iteritems():
-			if fnmatch(toMatch, mask):
+			if fnmatchcase(toMatch, mask):
 				user.cache["eline_match"] = linedata["reason"]
 				return user.cache["eline_match"]
 		toMatch = ircLower("{}@{}".format(user.ident, user.ip))
 		for mask, linedata in self.exceptlist.iteritems():
-			if fnmatch(toMatch, mask):
+			if fnmatchcase(toMatch, mask):
 				user.cache["eline_match"] = linedata["reason"]
 				return user.cache["eline_match"]
 

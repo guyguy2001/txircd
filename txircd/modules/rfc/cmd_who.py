@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class WhoCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -51,7 +51,7 @@ class WhoCommand(ModuleData, Command):
 					continue
 				lowerMask = ircLower(mask)
 				serverName = self.ircd.name if targetUser.uuid[:3] == self.ircd.serverID else self.ircd.servers[targetUser.uuid[:3]].name
-				if fnmatch(ircLower(targetUser.host), lowerMask) or fnmatch(ircLower(targetUser.gecos), lowerMask) or fnmatch(ircLower(serverName), lowerMask) or fnmatch(ircLower(targetUser.nick), lowerMask):
+				if fnmatchcase(ircLower(targetUser.host), lowerMask) or fnmatchcase(ircLower(targetUser.gecos), lowerMask) or fnmatchcase(ircLower(serverName), lowerMask) or fnmatchcase(ircLower(targetUser.nick), lowerMask):
 					matchingUsers.append(targetUser)
 		if "opersonly" in data:
 			allMatches = matchingUsers

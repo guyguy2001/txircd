@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, durationToSeconds, ircLower, now, timestamp
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class KLineCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -128,12 +128,12 @@ class KLineCommand(ModuleData, Command):
 		self.expireKLines()
 		toMatch = ircLower("{}@{}".format(user.ident, user.realHost))
 		for mask, linedata in self.banlist.iteritems():
-			if fnmatch(toMatch, mask):
+			if fnmatchcase(toMatch, mask):
 				user.cache["kline_match"] = linedata["reason"]
 				return user.cache["kline_match"]
 		toMatch = ircLower("{}@{}".format(user.ident, user.ip))
 		for mask, linedata in self.banlist.iteritems():
-			if fnmatch(toMatch, mask):
+			if fnmatchcase(toMatch, mask):
 				user.cache["kline_match"] = linedata["reason"]
 				return user.cache["kline_match"]
 

@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class ListCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -27,7 +27,7 @@ class ListCommand(ModuleData, Command):
 				wildcardNames.append(ircLower(name))
 		for lowerName, channel in self.ircd.channels.iteritems():
 			for wildcardName in wildcardNames:
-				if fnmatch(lowerName, wildcardName):
+				if fnmatchcase(lowerName, wildcardName):
 					channels.append(channel)
 					break
 		return {

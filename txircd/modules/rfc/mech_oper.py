@@ -4,7 +4,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 import logging
 
 class Oper(ModuleData, Mode):
@@ -39,7 +39,7 @@ class Oper(ModuleData, Mode):
 			return False
 		if "*" in permissionType or "?" in permissionType:
 			for operPerm in user.cache["oper-permissions"]:
-				if fnmatch(operPerm, permissionType):
+				if fnmatchcase(operPerm, permissionType):
 					return True
 			return False
 		return permissionType in user.cache["oper-permissions"]
@@ -100,11 +100,11 @@ class UserOper(Command):
 		if "host" in operData:
 			operHost = ircLower(operData["host"])
 			userHost = ircLower("{}@{}".format(user.ident, user.host))
-			if not fnmatch(userHost, operHost):
+			if not fnmatchcase(userHost, operHost):
 				userHost = ircLower("{}@{}".format(user.ident, user.realHost))
-				if not fnmatch(userHost, operHost):
+				if not fnmatchcase(userHost, operHost):
 					userHost = ircLower("{}@{}".format(user.ident, user.ip))
-					if not fnmatch(userHost, operHost):
+					if not fnmatchcase(userHost, operHost):
 						user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
 						self.reportOper(user, "Bad host")
 						return True

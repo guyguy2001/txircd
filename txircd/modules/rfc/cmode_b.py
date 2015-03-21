@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType, timestamp
 from zope.interface import implements
-from fnmatch import fnmatch
+from fnmatch import fnmatchcase
 
 class BanMode(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
@@ -40,13 +40,13 @@ class BanMode(ModuleData, Mode):
 	def matchHostmask(self, user, banmask):
 		banmask = ircLower(banmask)
 		userMask = ircLower(user.hostmask())
-		if fnmatch(userMask, banmask):
+		if fnmatchcase(userMask, banmask):
 			return True
 		userMask = ircLower(user.hostmaskWithRealHost())
-		if fnmatch(userMask, banmask):
+		if fnmatchcase(userMask, banmask):
 			return True
 		userMask = ircLower(user.hostmaskWithIP())
-		return fnmatch(userMask, banmask)
+		return fnmatchcase(userMask, banmask)
 	
 	def checkAction(self, actionName, mode, channel, user, *params, **kw):
 		if "b" not in channel.modes:
