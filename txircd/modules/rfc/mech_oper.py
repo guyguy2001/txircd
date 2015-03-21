@@ -38,7 +38,7 @@ class Oper(ModuleData, Mode):
 		if "oper-permissions" not in user.cache:
 			return False
 		for operPerm in user.cache["oper-permissions"]:
-			if fnmatchcase(operPerm, permissionType):
+			if fnmatchcase(permissionType, operPerm):
 				return True
 		return False
 	
