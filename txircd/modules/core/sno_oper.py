@@ -9,17 +9,21 @@ class SnoOper(ModuleData):
 	core = True
 
 	def actions(self):
-		return [ ("operreport", 1, self.sendOperNotice),
-				("servernoticetype", 1, self.checkSnoType) ]
-
-	def sendOperNotice(self, user, reason):
-		if reason:
-			message = "Failed OPER attempt from {} ({}).".format(user.nick, reason)
-		else:
-			message = "{} has opered.".format(user.nick)
+		return [ ("oper", 1, self.sendOperNotice),
+		         ("operfail", 1, self.sendOperFailNotice),
+		         ("servernoticetype", 1, self.checkSnoType) ]
+	
+	def sendOperNotice(self, user):
 		snodata = {
 			"mask": "oper",
-			"message": message
+			"message": "{} has opered.".format(user.nick)
+		}
+		self.ircd.runActionProcessing("sendservernotice", snodata)
+	
+	def sendOperFailNotice(self, user, reason):
+		snodata = {
+			"mask": "oper",
+			"message": "Failed OPER attempt from {} ({})".format(user.nick, reason)
 		}
 		self.ircd.runActionProcessing("sendservernotice", snodata)
 

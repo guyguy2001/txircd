@@ -130,7 +130,9 @@ class UserOper(Command):
 	def reportOper(self, user, reason):
 		if reason:
 			log.msg("Failed OPER attempt from {} ({})".format(user.nick, reason), logLevel=logging.WARNING)
-		self.ircd.runActionStandard("operreport", user, reason)
+			self.ircd.runActionStandard("operfail", user, reason)
+			return
+		self.ircd.runActionStandard("oper", user, reason)
 
 class ServerOper(Command):
 	implements(ICommand)
