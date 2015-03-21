@@ -37,12 +37,10 @@ class Oper(ModuleData, Mode):
 		# Check for oper permissions in the user's permission storage
 		if "oper-permissions" not in user.cache:
 			return False
-		if "*" in permissionType or "?" in permissionType:
-			for operPerm in user.cache["oper-permissions"]:
-				if fnmatchcase(operPerm, permissionType):
-					return True
-			return False
-		return permissionType in user.cache["oper-permissions"]
+		for operPerm in user.cache["oper-permissions"]:
+			if fnmatchcase(operPerm, permissionType):
+				return True
+		return False
 	
 	def nope(self, user, settingUser, adding, param):
 		if adding:
