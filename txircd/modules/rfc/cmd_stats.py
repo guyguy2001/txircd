@@ -83,8 +83,6 @@ class UserStats(Command):
 	def checkPermission(self, user, typeName):
 		if typeName in self.ircd.config.get("public_info", []):
 			return True
-		if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-all"):
-			return True
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-type-{}".format(typeName.lower())):
 			return True
 		return False
