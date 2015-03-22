@@ -335,7 +335,8 @@ class IRCd(Service):
 		del self.loadedModules[moduleName]
 		del self._loadedModuleData[moduleName]
 		
-		self.runActionStandard("moduleunload", module.name)
+		if fullUnload:
+			self.runActionStandard("moduleunload", module.name)
 		
 		if unloadDeferreds:
 			deferList = DeferredList(unloadDeferreds)
