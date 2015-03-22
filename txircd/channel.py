@@ -215,6 +215,8 @@ class IRCChannel(object):
 	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
 		if len(parameter) > 255:
 			return False
+		if " " in parameter:
+			return False
 		
 		if adding:
 			if modeType == ModeType.Status:
