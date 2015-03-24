@@ -42,7 +42,7 @@ class IRCd(Service):
 		self.isupport_tokens = {
 			"CHANNELLEN": 64,
 			"CHANTYPES": "#",
-			"CASEMAPPING": "rfc1459",
+			"CASEMAPPING": "strict-rfc1459",
 			"MODES": 20,
 			"NICKLEN": 32,
 			"TOPICLEN": 328
