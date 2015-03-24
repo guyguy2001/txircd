@@ -1,9 +1,11 @@
 from twisted.words.protocols import irc
-from txircd.utils import ModeType, now
+from txircd.utils import isValidChannelName, ModeType, now
 from weakref import WeakKeyDictionary
 
 class IRCChannel(object):
 	def __init__(self, ircd, name):
+		if not isValidChannelName(name):
+			raise InvalidChannelName
 		self.ircd = ircd
 		self.name = name[:64]
 		self.users = WeakKeyDictionary()
@@ -332,3 +334,7 @@ class IRCChannel(object):
 		if not status:
 			return 0
 		return self.ircd.channelStatuses[status[0]][1]
+
+class InvalidChannelName(Exception):
+	def __str__(self):
+		return "Invalid character in channel name"

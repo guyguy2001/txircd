@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
-from txircd.channel import IRCChannel
+from txircd.channel import InvalidChannelName, IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -75,7 +75,10 @@ class JoinChannel(Command):
 			return None
 		channels = []
 		for chan in joiningChannels:
-			channels.append(self.ircd.channels[chan] if chan in self.ircd.channels else IRCChannel(self.ircd, chan))
+			try:
+				channels.append(self.ircd.channels[chan] if chan in self.ircd.channels else IRCChannel(self.ircd, chan))
+			except InvalidChannelName:
+				user.sendBatchedError("JoinCmd", irc.ERR_BADCHANMASK, chanName, "Bad channel mask")
 		return {
 			"channels": channels,
 			"keys": chanKeys

@@ -6,6 +6,15 @@ validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$
 def isValidNick(nick):
 	return validNick.match(nick)
 
+def isValidChannelName(channelName):
+	if channelName[0] != "#":
+		return False
+	for char in "\x07 ,?*": # \x07, space, and comma are explicitly denied by RFC; * and ? make matching a channel name difficult
+		if char in channelName:
+			return False
+	return True
+
+
 def _enum(**enums):
 	return type('Enum', (), enums)
 

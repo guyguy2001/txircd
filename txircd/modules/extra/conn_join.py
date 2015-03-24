@@ -1,7 +1,9 @@
 from twisted.plugin import IPlugin
-from txircd.channel import IRCChannel
+from twisted.python import log
+from txircd.channel import InvalidChannelName, IRCChannel
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
+import logging
 
 class AutoJoin(ModuleData):
 	implements(IPlugin, IModuleData)
@@ -18,7 +20,11 @@ class AutoJoin(ModuleData):
 			if chanName in self.ircd.channels:
 				channel = self.ircd.channels[chanName]
 			else:
-				channel = IRCChannel(self.ircd, chanName)
+				try:
+					channel = IRCChannel(self.ircd, chanName)
+				except InvalidChannelName:
+					log.msg("Invalid channel name {} in conn_join configuration".format(chanName), logLevel=logging.WARNING)
+					continue
 			user.joinChannel(channel)
 
 autoJoin = AutoJoin()
