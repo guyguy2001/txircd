@@ -21,15 +21,18 @@ class ChannelOpAccess(ModuleData, Mode):
 	
 	def checkMode(self, channel, checkType, paramChannel, user):
 		if "W" not in channel.mode:
-			continue
+			return None
 		for paramData in channel.mode["W"]:
-			if paramData[0] == checkType:
+			level, permType = paramData[0].split(":", 1)
+			if permType == checkType:
 				return paramData[0]
 		return None
 	
 	def checkSet(self, channel, param):
 		checkedParams = []
 		for parameter in param.split(","):
+			if ":" not in parameter:
+				continue
 			status, permissionType = parameter.split(":", 1)
 			if status not in self.ircd.channelStatuses:
 				continue
