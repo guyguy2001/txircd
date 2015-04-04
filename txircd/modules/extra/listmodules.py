@@ -11,7 +11,6 @@ class ModulesCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
 
 	name = "ModulesCommand"
-	core = True
 
 	def userCommands(self):
 		return [ ("MODULES", 1, self) ]
