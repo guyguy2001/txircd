@@ -25,7 +25,7 @@ class StripColors(ModuleData, Mode):
 		return None
 
 	def apply(self, actionName, channel, param, user, data):
-		if channel in data["targetchans"] not self.ircd.runActionUntilValue("checkexemptchanops", "stripcolor", channel, user):
+		if channel in data["targetchans"] and not self.ircd.runActionUntilValue("checkexemptchanops", "stripcolor", channel, user):
 			message = data["targetchans"][channel]
 			data["targetchans"][channel] = stripFormatting(message)
 
