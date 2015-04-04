@@ -1,4 +1,4 @@
-from twisted.protocols.basic.LineOnlyReceiver
+from twisted.protocols.basic import LineOnlyReceiver
 
 class IRCBase(LineOnlyReceiver):
 	delimiter = "\n" # Default to splitting by \n, and then we'll also split \r in the handler
