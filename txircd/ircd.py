@@ -547,7 +547,7 @@ class IRCd(Service):
 	
 	def _getActionFunctionList(self, actionName, *params, **kw):
 		functionList = self.actions.get(actionName, [])
-		functionList += self._getActionModes(actionName, *params, **kw)
+		functionList = functionList + self._getActionModes(actionName, *params, **kw)
 		return sorted(functionList, key=lambda action: action[1], reverse=True)
 	
 	def _combineActionFunctionLists(self, actionLists):
