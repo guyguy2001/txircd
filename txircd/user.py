@@ -75,7 +75,6 @@ class IRCUser(IRCBase):
 			self.register("connection")
 	
 	def dataReceived(self, data):
-		data = data.replace("\r", "").replace("\n", "\r\n").replace("\0", "")
 		self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
 		try:
 			irc.IRC.dataReceived(self, data)
