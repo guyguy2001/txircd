@@ -229,7 +229,7 @@ class IRCUser(IRCBase):
 			return
 		self._registerHolds.remove(holdName)
 		if not self._registerHolds:
-			if self.nick in self.ircd.userNicks:
+			if not self.nick or self.nick in self.ircd.userNicks:
 				self._registerHolds.add("NICK")
 			if not self.ident or not self.gecos:
 				self._registerHolds.add("USER")
