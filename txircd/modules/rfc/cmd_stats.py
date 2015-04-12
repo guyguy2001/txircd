@@ -112,7 +112,7 @@ class ServerInfoRequest(Command):
 		if serverID == self.ircd.serverID:
 			user = data["user"]
 			destServer = user.uuid[:3]
-			results = self.ircd.runComboActionUntilValue((("statsruntype", user, typeName), ("statsruntype-{}".format(typeName), user)), users=[user])
+			results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName))), users=[user])
 			if results:
 				for key, val in results.iteritems():
 					destServer.sendMessage("INFO", user.uuid, typeName, key, val, prefix=self.ircd.serverID)

@@ -60,7 +60,7 @@ class Censor(ModuleData):
 			return "CENSOR"
 		return None
 
-	def listStats(self, user, typeName):
+	def listStats(self, typeName):
 		if typeName == "CENSOR":
 			return self.badwords
 		return None
