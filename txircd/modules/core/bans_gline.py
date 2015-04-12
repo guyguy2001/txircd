@@ -24,7 +24,8 @@ class GLine(ModuleData, XLineBase):
 		return [ ("GLINE", 1, UserGLine(self)) ]
 	
 	def serverCommands(self):
-		return [ ("ADDLINE", 1, ServerGLine(self)) ]
+		return [ ("ADDLINE", 1, ServerAddGLine(self)),
+		         ("DELLINE", 1, ServerDelGLine(self)) ]
 	
 	def checkUserMatch(self, user, mask):
 		banMask = self.normalizeMask(mask)
@@ -104,16 +105,28 @@ class UserGLine(Command):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
 		return True
 
-class ServerGLine(Command):
+class ServerAddGLine(Command):
 	implements(ICommand)
 	
 	def __init__(self, module):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerCommands(server, params, prefix, tags)
+		return self.module.handleServerAddCommands(server, params, prefix, tags)
 	
 	def execute(self, server, data):
-		return self.module.executeServerCommand(server, data)
+		return self.module.executeServerAddCommand(server, data)
+
+class ServerDelGLine(Command):
+	implements(ICommand)
+	
+	def __init__(self, module):
+		self.module = module
+	
+	def parseParams(self, server, params, prefix, tags):
+		return self.module.handleServerDelCommands(server, param, prefix, tags)
+	
+	def execute(self, server, data):
+		return self.module.executeServerDelCommand(server, data)
 
 glineModule = GLine()
