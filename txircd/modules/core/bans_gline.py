@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
-from zope.interface import Implements
+from zope.interface import implements
 from fnmatch import fnmatchcase
 
 class GLine(ModuleData, XLineBase):
