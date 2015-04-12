@@ -1,20 +1,19 @@
-from txircd.utils import now, timestamp
+from txircd.utils import ircLower, now, timestamp
 from datetime import timedelta
 
 class XLineBase(object):
 	lineType = None
 	lines = []
 	
-	def matchUser(self, user, context):
+	def matchUser(self, user):
 		self.expireLines()
 		if not self.lineType:
-			return False
+			return None
 		for lineData in self.lines:
 			mask = lineData["mask"]
 			if self.checkUserMatch(user, mask) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask), ("verifyxlinematch", self.lineType, user, mask)), users=[user]) is not False:
-				self.onUserMatch(user, context, lineData["reason"])
-				return True
-		return False
+				return lineData["reason"]
+		return None
 	
 	def checkUserMatch(self, user, mask):
 		pass
@@ -42,8 +41,6 @@ class XLineBase(object):
 				del self.lines[index]
 				return
 	
-	def onUserMatch(self, user, context, banReason):
-		pass
 	
 	def expireLines(self):
 		currentTime = now()
