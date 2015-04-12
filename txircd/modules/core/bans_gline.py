@@ -2,8 +2,9 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
-from txircd.utils import durationToSeconds, now
+from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import Implements
+from fnmatch import fnmatchcase
 
 class GLine(ModuleData, XLineBase):
 	implements(IPlugin, IModuleData)
@@ -14,13 +15,49 @@ class GLine(ModuleData, XLineBase):
 	
 	def actions(self):
 		return [ ("register", 10, self.checkLines),
-		         ("commandpermission-GLINE", 10, self.restrictToOper) ]
+		         ("commandpermission-GLINE", 10, self.restrictToOper),
+		         ("statstypename", 10, self.checkStatsType),
+		         ("statsruntype-GLINES", 10, self.listStats),
+		         ("burst", 10, self.burstXLines) ]
 	
 	def userCommands(self):
 		return [ ("GLINE", 1, UserGLine(self)) ]
 	
 	def serverCommands(self):
 		return [ ("ADDLINE", 1, ServerGLine(self)) ]
+	
+	def checkUserMatch(self, user, mask):
+		banMask = self.normalizeMask(mask)
+		userMask = ircLower("{}@{}".format(user.ident, user.host))
+		return fnmatchcase(userMask, banMask)
+	
+	def killUser(self, user, reason):
+		user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
+		user.disconnect("G:Lined: {}".format(banReason))
+	
+	def checkLines(self, user):
+		banReason = self.matchUser(user)
+		if banReason:
+			self.killUser(user, banReason)
+			return False
+		return True
+	
+	def restrictToOper(self, user, data):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
+			return False
+		return None
+	
+	def checkStatsType(self, typeName):
+		if typeName == "G":
+			return "GLINES"
+		return None
+	
+	def listStats(self):
+		return self.generateInfo()
+	
+	def burstXLines(self, server):
+		self.burstLines(server)
 
 class UserGLine(Command):
 	implements(ICommand)
@@ -55,6 +92,13 @@ class UserGLine(Command):
 		if "reason" in data:
 			if not self.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** G:Line for {} is already set.".format(banmask))
+			badUsers = []
+			for checkUser in self.module.ircd.users.itervalues():
+				reason = self.matchUser(checkUser)
+				if reason:
+					badUsers.append((checkUser, reason))
+			for badUser in badUsers:
+				self.module.killUser(*badUser)
 			return True
 		if not self.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
