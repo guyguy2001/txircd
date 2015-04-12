@@ -75,7 +75,7 @@ class XLineBase(object):
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
 		return lineInfo
 	
-	def handleServerParams(self, server, params, prefix, tags):
+	def handleServerAddParams(self, server, params, prefix, tags):
 		if len(params) != 6:
 			return None
 		try:
@@ -90,10 +90,24 @@ class XLineBase(object):
 		except ValueError:
 			return None
 	
-	def executeServerCommand(self, server, data):
+	def executeServerAddCommand(self, server, data):
 		if data["linetype"] != self.lineType:
 			return None
 		self.addLine(data["mask"], datetime.utcfromtimestamp(data["created"]), data["duration"], data["setter"], data["reason"], server)
+		return True
+	
+	def handleServerDelParams(self, server, params, prefix, tags):
+		if len(params) != 2:
+			return None
+		return {
+			"linetype": params[0],
+			"mask": params[1]
+		}
+	
+	def executeServerDelCommand(self, server, data):
+		if data["linetype"] != self.lineType:
+			return None
+		self.delLine(data["mask"])
 		return True
 	
 	def burstLines(self, server):
