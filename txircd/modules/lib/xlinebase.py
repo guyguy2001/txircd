@@ -4,6 +4,7 @@ from datetime import timedelta
 class XLineBase(object):
 	lineType = None
 	lines = []
+	propagateToServers = True
 	
 	def matchUser(self, user):
 		self.expireLines()
@@ -18,7 +19,7 @@ class XLineBase(object):
 	def checkUserMatch(self, user, mask):
 		pass
 	
-	def addLine(self, mask, durationSeconds, setter, reason):
+	def addLine(self, mask, durationSeconds, setter, reason, fromServer = None):
 		self.expireLines()
 		if not self.lineType:
 			return
@@ -27,13 +28,16 @@ class XLineBase(object):
 			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
 				return 
+		currentTime = now()
 		self.lines.append({
 			"mask": mask,
-			"created": now(),
+			"created": currentTime,
 			"duration": durationSeconds,
 			"setter": setter,
 			"reason": reason
 		})
+		if self.propagateToServers:
+			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(currentTime)), durationSeconds, reason)
 	
 	def delLine(self, mask):
 		if not self.lineType:
