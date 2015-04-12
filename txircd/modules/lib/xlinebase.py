@@ -41,6 +41,8 @@ class XLineBase(object):
 				del self.lines[index]
 				return
 	
+	def normalizeMask(self, mask):
+		return ircLower(mask)
 	
 	def expireLines(self):
 		currentTime = now()
