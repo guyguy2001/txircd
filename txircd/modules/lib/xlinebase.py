@@ -22,8 +22,10 @@ class XLineBase(object):
 		self.expireLines()
 		if not self.lineType:
 			return
+		normalMask = self.normalizeMask(mask)
 		for lineData in self.lines:
-			if mask == lineData["mask"]:
+			lineMask = self.normalizeMask(lineData["mask"])
+			if normalMask == lineMask:
 				return 
 		self.lines.append({
 			"mask": mask,
@@ -36,8 +38,10 @@ class XLineBase(object):
 	def delLine(self, mask):
 		if not self.lineType:
 			return
+		normalMask = self.normalizeMask(mask)
 		for index, lineData in enumerate(self.lines):
-			if lineData["mask"] == mask:
+			lineMask = self.normalizeMask(mask)
+			if normalMask == lineMask:
 				del self.lines[index]
 				return
 	
