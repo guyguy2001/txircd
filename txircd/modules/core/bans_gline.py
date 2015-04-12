@@ -71,8 +71,8 @@ class UserGLine(Command):
 			return None
 		
 		banmask = params[0]
-		if banmask in self.ircd.userNicks:
-			targetUser = self.ircd.users[self.ircd.userNicks[banmask]]
+		if banmask in self.module.ircd.userNicks:
+			targetUser = self.module.ircd.users[self.module.ircd.userNicks[banmask]]
 			banmask = "{}@{}".format(targetUser.ident, targetUser.host)
 		else:
 			if "@" not in banmask:
@@ -90,7 +90,7 @@ class UserGLine(Command):
 	def execute(self, user, data):
 		banmask = data["mask"]
 		if "reason" in data:
-			if not self.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
+			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** G:Line for {} is already set.".format(banmask))
 			badUsers = []
 			for checkUser in self.module.ircd.users.itervalues():
@@ -100,7 +100,7 @@ class UserGLine(Command):
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
 			return True
-		if not self.delLine(banmask):
+		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
 		return True
 
