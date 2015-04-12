@@ -7,8 +7,11 @@ class XLineBase(object):
 	
 	def matchUser(self, user, context):
 		self.expireLines()
+		if not self.lineType:
+			return False
 		for lineData in self.lines:
-			if self.checkUserMatch(user, lineData["mask"]):
+			mask = lineData["mask"]
+			if self.checkUserMatch(user, mask) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask), ("verifyxlinematch", self.lineType, user, mask)), users=[user]) is not False:
 				self.onUserMatch(user, context, lineData["reason"])
 				return True
 		return False
