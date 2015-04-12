@@ -3,14 +3,13 @@ from datetime import datetime, timedelta
 
 class XLineBase(object):
 	lineType = None
-	lines = []
 	propagateToServers = True
 	
 	def matchUser(self, user):
 		self.expireLines()
 		if not self.lineType:
 			return None
-		for lineData in self.lines:
+		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			mask = lineData["mask"]
 			if self.checkUserMatch(user, mask) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask), ("verifyxlinematch", self.lineType, user, mask)), users=[user]) is not False:
 				return lineData["reason"]
@@ -24,11 +23,12 @@ class XLineBase(object):
 		if not self.lineType:
 			return False
 		normalMask = self.normalizeMask(mask)
-		for lineData in self.lines:
+		lines = self.ircd.storage["xlines"][self.lineType]
+		for lineData in lines:
 			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
 				return False
-		self.lines.append({
+		lines.append({
 			"mask": mask,
 			"created": createdTime,
 			"duration": durationSeconds,
@@ -43,10 +43,10 @@ class XLineBase(object):
 		if not self.lineType:
 			return False
 		normalMask = self.normalizeMask(mask)
-		for index, lineData in enumerate(self.lines):
+		for index, lineData in enumerate(self.ircd.storage["xlines"][self.lineType]):
 			lineMask = self.normalizeMask(mask)
 			if normalMask == lineMask:
-				del self.lines[index]
+				del self.ircd.storage["xlines"][self.lineType][index]
 				return True
 		return False
 	
@@ -56,17 +56,18 @@ class XLineBase(object):
 	def expireLines(self):
 		currentTime = now()
 		expiredLines = []
-		for lineData in self.lines:
+		lines = self.ircd.storage["xlines"][self.lineType]
+		for lineData in lines:
 			duration = timedelta(seconds=lineData["duration"])
 			expireTime = currentTime + duration
 			if expireTime < currentTime:
 				expiredLines.append(lineData)
 		for lineData in expiredLines:
-			self.lines.remove(lineData)
+			lines.remove(lineData)
 	
 	def generateInfo(self):
 		lineInfo = {}
-		for lineData in self.lines:
+		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
 		return lineInfo
 	
