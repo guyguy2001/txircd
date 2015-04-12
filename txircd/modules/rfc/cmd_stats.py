@@ -70,7 +70,7 @@ class UserStats(Command):
 		if not self.checkPermission(user, typeName):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(statsType))
 			return True
-		results = self.ircd.runComboActionUntilValue((("statsruntype", user, typeName), ("statsruntype-{}".format(typeName), user)), users=[user])
+		results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName))), users=[user])
 		if results:
 			for key, val in results.iteritems():
 				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val)
