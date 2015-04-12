@@ -6,9 +6,9 @@ class XLineBase(object):
 	propagateToServers = True
 	
 	def matchUser(self, user):
-		self.expireLines()
 		if not self.lineType:
 			return None
+		self.expireLines()
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			mask = lineData["mask"]
 			if self.checkUserMatch(user, mask) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask), ("verifyxlinematch", self.lineType, user, mask)), users=[user]) is not False:
@@ -19,9 +19,9 @@ class XLineBase(object):
 		pass
 	
 	def addLine(self, mask, createdTime, durationSeconds, setter, reason, fromServer = None):
-		self.expireLines()
 		if not self.lineType:
 			return False
+		self.expireLines()
 		normalMask = self.normalizeMask(mask)
 		lines = self.ircd.storage["xlines"][self.lineType]
 		for lineData in lines:
@@ -36,7 +36,7 @@ class XLineBase(object):
 			"reason": reason
 		})
 		if self.propagateToServers:
-			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), durationSeconds, reason, prefix=self.ircd.serverID)
+			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), str(durationSeconds), reason, prefix=self.ircd.serverID)
 		return True
 	
 	def delLine(self, mask):
@@ -54,6 +54,8 @@ class XLineBase(object):
 		return ircLower(mask)
 	
 	def expireLines(self):
+		if not self.lineType:
+			return
 		currentTime = now()
 		expiredLines = []
 		lines = self.ircd.storage["xlines"][self.lineType]
@@ -66,6 +68,8 @@ class XLineBase(object):
 			lines.remove(lineData)
 	
 	def generateInfo(self):
+		if not self.lineType:
+			return None
 		lineInfo = {}
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
@@ -91,3 +95,10 @@ class XLineBase(object):
 			return None
 		self.addLine(data["mask"], datetime.utcfromtimestamp(data["created"]), data["duration"], data["setter"], data["reason"], server)
 		return True
+	
+	def burstLines(self, server):
+		if not self.lineType:
+			return
+		self.expireLines()
+		for lineData in self.ircd.storage["xlines"][self.lineType]:
+			server.sendMessage("ADDLINE", self.lineType, lineData["mask"], lineData["setter"], str(timestamp(lineData["created"])), str(durationSeconds), reason, prefix=self.ircd.serverID)
