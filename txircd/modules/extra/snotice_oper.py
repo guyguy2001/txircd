@@ -6,7 +6,6 @@ class SnoOper(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "ServerNoticeOper"
-	core = True
 
 	def actions(self):
 		return [ ("oper", 1, self.sendOperNotice),

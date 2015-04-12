@@ -6,7 +6,6 @@ class SnoConnect(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "ServerNoticeConnect"
-	core = True
 
 	def actions(self):
 		return [ ("register", 1, self.sendConnectNotice),

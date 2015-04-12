@@ -6,7 +6,6 @@ class SnoQuit(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "ServerNoticeQuit"
-	core = True
 
 	def actions(self):
 		return [ ("quit", 1, self.sendQuitNotice),

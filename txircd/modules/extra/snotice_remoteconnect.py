@@ -6,7 +6,6 @@ class SnoRemoteConnect(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "ServerNoticeRemoteConnect"
-	core = True
 
 	def actions(self):
 		return [ ("remoteregister", 1, self.sendRemoteConnectNotice),

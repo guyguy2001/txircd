@@ -6,7 +6,6 @@ class SnoRemoteQuit(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "ServerNoticeRemoteQuit"
-	core = True
 
 	def actions(self):
 		return [ ("remotequit", 1, self.sendRemoteQuitNotice),
