@@ -1,5 +1,5 @@
 from txircd.utils import ircLower, now, timestamp
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 class XLineBase(object):
 	lineType = None
@@ -19,7 +19,7 @@ class XLineBase(object):
 	def checkUserMatch(self, user, mask):
 		pass
 	
-	def addLine(self, mask, durationSeconds, setter, reason, fromServer = None):
+	def addLine(self, mask, createdTime, durationSeconds, setter, reason, fromServer = None):
 		self.expireLines()
 		if not self.lineType:
 			return
@@ -28,16 +28,15 @@ class XLineBase(object):
 			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
 				return 
-		currentTime = now()
 		self.lines.append({
 			"mask": mask,
-			"created": currentTime,
+			"created": createdTime,
 			"duration": durationSeconds,
 			"setter": setter,
 			"reason": reason
 		})
 		if self.propagateToServers:
-			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(currentTime)), durationSeconds, reason)
+			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), durationSeconds, reason, prefix=self.ircd.serverID)
 	
 	def delLine(self, mask):
 		if not self.lineType:
@@ -68,3 +67,24 @@ class XLineBase(object):
 		for lineData in self.lines:
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
 		return lineInfo
+	
+	def handleServerParams(self, server, params, prefix, tags):
+		if len(params) != 6:
+			return None
+		try:
+			return {
+				"linetype": params[0],
+				"mask": params[1],
+				"setter": params[2],
+				"created": params[3],
+				"duration": int(params[4]),
+				"reason": params[5]
+			}
+		except ValueError:
+			return None
+	
+	def executeServerCommand(self, server, data):
+		if data["linetype"] != self.lineType:
+			return None
+		self.addLine(data["mask"], datetime.utcfromtimestamp(data["created"]), data["duration"], data["setter"], data["reason"], server)
+		return True
