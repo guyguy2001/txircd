@@ -22,12 +22,12 @@ class XLineBase(object):
 	def addLine(self, mask, createdTime, durationSeconds, setter, reason, fromServer = None):
 		self.expireLines()
 		if not self.lineType:
-			return
+			return False
 		normalMask = self.normalizeMask(mask)
 		for lineData in self.lines:
 			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
-				return 
+				return False
 		self.lines.append({
 			"mask": mask,
 			"created": createdTime,
@@ -37,16 +37,18 @@ class XLineBase(object):
 		})
 		if self.propagateToServers:
 			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), durationSeconds, reason, prefix=self.ircd.serverID)
+		return True
 	
 	def delLine(self, mask):
 		if not self.lineType:
-			return
+			return False
 		normalMask = self.normalizeMask(mask)
 		for index, lineData in enumerate(self.lines):
 			lineMask = self.normalizeMask(mask)
 			if normalMask == lineMask:
 				del self.lines[index]
-				return
+				return True
+		return False
 	
 	def normalizeMask(self, mask):
 		return ircLower(mask)
