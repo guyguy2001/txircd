@@ -86,7 +86,7 @@ class KLine(ModuleData, Command, XLineBase):
 				user.sendMessage("NOTICE", "*** K:Line for {} is already set.".format(banmask))
 			badUsers = []
 			for checkUser in self.ircd.users.itervalues():
-				reason = self.matchUser(checkUser)
+				reason = self.module.matchUser(checkUser)
 				if reason:
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:

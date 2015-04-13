@@ -96,7 +96,7 @@ class UserGLine(Command):
 				return True
 			badUsers = []
 			for checkUser in self.module.ircd.users.itervalues():
-				reason = self.matchUser(checkUser)
+				reason = self.module.matchUser(checkUser)
 				if reason:
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
