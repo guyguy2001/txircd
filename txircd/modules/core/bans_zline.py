@@ -28,7 +28,7 @@ class ZLine(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddZLine(self)),
 		         ("DELLINE", 1, ServerDelZLine(self)) ]
 	
-	def checkUserMatch(self, user, mask):
+	def checkUserMatch(self, user, mask, data):
 		return fnmatchcase(user.ip, mask)
 	
 	def normalizeMask(self, mask):
@@ -65,7 +65,7 @@ class ZLine(ModuleData, XLineBase):
 		return self.generateInfo()
 	
 	def burstXLines(self, server):
-		return self.burstLines(server)
+		self.burstLines(server)
 
 class UserZLine(Command):
 	implements(ICommand)
