@@ -91,9 +91,12 @@ class KLine(ModuleData, Command, XLineBase):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.killUser(*badUser)
+			user.sendMessage("NOTICE", "*** K:line for {} has been set.".format(banmask))
 			return True
 		if not self.delLine(banmask):
 			user.sendMessage("NOTICE", "*** K:Line for {} doesn't exist.".format(banmask))
+			return True
+		user.sendMessage("NOTICE", "*** K:Line for {} has been removed.".format(banmask))
 		return True
 
 klineModule = KLine()

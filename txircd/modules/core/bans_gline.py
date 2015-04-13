@@ -105,6 +105,8 @@ class UserGLine(Command):
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
+			return True
+		user.sendMessage("NOTICE", "*** G:Line for {} has been removed.".format(banmask))
 		return True
 
 class ServerAddGLine(Command):
