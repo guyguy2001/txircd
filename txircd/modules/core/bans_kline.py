@@ -30,7 +30,7 @@ class KLine(ModuleData, Command, XLineBase):
 		return fnmatchcase(userMask, banMask)
 	
 	def killUser(self, user, reason):
-		user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
+		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("K:Lined: {}".format(banReason))
 	
 	def checkLines(self, user):
