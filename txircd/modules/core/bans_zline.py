@@ -118,7 +118,7 @@ class ServerAddZLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerAddCommand(server, params, prefix, tags)
+		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
 		return self.module.executeServerAddCommand(server, data)
@@ -130,9 +130,9 @@ class ServerDelZLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerDelCommand(server, params, prefix, tags)
+		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
-		return self.module.executeServerDelCommmand(server, data)
+		return self.module.executeServerDelCommand(server, data)
 
 zlineModule = ZLine()

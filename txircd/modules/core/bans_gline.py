@@ -116,7 +116,7 @@ class ServerAddGLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerAddCommands(server, params, prefix, tags)
+		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
 		return self.module.executeServerAddCommand(server, data)
@@ -128,7 +128,7 @@ class ServerDelGLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerDelCommands(server, param, prefix, tags)
+		return self.module.handleServerDelParams(server, param, prefix, tags)
 	
 	def execute(self, server, data):
 		return self.module.executeServerDelCommand(server, data)
