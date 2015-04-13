@@ -101,7 +101,10 @@ class UserGLine(Command):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** G:line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed g:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent g:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))

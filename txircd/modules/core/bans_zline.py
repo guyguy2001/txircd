@@ -103,7 +103,10 @@ class UserZLine(Command):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** Z:Line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed z:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent z:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(data["mask"]):
 			user.sendMessage("NOTICE", "*** Z:Line for {} doesn't exist.".format(banmask))

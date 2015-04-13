@@ -101,7 +101,10 @@ class UserQLine(Command):
 				reason = self.module.matchUser(checkUser)
 				if reason:
 					self.module.changeNick(checkUser, reason, True)
-			user.sendMessage("NOTICE", "*** Q:Line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed q:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent q:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** Q:Line for {} doesn't exist.".format(banmask))

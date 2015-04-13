@@ -91,7 +91,10 @@ class KLine(ModuleData, Command, XLineBase):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** K:line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed k:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent k:line for {} has been set.".format(banmask))
 			return True
 		if not self.delLine(banmask):
 			user.sendMessage("NOTICE", "*** K:Line for {} doesn't exist.".format(banmask))
