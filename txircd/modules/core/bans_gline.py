@@ -93,6 +93,7 @@ class UserGLine(Command):
 		if "reason" in data:
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** G:Line for {} is already set.".format(banmask))
+				return True
 			badUsers = []
 			for checkUser in self.module.ircd.users.itervalues():
 				reason = self.matchUser(checkUser)
@@ -100,6 +101,7 @@ class UserGLine(Command):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
+			user.sendMessage("NOTICE", "*** G:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
