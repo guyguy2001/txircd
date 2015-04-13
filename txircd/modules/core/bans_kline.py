@@ -24,7 +24,7 @@ class KLine(ModuleData, Command, XLineBase):
 	def userCommands(self):
 		return [ ("KLINE", 1, self) ]
 	
-	def checkUserMatch(self, user, mask):
+	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))
 		return fnmatchcase(userMask, banMask)

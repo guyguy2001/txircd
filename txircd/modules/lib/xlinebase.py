@@ -5,17 +5,17 @@ class XLineBase(object):
 	lineType = None
 	propagateToServers = True
 	
-	def matchUser(self, user):
+	def matchUser(self, user, data = None):
 		if not self.lineType:
 			return None
 		self.expireLines()
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			mask = lineData["mask"]
-			if self.checkUserMatch(user, mask) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask), ("verifyxlinematch", self.lineType, user, mask)), users=[user]) is not False:
+			if self.checkUserMatch(user, mask, data) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask, data), ("verifyxlinematch", self.lineType, user, mask, data)), users=[user]) is not False:
 				return lineData["reason"]
 		return None
 	
-	def checkUserMatch(self, user, mask):
+	def checkUserMatch(self, user, mask, data):
 		pass
 	
 	def addLine(self, mask, createdTime, durationSeconds, setter, reason, fromServer = None):
