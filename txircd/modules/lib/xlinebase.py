@@ -11,7 +11,7 @@ class XLineBase(object):
 		self.expireLines()
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			mask = lineData["mask"]
-			if self.checkUserMatch(user, mask, data) and self.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask, data), ("verifyxlinematch", self.lineType, user, mask, data)), users=[user]) is not False:
+			if self.checkUserMatch(user, mask, data) and self.ircd.runComboActionUntilValue((("verifyxlinematch-{}".format(self.lineType), user, mask, data), ("verifyxlinematch", self.lineType, user, mask, data)), users=[user]) is not False:
 				return lineData["reason"]
 		return None
 	

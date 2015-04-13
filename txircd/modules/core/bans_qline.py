@@ -48,7 +48,8 @@ class QLine(ModuleData, XLineBase):
 	
 	def checkNick(self, user, data):
 		newNick = data["nick"]
-		if self.matchUser(user, { "newnick": newNick }):
+		reason = self.matchUser(user, { "newnick": newNick })
+		if reason:
 			user.sendMessage("NOTICE", "The nickname you chose was invalid. ({})".format(reason))
 			return False
 		return True
@@ -60,8 +61,8 @@ class QLine(ModuleData, XLineBase):
 		return None
 	
 	def checkStatsType(self, typeName):
-		if typeName == "Z":
-			return "ZLINES"
+		if typeName == "Q":
+			return "QLINES"
 		return None
 	
 	def listStats(self):

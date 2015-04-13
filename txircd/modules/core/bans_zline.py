@@ -41,7 +41,7 @@ class ZLine(ModuleData, XLineBase):
 	
 	def killUser(self, user, reason):
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
-		user.disconnect("Z:Lined: {}".format(banReason))
+		user.disconnect("Z:Lined: {}".format(reason))
 	
 	def checkLines(self, user):
 		reason = self.matchUser(user)

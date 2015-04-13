@@ -34,7 +34,7 @@ class GLine(ModuleData, XLineBase):
 	
 	def killUser(self, user, reason):
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
-		user.disconnect("G:Lined: {}".format(banReason))
+		user.disconnect("G:Lined: {}".format(reason))
 	
 	def checkLines(self, user):
 		banReason = self.matchUser(user)
@@ -62,7 +62,7 @@ class GLine(ModuleData, XLineBase):
 
 class UserGLine(Command):
 	implements(ICommand)
-	
+
 	def __init__(self, module):
 		self.module = module
 	
@@ -128,7 +128,7 @@ class ServerDelGLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerDelParams(server, param, prefix, tags)
+		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
 		return self.module.executeServerDelCommand(server, data)
