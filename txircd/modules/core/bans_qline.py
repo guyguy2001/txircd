@@ -48,7 +48,8 @@ class QLine(ModuleData, XLineBase):
 	
 	def checkNick(self, user, data):
 		newNick = data["nick"]
-		if self.matchUser(user, { "newnick": newNick }):
+		reason = self.matchUser(user, { "newnick": newNick })
+		if reason:
 			user.sendMessage("NOTICE", "The nickname you chose was invalid. ({})".format(reason))
 			return False
 		return True
@@ -60,8 +61,8 @@ class QLine(ModuleData, XLineBase):
 		return None
 	
 	def checkStatsType(self, typeName):
-		if typeName == "Z":
-			return "ZLINES"
+		if typeName == "Q":
+			return "QLINES"
 		return None
 	
 	def listStats(self):
@@ -100,7 +101,10 @@ class UserQLine(Command):
 				reason = self.module.matchUser(checkUser)
 				if reason:
 					self.module.changeNick(checkUser, reason, True)
-			user.sendMessage("NOTICE", "*** Q:Line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed q:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent q:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** Q:Line for {} doesn't exist.".format(banmask))

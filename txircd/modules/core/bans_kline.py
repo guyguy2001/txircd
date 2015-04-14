@@ -30,8 +30,8 @@ class KLine(ModuleData, Command, XLineBase):
 		return fnmatchcase(userMask, banMask)
 	
 	def killUser(self, user, reason):
-		user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
-		user.disconnect("K:Lined: {}".format(banReason))
+		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
+		user.disconnect("K:Lined: {}".format(reason))
 	
 	def checkLines(self, user):
 		banReason = self.matchUser(user)
@@ -91,7 +91,10 @@ class KLine(ModuleData, Command, XLineBase):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** K:line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed k:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent k:line for {} has been set.".format(banmask))
 			return True
 		if not self.delLine(banmask):
 			user.sendMessage("NOTICE", "*** K:Line for {} doesn't exist.".format(banmask))

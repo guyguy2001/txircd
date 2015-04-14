@@ -33,8 +33,8 @@ class GLine(ModuleData, XLineBase):
 		return fnmatchcase(userMask, banMask)
 	
 	def killUser(self, user, reason):
-		user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
-		user.disconnect("G:Lined: {}".format(banReason))
+		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
+		user.disconnect("G:Lined: {}".format(reason))
 	
 	def checkLines(self, user):
 		banReason = self.matchUser(user)
@@ -62,7 +62,7 @@ class GLine(ModuleData, XLineBase):
 
 class UserGLine(Command):
 	implements(ICommand)
-	
+
 	def __init__(self, module):
 		self.module = module
 	
@@ -101,7 +101,10 @@ class UserGLine(Command):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** G:line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed g:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent g:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(banmask):
 			user.sendMessage("NOTICE", "*** G:Line for {} doesn't exist.".format(banmask))
@@ -128,7 +131,7 @@ class ServerDelGLine(Command):
 		self.module = module
 	
 	def parseParams(self, server, params, prefix, tags):
-		return self.module.handleServerDelParams(server, param, prefix, tags)
+		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
 		return self.module.executeServerDelCommand(server, data)

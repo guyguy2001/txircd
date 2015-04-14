@@ -40,8 +40,8 @@ class ZLine(ModuleData, XLineBase):
 		return mask
 	
 	def killUser(self, user, reason):
-		user.sendMessage("NOTICE", self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
-		user.disconnect("Z:Lined: {}".format(banReason))
+		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
+		user.disconnect("Z:Lined: {}".format(reason))
 	
 	def checkLines(self, user):
 		reason = self.matchUser(user)
@@ -103,7 +103,10 @@ class UserZLine(Command):
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
-			user.sendMessage("NOTICE", "*** Z:Line for {} has been set.".format(banmask))
+			if data["duration"] > 0:
+				user.sendMessage("NOTICE", "*** Timed z:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
+			else:
+				user.sendMessage("NOTICE", "*** Permanent z:line for {} has been set.".format(banmask))
 			return True
 		if not self.module.delLine(data["mask"]):
 			user.sendMessage("NOTICE", "*** Z:Line for {} doesn't exist.".format(banmask))
