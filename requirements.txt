@@ -1,5 +1,4 @@
-twisted==15.0.0
-pyopenssl==0.13.1
+twisted[tls]==15.1.0
 pyyaml==3.11
 pbkdf2
 pymysql
