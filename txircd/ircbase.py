@@ -43,6 +43,7 @@ class IRCBase(LineOnlyReceiver):
 		for tagval in tagLine.split(";"):
 			if "=" in tagval:
 				tag, value = tagval.split("=", 1)
+				value = value.replace("\:", ";").replace("\\r", "\r").replace("\\n", "\n").replace("\\0", "\0").replace("\s", " ").replace("\\\\", "\\")
 			else:
 				tag = tagval
 				value = None
