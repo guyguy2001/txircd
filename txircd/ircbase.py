@@ -70,3 +70,13 @@ class IRCBase(LineOnlyReceiver):
 			lineToSend += ":{} ".format(prefix)
 		lineToSend += "{} {}".format(command, " ".join(params))
 		self.sendLine(lineToSend)
+	
+	def _buildTagString(self, tags):
+		tagList = []
+		for tag, value in tags.iteritems():
+			if value is None:
+				tagList.append(tag)
+			else:
+				escapedValue = value.replace("\\", "\\\\").replace(";", "\\:").replace(" ", "\\s").replace("\0", "\\0").replace("\r", "\\r").replace("\n", "\\n")
+				tagList.append("{}={}".format(tag, escapedValue))
+		return ";".join(tagList)
