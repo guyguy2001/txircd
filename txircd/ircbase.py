@@ -43,7 +43,7 @@ class IRCBase(LineOnlyReceiver):
 		for tagval in tagLine.split(";"):
 			if "=" in tagval:
 				tag, value = tagval.split("=", 1)
-				value = value.replace("\:", ";").replace("\\r", "\r").replace("\\n", "\n").replace("\\0", "\0").replace("\s", " ").replace("\\\\", "\\")
+				value = value.replace("\:", ";").replace("\\r", "\r").replace("\\n", "\n").replace("\s", " ").replace("\\\\", "\\")
 			else:
 				tag = tagval
 				value = None
@@ -78,6 +78,6 @@ class IRCBase(LineOnlyReceiver):
 			if value is None:
 				tagList.append(tag)
 			else:
-				escapedValue = value.replace("\\", "\\\\").replace(";", "\\:").replace(" ", "\\s").replace("\0", "\\0").replace("\r", "\\r").replace("\n", "\\n")
+				escapedValue = value.replace("\\", "\\\\").replace(";", "\\:").replace(" ", "\\s").replace("\r", "\\r").replace("\n", "\\n")
 				tagList.append("{}={}".format(tag, escapedValue))
 		return ";".join(tagList)
