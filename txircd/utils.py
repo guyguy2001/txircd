@@ -6,6 +6,10 @@ validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$
 def isValidNick(nick):
 	return validNick.match(nick)
 
+validHost = re.compile(r"^[a-zA-Z0-9.-]+$")
+def isValidHost(host):
+	return validHost.match(host)
+
 def isValidChannelName(channelName):
 	if channelName[0] != "#":
 		return False

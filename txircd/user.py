@@ -6,7 +6,7 @@ from twisted.python import log
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import ModeType, now, splitMessage
+from txircd.utils import isValidHost, ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
 from traceback import format_exc
@@ -25,7 +25,7 @@ class IRCUser(IRCBase):
 				resolvedHost = gethostbyaddr(ip)[0]
 				# First half of host resolution done, run second half to prevent rDNS spoofing.
 				# Refuse hosts that are too long as well.
-				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= 64:
+				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= 64 and isValidHost(resolvedHost):
 					host = resolvedHost
 				else:
 					host = ip
