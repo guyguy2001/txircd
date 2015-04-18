@@ -30,7 +30,15 @@ class GLine(ModuleData, XLineBase):
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))
-		return fnmatchcase(userMask, banMask)
+		if fnmatchcase(userMask, banMask):
+			return True
+		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
+		if fnmatchcase(userMask, banMask):
+			return True
+		userMask = ircLower("{}@{}".format(user.ident, user.ip))
+		if fnmatchcase(userMask, banMask):
+			return True
+		return False
 	
 	def killUser(self, user, reason):
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))

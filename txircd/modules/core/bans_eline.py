@@ -30,7 +30,15 @@ class ELine(ModuleData, XLineBase):
 	def checkUserMatch(self, user, mask, data):
 		exceptMask = ircLower(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))
-		return fnmatchcase(userMask, exceptMask)
+		if fnmatchcase(userMask, exceptMask):
+			return True
+		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
+		if fnmatchcase(userMask, exceptMask):
+			return True
+		userMask = ircLower("{}@{}".format(user.ident, user.ip))
+		if fnmatchcase(userMask, exceptMask):
+			return True
+		return False
 	
 	def checkException(self, lineType, user, mask, data):
 		if lineType == "E":
