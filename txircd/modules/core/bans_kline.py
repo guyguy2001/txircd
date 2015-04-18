@@ -18,8 +18,8 @@ class KLine(ModuleData, Command, XLineBase):
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-KLINE", 10, self.restrictToOper),
 		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-KLINES", 10, self.listStats),
-		         ("burst", 10, self.burstXLines) ]
+		         ("statsruntype-KLINES", 10, self.generateInfo),
+		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
 		return [ ("KLINE", 1, self) ]
@@ -50,12 +50,6 @@ class KLine(ModuleData, Command, XLineBase):
 		if typeName == "K":
 			return "KLINES"
 		return None
-	
-	def listStats(self):
-		return self.generateInfo()
-	
-	def burstXLines(self, server):
-		self.burstLines(server)
 	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 1 or len(params) == 2:

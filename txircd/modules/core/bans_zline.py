@@ -18,8 +18,8 @@ class ZLine(ModuleData, XLineBase):
 		return [ ("connect", 10, self.checkLines),
 		         ("commandpermission-ZLINE", 10, self.restrictToOper),
 		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-ZLINES", 10, self.listStats),
-		         ("burst", 10, self.burstXLines) ]
+		         ("statsruntype-ZLINES", 10, self.generateInfo),
+		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
 		return [ ("ZLINE", 1, UserZLine(self)) ]
@@ -60,12 +60,6 @@ class ZLine(ModuleData, XLineBase):
 		if typeName == "Z":
 			return "ZLINES"
 		return None
-	
-	def listStats(self):
-		return self.generateInfo()
-	
-	def burstXLines(self, server):
-		self.burstLines(server)
 
 class UserZLine(Command):
 	implements(ICommand)

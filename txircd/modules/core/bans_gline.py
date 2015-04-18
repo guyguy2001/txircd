@@ -17,8 +17,8 @@ class GLine(ModuleData, XLineBase):
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-GLINE", 10, self.restrictToOper),
 		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-GLINES", 10, self.listStats),
-		         ("burst", 10, self.burstXLines) ]
+		         ("statsruntype-GLINES", 10, self.generateInfo),
+		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
 		return [ ("GLINE", 1, UserGLine(self)) ]
@@ -53,12 +53,6 @@ class GLine(ModuleData, XLineBase):
 		if typeName == "G":
 			return "GLINES"
 		return None
-	
-	def listStats(self):
-		return self.generateInfo()
-	
-	def burstXLines(self, server):
-		self.burstLines(server)
 
 class UserGLine(Command):
 	implements(ICommand)

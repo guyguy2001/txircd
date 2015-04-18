@@ -18,8 +18,8 @@ class QLine(ModuleData, XLineBase):
 		         ("commandpermission-NICK", 10, self.checkNick),
 		         ("commandpermission-QLINE", 10, self.restrictToOper),
 		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-QLINES", 10, self.listStats),
-		         ("burst", 10, self.burstXLines) ]
+		         ("statsruntype-QLINES", 10, self.generateInfo),
+		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
 		return [ ("QLINE", 1, UserQLine(self)) ]
@@ -64,12 +64,6 @@ class QLine(ModuleData, XLineBase):
 		if typeName == "Q":
 			return "QLINES"
 		return None
-	
-	def listStats(self):
-		return self.generateInfo()
-	
-	def burstXLines(self, server):
-		self.burstLines(server)
 
 class UserQLine(Command):
 	implements(ICommand)
