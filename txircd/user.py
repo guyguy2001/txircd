@@ -77,7 +77,7 @@ class IRCUser(IRCBase):
 	def dataReceived(self, data):
 		self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
 		try:
-			irc.IRC.dataReceived(self, data)
+			IRCBase.dataReceived(self, data)
 		except Exception as ex:
 			# it seems that twisted.protocols.irc makes no attempt to raise useful "invalid syntax"
 			# errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
@@ -88,7 +88,7 @@ class IRCUser(IRCBase):
 	
 	def sendLine(self, line):
 		self.ircd.runActionStandard("usersenddata", self, line, users=[self])
-		irc.IRC.sendLine(self, line)
+		IRCBase.sendLine(self, line)
 	
 	def sendMessage(self, command, *args, **kw):
 		kw["prefix"] = self._getPrefix(kw)
@@ -354,11 +354,11 @@ class IRCUser(IRCBase):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("join", channel, self, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, type = "PART", typeData = {}, fromServer = None):
+	def leaveChannel(self, channel, partType = "PART", typeData = {}, fromServer = None):
 		if channel not in self.channels:
 			return
 		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, type, typeData, fromServer, users=[self], channels=[channel])
+		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
@@ -436,7 +436,7 @@ class IRCUser(IRCBase):
 				continue
 			
 			for parameter in paramList:
-				if len(changing) >= 20:
+				if len(changes) >= 20:
 					break
 				if not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, parameter, users=[self, user]) is False:
 					continue
@@ -585,13 +585,11 @@ class RemoteUser(IRCUser):
 			if self.isRegistered():
 				del self.ircd.userNicks[self.nick]
 			del self.ircd.users[self.uuid]
-			userSendList = []
+			userSendList = [self]
 			for channel in self.channels:
 				userSendList.extend(channel.users.keys())
 			userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-			channels = copy(self.channels)
-			for channel in channels:
-				self.leaveChannel(channel, True)
+			userSendList.remove(self)
 			self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 			self.ircd.runActionStandard("remotequit", self, reason, users=[self])
 		else:
@@ -651,8 +649,8 @@ class RemoteUser(IRCUser):
 		else:
 			self.ircd.runActionUntilTrue("remotejoinrequest", self, channel, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, type = "PART", typeData = {}, fromRemote = None):
-		self.ircd.runActionProcessing("leavemessage", channel, self, type, typeData, fromRemote, users=[self], channels=[channel])
+	def leaveChannel(self, channel, partType = "PART", typeData = {}, fromRemote = None):
+		self.ircd.runActionProcessing("leavemessage", channel, self, partType, typeData, fromRemote, users=[self], channels=[channel])
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
@@ -684,7 +682,7 @@ class LocalUser(IRCUser):
 	def sendMessage(self, command, *args, **kw):
 		self._sendMsgFunc(self, command, *args, **kw)
 	
-	def handleCommand(self, command, prefix, params):
+	def handleCommand(self, command, prefix, params, tags):
 		if command not in self.ircd.userCommands:
 			raise ValueError ("Command not loaded")
 		handlers = self.ircd.userCommands[command]

@@ -84,7 +84,7 @@ class UserShun(Command):
 			targetUser = self.module.ircd.users[self.module.ircd.userNicks[shunmask]]
 			shunmask = "{}@{}".format(targetUser.ident, targetUser.host)
 		else:
-			if "@" not in banmask:
+			if "@" not in shunmask:
 				shunmask = "*@{}".format(shunmask)
 		if len(params) == 1:
 			return {
