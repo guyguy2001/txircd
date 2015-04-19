@@ -173,7 +173,7 @@ class IRCChannel(object):
 				continue
 			
 			for parameter in paramList:
-				if len(changing) >= 20:
+				if len(changes) >= 20:
 					break
 				if not override and self.ircd.runActionUntilValue("modepermission-channel-{}".format(mode), self, user, adding, parameter, users=[user], channels=[self]) is False:
 					continue

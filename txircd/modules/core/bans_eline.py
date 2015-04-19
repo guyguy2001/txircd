@@ -84,7 +84,7 @@ class UserELine(Command):
 		return {
 			"mask": banmask,
 			"duration": durationToSeconds,
-			"reason": " ".formats(params[2:])
+			"reason": " ".format(params[2:])
 		}
 	
 	def execute(self, user, data):
@@ -106,7 +106,7 @@ class UserELine(Command):
 		return True
 
 class ServerAddELine(Command):
-	implement(ICommand)
+	implements(ICommand)
 	
 	def __init__(self, module):
 		self.module = module
@@ -118,7 +118,7 @@ class ServerAddELine(Command):
 		return self.module.executeServerAddCommand(server, data)
 
 class ServerDelELine(Command):
-	implement(ICommand)
+	implements(ICommand)
 	
 	def __init__(self, module):
 		self.module = module

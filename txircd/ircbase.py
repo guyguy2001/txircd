@@ -23,6 +23,7 @@ class IRCBase(LineOnlyReceiver):
 			tags = self._parseTags(tagLine[1:])
 		else:
 			tags = {}
+		prefix = None
 		if linePart[0] == ":":
 			if " " not in linePart:
 				return None, None, None, None
