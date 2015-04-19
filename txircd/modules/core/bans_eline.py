@@ -93,13 +93,7 @@ class UserELine(Command):
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** E:Line for {} is already set.".format(banmask))
 				return True
-			badUsers = []
-			for checkUser in self.module.ircd.users.itervalues():
-				reason = self.module.matchUser(checkUser)
-				if reason:
-					badUsers.append((checkUser, reason))
-			for badUser in badUsers:
-				self.module.killUser(*badUser)
+			
 			if data["duration"] > 0:
 				user.sendMessage("NOTICE", "*** Timed e:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
 			else:
