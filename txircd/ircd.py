@@ -285,10 +285,9 @@ class IRCd(Service):
 				if modeData[1] == ModeType.Status:
 					for channel in self.ircd.channels.itervalues():
 						removeFromChannel = []
-						for channel in self.ircd.channels.itervalues():
-							for user, userData in channel.user.iteritems():
-								if modeData[0] in userData["status"]:
-									removeFromChannel.append((False, modeData[0], user.uuid))
+						for user, userData in channel.user.iteritems():
+							if modeData[0] in userData["status"]:
+								removeFromChannel.append((False, modeData[0], user.uuid))
 						channel.setModes(removeFromChannel, self.serverID)
 				elif modeData[1] == ModeType.List:
 					for channel in self.ircd.channels.itervalues():
