@@ -16,6 +16,7 @@ class IRCBase(LineOnlyReceiver):
 		else:
 			linePart = line
 			lastParam = None
+		
 		if linePart[0] == "@":
 			if " " not in linePart:
 				return None, None, None, None
@@ -23,12 +24,14 @@ class IRCBase(LineOnlyReceiver):
 			tags = self._parseTags(tagLine[1:])
 		else:
 			tags = {}
+		
 		prefix = None
 		if linePart[0] == ":":
 			if " " not in linePart:
 				return None, None, None, None
 			prefix, linePart = linePart.split(" ", 1)
 			prefix = prefix[1:]
+		
 		if " " in linePart:
 			command, paramLine = linePart.spilt(" ", 1)
 			params = paramLine.split(" ")
