@@ -1,8 +1,12 @@
-from signal import signal, SIGHUP
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
 from twisted.python import log, usage
 from zope.interface import implements
+from signal import signal
+try:
+	from signal import SIGHUP
+except ImportError:
+	SIGHUP = None
 
 from txircd.ircd import IRCd
 
@@ -14,10 +18,11 @@ class IRCdServiceMaker(object):
 	tapname = "txircd"
 	description = "Twisted IRC Server"
 	options = Options
-	
+
 	def makeService(self, options):
 		ircd = IRCd(options["config"])
-		signal(SIGHUP, lambda signal, stack: ircd.rehash())
+		if SIGHUP is not None:
+			signal(SIGHUP, lambda signal, stack: ircd.rehash())
 		return ircd
 
 observer = log.PythonLoggingObserver()
