@@ -616,7 +616,7 @@ class IRCd(Service):
 	def runActionProcessing(self, actionName, data, *params, **kw):
 		actionList = self._getActionFunctionList(actionName, data, *params, **kw)
 		for action in actionList:
-			action[0](data, *params, **kw)
+			action[0](data, *params)
 			if not data:
 				return
 	
