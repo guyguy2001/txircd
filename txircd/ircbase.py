@@ -90,7 +90,7 @@ class IRCBase(LineOnlyReceiver):
 		if prefix:
 			lineToSend += ":{} ".format(prefix)
 		lineToSend += "{} {}".format(command, " ".join(params))
-		self.sendLine(lineToSend)
+		self.sendLine(lineToSend.replace("\0", ""))
 	
 	def _buildTagString(self, tags):
 		tagList = []
