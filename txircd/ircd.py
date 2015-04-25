@@ -565,7 +565,7 @@ class IRCd(Service):
 						insertPos += 1
 					fullActionList.insert(insertPos, (actionName, action[0]))
 				except IndexError:
-					fullActionList.append(action)
+					fullActionList.append((actionName, action[0]))
 				insertPos += 1
 		return fullActionList
 	
