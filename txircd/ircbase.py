@@ -33,7 +33,7 @@ class IRCBase(LineOnlyReceiver):
 			prefix = prefix[1:]
 		
 		if " " in linePart:
-			command, paramLine = linePart.spilt(" ", 1)
+			command, paramLine = linePart.split(" ", 1)
 			params = paramLine.split(" ")
 		else:
 			command = linePart
