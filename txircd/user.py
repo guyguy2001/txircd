@@ -368,11 +368,13 @@ class IRCUser(IRCBase):
 		defaultSourceName = self._sourceName(defaultSource)
 		if defaultSourceName is None:
 			raise ValueError ("Source must be a valid user or server ID.")
+		nowTime = now()
 		for modeData in modes:
 			mode = modeData[1]
 			if mode not in self.ircd.userModeTypes:
 				continue
 			setBy = defaultSourceName
+			setTime = nowTime
 			modeType = self.ircd.userModeTypes[mode]
 			adding = modeData[0]
 			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param):
@@ -385,8 +387,6 @@ class IRCUser(IRCBase):
 					setBy = modeData[3]
 				if dataCount >= 5:
 					setTime = modeData[4]
-				else:
-					setTime = now()
 			if adding:
 				paramList = self.ircd.userModes[modeType][mode].checkSet(self, param)
 			else:

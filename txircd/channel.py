@@ -93,11 +93,13 @@ class IRCChannel(object):
 		defaultSourceName = self._sourceName(defaultSource)
 		if defaultSourceName is None:
 			raise ValueError ("Source must be a valid user or server ID.")
+		nowTime = now()
 		for modeData in modes:
 			mode = modeData[1]
 			if mode not in self.ircd.channelModeTypes:
 				continue
 			setBy = defaultSourceName
+			setTime = nowTime
 			modeType = self.ircd.channelModeTypes[mode]
 			adding = modeData[0]
 			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param, ModeType.Status):
@@ -110,8 +112,6 @@ class IRCChannel(object):
 					setBy = modeData[3]
 				if dataCount >= 5:
 					setTime = modeData[4]
-				else:
-					setTime = now()
 			if modeType == ModeType.Status:
 				if adding:
 					paramList = self.ircd.channelStatuses[mode][2].checkSet(self, param)
