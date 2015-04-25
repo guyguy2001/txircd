@@ -5,6 +5,10 @@ class XLineBase(object):
 	lineType = None
 	propagateToServers = True
 	
+	def loadModule(self):
+		if "xlines" not in self.ircd.storage:
+			self.ircd.storage["xlines"] = {}
+	
 	def matchUser(self, user, data = None):
 		if not self.lineType:
 			return None
