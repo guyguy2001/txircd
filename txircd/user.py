@@ -196,10 +196,14 @@ class IRCUser(IRCBase):
 		self.disconnectedDeferred.callback(None)
 	
 	def disconnect(self, reason):
-		if self._pinger.running:
-			self._pinger.stop()
-		if self._registrationTimeoutTimer.active():
-			self._registrationTimeoutTimer.cancel()
+		if self._pinger:
+			if self._pinger.running:
+				self._pinger.stop()
+			self._pinger = None
+		if self._registrationTimeoutTimer:
+			if self._registrationTimeoutTimer.active():
+				self._registrationTimeoutTimer.cancel()
+			self._registrationTimeoutTimer = None
 		del self.ircd.users[self.uuid]
 		if self.isRegistered():
 			del self.ircd.userNicks[self.nick]
