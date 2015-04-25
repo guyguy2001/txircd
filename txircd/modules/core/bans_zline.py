@@ -33,10 +33,10 @@ class ZLine(ModuleData, XLineBase):
 	def normalizeMask(self, mask):
 		if ":" in mask and "*" not in mask and "?" not in mask: # Normalize non-wildcard IPv6 addresses
 			try:
-				return socket.inet_ntop(socket.AF_INET6, socket.inet_pton(socket.AF_INET6, mask))
+				return socket.inet_ntop(socket.AF_INET6, socket.inet_pton(socket.AF_INET6, mask)).lower()
 			except socket.error:
-				return mask # If we can't normalize, give up and return the original mask
-		return mask
+				return mask.lower()
+		return mask.lower()
 	
 	def killUser(self, user, reason):
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
