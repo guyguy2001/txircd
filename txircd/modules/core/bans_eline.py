@@ -26,6 +26,9 @@ class ELine(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddELine(self)),
 		         ("DELLINE", 1, ServerDelELine(self)) ]
 	
+	def load(self):
+		self.initializeLineStorage()
+	
 	def checkUserMatch(self, user, mask, data):
 		exceptMask = ircLower(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))

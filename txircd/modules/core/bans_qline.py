@@ -27,6 +27,9 @@ class QLine(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddQLine(self)),
 		         ("DELLINE", 1, ServerDelQLine(self)) ]
 	
+	def load(self):
+		self.initializeLineStorage()
+	
 	def checkUserMatch(self, user, mask, data):
 		if data and "newnick" in data:
 			return fnmatchcase(ircLower(data["newnick"]), ircLower(mask))

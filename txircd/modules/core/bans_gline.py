@@ -26,6 +26,9 @@ class GLine(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddGLine(self)),
 		         ("DELLINE", 1, ServerDelGLine(self)) ]
 	
+	def load(self):
+		self.initializeLineStorage()
+	
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))

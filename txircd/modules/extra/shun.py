@@ -26,6 +26,9 @@ class Shun(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddShun(self)),
 		         ("DELLINE", 1, ServerDelShun(self)) ]
 	
+	def load(self):
+		self.initializeLineStorage()
+	
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host))

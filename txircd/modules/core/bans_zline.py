@@ -27,6 +27,9 @@ class ZLine(ModuleData, XLineBase):
 		return [ ("ADDLINE", 1, ServerAddZLine(self)),
 		         ("DELLINE", 1, ServerDelZLine(self)) ]
 	
+	def load(self):
+		self.initializeLineStorage()
+	
 	def checkUserMatch(self, user, mask, data):
 		return fnmatchcase(user.ip, mask)
 	

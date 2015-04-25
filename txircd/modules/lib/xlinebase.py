@@ -5,7 +5,7 @@ class XLineBase(object):
 	lineType = None
 	propagateToServers = True
 	
-	def load(self):
+	def initializeLineStorage(self):
 		if "xlines" not in self.ircd.storage:
 			self.ircd.storage["xlines"] = {}
 		if self.lineType not in self.ircd.storage["xlines"]:
