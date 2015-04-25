@@ -476,7 +476,7 @@ class IRCUser(IRCBase):
 		if modeType == ModeType.List:
 			if mode not in self.modes:
 				return False
-			for index, paramData in self.modes[mode]:
+			for index, paramData in enumerate(self.modes[mode]):
 				if paramData[0] == parameter:
 					del self.modes[mode][index]
 					break
