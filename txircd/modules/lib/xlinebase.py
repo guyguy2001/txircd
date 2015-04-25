@@ -8,6 +8,8 @@ class XLineBase(object):
 	def loadModule(self):
 		if "xlines" not in self.ircd.storage:
 			self.ircd.storage["xlines"] = {}
+		if self.lineType not in self.ircd.storage["xlines"]:
+			self.ircd.storage["xlines"][self.lineType] = []
 	
 	def matchUser(self, user, data = None):
 		if not self.lineType:
