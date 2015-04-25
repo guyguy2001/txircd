@@ -41,7 +41,7 @@ class CapabCommand(ModuleData, Command):
 		subcmd = data["subcmd"]
 		if subcmd == "START":
 			version = data["version"]
-			if version != "300":
+			if version != "400":
 				server.disconnect("Incompatible protocol version {}".format(version))
 				return True
 			return True
@@ -53,7 +53,7 @@ class CapabCommand(ModuleData, Command):
 			return True
 		if subcmd == "END":
 			if server.receivedConnection:
-				server.sendMessage("CAPAB", "START", "300", prefix=self.ircd.serverID)
+				server.sendMessage("CAPAB", "START", "400", prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "MODULES", " ".join(self.ircd.loadedModules.keys()), prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			self.ircd.runActionStandard("burst", server)
