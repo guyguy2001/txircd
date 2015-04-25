@@ -8,16 +8,6 @@ irc.RPL_XINFOENTRY = "773"
 irc.RPL_XINFOEND = "774"
 irc.RPL_XINFOTYPE = "775"
 
-# NOTE: The XINFO specification, at the time this module was written, is still incomplete.
-# As such, it's not yet a complete implementation of making STATS act like XINFO, but it's a start.
-# Since STATS/XINFO is meant to be human-readable, I don't think this is a huge deal.
-# That said, this is likely to change as the XINFO spec becomes finalized.
-# Things still needed to finalize:
-# - An action to get response types for an XINFO response
-# - A server command to communicate same
-# - Modify the output to consolidate output lines
-# As such, the "statsruntype" action is still pretty flexible and liable to change.
-
 class StatsCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData)
 	
@@ -42,16 +32,17 @@ class UserStats(Command):
 		if not params:
 			user.sendSingleError("StatsParams", irc.ERR_NEEDMOREPARAMS, "STATS", "Not enough parameters")
 			return None
+		typeName = params[0].lower()
 		if len(params) >= 2 and params[1] != self.ircd.name:
 			if params[1] not in self.ircd.serverNames:
 				user.sendSingleError("StatsServer", irc.ERR_NOSUCHSERVER, params[1], "No such server")
 				return None
 			return {
-				"type": params[0],
+				"type": typeName,
 				"server": self.ircd.servers[self.ircd.serverNames[params[1]]]
 			}
 		return {
-			"type": params[0]
+			"type": typeName
 		}
 	
 	def execute(self, user, data):
