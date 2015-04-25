@@ -27,7 +27,7 @@ class ModeCommand(ModuleData):
 	def serverCommands(self):
 		return [ ("MODE", 1, ServerMode(self.ircd)) ]
 	
-	def getOutputModes(self, modes, fixStatuses):
+	def getOutputModes(self, modes, useUUIDs):
 		addInStr = None
 		modeStrList = []
 		params = []
@@ -54,8 +54,8 @@ class ModeCommand(ModuleData):
 			modeStrList.append(mode)
 			modeLen += 1
 			if param is not None:
-				if fixStatuses and self.ircd.channelModeTypes[mode] == ModeType.Status:
-					param = self.ircd.userNicks[param]
+				if not useUUIDs and self.ircd.channelModeTypes[mode] == ModeType.Status:
+					param = self.ircd.users[param].nick
 				params.append(param)
 				modeLen += 1 + paramLen
 		modeLists.append(["".join(modeStrList)] + params)
