@@ -21,7 +21,7 @@ class AutoUserModes(ModuleData):
 				if mode not in self.ircd.userModeTypes:
 					continue
 				modeType = self.ircd.userModeTypes[mode]
-				if modeType in (ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
+				if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param):
 					parsedModes.append((True, mode, params.pop(0)))
 				else:
 					parsedModes.append((True, mode, None))
