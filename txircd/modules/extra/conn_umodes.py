@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import ModeType
 from zope.interface import implements
 
 class AutoUserModes(ModuleData):
