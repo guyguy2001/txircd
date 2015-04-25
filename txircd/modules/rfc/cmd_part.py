@@ -30,7 +30,7 @@ class PartCommand(ModuleData):
 	def sendPartMessage(self, sendUserList, channel, user, type, typeData, fromServer):
 		if type != "PART":
 			return
-		if "reason" in typeData:
+		if "reason" in typeData and typeData["reason"]:
 			reason = typeData["reason"]
 			for destUser in sendUserList:
 				if destUser.uuid[:3] == self.ircd.serverID:
