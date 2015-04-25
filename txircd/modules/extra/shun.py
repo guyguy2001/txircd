@@ -16,8 +16,7 @@ class Shun(ModuleData, XLineBase):
 		return [ ("welcome", 10, self.checkLines),
 		         ("commandpermission", 50, self.blockShunned),
 		         ("commandpermission-SHUN", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-SHUNS", 10, self.generateInfo),
+		         ("statsruntype-shuns", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -57,11 +56,6 @@ class Shun(ModuleData, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-shun", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "S":
-			return "SHUNS"
 		return None
 	
 	def onShunUpdate(self):

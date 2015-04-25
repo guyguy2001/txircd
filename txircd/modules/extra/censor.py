@@ -35,8 +35,7 @@ class Censor(ModuleData):
 				("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
 				("modeactioncheck-user-G-commandmodify-NOTICE", 10, self.userHasMode),
 				("commandpermission-CENSOR", 1, self.restrictToOpers),
-				("statstypename", 1, self.checkStatsType),
-				("statsruntype", 1, self.listStats),
+				("statsruntype-censor", 1, self.listStats),
 				("burst", 10, self.propgateOnBurst) ]
 
 	def restrictToOpers(self, user, data):
@@ -55,15 +54,8 @@ class Censor(ModuleData):
 			return True
 		return None
 
-	def checkStatsType(self, typeName):
-		if typeName == "C":
-			return "CENSOR"
-		return None
-
-	def listStats(self, typeName):
-		if typeName == "CENSOR":
-			return self.badwords
-		return None
+	def listStats(self):
+		return self.badwords
 
 	def propgateOnBurst(self, server):
 		for badword, replacement in self.badwords.iteritems():

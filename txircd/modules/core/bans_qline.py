@@ -17,8 +17,7 @@ class QLine(ModuleData, XLineBase):
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-NICK", 10, self.checkNick),
 		         ("commandpermission-QLINE", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-QLINES", 10, self.generateInfo),
+		         ("statsruntype-qlines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -58,11 +57,6 @@ class QLine(ModuleData, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline"):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "Q":
-			return "QLINES"
 		return None
 
 class UserQLine(Command):

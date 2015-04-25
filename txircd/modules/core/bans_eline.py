@@ -16,8 +16,7 @@ class ELine(ModuleData, XLineBase):
 	def actions(self):
 		return [ ("verifyxlinematch", 10, self.checkException),
 		         ("commandpermission-ELINE", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-ELINES", 10, self.generateInfo),
+		         ("statsruntype-elines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -51,11 +50,6 @@ class ELine(ModuleData, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "E":
-			return "ELINES"
 		return None
 
 class UserELine(Command):

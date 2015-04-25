@@ -17,8 +17,7 @@ class ZLine(ModuleData, XLineBase):
 	def actions(self):
 		return [ ("connect", 10, self.checkLines),
 		         ("commandpermission-ZLINE", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-ZLINES", 10, self.generateInfo),
+		         ("statsruntype-zlines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -54,11 +53,6 @@ class ZLine(ModuleData, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline"):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "Z":
-			return "ZLINES"
 		return None
 
 class UserZLine(Command):

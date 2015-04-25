@@ -16,8 +16,7 @@ class GLine(ModuleData, XLineBase):
 	def actions(self):
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-GLINE", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-GLINES", 10, self.generateInfo),
+		         ("statsruntype-glines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -55,11 +54,6 @@ class GLine(ModuleData, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "G":
-			return "GLINES"
 		return None
 
 class UserGLine(Command):

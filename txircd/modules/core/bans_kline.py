@@ -17,8 +17,7 @@ class KLine(ModuleData, Command, XLineBase):
 	def actions(self):
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-KLINE", 10, self.restrictToOper),
-		         ("statstypename", 10, self.checkStatsType),
-		         ("statsruntype-KLINES", 10, self.generateInfo),
+		         ("statsruntype-klines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
@@ -52,11 +51,6 @@ class KLine(ModuleData, Command, XLineBase):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
-		return None
-	
-	def checkStatsType(self, typeName):
-		if typeName == "K":
-			return "KLINES"
 		return None
 	
 	def parseParams(self, user, params, prefix, tags):
