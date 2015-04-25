@@ -47,28 +47,27 @@ class UserStats(Command):
 				user.sendSingleError("StatsServer", irc.ERR_NOSUCHSERVER, params[1], "No such server")
 				return None
 			return {
-				"type": params[0][0],
+				"type": params[0],
 				"server": self.ircd.servers[self.ircd.serverNames[params[1]]]
 			}
 		return {
-			"type": params[0][0]
+			"type": params[0]
 		}
 	
 	def execute(self, user, data):
-		statsType = data["type"]
-		typeName = self.ircd.runActionUntilValue("statstypename", statsType)
+		typeName = data["type"]
 		if "server" in data:
 			server = data["server"]
 			server.sendMessage("INFOREQ", server.serverID, typeName, prefix=user.uuid)
 			return True
 		if typeName is None:
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-all"):
-				user.sendMessage(irc.ERR_NOSUCHXINFO, statsType, "No such XINFO topic available")
+				user.sendMessage(irc.ERR_NOSUCHXINFO, typeName, "No such XINFO topic available")
 			else:
-				user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(statsType))
+				user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
 			return True
 		if not self.checkPermission(user, typeName):
-			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(statsType))
+			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
 			return True
 		results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName))), users=[user])
 		if results:
