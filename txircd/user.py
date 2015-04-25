@@ -115,7 +115,7 @@ class IRCUser(IRCBase):
 			return msgKeywords["prefix"]
 		return self.ircd.name
 	
-	def handleCommand(self, command, prefix, params, tags):
+	def handleCommand(self, command, params, prefix, tags):
 		if self.uuid not in self.ircd.users:
 			return # we have been disconnected - ignore all further commands
 		if command in self.ircd.userCommands:
