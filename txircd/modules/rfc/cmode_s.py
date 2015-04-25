@@ -8,7 +8,7 @@ class SecretMode(ModuleData, Mode):
 	
 	name = "SecretMode"
 	core = True
-	affectedActions = { "displaychannel": 10 }
+	affectedActions = { "displaychannel": 20 }
 	
 	def channelModes(self):
 		return [ ("s", ModeType.NoParam, self) ]
