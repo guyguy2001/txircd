@@ -541,7 +541,7 @@ class IRCd(Service):
 									applyChannels.append((channel, param))
 								break
 					for channel, param in applyChannels:
-						functionList.append(((lambda modeObj, actionName, channel, param: lambda *params: modeObj.apply(actionName, channel, param, *params))(modeObj, actionName, user, param), priority))
+						functionList.append(((lambda modeObj, actionName, channel, param: lambda *params: modeObj.apply(actionName, channel, param, *params))(modeObj, actionName, channel, param), priority))
 		return functionList
 	
 	def _getActionFunctionList(self, actionName, *params, **kw):
