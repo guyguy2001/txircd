@@ -3,7 +3,7 @@ from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
 class ChannelLevel(ModuleData):
-	implements(IModuleData)
+	implements(IPlugin, IModuleData)
 	
 	name = "ChannelLevel"
 	core = True
