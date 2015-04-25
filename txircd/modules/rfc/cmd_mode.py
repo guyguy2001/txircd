@@ -179,9 +179,9 @@ class UserMode(Command):
 			return True
 		if "channel" in data:
 			channel = data["channel"]
-			channel.setModesByUser(user.uuid, data["modes"], data["params"])
+			channel.setModesByUser(user, data["modes"], data["params"])
 			return True
-		user.setModesByUser(user.uuid, data["modes"], data["params"])
+		user.setModesByUser(user, data["modes"], data["params"])
 		return True
 
 class ServerMode(Command):
