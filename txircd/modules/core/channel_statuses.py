@@ -16,6 +16,6 @@ class StatusReport(ModuleData):
 			return None
 		if not channel.users[user]:
 			return ""
-		return self.ircd.channelStatuses[channel.users[user][0]][0]
+		return self.ircd.channelStatuses[channel.users[user]["status"]][0]
 
 statuses = StatusReport()
