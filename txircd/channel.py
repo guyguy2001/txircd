@@ -201,7 +201,7 @@ class IRCChannel(object):
 							targetUser = self.ircd.users[self.ircd.userNicks[parameter]]
 						except KeyError:
 							continue
-						if mode not in self.users[targetUser]:
+						if mode not in self.users[targetUser]["status"]:
 							continue
 						statusLevel = self.ircd.channelStatuses[mode][1]
 						if not override and self.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, mode, parameter, users=[user], channels=[self]):
