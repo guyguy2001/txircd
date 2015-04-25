@@ -15,7 +15,7 @@ class ListCommand(ModuleData, Command):
 		return [ ("LIST", 1, self) ]
 	
 	def parseParams(self, user, params, prefix, tags):
-		if not params:
+		if not params or not params[0]:
 			return {}
 		channels = []
 		wildcardNames = []
