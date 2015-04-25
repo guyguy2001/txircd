@@ -10,6 +10,7 @@ class XLineBase(object):
 			self.ircd.storage["xlines"] = {}
 		if self.lineType not in self.ircd.storage["xlines"]:
 			self.ircd.storage["xlines"][self.lineType] = []
+		self.expireLines()
 	
 	def matchUser(self, user, data = None):
 		if not self.lineType:
