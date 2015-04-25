@@ -112,7 +112,8 @@ class MessageCommands(ModuleData):
 		if "targetchans" in data:
 			for target, message in data["targetchans"].iteritems():
 				if message:
-					target.sendMessage(command, message, to=target.name, sourceuser=user, skipusers=[user])
+					target.sendUserMessage(command, message, to=target.name, sourceuser=user, skip=[user])
+					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
 					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
@@ -151,10 +152,8 @@ class MessageCommands(ModuleData):
 		if "tochan" in data:
 			chan = data["tochan"]
 			fromUser = data["from"]
-			nearServer = self.ircd.servers[fromUser.uuid[:3]]
-			while nearServer.nextClosest != self.ircd.serverID:
-				nearServer = self.ircd.servers[nearServer.nextClosest]
-			chan.sendMessage(command, data["message"], sourceuser=data["from"], skipservers=[nearServer])
+			chan.sendUserMessage(command, data["message"], sourceuser=fromUser)
+			chan.sendServerMessage(command, chan.name, data["message"], prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return None
 
