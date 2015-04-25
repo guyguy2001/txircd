@@ -84,7 +84,7 @@ class IRCUser(IRCBase):
 			# so let's catch everything.
 			log.msg("An error occurred processing data:\n{}".format(format_exc()), logLevel=logging.WARNING)
 			if self.uuid in self.ircd.users:
-				self.disconnect("Invalid data")
+				self.disconnect("Error occurred")
 	
 	def sendLine(self, line):
 		self.ircd.runActionStandard("usersenddata", self, line, users=[self])
