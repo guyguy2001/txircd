@@ -17,6 +17,9 @@ class IRCBase(LineOnlyReceiver):
 			linePart = line
 			lastParam = None
 		
+		if not linePart:
+			return None, None, None, None
+		
 		if linePart[0] == "@":
 			if " " not in linePart:
 				return None, None, None, None
