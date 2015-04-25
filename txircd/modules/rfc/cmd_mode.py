@@ -34,7 +34,7 @@ class ModeCommand(ModuleData):
 		modeLists = []
 		modeLen = 0
 		for modeData in modes:
-			adding, mode, param = modeData
+			adding, mode, param, setBy, setTime = modeData
 			paramLen = 0
 			if param is not None:
 				paramLen = len(param)
