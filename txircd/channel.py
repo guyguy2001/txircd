@@ -97,6 +97,7 @@ class IRCChannel(object):
 			mode = modeData[1]
 			if mode not in self.ircd.channelModeTypes:
 				continue
+			setBy = defaultSourceName
 			modeType = self.ircd.channelModeTypes[mode]
 			adding = modeData[0]
 			if modeType in (ModeType.List, ModeType.ParamOnUnset, ModeType.Param, ModeType.Status):
@@ -107,8 +108,6 @@ class IRCChannel(object):
 				dataCount = len(modeData)
 				if dataCount >= 4:
 					setBy = modeData[3]
-				else:
-					setBy = defaultSourceName
 				if dataCount >= 5:
 					setTime = modeData[4]
 				else:
