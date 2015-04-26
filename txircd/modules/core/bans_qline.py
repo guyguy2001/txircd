@@ -49,6 +49,7 @@ class QLine(ModuleData, XLineBase):
 		return True
 	
 	def checkNick(self, user, data):
+		self.expireLines()
 		newNick = data["nick"]
 		reason = self.matchUser(user, { "newnick": newNick })
 		if reason:
