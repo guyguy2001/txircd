@@ -21,12 +21,12 @@ class AwayCommand(ModuleData, Command):
 		if "targetusers" not in data:
 			return
 		for u in data["targetusers"].iterkeys():
-			if "away" in u.metadata["ext"]:
-				user.sendMessage(irc.RPL_AWAY, u.nick, u.metadata["ext"]["away"])
+			if u.metadataKeyExists("away"):
+				user.sendMessage(irc.RPL_AWAY, u.nick, u.metadataValue("away"))
 	
 	def addWhois(self, user, targetUser):
-		if "away" in targetUser.metadata["ext"]:
-			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadata["ext"]["away"])
+		if targetUser.metadataKeyExists("away"):
+			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadataValue("away"))
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
@@ -37,10 +37,10 @@ class AwayCommand(ModuleData, Command):
 	
 	def execute(self, user, data):
 		if "message" in data and data["message"]:
-			user.setMetadata("ext", "away", data["message"])
+			user.setMetadata("away", data["message"], "*", False)
 			user.sendMessage(irc.RPL_NOWAWAY, "You have been marked as being away")
 		else:
-			user.setMetadata("ext", "away", None)
+			user.setMetadata("away", None, "*", False)
 			user.sendMessage(irc.RPL_UNAWAY, "You are no longer marked as being away")
 		return True
 

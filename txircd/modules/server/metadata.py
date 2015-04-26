@@ -17,24 +17,23 @@ class ServerMetadata(ModuleData, Command):
 	def serverCommands(self):
 		return [ ("METADATA", 1, self) ]
 	
-	def propagateMetadata(self, targetID, targetTime, namespace, key, value, fromServer):
+	def propagateMetadata(self, targetID, targetTime, key, value, visibility, setByUser, fromServer):
 		serverPrefix = fromServer.serverID if fromServer else self.ircd.serverID
 		if value is None:
-			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, namespace, key, prefix=serverPrefix)
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, visibility, "1" if setByUser else "0", prefix=serverPrefix)
 		else:
-			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, namespace, key, value, prefix=serverPrefix)
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, visibility, "1" if setByUser else "0", value, prefix=serverPrefix)
 	
-	def propagateUserMetadata(self, user, namespace, key, oldValue, value, fromServer):
-		self.propagateMetadata(user.uuid, str(timestamp(user.connectedSince)), namespace, key, value, fromServer)
+	def propagateUserMetadata(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+		self.propagateMetadata(user.uuid, str(timestamp(user.connectedSince)), key, value, visibility, setByUser, fromServer)
 	
-	def propagateChannelMetadata(self, channel, namespace, key, oldValue, value, fromServer):
-		self.propagateMetadata(channel.name, str(timestamp(channel.existedSince)), namespace, key, value, fromServer)
+	def propagateChannelMetadata(self, channel, key, oldValue, value, visibility, setByUser, fromServer):
+		self.propagateMetadata(channel.name, str(timestamp(channel.existedSince)), key, value, visibility, setByUser, fromServer)
 	
 	def clearMetadata(self, target, server):
-		metadataToClear = target.metadata.copy()
-		for namespace, data in metadataToClear.iteritems():
-			for key in data.iterkeys():
-				target.setMetadata(namespace, key, None, server)
+		metadataToClear = target.metadataList()
+		for key, value, visibility, setByUser, in metadataToClear:
+			target.setMetadata(key, None, visibility, setByUser, server)
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 4 and len(params) != 5:
@@ -46,16 +45,18 @@ class ServerMetadata(ModuleData, Command):
 			data["channel"] = self.ircd.channels[params[0]]
 		else:
 			return None
-		if params[2] not in ("server", "user", "client", "ext", "private"):
-			return None
 		try:
 			data["time"] = datetime.utcfromtimestamp(int(params[1]))
 		except ValueError:
 			return None
-		data["namespace"] = params[2]
-		data["key"] = params[3]
-		if len(params) == 5:
-			data["value"] = params[4]
+		data["key"] = params[2]
+		data["visibility"] = params[3]
+		try:
+			data["setbyuser"] = int(params[4]) > 0
+		except ValueError:
+			return None
+		if len(params) == 6:
+			data["value"] = params[5]
 		return data
 	
 	def execute(self, server, data):
@@ -73,7 +74,6 @@ class ServerMetadata(ModuleData, Command):
 			value = data["value"]
 		else:
 			value = None
-		target.setMetadata(data["namespace"], data["key"], value, server)
-		return True
+		return target.setMetadata(data["key"], value, data["visibility"], data["setbyuser"], server)
 
 serverMetadata = ServerMetadata()

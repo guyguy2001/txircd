@@ -30,7 +30,7 @@ class UserhostCommand(ModuleData, Command):
 			if "o" in targetUser.modes:
 				output += "*"
 			output += "="
-			if "away" in user.metadata["ext"]:
+			if user.metadataKeyExists("away"):
 				output += "-"
 			else:
 				output += "+"
