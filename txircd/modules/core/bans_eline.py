@@ -67,8 +67,8 @@ class UserELine(Command):
 			return None
 		
 		banmask = params[0]
-		if banmask in self.ircd.userNicks:
-			targetUser = self.ircd.users[self.ircd.userNicks[banmask]]
+		if banmask in self.module.ircd.userNicks:
+			targetUser = self.module.ircd.users[self.module.ircd.userNicks[banmask]]
 			banmask = "{}@{}".format(targetUser.ident, targetUser.host)
 		else:
 			if "@" not in banmask:
@@ -80,7 +80,7 @@ class UserELine(Command):
 			}
 		return {
 			"mask": banmask,
-			"duration": durationToSeconds,
+			"duration": durationToSeconds(params[1]),
 			"reason": " ".format(params[2:])
 		}
 	
@@ -90,7 +90,6 @@ class UserELine(Command):
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** E:Line for {} is already set.".format(banmask))
 				return True
-			
 			if data["duration"] > 0:
 				user.sendMessage("NOTICE", "*** Timed e:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))
 			else:

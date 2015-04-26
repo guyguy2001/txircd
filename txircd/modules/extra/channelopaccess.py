@@ -46,6 +46,6 @@ class ChannelOpAccess(ModuleData, Mode):
 		if status not in self.ircd.channelStatuses:
 			return False # For security, we'll favor those that were restricting permissions while a certain status was loaded.
 		level = self.ircd.channelStatuses[status][1]
-		return (channel.userRank(user) >= level)
+		return channel.userRank(user) >= level
 
 chanAccess = ChannelOpAccess()

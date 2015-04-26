@@ -137,7 +137,7 @@ class UserOper(Command):
 			log.msg("Failed OPER attempt from {} ({})".format(user.nick, reason), logLevel=logging.WARNING)
 			self.ircd.runActionStandard("operfail", user, reason)
 			return
-		self.ircd.runActionStandard("oper", user, reason)
+		self.ircd.runActionStandard("oper", user)
 
 class ServerOper(Command):
 	implements(ICommand)

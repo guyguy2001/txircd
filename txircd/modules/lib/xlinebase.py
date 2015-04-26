@@ -68,8 +68,8 @@ class XLineBase(object):
 		lines = self.ircd.storage["xlines"][self.lineType]
 		for lineData in lines:
 			duration = timedelta(seconds=lineData["duration"])
-			expireTime = currentTime + duration
-			if expireTime < currentTime:
+			expireTime = lineData["created"] + duration
+			if expireTime < currentTime and lineData["duration"] > 0:
 				expiredLines.append(lineData)
 		for lineData in expiredLines:
 			lines.remove(lineData)
