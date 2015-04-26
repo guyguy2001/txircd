@@ -37,7 +37,7 @@ class IRCBase(LineOnlyReceiver):
 		if not linePart:
 			return None, None, None, None
 		
-		if " " in line:
+		if " " in linePart:
 			command, paramLine = linePart.split(" ", 1)
 			params = paramLine.split(" ")
 		else:
