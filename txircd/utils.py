@@ -18,6 +18,10 @@ def isValidChannelName(channelName):
 			return False
 	return True
 
+validMetadataKey = re.compile(r"^[A-Za-z0-9_\.:]+$")
+def isValidMetadataKey(key):
+	return validMetadataKey.match(key)
+
 
 def _enum(**enums):
 	return type('Enum', (), enums)

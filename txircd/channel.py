@@ -1,5 +1,5 @@
 from twisted.words.protocols import irc
-from txircd.utils import isValidChannelName, ModeType, now
+from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, ModeType, now
 from weakref import WeakKeyDictionary
 
 class IRCChannel(object):
@@ -14,13 +14,7 @@ class IRCChannel(object):
 		self.topic = ""
 		self.topicSetter = ""
 		self.topicTime = now()
-		self.metadata = {
-			"server": {},
-			"user": {},
-			"client": {},
-			"ext": {},
-			"private": {}
-		}
+		self._metadata = CaseInsensitiveDictionary()
 		self.cache = {}
 	
 	def sendUserMessage(self, command, *params, **kw):
@@ -74,19 +68,50 @@ class IRCChannel(object):
 		self.ircd.runActionStandard("topic", self, setter, oldTopic, channels=[self])
 		return True
 	
-	def setMetadata(self, namespace, key, value = None, fromServer = None):
-		if namespace not in self.metadata:
-			return
-		oldValue = None
-		if key in self.metadata[namespace]:
-			oldValue = self.metadata[namespace][key]
-		if oldValue == value:
-			return
+	def metadataKeyExists(self, key):
+		return key in self._metadata
+	
+	def metadataKeyCase(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][0]
+	
+	def metadataValue(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][1]
+	
+	def metadataVisibility(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][2]
+	
+	def metadataSetByUser(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][3]
+	
+	def metadataList(self):
+		return self._metadata.values()
+	
+	def setMetadata(self, key, value, visibility, setByUser, fromServer = None):
+		if not isValidMetadataKey(key):
+			return False
+		oldData = None
+		if key in self._metadata:
+			oldData = self._metadata[key]
+		if setByUser and not oldData[3]:
+			return False
+		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, users=[self]) is False:
+			return False
 		if value is None:
-			del self.metadata[namespace][key]
+			del self._metadata[key]
+		elif not visibility:
+			return False
 		else:
-			self.metadata[namespace][key] = value
-		self.ircd.runActionStandard("channelmetadataupdate", self, namespace, key, value, channels=[self])
+			self._metadata[key] = (key, value, visibility, setByUser)
+		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldData[1], value, visibility, setByUser, fromServer, channels=[self])
+		return True
 	
 	def setModes(self, modes, defaultSource):
 		modeChanges = []

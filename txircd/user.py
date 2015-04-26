@@ -6,7 +6,7 @@ from twisted.python import log
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import isValidHost, ModeType, now, splitMessage
+from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
 from traceback import format_exc
@@ -35,13 +35,7 @@ class IRCUser(IRCBase):
 		self.realHost = host
 		self.ip = ip
 		self.gecos = None
-		self.metadata = {
-			"server": {},
-			"user": {},
-			"client": {},
-			"ext": {},
-			"private": {}
-		}
+		self._metadata = CaseInsensitiveDictionary()
 		self.cache = {}
 		self.channels = []
 		self.modes = {}
@@ -323,20 +317,51 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runActionStandard("changegecos", self, oldGecos, fromServer, users=[self])
 	
-	def setMetadata(self, namespace, key, value, fromServer = None):
-		if namespace not in self.metadata:
-			return
-		oldValue = None
-		if key in self.metadata[namespace]:
-			oldValue = self.metadata[namespace][key]
-		if value == oldValue:
-			return # Don't do any more processing, including calling the action
+	def metadataKeyExists(self, key):
+		return key in self._metadata
+	
+	def metadataKeyCase(self, key):
+		if key not in self._metadata:
+			return None
+		return self.metadata[key][0]
+	
+	def metadataValue(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][1]
+	
+	def metadataVisibility(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][2]
+	
+	def metadataSetByUser(self, key):
+		if key not in self._metadata:
+			return None
+		return self._metadata[key][3]
+	
+	def metadataList(self):
+		return self._metadata.values()
+	
+	def setMetadata(self, key, value, visibility, setByUser, fromServer = None):
+		if not isValidMetadataKey(key):
+			return False
+		oldData = None
+		if key in self._metadata:
+			oldData = self._metadata[key]
+		if setByUser and not oldData[3]:
+			return False
+		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, users=[self]) is False:
+			return False
 		if value is None:
-			if key in self.metadata[namespace]:
-				del self.metadata[namespace][key]
+			if key in self._metadata:
+				del self._metadata[key]
+		elif not visibility:
+			return False
 		else:
-			self.metadata[namespace][key] = value
-		self.ircd.runActionStandard("usermetadataupdate", self, namespace, key, oldValue, value, fromServer, users=[self])
+			self._metadata[key] = (key, value, visibility, setByUser)
+		self.ircd.runActionStandard("usermetadataupdate", self, key, oldData[1], value, visibility, setByUser, fromServer, users=[self])
+		return True
 	
 	def joinChannel(self, channel, override = False):
 		if channel in self.channels:
