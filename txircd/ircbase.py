@@ -92,7 +92,7 @@ class IRCBase(LineOnlyReceiver):
 		else:
 			prefix = None
 		params = list(params)
-		if " " in params[-1] or params[-1][0] == ":":
+		if not params[-1] or " " in params[-1] or params[-1][0] == ":":
 			params[-1] = ":{}".format(params[-1])
 		lineToSend = ""
 		if tags:
