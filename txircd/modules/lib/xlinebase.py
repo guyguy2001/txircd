@@ -69,7 +69,7 @@ class XLineBase(object):
 		for lineData in lines:
 			duration = timedelta(seconds=lineData["duration"])
 			expireTime = lineData["created"] + duration
-			if expireTime < currentTime:
+			if expireTime < currentTime and lineData["duration"] > 0:
 				expiredLines.append(lineData)
 		for lineData in expiredLines:
 			lines.remove(lineData)
