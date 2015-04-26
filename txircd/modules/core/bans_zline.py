@@ -15,7 +15,7 @@ class ZLine(ModuleData, XLineBase):
 	lineType = "Z"
 	
 	def actions(self):
-		return [ ("connect", 10, self.checkLines),
+		return [ ("userconnect", 10, self.checkLines),
 		         ("commandpermission-ZLINE", 10, self.restrictToOper),
 		         ("statsruntype-zlines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
