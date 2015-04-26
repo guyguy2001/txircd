@@ -11,31 +11,33 @@ class IRCBase(LineOnlyReceiver):
 	
 	def _parseLine(self, line):
 		line = line.replace("\0", "")
-		if " :" in line:
-			linePart, lastParam = line.split(" :", 1)
-		else:
-			linePart = line
-			lastParam = None
-		
-		if not linePart:
+		if not line:
 			return None, None, None, None
 		
-		if linePart[0] == "@":
-			if " " not in linePart:
+		if line[0] == "@":
+			if " " not in line:
 				return None, None, None, None
-			tagLine, linePart = linePart.split(" ", 1)
+			tagLine, line = line.split(" ", 1)
 			tags = self._parseTags(tagLine[1:])
 		else:
 			tags = {}
 		
 		prefix = None
-		if linePart[0] == ":":
-			if " " not in linePart:
+		if line[0] == ":":
+			if " " not in line:
 				return None, None, None, None
-			prefix, linePart = linePart.split(" ", 1)
+			prefix, line = line.split(" ", 1)
 			prefix = prefix[1:]
 		
-		if " " in linePart:
+		if " :" in line:
+			linePart, lastParam = line.split(" :", 1)
+		else:
+			linePart = line
+			lastParam = None
+		if not linePart:
+			return None, None, None, None
+		
+		if " " in line:
 			command, paramLine = linePart.split(" ", 1)
 			params = paramLine.split(" ")
 		else:
