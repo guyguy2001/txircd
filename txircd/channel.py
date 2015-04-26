@@ -100,7 +100,7 @@ class IRCChannel(object):
 		oldData = None
 		if key in self._metadata:
 			oldData = self._metadata[key]
-		if setByUser and not oldData[3]:
+		if setByUser and oldData and not oldData[3]:
 			return False
 		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, users=[self]) is False:
 			return False
@@ -110,7 +110,8 @@ class IRCChannel(object):
 			return False
 		else:
 			self._metadata[key] = (key, value, visibility, setByUser)
-		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldData[1], value, visibility, setByUser, fromServer, channels=[self])
+		oldValue = oldData[1] if oldData else None
+		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldValue, value, visibility, setByUser, fromServer, channels=[self])
 		return True
 	
 	def setModes(self, modes, defaultSource):
