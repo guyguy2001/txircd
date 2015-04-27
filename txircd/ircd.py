@@ -128,6 +128,13 @@ class IRCd(Service):
 				log.msg("The module {} failed to load.".format(moduleName), logLevel=logging.WARNING)
 	
 	def loadModule(self, moduleName):
+		"""
+		Loads a module of the specified name.
+		Raises ModuleLoadError if the module cannot be loaded.
+		If the specified module is currently being unloaded, returns the
+		DeferredList specified by the module when it was unloading with a
+		callback to try to load the module again once it succeeds.
+		"""
 		if moduleName in self._unloadingModules:
 			deferList = self._unloadingModules[moduleName]
 			deferList.addCallback(self._tryLoadAgain, moduleName)
@@ -263,7 +270,14 @@ class IRCd(Service):
 				else:
 					self.serverCommands[command].append(data)
 	
-	def unloadModule(self, moduleName, fullUnload = True):
+	def unloadModule(self, moduleName):
+		"""
+		Unloads the loaded module with the given name. Raises ValueError
+		if the module cannot be unloaded because it's a core module.
+		"""
+		self._unloadModule(moduleName, True)
+	
+	def _unloadModule(self, moduleName, fullUnload):
 		unloadDeferreds = []
 		if moduleName not in self.loadedModules:
 			return
@@ -347,7 +361,12 @@ class IRCd(Service):
 		del self._unloadingModules[moduleName]
 	
 	def reloadModule(self, moduleName):
-		deferList = self.unloadModule(moduleName, False)
+		"""
+		Reloads the module with the given name.
+		Returns a DeferredList if the module unloads with one or more Deferreds.
+		May raise ModuleLoadError if the module cannot be loaded.
+		"""
+		deferList = self._unloadModule(moduleName, False)
 		if deferList is None:
 			deferList = self.loadModule(moduleName)
 		else:
@@ -355,6 +374,9 @@ class IRCd(Service):
 		return deferList
 	
 	def rehash(self):
+		"""
+		Reloads the configuration file and applies changes.
+		"""
 		log.msg("Rehashing...", logLevel=logging.INFO)
 		self.config.reload()
 		d = self._unbindPorts() # Unbind the ports that are bound
@@ -400,6 +422,9 @@ class IRCd(Service):
 		log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
 	
 	def createUUID(self):
+		"""
+		Gets the next UUID for a new client.
+		"""
 		newUUID = self.serverID + self._uid.next()
 		while newUUID in self.users: # It'll take over 1.5 billion connections to loop around, but we still
 			newUUID = self.serverID + self._uid.next() # want to be extra safe and avoid collisions
@@ -437,6 +462,12 @@ class IRCd(Service):
 		return isupportList
 	
 	def connectServer(self, name):
+		"""
+		Connect a server with the given name in the configuration.
+		Returns a Deferred for the connection when we can successfully connect
+		or None if the server is already connected or if we're unable to find
+		information for that server in the configuration.
+		"""
 		if name in self.serverNames:
 			return None
 		if name not in self.config.get("links", {}):
@@ -454,6 +485,11 @@ class IRCd(Service):
 		self.runActionStandard("initiateserverconnection", result)
 	
 	def broadcastToServers(self, fromServer, command, *params, **kw):
+		"""
+		Broadcasts a message to all connected servers. The fromServer parameter
+		should be the server from which the message came; if this server is the
+		originating server, specify None for fromServer.
+		"""
 		for server in self.servers.itervalues():
 			if server.nextClosest == self.serverID and server != fromServer:
 				server.sendMessage(command, *params, **kw)
@@ -570,11 +606,23 @@ class IRCd(Service):
 		return fullActionList
 	
 	def runActionStandard(self, actionName, *params, **kw):
+		"""
+		Calls all functions for a given action with the given parameters in
+		priority order. Accepts the 'users' and 'channels' keyword arguments to
+		determine which mode handlers should be included.
+		"""
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
 			action[0](*params)
 	
 	def runActionUntilTrue(self, actionName, *params, **kw):
+		"""
+		Calls functions for a given action with the given parameters in
+		priority order until one of them returns a true value. Returns True
+		when one of the functions returned True. Accepts the 'users' and
+		'channels' keyword arguments to determine which mode handlers should be
+		included.
+		"""
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
 			if action[0](*params):
@@ -582,6 +630,13 @@ class IRCd(Service):
 		return False
 	
 	def runActionUntilFalse(self, actionName, *params, **kw):
+		"""
+		Calls functions for a given action with the given parameters in
+		priority order until one of them returns a false value. Returns True
+		when one of the functions returned False. Accepts the 'users' and
+		'channels' keyword arguments to determine which mode handlers should be
+		included.
+		"""
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
 			if not action[0](*params):
@@ -589,6 +644,13 @@ class IRCd(Service):
 		return False
 	
 	def runActionUntilValue(self, actionName, *params, **kw):
+		"""
+		Calls functions for a given action with the given parameters in
+		priority order until one of them returns a non-None value. Returns the
+		value returned by the function that returned a non-None value. Accepts
+		the 'users' and 'channels' keyword arguments to determine which mode
+		handlers should be included.
+		"""
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
 			value = action[0](*params)
@@ -597,6 +659,12 @@ class IRCd(Service):
 		return None
 	
 	def runActionFlagTrue(self, actionName, *params, **kw):
+		"""
+		Calls all functions for a given action with the given parameters in
+		priority order. Returns True when one of the functions returns a true
+		value. Accepts the 'users' and 'channels' keyword arguments to
+		determine which mode handlers should be included.
+		"""
 		oneIsTrue = False
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
@@ -605,6 +673,12 @@ class IRCd(Service):
 		return oneIsTrue
 	
 	def runActionFlagFalse(self, actionName, *params, **kw):
+		"""
+		Calls all functions for a given action with the given parameters in
+		priority order. Returns True when one of the functions returns a false
+		value. Accepts the 'users' and 'channels' keyword arguments to
+		determine which mode handlers should be included.
+		"""
 		oneIsFalse = False
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
@@ -613,6 +687,12 @@ class IRCd(Service):
 		return oneIsFalse
 	
 	def runActionProcessing(self, actionName, data, *params, **kw):
+		"""
+		Calls functions for a given action with the given parameters in
+		priority order until the provided data is all processed (the data
+		parameter becomes empty). Accepts 'users' and 'channels' keyword
+		arguments to determine which mode handlers should be included.
+		"""
 		actionList = self._getActionFunctionList(actionName, data, *params, **kw)
 		for action in actionList:
 			action[0](data, *params)
@@ -620,6 +700,13 @@ class IRCd(Service):
 				return
 	
 	def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
+		"""
+		Calls functions for a given action with the given parameters in
+		priority order until the provided data is all processed (all of the
+		data structures in the dataList parameter become empty). Accepts
+		'users' and 'channels' keyword arguments to determine which mode
+		handlers should be included.
+		"""
 		paramList = dataList + params
 		actionList = self._getActionFunctionList(actionName, *paramList, **kw)
 		for action in actionList:
@@ -631,6 +718,13 @@ class IRCd(Service):
 				return
 	
 	def runComboActionStandard(self, actionList, **kw):
+		"""
+		Calls all functions for the given actions with the given parameters in
+		priority order. Actions are specifed as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Accepts 'users' and 'channels' keyword arguments to determine which
+		mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -642,6 +736,15 @@ class IRCd(Service):
 			actionFunc(*actionParameters[actionName])
 	
 	def runComboActionUntilTrue(self, actionList, **kw):
+		"""
+		Calls functions for the given actions with the given parameters in
+		priority order until one of the functions returns a true value. Actions
+		are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Returns True if one of the functions returned a true value. Accepts
+		'users' and 'channels' keyword arguments to determine which mode
+		handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -655,6 +758,15 @@ class IRCd(Service):
 		return False
 	
 	def runComboActionUntilFalse(self, actionList, **kw):
+		"""
+		Calls functions for the given actions with the given parameters in
+		priority order until one of the functions returns a false value.
+		Actions are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Returns True if one of the functions returned a false value. Accepts
+		'users' and 'channels' keyword arguments to determine which mode
+		handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -668,6 +780,15 @@ class IRCd(Service):
 		return False
 	
 	def runComboActionUntilValue(self, actionList, **kw):
+		"""
+		Calls functions for the given actions with the given parameters in
+		priority order until one of the functions returns a non-None value.
+		Actions are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Returns the value returned by the function that returned a non-None
+		value. Accepts 'users' and 'channels' keyword arguments to determine
+		which mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -682,6 +803,14 @@ class IRCd(Service):
 		return None
 	
 	def runComboActionFlagTrue(self, actionList, **kw):
+		"""
+		Calls all functions for the given actions with the given parameters in
+		priority order. Actions are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Returns True if any of the functions called returned a true value.
+		Accepts 'users' and 'channels' keyword arguments to determine which
+		mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -696,6 +825,14 @@ class IRCd(Service):
 		return oneIsTrue
 	
 	def runComboActionFlagFalse(self, actionList, **kw):
+		"""
+		Calls all functions for the given actions with the given parameters in
+		priority order. Actions are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Returns True if any of the functions called returned a false value.
+		Accepts 'users' and 'channels' keyword arguments to determine which
+		mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -710,6 +847,14 @@ class IRCd(Service):
 		return oneIsFalse
 	
 	def runComboActionProcessing(self, data, actionList, **kw):
+		"""
+		Calls functions for the given actions with the given parameters in
+		priority order until the data given has been processed (the data
+		parameter becomes empty). Actions are specified as a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Accepts 'users' and 'channels' keyword arguments to determine which
+		mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
@@ -723,6 +868,15 @@ class IRCd(Service):
 				break
 	
 	def runComboActionProcessingMultiple(self, dataList, actionList, **kw):
+		"""
+		Calls functions for the given actions with the given parameters in
+		priority order until the data given has been processed (all the data
+		items in the dataList parameter become empty). Actions are specified as
+		a list of tuples:
+		[ ("action1", param1, param2, ...), ("action2", param1, param2, ...) ]
+		Accepts 'users' and 'channels' keyword arguments to determine which
+		mode handlers should be included.
+		"""
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:

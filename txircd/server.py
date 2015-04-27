@@ -46,6 +46,9 @@ class IRCServer(IRCBase):
 			return
 	
 	def endBurst(self):
+		"""
+		Called at the end of bursting.
+		"""
 		self.bursted = True
 		if "burst_queue" in self.cache:
 			for command, prefix, params in self.cache["burst_queue"]:
@@ -60,6 +63,9 @@ class IRCServer(IRCBase):
 		self.disconnectedDeferred.callback(None)
 	
 	def disconnect(self, reason, netsplitQuitMsg = None):
+		"""
+		Disconnects the server.
+		"""
 		log.msg("Disconnecting server {}: {}".format(self.name, reason), logLevel=logging.WARNING)
 		if self.bursted:
 			self.ircd.runActionStandard("serverquit", self, reason)
@@ -94,6 +100,10 @@ class IRCServer(IRCBase):
 		self.ircd.runActionStandard("pingserver", self)
 	
 	def register(self):
+		"""
+		Marks the server as registered. Should be called once after capability
+		negotiation.
+		"""
 		if not self.serverID:
 			return
 		if not self.name:
@@ -110,6 +120,12 @@ class RemoteServer(IRCServer):
 		self._registrationTimeoutTimer.cancel()
 	
 	def sendMessage(self, command, *params, **kw):
+		"""
+		Sends a message to the locally-connected server that will route to the
+		remote server.
+		Messages sent this way should have some information in the contents so
+		that they can be propagated in the correct direction.
+		"""
 		target = self
 		while target.nextClosest != self.ircd.serverID:
 			target = self.ircd.servers[target.nextClosest]

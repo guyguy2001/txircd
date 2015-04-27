@@ -18,6 +18,13 @@ class IRCChannel(object):
 		self.cache = {}
 	
 	def sendUserMessage(self, command, *params, **kw):
+		"""
+		Sends a message to all users in a channel.
+		Accepts a command and some parameters for that command to send.
+		Also accepts the following keyword arguments:
+		- to: allows you to override the default destination of the channel name
+		- skip: list of users in the channel to skip when sending the message
+		"""
 		if "to" not in kw:
 			kw["to"] = self.name
 		if kw["to"] is None:
@@ -33,6 +40,15 @@ class IRCChannel(object):
 			user.sendMessage(command, *params, **kw)
 	
 	def sendServerMessage(self, command, *params, **kw):
+		"""
+		Sends a message to all remote servers to which any user in this channel
+		is connected. Accepts a command and some parameters for that command to
+		send. Also accepts the following keyword arguments:
+		- skipall: list of servers to skip from the network
+		- skiplocal: list of locally-connected servers to which to skip sending
+		    after we've determined the closest hop of all the servers to which
+		    we're sending
+		"""
 		servers = set()
 		for user in self.users.iterkeys():
 			if user.uuid[:3] != self.ircd.serverID:
@@ -53,6 +69,9 @@ class IRCChannel(object):
 			server.sendMessage(command, *params, **kw)
 	
 	def setTopic(self, topic, setter):
+		"""
+		Sets the channel topic.
+		"""
 		if setter in self.ircd.users:
 			source = self.ircd.users[setter].hostmask()
 		elif setter == self.ircd.serverID:
@@ -69,32 +88,61 @@ class IRCChannel(object):
 		return True
 	
 	def metadataKeyExists(self, key):
+		"""
+		Checks whether a specific key exists in the channel's metadata.
+		"""
 		return key in self._metadata
 	
 	def metadataKeyCase(self, key):
+		"""
+		Gets the key from the channel's metadata in its original case.
+		Returns None if the key is not present.
+		"""
 		if key not in self._metadata:
 			return None
 		return self._metadata[key][0]
 	
 	def metadataValue(self, key):
+		"""
+		Gets the value for the given key in the channel's metadata.
+		Returns None if the key is not present.
+		"""
 		if key not in self._metadata:
 			return None
 		return self._metadata[key][1]
 	
 	def metadataVisibility(self, key):
+		"""
+		Gets the visibility value for the given key in the channel's metadata.
+		Returns None if the key is not present.
+		"""
 		if key not in self._metadata:
 			return None
 		return self._metadata[key][2]
 	
 	def metadataSetByUser(self, key):
+		"""
+		Gets whether the given metadata key/value was set by a user.
+		Returns None if the key is not present.
+		"""
 		if key not in self._metadata:
 			return None
 		return self._metadata[key][3]
 	
 	def metadataList(self):
+		"""
+		Returns the list of metadata keys/values for the channel as a list of
+		tuples in the format
+		[ (key, value, visibility, setByUser) ]
+		"""
 		return self._metadata.values()
 	
 	def setMetadata(self, key, value, visibility, setByUser, fromServer = None):
+		"""
+		Sets metadata for the channel. Returns True if the set is successful or
+		False if it is not. If the metadata set is caused by a message from a
+		remote server, pass the server object as the fromServer parameter.
+		"""
 		if not isValidMetadataKey(key):
 			return False
 		oldData = None
@@ -115,6 +163,26 @@ class IRCChannel(object):
 		return True
 	
 	def setModes(self, modes, defaultSource):
+		"""
+		Sets modes on the channel. Accepts modes as a list of tuples in the
+		format:
+		[ (adding, mode, param, setBy, setTime) ]
+		- adding: True if we're setting the mode; False if unsetting
+		- mode: The mode letter
+		- param: The mode's parameter; None if no parameter is needed for that
+		    mode
+		- setBy: Optional, only used for list modes; a human-readable string
+		    (typically server name or nick!user@host) for who/what set this
+		    mode)
+		- setTime: Optional, only used for list modes; a datetime object
+		    containing when the mode was set
+		
+		The defaultSource is a valid user ID or server ID of someone who set
+		the modes. It is used as the source for announcements about the mode
+		change and as the default setter for any list modes who do not have the
+		setBy parameter specified.
+		The default time for list modes with no setTime specified is now().
+		"""
 		modeChanges = []
 		defaultSourceName = self._sourceName(defaultSource)
 		if defaultSourceName is None:
@@ -159,6 +227,15 @@ class IRCChannel(object):
 		return modeChanges
 	
 	def setModesByUser(self, user, modes, params, override = False):
+		"""
+		Parses a mode string specified by a user and sets those modes on the
+		channel.
+		The user parameter should be the user who set the modes.
+		The modes parameter is the actual modes string; parameters specified by
+		the user should be as a list of strings in params.
+		The override parameter should be used only when all permission checks
+		should be overridden.
+		"""
 		adding = True
 		changes = []
 		setBy = self._sourceName(user.uuid)
@@ -334,6 +411,9 @@ class IRCChannel(object):
 		return None
 	
 	def modeString(self, toUser):
+		"""
+		Get a user-reportable mode string for the modes set on the channel.
+		"""
 		modeStr = ["+"]
 		params = []
 		for mode in self.modes:
@@ -354,6 +434,9 @@ class IRCChannel(object):
 		return "".join(modeStr)
 	
 	def userRank(self, user):
+		"""
+		Gets the user's numeric rank in the channel.
+		"""
 		if user not in self.users:
 			return -1
 		status = self.users[user]["status"]

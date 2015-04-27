@@ -4,13 +4,22 @@ import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$")
 def isValidNick(nick):
+	"""
+	Determines whether the provided nickname is in a valid format.
+	"""
 	return validNick.match(nick)
 
 validHost = re.compile(r"^[a-zA-Z0-9.-]+$")
 def isValidHost(host):
+	"""
+	Determines whether the provided hostname is in a valid format.
+	"""
 	return validHost.match(host)
 
 def isValidChannelName(channelName):
+	"""
+	Determines whether the given channel name is in a valid format.
+	"""
 	if channelName[0] != "#":
 		return False
 	for char in "\x07 ,?*": # \x07, space, and comma are explicitly denied by RFC; * and ? make matching a channel name difficult
@@ -20,6 +29,9 @@ def isValidChannelName(channelName):
 
 validMetadataKey = re.compile(r"^[A-Za-z0-9_\.:]+$")
 def isValidMetadataKey(key):
+	"""
+	Determines whether the given metadata key is in a valid format.
+	"""
 	return validMetadataKey.match(key)
 
 
@@ -30,9 +42,15 @@ ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
 
 
 def ircLower(string):
+	"""
+	Lowercases a string according to RFC lowercasing standards.
+	"""
 	return string.lower().replace("[", "{").replace("]", "}").replace("\\", "|")
 
 class CaseInsensitiveDictionary(MutableMapping):
+	"""
+	It's a dictionary with RFC-case-insensitive keys.
+	"""
 	def __init__(self, dictType = dict):
 		self._data = dictType()
 
@@ -62,14 +80,23 @@ class CaseInsensitiveDictionary(MutableMapping):
 
 
 def now():
+	"""
+	Returns a datetime object representing now.
+	"""
 	return datetime.utcnow().replace(microsecond=0)
 
 def timestamp(time):
+	"""
+	Converts a datetime object to a Unix timestamp.
+	"""
 	unixEpoch = datetime.utcfromtimestamp(0)
 	return int((time - unixEpoch).total_seconds())
 
 
 def durationToSeconds(durationStr):
+	"""
+	Converts a 1y2w3d4h5m6s format string duration into a number of seconds.
+	"""
 	try: # If it's just a number, assume it's seconds.
 		return int(durationStr)
 	except ValueError:
@@ -100,6 +127,9 @@ def durationToSeconds(durationStr):
 
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
 def unmapIPv4(ip):
+	"""
+	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
+	"""
 	mapped = ipv4MappedAddr.match(ip)
 	if mapped:
 		return mapped.group(1)
@@ -107,6 +137,10 @@ def unmapIPv4(ip):
 
 
 def unescapeEndpointDescription(desc):
+	"""
+	Takes escaped endpoint descriptions from our configuration and unescapes
+	them to pass as a Twisted endpoint description.
+	"""
 	result = []
 	escape = []
 	depth = 0
@@ -146,6 +180,10 @@ def unescapeEndpointDescription(desc):
 
 
 def splitMessage(message, maxLength):
+	"""
+	Split a string into a series of strings each with maximum length maxLength
+	and returns them in a list.
+	"""
 	msgList = []
 	while message:
 		limitedMessage = message[:maxLength]
@@ -179,4 +217,7 @@ def splitMessage(message, maxLength):
 # \x03FF,BB: set fore/background
 format_chars = re.compile('[\x02\x1f\x16\x1d\x0f]|\x03([0-9]{1,2}(,[0-9]{1,2})?)?')
 def stripFormatting(message):
+	"""
+	Removes IRC formatting from the provided message.
+	"""
 	return format_chars.sub('', message)

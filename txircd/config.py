@@ -84,6 +84,10 @@ class Config(object):
 		return iter(self._configData)
 	
 	def get(self, key, defaultValue):
+		"""
+		Allows you to get a key from the configuration with a default value if
+		the configuration key does not exist.
+		"""
 		try:
 			return self._configData[key]
 		except KeyError:
