@@ -108,7 +108,7 @@ class IRCd(Service):
 		log.msg("Unloading modules...", logLevel=logging.INFO)
 		moduleList = self.loadedModules.keys()
 		for module in moduleList:
-			self.unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
+			self._unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
 		log.msg("Closing data storage...", logLevel=logging.INFO)
 		if self.storageSyncer.running:
 			self.storageSyncer.stop()
