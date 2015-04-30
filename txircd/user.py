@@ -150,9 +150,9 @@ class IRCUser(IRCBase):
 			if data is None:
 				if spewRegWarning:
 					if self.isRegistered() == 0:
-						self.sendMessage(irc.ERR_ALREADYREGISTERED, ":You may not reregister")
+						self.sendMessage(irc.ERR_ALREADYREGISTERED, "You may not reregister")
 					else:
-						self.sendMessage(irc.ERR_NOTREGISTERED, command, ":You have not registered")
+						self.sendMessage(irc.ERR_NOTREGISTERED, command, "You have not registered")
 				elif self._hasBatchedErrors():
 					self._dispatchErrorBatch()
 				return
@@ -170,7 +170,7 @@ class IRCUser(IRCBase):
 			self.ircd.runComboActionStandard((("commandextra-{}".format(command), self, data), ("commandextra", self, command, data)), users=affectedUsers, channels=affectedChannels)
 		else:
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
-				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, ":Unknown command")
+				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
 	
 	def startErrorBatch(self, batchName):
 		"""
