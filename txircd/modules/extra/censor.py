@@ -1,10 +1,9 @@
 from twisted.plugin import IPlugin
-from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
-import logging, re
+import re
 
 irc.RPL_BADWORDADDED = "927"
 irc.RPL_BADWORDREMOVED = "928"
