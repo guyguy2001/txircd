@@ -21,7 +21,7 @@ class IRCUser(IRCBase):
 				resolvedHost = gethostbyaddr(ip)[0]
 				# First half of host resolution done, run second half to prevent rDNS spoofing.
 				# Refuse hosts that are too long as well.
-				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= 64 and isValidHost(resolvedHost):
+				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= self.ircd.config.get("hostname_length", 64) and isValidHost(resolvedHost):
 					host = resolvedHost
 				else:
 					host = ip
@@ -345,7 +345,7 @@ class IRCUser(IRCBase):
 		"""
 		if newIdent == self.ident:
 			return
-		if len(newIdent) > 12:
+		if len(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent
@@ -357,7 +357,7 @@ class IRCUser(IRCBase):
 		Changes a user's host. If initiated by a remote server, that server
 		should be specified in the fromServer parameter.
 		"""
-		if len(newHost) > 64:
+		if len(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		if newHost == self.host:
 			return
@@ -572,7 +572,7 @@ class IRCUser(IRCBase):
 		setBy = self._sourceName(user.uuid)
 		setTime = now()
 		for mode in modes:
-			if len(changes) >= 20:
+			if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 				break
 			if mode == "+":
 				adding = True
@@ -600,7 +600,7 @@ class IRCUser(IRCBase):
 				continue
 			
 			for parameter in paramList:
-				if len(changes) >= 20:
+				if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 					break
 				if not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, parameter, users=[self, user]) is False:
 					continue
@@ -799,7 +799,7 @@ class RemoteUser(IRCUser):
 		Changes the ident of the user. If the change was initiated by a remote
 		server, that server should be specified as the fromServer parameter.
 		"""
-		if len(newIdent) > 12:
+		if len(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent
@@ -812,7 +812,7 @@ class RemoteUser(IRCUser):
 		remote server, that server should be specified as the fromServer
 		parameter.
 		"""
-		if len(newHost) > 64:
+		if len(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		oldHost = self.host
 		self.host = newHost

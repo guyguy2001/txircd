@@ -64,7 +64,7 @@ class UserTopic(Command):
 			return {
 				"channel": channel
 			}
-		topic = params[1][:self.ircd.config.get("topic_length",326)]
+		topic = params[1][:self.ircd.config.get("topic_length", 326)]
 		return {
 			"channel": channel,
 			"topic": topic

@@ -42,7 +42,7 @@ class HostCloaking(ModuleData, Mode):
 		# Cloak the first part of the host and leave the last segments alone.
 		hostmask = "{}-{}{}".format(self.cloakingPrefix, sha256(self.cloakingSalt + host[:index]).hexdigest()[:8], host[index:])
 		# This is very rare since we only leave up to 3 segments uncloaked, but make sure the end result isn't too long.
-		if len(hostmask) > 64:
+		if len(hostmask) > self.ircd.config.get("hostname_length", 64):
 			if isIPv6Address(ip):
 				return self.applyIPv6Cloak(ip)
 			else:

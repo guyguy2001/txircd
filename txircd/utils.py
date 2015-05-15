@@ -2,7 +2,7 @@ from collections import MutableMapping
 from datetime import datetime
 import re
 
-validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]{0,31}$")
+validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]+$")
 def isValidNick(nick):
 	"""
 	Determines whether the provided nickname is in a valid format.

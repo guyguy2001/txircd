@@ -7,7 +7,7 @@ class IRCChannel(object):
 		if not isValidChannelName(name):
 			raise InvalidChannelName
 		self.ircd = ircd
-		self.name = name[:64]
+		self.name = name[:self.ircd.config.get("channel_length", 64)]
 		self.users = WeakKeyDictionary()
 		self.modes = {}
 		self.existedSince = now()
@@ -241,7 +241,7 @@ class IRCChannel(object):
 		setBy = self._sourceName(user.uuid)
 		setTime = now()
 		for mode in modes:
-			if len(changes) >= 20:
+			if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 				break
 			if mode == "+":
 				adding = True
@@ -275,7 +275,7 @@ class IRCChannel(object):
 				continue
 			
 			for parameter in paramList:
-				if len(changes) >= 20:
+				if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 					break
 				if not override and self.ircd.runActionUntilValue("modepermission-channel-{}".format(mode), self, user, adding, parameter, users=[user], channels=[self]) is False:
 					continue

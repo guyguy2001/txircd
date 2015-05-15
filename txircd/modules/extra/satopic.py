@@ -29,7 +29,7 @@ class SatopicCommand(ModuleData, Command):
 			return None
 		return {
 			"channel": self.ircd.channels[params[0]],
-			"topic": params[1][:self.ircd.config.get("topic_length",326)]
+			"topic": params[1][:self.ircd.config.get("topic_length", 326)]
 		}
 
 	def affectedChannels(self, user, data):

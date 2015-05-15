@@ -45,7 +45,7 @@ class NickUserCommand(Command):
 		if not params or not params[0]:
 			user.sendSingleError("NickCmd", irc.ERR_NEEDMOREPARAMS, "NICK", "Not enough parameters")
 			return None
-		if not isValidNick(params[0]):
+		if not isValidNick(params[0]) or len(params[0]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
 		if params[0] in self.ircd.userNicks:
