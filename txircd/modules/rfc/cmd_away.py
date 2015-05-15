@@ -31,8 +31,10 @@ class AwayCommand(ModuleData, Command):
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
 			return {}
+		message = " ".join(params)
+		message = message[:self.ircd.config.get("away_length", 200)]
 		return {
-			"message": " ".join(params)
+			"message": message
 		}
 	
 	def execute(self, user, data):

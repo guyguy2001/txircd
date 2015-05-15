@@ -377,6 +377,8 @@ class IRCUser(IRCBase):
 		Changes a user's real name. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
 		"""
+		if len(newGecos) > self.ircd.config.get("gecos_length", 128):
+			return
 		if newGecos == self.gecos:
 			return
 		oldGecos = self.gecos
