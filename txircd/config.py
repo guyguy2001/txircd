@@ -1,43 +1,13 @@
 import yaml
 
-_defaults = {
-	"bind_client": [ "tcp:6667:interface={::}" ],
-	"bind_server": [],
-	"modules": []
-}
-
-_required = []
-
-_requiredValue = [
-	"server_name",
-	"server_description",
-	"network_name"
-]
-
-_formatValue = {
-	"network_name": lambda name: name[:32]
-}
-
 class Config(object):
-	def __init__(self, configFileName):
+	def __init__(self, ircd, configFileName):
+		self.ircd = ircd
 		self.fileName = configFileName
 	
 	def reload(self):
 		newConfig = self._readConfig(self.fileName)
-		for key, val in _defaults.iteritems():
-			if key not in newConfig:
-				newConfig[key] = val
-		for item in _required:
-			if item not in newConfig:
-				raise ConfigReadError (self.fileName, "Required item {} not found in configuration file.".format(item))
-		for item in _requiredValue:
-			if item not in newConfig:
-				raise ConfigReadError (self.fileName, "Required item {} not found in configuration file.".format(item))
-			if not newConfig[item]:
-				raise ConfigReadError (self.fileName, "Required item {} found in configuration file with no value.".format(item))
-		for item, formatFunc in _formatValue.iteritems():
-			if item in newConfig:
-				newConfig[item] = formatFunc(newConfig[item])
+		self.ircd.verifyConfig(newConfig)
 		self._configData = newConfig
 	
 	def _readConfig(self, fileName):
@@ -79,7 +49,10 @@ class Config(object):
 	
 	def __getitem__(self, key):
 		return self._configData[key]
-	
+
+	def __setitem__(self, key, value):
+		self._configData[key] = value
+
 	def __iter__(self):
 		return iter(self._configData)
 	
@@ -93,10 +66,21 @@ class Config(object):
 		except KeyError:
 			return defaultValue
 
-class ConfigReadError(Exception):
+class ConfigError(Exception):
+	pass
+
+class ConfigReadError(ConfigError):
 	def __init__(self, fileName, desc):
 		self.fileName = fileName
 		self.desc = desc
 	
 	def __str__(self):
 		return "Error reading configuration file {}: {}".format(self.fileName, self.desc)
+
+class ConfigValidationError(ConfigError):
+	def __init__(self, key, desc):
+		self.key = key
+		self.desc = desc
+
+	def __str__(self):
+		return "Error validating configuration value {}: {}".format(self.key, self.desc)

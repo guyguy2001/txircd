@@ -6,7 +6,7 @@ from twisted.internet.task import LoopingCall
 from twisted.logger import FilteringLogObserver, globalLogPublisher, InvalidLogLevelError, LogLevel, LogLevelFilterPredicate, Logger
 from twisted.plugin import getPlugins
 from twisted.python.rebuild import rebuild
-from txircd.config import Config
+from txircd.config import Config, ConfigError, ConfigReadError, ConfigValidationError
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
@@ -15,7 +15,7 @@ import importlib, random, shelve, string, txircd.modules
 
 class IRCd(Service):
 	def __init__(self, configFileName):
-		self.config = Config(configFileName)
+		self.config = Config(self, configFileName)
 		
 		self.boundPorts = {}
 		self.loadedModules = {}
@@ -162,6 +162,10 @@ class IRCd(Service):
 		if module.name in self.loadedModules:
 			return
 		module.hookIRCd(self)
+		try:
+			module.verifyConfig(self.config)
+		except ConfigError as e:
+			raise ModuleLoadError(module.name, e)
 		moduleData = {
 			"channelmodes": module.channelModes(),
 			"usermodes": module.userModes(),
@@ -218,9 +222,9 @@ class IRCd(Service):
 			common = True
 		if not common or module.multipleModulesForServers:
 			common = module.requiredOnAllServers
-		
+
 		self.log.debug("Loaded data from {module.name}; committing data and calling hooks...", module=module)
-		
+
 		self.loadedModules[module.name] = module
 		self._loadedModuleData[module.name] = moduleData
 		if common:
@@ -381,6 +385,38 @@ class IRCd(Service):
 		else:
 			deferList.addCallback(lambda result: self.loadModule(moduleName))
 		return deferList
+
+	def verifyConfig(self, config):
+		defaults = {
+			"bind_client": [ "tcp:6667:interface={::}" ],
+			"bind_server": [],
+			"modules": []
+		}
+		required = []
+		requiredValue = [
+			"server_name",
+			"server_description",
+			"network_name"
+		]
+		formatValue = {
+			"network_name": lambda name: name[:32]
+		}
+		for key, val in defaults.iteritems():
+			if key not in config:
+				config[key] = val
+		for item in required:
+			if item not in config:
+				raise ConfigValidationError(item, "Required item not found in configuration file.")
+		for item in requiredValue:
+			if item not in config:
+				raise ConfigValidationError(item, "Required item not found in configuration file.")
+			if not config[item]:
+				raise ConfigValidationError(item, "Required item found in configuration file with no value.")
+		for item, formatFunc in formatValue.iteritems():
+			if item in config:
+				config[item] = formatFunc(config[item])
+		for module in self.loadedModules.itervalues():
+			module.verifyConfig(config)
 	
 	def rehash(self):
 		"""

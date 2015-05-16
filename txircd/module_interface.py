@@ -108,6 +108,13 @@ class IModuleData(Interface):
 		handled by this module.
 		"""
 
+	def verifyConfig(config):
+		"""
+		Called when the module is loaded and when the server is rehashed.  Should check all
+		configuration values defined by this module and either adjust them in the configuration
+		or raise a ConfigValidationError when an invalid value is defined.
+		"""
+
 class ModuleData(object):
 	requiredOnAllServers = False
 	multipleModulesForServers = False
@@ -141,6 +148,9 @@ class ModuleData(object):
 		pass
 	
 	def fullUnload(self):
+		pass
+
+	def verifyConfig(self, config):
 		pass
 
 
