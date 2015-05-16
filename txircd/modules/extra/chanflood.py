@@ -3,7 +3,6 @@ from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
 from zope.interface import implements
 from datetime import timedelta
-from weakref import WeakKeyDictionary
 
 class ChannelFlood(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)

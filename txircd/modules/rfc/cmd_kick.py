@@ -1,9 +1,7 @@
 from twisted.plugin import IPlugin
-from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
-import logging
 
 class KickCommand(ModuleData):
 	implements(IPlugin, IModuleData)
