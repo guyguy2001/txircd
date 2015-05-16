@@ -608,7 +608,7 @@ class IRCUser(IRCBase):
 					continue
 				if adding:
 					if modeType == ModeType.List:
-						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("user_listmode_limit", 128):
 							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
 							continue
 				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
@@ -626,7 +626,7 @@ class IRCUser(IRCBase):
 		if adding:
 			if modeType == ModeType.List:
 				if mode in self.modes:
-					if len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+					if len(self.modes[mode]) > self.ircd.config.get("user_listmode_limit", 128):
 						return False
 					for paramData in self.modes[mode]:
 						if parameter == paramData[0]:

@@ -7,7 +7,7 @@ class IRCChannel(object):
 		if not isValidChannelName(name):
 			raise InvalidChannelName
 		self.ircd = ircd
-		self.name = name[:self.ircd.config.get("channel_length", 64)]
+		self.name = name[:self.ircd.config.get("channel_name_length", 64)]
 		self.users = WeakKeyDictionary()
 		self.modes = {}
 		self.existedSince = now()
@@ -295,7 +295,7 @@ class IRCChannel(object):
 							continue
 						parameter = targetUser.uuid
 					elif modeType == ModeType.List:
-						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 128):
+						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("channel_listmode_limit", 128):
 							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
 							continue
 				else:
@@ -345,7 +345,7 @@ class IRCChannel(object):
 				return True
 			if modeType == ModeType.List:
 				if mode in self.modes:
-					if len(self.modes[mode]) > self.ircd.config.get("channel_list_limit", 128):
+					if len(self.modes[mode]) > self.ircd.config.get("channel_listmode_limit", 128):
 						return False
 					for paramData in self.modes[mode]:
 						if parameter == paramData[0]:
