@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
@@ -11,6 +12,12 @@ class ChannelLevel(ModuleData):
 	def actions(self):
 		return [ ("checkchannellevel", 1, self.levelCheck),
 		         ("checkexemptchanops", 1, self.exemptCheck) ]
+
+	def verifyConfig(self, config):
+		if "channel_minimum_level" in config and not isinstance("channel_minimum_level", dict):
+			raise ConfigValidationError("channel_minimum_level", "value must be a dictionary")
+		if "channel_exempt_level" in config and not isinstance("channel_exempt_level", dict):
+			raise ConfigValidationError("channel_exempt_level", "value must be a dictionary")
 	
 	def minLevelFromConfig(self, configKey, checkType, defaultLevel):
 		configLevel = self.ircd.config.get(configKey, {}).get(checkType, defaultLevel)
