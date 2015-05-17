@@ -5,7 +5,7 @@ from weakref import WeakKeyDictionary
 class IRCChannel(object):
 	def __init__(self, ircd, name):
 		if not isValidChannelName(name):
-			raise InvalidChannelName
+			raise InvalidChannelNameError
 		self.ircd = ircd
 		self.name = name[:self.ircd.config.get("channel_name_length", 64)]
 		self.users = WeakKeyDictionary()
@@ -444,6 +444,6 @@ class IRCChannel(object):
 			return 0
 		return self.ircd.channelStatuses[status[0]][1]
 
-class InvalidChannelName(Exception):
+class InvalidChannelNameError(Exception):
 	def __str__(self):
 		return "Invalid character in channel name"

@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 from fnmatch import fnmatchcase
@@ -13,6 +14,15 @@ class DenyChannels(ModuleData):
 	
 	def actions(self):
 		return [ ("joinpermission", 50, self.blockNonDenied) ]
+
+	def verifyConfig(self, config):
+		for option in ("deny_channels", "allow_channels"):
+			if option in config:
+				if not isinstance(config[option], list):
+					raise ConfigValidationError(option, "value must be a list")
+				for chanName in config[option]:
+					if not isinstance(chanName, basestring) or not chanName:
+						raise ConfigValidationError(option, "\"{}\" is an invalid channel name".format(chanName))
 	
 	def blockNonDenied(self, channel, user):
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "channel-denied") is True:

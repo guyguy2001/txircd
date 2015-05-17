@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
@@ -10,6 +11,11 @@ class AutoUserModes(ModuleData):
 
 	def actions(self):
 		return [ ("welcome", 50, self.autoSetUserModes) ]
+
+	def verifyConfig(self, config):
+		if "client_umodes_on_connect" in config:
+			if not isinstance(config["client_umodes_on_connect"], basestring):
+				raise ConfigValidationError("client_umodes_on_connect", "value must be a valid mode string")
 
 	def autoSetUserModes(self, user):
 		try:

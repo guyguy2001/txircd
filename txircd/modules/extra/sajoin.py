@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
-from txircd.channel import InvalidChannelName, IRCChannel
+from txircd.channel import InvalidChannelNameError, IRCChannel
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
 from zope.interface import implements
 
@@ -36,7 +36,7 @@ class SajoinCommand(ModuleData, Command):
 		else:
 			try:
 				channel = IRCChannel(self.ircd, channame)
-			except InvalidChannelName:
+			except InvalidChannelNameError:
 				user.sendSingleError("SajoinCmd", irc.ERR_BADCHANMASK, channame, "Bad channel mask")
 				return None
 		return {
