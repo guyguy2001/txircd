@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -21,6 +22,14 @@ class StatsCommand(ModuleData, Command):
 		return [ ("INFOREQ", 1, ServerInfoRequest(self.ircd)),
 				("INFO", 1, ServerInfo(self.ircd)),
 				("INFOEND", 1, ServerInfoEnd(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "public_info" in config:
+			if not isinstance(config["public_info"], list):
+				raise ConfigValidationError("public_info", "value must be a list")
+			for info in config["public_info"]:
+				if not isinstance(info, basestring):
+					raise ConfigValidationError("public_info", "every entry must be a string")
 
 class UserStats(Command):
 	implements(ICommand)

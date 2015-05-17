@@ -611,17 +611,13 @@ class IRCd(Service):
 	def generateISupportList(self):
 		isupport = self.isupport_tokens.copy()
 		statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
-		isupport["AWAYLEN"] = self.config.get("away_length", 200)
 		isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
 		isupport["CHANNELEN"] = self.config.get("channel_name_length", 64)
-		isupport["KICKLEN"] = self.config.get("kick_length", 255)
-		isupport["MODES"] = self.config.get("modes_per_line", 20)
 		isupport["NETWORK"] = self.config["network_name"]
-		isupport["NICKLEN"] = self.config.get("nick_length", 32)
 		isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
 		isupport["STATUSMSG"] = statusSymbolOrder
-		isupport["TOPICLEN"] = self.config.get("topic_length", 326)
 		isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
+		self.runActionStandard("buildisupport", isupport)
 		isupportList = []
 		for key, val in isupport.iteritems():
 			if val is None:

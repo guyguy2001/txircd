@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -18,6 +19,14 @@ class PartCommand(ModuleData):
 	
 	def serverCommands(self):
 		return [ ("PART", 1, ServerPart(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "part_message_length" in config:
+			if not isinstance(config["part_message_length"], int) or config["part_message_length"] < 0:
+				raise ConfigValidationError("part_message_length", "invalid number")
+			elif config["part_message_length"] > 300:
+				config["part_message_length"] = 300
+				self.ircd.logConfigValidationWarning("part_message_length", "value is too large", 300)
 	
 	def broadcastPart(self, sendUserList, channel, user, type, typeData, fromServer):
 		if type != "PART":

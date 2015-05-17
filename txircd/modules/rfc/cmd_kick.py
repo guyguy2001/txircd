@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -12,13 +13,25 @@ class KickCommand(ModuleData):
 	def actions(self):
 		return [ ("commandpermission-KICK", 10, self.checkKickLevel),
 		         ("leavemessage", 101, self.broadcastKick),
-		         ("leavemessage", 1, self.sendKickMessage) ]
+		         ("leavemessage", 1, self.sendKickMessage),
+		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("KICK", 1, UserKick(self.ircd)) ]
 	
 	def serverCommands(self):
 		return [ ("KICK", 1, ServerKick(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "kick_length" in config:
+			if not isinstance(config["kick_length"], int) or config["kick_length"] < 0:
+				raise ConfigValidationError("kick_length", "invalid number")
+			elif config["away_length"] > 255:
+				config["away_length"] = 255
+				self.ircd.logConfigValidationWarning("kick_length", "value is too large", 255)
+
+	def buildISupport(self, data):
+		data["KICKLEN"] = self.ircd.config.get("kick_length", 255)
 	
 	def checkKickLevel(self, user, data):
 		channel = data["channel"]

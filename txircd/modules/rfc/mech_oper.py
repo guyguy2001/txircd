@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType
 from zope.interface import implements
@@ -24,6 +25,37 @@ class Oper(ModuleData, Mode):
 	
 	def userModes(self):
 		return [ ("o", ModeType.NoParam, self) ]
+
+	def verifyConfig(self, config):
+		if "opers" in config:
+			if not isinstance(config["opers"], dict):
+				raise ConfigValidationError("opers", "value must be a dictionary")
+			for operNick, values in config["opers"].iteritems():
+				if "password" not in values:
+					raise ConfigValidationError("opers", "no password defined for oper \"{}\"".format(operNick))
+				if not isinstance(values["password"], basestring):
+					raise ConfigValidationError("opers", "value \"password\" for oper \"{}\" must be string".format(operNick))
+				if "hash" in values and not isinstance(values["hash"], basestring):
+					raise ConfigValidationError("opers", "value \"hash\" for oper \"{}\" is not a valid hashing module".format(operNick))
+				if "host" in values and not isinstance(values["host"], basestring): # We could add some hostname validation here if we really want to
+					raise ConfigValidationError("opers", "value \"host\" for oper \"{}\" must be a valid hostname".format(operNick))
+				if "types" in values:
+					if not isinstance(values["types"], list):
+						raise ConfigValidationError("opers", "value \"types\" for oper \"{}\" must be list".format(operNick))
+					for operType in values["types"]:
+						if not isinstance(operType, basestring):
+							raise ConfigValidationError("opers", "every type entry for oper \"{}\" must be string".format(operNick))
+		if "oper_types" in config:
+			if not isinstance(config["oper_types"], dict):
+				raise ConfigValidationError("oper_types", "value must be a dictionary")
+			for operType, permissions in config["oper_types"].iteritems():
+				if not isinstance(operType, basestring):
+					raise ConfigValidationError("oper_types", "every oper type must be a string")
+				if not isinstance(permissions, list):
+					raise ConfigValidationError("oper_types", "permissions for oper type \"{}\" must be a list".format(operType))
+				for permission in permissions:
+					if not isinstance(permission, basestring):
+						raise ConfigValidationError("oper_types", "every permission for oper type \"{}\" must be a string".format(operType))
 	
 	def operPermission(self, user, permissionType):
 		if "o" not in user.modes:

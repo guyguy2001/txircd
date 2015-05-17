@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -15,7 +16,19 @@ class AwayCommand(ModuleData, Command):
 	def actions(self):
 		return [ ("commandextra-PRIVMSG", 10, self.notifyAway),
 				("commandextra-NOTICE", 10, self.notifyAway),
-				("extrawhois", 10, self.addWhois) ]
+				("extrawhois", 10, self.addWhois),
+				("buildisupport", 1, self.buildISupport) ]
+
+	def buildISupport(self, data):
+		data["AWAYLEN"] = self.ircd.config.get("away_length", 200)
+
+	def verifyConfig(self, config):
+		if "away_length" in config:
+			if not isinstance(config["away_length"], int) or config["away_length"] < 0:
+				raise ConfigValidationError("away_length", "invalid number")
+			elif config["away_length"] > 200:
+				config["away_length"] = 200
+				self.ircd.logConfigValidationWarning("away_length", "value is too large", 200)
 	
 	def notifyAway(self, user, data):
 		if "targetusers" not in data:
