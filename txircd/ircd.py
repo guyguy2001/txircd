@@ -55,9 +55,9 @@ class IRCd(Service):
 		self.servers = {}
 		self.serverNames = CaseInsensitiveDictionary()
 		
-		self.logFilter = LogLevelFilterPredicate()
+		self._logFilter = LogLevelFilterPredicate()
 		global globalLogPublisher
-		filterObserver = FilteringLogObserver(globalLogPublisher, (self.logFilter,))
+		filterObserver = FilteringLogObserver(globalLogPublisher, (self._logFilter,))
 		self.log = Logger("txircd", observer=filterObserver)
 		
 		self.startupTime = None
@@ -89,9 +89,9 @@ class IRCd(Service):
 		self._bindPorts()
 		self.log.info("txircd started!")
 		try:
-			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
+			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
 		except (KeyError, InvalidLogLevelError):
-			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.warn)
+			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.warn)
 		self.runActionStandard("startup")
 	
 	def stopService(self):
@@ -399,7 +399,7 @@ class IRCd(Service):
 			self._bindPorts()
 		
 		try:
-			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
+			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
 		except (KeyError, InvalidLogLevelError):
 			pass # If we can't set a new log level, we'll keep the old one
 		
