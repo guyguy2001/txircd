@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 from base64 import b64encode, b64decode
-try: # The PBKDF2 module is dumb and reacts different in the presence of PyCrypto, so let's handle its presence appropriately
+try: # The PBKDF2 module is dumb and reacts differently in the presence of PyCrypto, so let's handle its presence appropriately
 	from Crypto.Hash import MD5 as md5, SHA as sha1, SHA224 as sha224, SHA256 as sha256, SHA384 as sha384, SHA512 as sha512
 except ImportError: # PyCrypto isn't actually present, so let's hashlib
 	from hashlib import md5, sha1, sha224, sha256, sha384, sha512

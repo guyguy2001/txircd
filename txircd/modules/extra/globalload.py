@@ -1,10 +1,8 @@
 from twisted.plugin import IPlugin
-from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
-import logging
 
 class GlobalLoad(ModuleData):
 	implements(IPlugin, IModuleData)
@@ -150,7 +148,7 @@ class ServerLoad(Command):
 		except ModuleLoadError:
 			return None
 		if moduleName not in self.ircd.loadedModules: # We want to log a message, but this shouldn't break the servers
-			log.msg("Tried to globally load nonexistent module {}".format(moduleName), logLevel=logging.WARNING)
+			self.ircd.log.warn("Tried to globally load nonexistent module {module}", module=moduleName)
 		self.ircd.broadcastToServers(server, "LOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 

@@ -2,7 +2,6 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import ISSLTransport
 from twisted.internet.task import LoopingCall
-from twisted.python import log
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
@@ -10,7 +9,6 @@ from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadata
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
 from traceback import format_exc
-import logging
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -73,10 +71,7 @@ class IRCUser(IRCBase):
 		try:
 			IRCBase.dataReceived(self, data)
 		except Exception as ex:
-			# it seems that twisted.protocols.irc makes no attempt to raise useful "invalid syntax"
-			# errors. Any invalid message *should* result in a ValueError, but we can't guarentee that,
-			# so let's catch everything.
-			log.msg("An error occurred processing data:\n{}".format(format_exc()), logLevel=logging.WARNING)
+			self.ircd.log.failure("An error occurred while processing incoming data:\n{exceptionData}", exceptionData=format_exc())
 			if self.uuid in self.ircd.users:
 				self.disconnect("Error occurred")
 	
@@ -220,6 +215,7 @@ class IRCUser(IRCBase):
 		"""
 		Disconnects the user from the server.
 		"""
+		self.ircd.log.debug("Disconnecting user {user.uuid} ({user.hostmask()}): {reason}", user=self, reason=reason)
 		if self._pinger:
 			if self._pinger.running:
 				self._pinger.stop()
@@ -274,6 +270,7 @@ class IRCUser(IRCBase):
 			if self.ircd.runActionUntilFalse("register", self, users=[self]):
 				self.transport.loseConnection()
 				return
+			self.ircd.log.debug("Registering user {user.uuid} ({user.hostmask()})", user=self)
 			versionWithName = "txircd-{}".format(version)
 			self.sendMessage(irc.RPL_WELCOME, "Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
 			self.sendMessage(irc.RPL_YOURHOST, "Your host is {}, running version {}".format(self.ircd.name, versionWithName))
@@ -753,6 +750,7 @@ class RemoteUser(IRCUser):
 			return
 		if holdName not in self._registerHolds:
 			return
+		self.ircd.log.debug("Registered remote user {user.uuid} ({user.hostmask()})", user=self)
 		self._registerHolds.remove(holdName)
 		if not self._registerHolds:
 			self.ircd.runActionStandard("remoteregister", self, users=[self])
@@ -879,6 +877,7 @@ class LocalUser(IRCUser):
 		self.nick = nick
 		self.ident = ident
 		self.gecos = gecos
+		self.ircd.log.debug("Created new local user {user.uuid} ({user.hostmask()})", user=self)
 		self.ircd.runActionStandard("localregister", self, users=[self])
 		self.ircd.userNicks[self.nick] = self.uuid
 	
@@ -908,6 +907,7 @@ class LocalUser(IRCUser):
 			userSendList.extend(channel.users.keys())
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
+		self.ircd.log.debug("Removing local user {user.uuid} ({user.hostmask()}): {reason}", user=self, reason=reason)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 		self.ircd.runActionStandard("localquit", self, reason, users=[self])
 	

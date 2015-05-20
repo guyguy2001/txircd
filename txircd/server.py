@@ -1,9 +1,7 @@
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
-from twisted.python import log
 from txircd.ircbase import IRCBase
-import logging
 
 class IRCServer(IRCBase):
 	def __init__(self, ircd, ip, received):
@@ -66,7 +64,7 @@ class IRCServer(IRCBase):
 		"""
 		Disconnects the server.
 		"""
-		log.msg("Disconnecting server {}: {}".format(self.name, reason), logLevel=logging.WARNING)
+		self.ircd.log.warn("Disconnecting server {server}: {reason}", server=self.name, reason=reason)
 		if self.bursted:
 			self.ircd.runActionStandard("serverquit", self, reason)
 			if netsplitQuitMsg is None:
@@ -93,7 +91,7 @@ class IRCServer(IRCBase):
 		if self.serverID and self.name:
 			self._pinger.start(self.ircd.config.get("server_ping_frequency", 60))
 			return
-		log.msg("Disconnecting unregistered server", logLevel=logging.INFO)
+		self.ircd.log.info("Disconnecting unregistered server")
 		self.disconnect("Registration timeout")
 	
 	def _ping(self):

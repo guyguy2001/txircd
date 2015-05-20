@@ -45,7 +45,10 @@ class SajoinCommand(ModuleData, Command):
 		}
 
 	def execute(self, user, data):
-		data["user"].joinChannel(data["channel"], override=True)
+		targetUser = data["user"]
+		channel = data["channel"]
+		targetUser.joinChannel(channel, override=True)
+		self.ircd.log.debug("User {user.uuid} ({user.nick}) forcibly joined user {targetUser.uuid} ({targetUser.nick}) to channel {channel.name}", user=user, targetUser=targetUser, channel=channel)
 		return True
 
 sajoin = SajoinCommand()

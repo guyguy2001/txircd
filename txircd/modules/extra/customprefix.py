@@ -1,9 +1,7 @@
 from twisted.plugin import IPlugin
-from twisted.python import log
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
-import logging
 
 class CustomPrefix(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
@@ -19,9 +17,9 @@ class CustomPrefix(ModuleData, Mode):
 				statusLevel = int(prefixValue["level"])
 				modes.append((prefix, ModeType.Status, self, statusLevel, prefixValue["char"]))
 			except ValueError:
-				log.msg("CustomPrefix: Prefix {} does not specify a valid level; skipping prefix".format(prefix), logLevel=logging.WARNING)
+				self.ircd.log.warn("Custom prefix {prefix} does not specify a valid level; skipping prefix", prefix=prefix)
 			except KeyError as e:
-				log.msg("CustomPrefix: Prefix {} is missing {}; skipping prefix".format(prefix, e. message), logLevel=logging.WARNING)
+				self.ircd.log.warn("Custom prefix {prefix} is missing {missingKey}; skipping prefix", prefix=prefix, missingKey=e)
 		return modes
 
 	def checkSet(self, channel, param):

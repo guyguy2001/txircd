@@ -1,11 +1,9 @@
 from twisted.internet.abstract import isIPAddress, isIPv6Address
 from twisted.plugin import IPlugin
-from twisted.python import log
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
 from hashlib import sha256
-import logging
 
 class HostCloaking(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
@@ -91,7 +89,7 @@ class HostCloaking(ModuleData, Mode):
 			self.cloakingSalt = self.ircd.config["cloaking_salt"]
 		except KeyError:
 			self.cloakingSalt = ""
-			log.msg("No cloaking salt was found in the config. Host cloaks will be insecure!", logLevel=logging.WARNING)
+			self.ircd.log.warn("No cloaking salt was found in the config. Host cloaks will be insecure!")
 		self.cloakingPrefix = self.ircd.config.get("cloaking_prefix", "txircd")
 
 hostCloaking = HostCloaking()

@@ -36,7 +36,10 @@ class SatopicCommand(ModuleData, Command):
 		return [ data["channel"] ]
 
 	def execute(self, user, data):
-		data["channel"].setTopic(data["topic"], user.uuid)
+		channel = data["channel"]
+		newTopic = data["topic"]
+		channel.setTopic(newTopic, user.uuid)
+		self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly set the topic of {channel.name} to '{newTopic}'.", user=user, channel=channel, newTopic=newTopic)
 		return True
 
 satopic = SatopicCommand()

@@ -54,6 +54,7 @@ class SapartCommand(ModuleData, Command):
 		channel = data["channel"]
 		reason = data["reason"]
 		target.leaveChannel(channel, "PART", { "reason": reason })
+		self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly part user {targetUser.uuid} ({targetUser.nick}) from channel {channel.name}", user=user, targetUser=target, channel=channel)
 		return True
 
 sapart = SapartCommand()

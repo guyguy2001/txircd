@@ -26,6 +26,7 @@ class DieCommand(ModuleData, Command):
 		return {}
 	
 	def execute(self, user, data):
+		self.ircd.log.info("Received DIE command from user {user.uuid} ({user.nick})", user=user)
 		reactor.stop()
 		return True
 

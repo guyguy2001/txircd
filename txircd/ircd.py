@@ -3,15 +3,16 @@ from twisted.internet import reactor
 from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import clientFromString, serverFromString
 from twisted.internet.task import LoopingCall
+from twisted.logger import FilteringLogObserver, FileLogObserver, formatEvent, InvalidLogLevelError, LogLevel, LogLevelFilterPredicate, Logger
 from twisted.plugin import getPlugins
-from twisted.python import log
+from twisted.python.logfile import DailyLogFile
 from twisted.python.rebuild import rebuild
 from txircd.config import Config
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
 from weakref import WeakValueDictionary
-import importlib, logging, random, shelve, string, txircd.modules
+import importlib, random, shelve, string, txircd.modules
 
 class IRCd(Service):
 	def __init__(self, configFileName):
@@ -55,12 +56,18 @@ class IRCd(Service):
 		self.servers = {}
 		self.serverNames = CaseInsensitiveDictionary()
 		
+		self.logFilter = LogLevelFilterPredicate()
+		logFile = DailyLogFile("txircd.log", "logs")
+		fileObserver = FileLogObserver(logFile, formatEvent)
+		filterObserver = FilteringLogObserver(fileObserver, (self.logFilter,))
+		self.log = Logger("txircd", observer=filterObserver)
+		
 		self.startupTime = None
 	
 	def startService(self):
-		log.msg("Starting up...", logLevel=logging.INFO)
+		self.log.info("Starting up...")
 		self.startupTime = now()
-		log.msg("Loading configuration...", logLevel=logging.INFO)
+		self.log.info("Loading configuration...")
 		self.config.reload()
 		self.name = self.config["server_name"][:64]
 		if "." not in self.name:
@@ -74,20 +81,24 @@ class IRCd(Service):
 			self.serverID += randFromName.choice(string.digits + string.uppercase)
 		if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
 			raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
-		log.msg("Loading storage...", logLevel=logging.INFO)
+		self.log.info("Loading storage...")
 		self.storage = shelve.open(self.config.get("datastore_path", "data.db"), writeback=True)
 		self.storageSyncer = LoopingCall(self.storage.sync)
 		self.storageSyncer.start(self.config.get("storage_sync_interval", 5), now=False)
-		log.msg("Loading modules...", logLevel=logging.INFO)
+		self.log.info("Loading modules...")
 		self._loadModules()
-		log.msg("Binding ports...", logLevel=logging.INFO)
+		self.log.info("Binding ports...")
 		self._bindPorts()
-		log.msg("txircd started!", logLevel=logging.INFO)
+		self.log.info("txircd started!")
+		try:
+			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
+		except (KeyError, InvalidLogLevelError):
+			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.warn)
 		self.runActionStandard("startup")
 	
 	def stopService(self):
 		stopDeferreds = []
-		log.msg("Disconnecting servers...", logLevel=logging.INFO)
+		self.log.info("Disconnecting servers...")
 		serverList = self.servers.values() # Take the list of server objects
 		self.servers = {} # And then destroy the server dict to inhibit server objects generating lots of noise
 		for server in serverList:
@@ -98,22 +109,22 @@ class IRCd(Service):
 					if user[:3] == server.serverID:
 						del self.users[user]
 				server.transport.loseConnection()
-		log.msg("Disconnecting users...", logLevel=logging.INFO)
+		self.log.info("Disconnecting users...")
 		userList = self.users.values() # Basically do the same thing I just did with the servers
 		self.users = {}
 		for user in userList:
 			if user.transport:
 				stopDeferreds.append(user.disconnectedDeferred)
 				user.transport.loseConnection()
-		log.msg("Unloading modules...", logLevel=logging.INFO)
+		self.log.info("Unloading modules...")
 		moduleList = self.loadedModules.keys()
 		for module in moduleList:
 			self._unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
-		log.msg("Closing data storage...", logLevel=logging.INFO)
+		self.log.info("Closing data storage...")
 		if self.storageSyncer.running:
 			self.storageSyncer.stop()
 		self.storage.close() # a close() will sync() also
-		log.msg("Releasing ports...", logLevel=logging.INFO)
+		self.log.info("Releasing ports...")
 		stopDeferreds.extend(self._unbindPorts())
 		return DeferredList(stopDeferreds)
 	
@@ -125,7 +136,7 @@ class IRCd(Service):
 				self._loadModuleData(module)
 		for moduleName in self.config["modules"]:
 			if moduleName not in self.loadedModules:
-				log.msg("The module {} failed to load.".format(moduleName), logLevel=logging.WARNING)
+				self.log.warn("The module {module} failed to load.", module=moduleName)
 	
 	def loadModule(self, moduleName):
 		"""
@@ -143,6 +154,7 @@ class IRCd(Service):
 			if module.name == moduleName:
 				rebuild(importlib.import_module(module.__module__)) # getPlugins doesn't recompile modules, so let's do that ourselves.
 				self._loadModuleData(module)
+				self.log.info("Loaded module {module}.", module=moduleName)
 				break
 	
 	def _tryLoadAgain(self, _, moduleName):
@@ -213,6 +225,8 @@ class IRCd(Service):
 		if not common or module.multipleModulesForServers:
 			common = module.requiredOnAllServers
 		
+		self.log.debug("Loaded data from {module.name}; committing data and calling hooks...", module=module)
+		
 		self.loadedModules[module.name] = module
 		self._loadedModuleData[module.name] = moduleData
 		if common:
@@ -276,6 +290,7 @@ class IRCd(Service):
 		if the module cannot be unloaded because it's a core module.
 		"""
 		self._unloadModule(moduleName, True)
+		self.log.info("Unloaded module {module}.", module=moduleName)
 	
 	def _unloadModule(self, moduleName, fullUnload):
 		unloadDeferreds = []
@@ -377,14 +392,20 @@ class IRCd(Service):
 		"""
 		Reloads the configuration file and applies changes.
 		"""
-		log.msg("Rehashing...", logLevel=logging.INFO)
+		self.log.info("Rehashing...")
 		self.config.reload()
 		d = self._unbindPorts() # Unbind the ports that are bound
 		if d: # And then bind the new ones
 			DeferredList(d).addCallback(lambda result: self._bindPorts())
 		else:
 			self._bindPorts()
-		for module in self.loadedModules.itervalues(): # Tell modules about it
+		
+		try:
+			self.logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
+		except (KeyError, InvalidLogLevelError):
+			pass # If we can't set a new log level, we'll keep the old one
+		
+		for module in self.loadedModules.itervalues():
 			module.rehash()
 	
 	def _bindPorts(self):
@@ -392,19 +413,19 @@ class IRCd(Service):
 			try:
 				endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
 			except ValueError as e:
-				log.msg(str(e), logLevel=logging.ERROR)
+				self.log.error(e)
 				continue
 			listenDeferred = endpoint.listen(UserFactory(self))
-			listenDeferred.addCallback(self._savePort, bindDesc)
+			listenDeferred.addCallback(self._savePort, bindDesc, "client")
 			listenDeferred.addErrback(self._logNotBound, bindDesc)
 		for bindDesc in self.config["bind_server"]:
 			try:
 				endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
 			except ValueError as e:
-				log.msg(str(e), logLevel=logging.ERROR)
+				self.log.error(e)
 				continue
 			listenDeferred = endpoint.listen(ServerListenFactory(self))
-			listenDeferred.addCallback(self._savePort, bindDesc)
+			listenDeferred.addCallback(self._savePort, bindDesc, "server")
 			listenDeferred.addErrback(self._logNotBound, bindDesc)
 	
 	def _unbindPorts(self):
@@ -415,11 +436,12 @@ class IRCd(Service):
 				deferreds.append(d)
 		return deferreds
 	
-	def _savePort(self, port, desc):
+	def _savePort(self, port, desc, portType):
 		self.boundPorts[desc] = port
+		self.log.debug("Bound endpoint '{endpointDescription}' for {portType} connections.", endpointDescription=desc, portType=portType)
 	
 	def _logNotBound(self, err, desc):
-		log.msg("Could not bind '{}': {}".format(desc, err), logLevel=logging.ERROR)
+		self.log.error("Could not bind '{endpointDescription}': {errorMsg}", endpointDescription=desk, errorMsg=err)\
 	
 	def createUUID(self):
 		"""
@@ -428,6 +450,7 @@ class IRCd(Service):
 		newUUID = self.serverID + self._uid.next()
 		while newUUID in self.users: # It'll take over 1.5 billion connections to loop around, but we still
 			newUUID = self.serverID + self._uid.next() # want to be extra safe and avoid collisions
+		self.log.debug("Generated new UUID {uuid}", uuid=newUUID)
 		return newUUID
 	
 	def _genUID(self):
@@ -481,7 +504,7 @@ class IRCd(Service):
 		return d
 	
 	def _completeServerConnection(self, result, name):
-		log.msg("Connected to server {}".format(name), logLevel=logging.INFO)
+		self.log.info("Connected to server {serverName}", serverName=name)
 		self.runActionStandard("initiateserverconnection", result)
 	
 	def broadcastToServers(self, fromServer, command, *params, **kw):

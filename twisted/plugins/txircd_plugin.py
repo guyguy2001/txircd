@@ -1,6 +1,6 @@
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
-from twisted.python import log, usage
+from twisted.python import usage
 from zope.interface import implements
 from signal import signal
 try:
@@ -24,8 +24,5 @@ class IRCdServiceMaker(object):
 		if SIGHUP is not None:
 			signal(SIGHUP, lambda signal, stack: ircd.rehash())
 		return ircd
-
-observer = log.PythonLoggingObserver()
-observer.start()
 
 txircd = IRCdServiceMaker()

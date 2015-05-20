@@ -1,10 +1,8 @@
 from twisted.internet.task import LoopingCall
 from twisted.plugin import IPlugin
-from twisted.python import log
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import durationToSeconds
 from zope.interface import implements
-import logging
 
 class ServerAutoconnect(ModuleData):
 	implements(IPlugin, IModuleData)
@@ -33,8 +31,8 @@ class ServerAutoconnect(ModuleData):
 				continue
 			d = self.ircd.connectServer(serverName)
 			if not d:
-				log.msg("Failed to autoconnect server {}: probably broken config".format(serverName), logLevel=logging.WARNING)
+				self.ircd.log.warn("Failed to autoconnect server {serverName}: probably broken config", serverName=serverName)
 			else:
-				d.addErrback(lambda result: log.msg("Failed to autoconnect server {}: {}".format(serverName, result.getErrorMessage()), logLevel=logging.ERROR))
+				d.addErrback(lambda result: self.ircd.log.error("Failed to autoconnect server {serverName}: {err.getErrorMessage()}", serverName=serverName, err=result))
 
 autoconnect = ServerAutoconnect()

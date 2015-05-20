@@ -1,11 +1,9 @@
 from twisted.plugin import IPlugin
-from twisted.python import log
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType
 from zope.interface import implements
 from fnmatch import fnmatchcase
-import logging
 
 class Oper(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
@@ -134,9 +132,10 @@ class UserOper(Command):
 
 	def reportOper(self, user, reason):
 		if reason:
-			log.msg("Failed OPER attempt from {} ({})".format(user.nick, reason), logLevel=logging.WARNING)
+			self.ircd.log.warn("Failed OPER attemped from user {user.uuid} ({user.nick}): {reason}", user=user, reason=reason)
 			self.ircd.runActionStandard("operfail", user, reason)
 			return
+		self.ircd.log.info("User {user.uuid} ({user.nick}) opered up", user=user)
 		self.ircd.runActionStandard("oper", user)
 
 class ServerOper(Command):

@@ -36,6 +36,7 @@ class QLine(ModuleData, XLineBase):
 		return fnmatchcase(ircLower(user.nick), ircLower(mask))
 	
 	def changeNick(self, user, reason, hasBeenConnected):
+		self.ircd.log.info("Matched user {user.uuid} ({user.nick}) against a q:line: {reason}", user=user, reason=reason)
 		if hasBeenConnected:
 			user.sendMessage("NOTICE", "Your nickname has been changed, as it is now invalid. ({})".format(reason))
 		else:

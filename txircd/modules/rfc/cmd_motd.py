@@ -34,8 +34,10 @@ class MessageOfTheDay(ModuleData, Command):
 				for line in motdFile:
 					for outputLine in splitMessage(line, 400):
 						self.motd.append(outputLine)
-		except (IOError, KeyError):
+		except KeyError:
 			pass # The MOTD list is already in the condition such that it will be reported as "no MOTD," so we're fine here
+		except IOError:
+			self.ircd.log.error("Failed to open MOTD file") # But if a file was specified but couldn't be opened, we'll log an error
 	
 	def showMOTD(self, user):
 		if not self.motd:

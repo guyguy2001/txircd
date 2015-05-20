@@ -26,7 +26,10 @@ class PingPong(ModuleData):
 		if "pingtime" not in user.cache or "pongtime" not in user.cache:
 			user.cache["pingtime"] = now()
 			user.cache["pongtime"] = now()
-		if user.cache["pongtime"] < user.cache["pingtime"]:
+		pingTime = user.cache["pingtime"]
+		pongTime = user.cache["pongtime"]
+		if pongTime < pingTime:
+			self.ircd.log.debug("User {user.uuid} pinged out (last pong time '{pongTime}' was less than last ping time '{pingTime}' at the next ping interval)", user=user, pongTime=pongTime, pingTime=pingTime)
 			user.disconnect("Ping timeout")
 			return
 		if user.idleSince > user.cache["pongtime"]:
@@ -40,7 +43,10 @@ class PingPong(ModuleData):
 		if "pingtime" not in server.cache or "pongtime" not in server.cache:
 			server.cache["pingtime"] = now()
 			server.cache["pongtime"] = now()
-		if server.cache["pongtime"] < server.cache["pingtime"]:
+		pingTime = server.cache["pingtime"]
+		pongTime = server.cache["pongtime"]
+		if pongTime < pingTime:
+			self.ircd.log.debug("Server {server.serverID} pinged out (last pong time '{pongTime}' was less than last ping time '{pingTime}' at the next ping interval)", server=server, pongTime=pongTime, pingTime=pingTime)
 			server.disconnect("Ping timeout")
 			return
 		server.sendMessage("PING", self.ircd.serverID, server.serverID, prefix=self.ircd.serverID)

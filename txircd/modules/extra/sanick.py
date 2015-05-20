@@ -42,6 +42,9 @@ class SanickCommand(ModuleData, Command):
 		}
 
 	def execute(self, user, data):
+		targetUser = data["target"]
+		newNick = data["nick"]
+		self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly changed user {targetUser.uuid}'s nick from {targetUser.nick} to {newNick}", user=user, targetUser=targetUser, newNick=newNick)
 		data["target"].changeNick(data["nick"])
 		return True
 
