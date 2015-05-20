@@ -19,10 +19,12 @@ class InfoCommand(ModuleData, Command):
 	def execute(self, user, data):
 		user.sendMessage(irc.RPL_INFO, "{} is running txircd-{}".format(self.ircd.name, version))
 		user.sendMessage(irc.RPL_INFO, "Originally developed for the Desert Bus for Hope charity fundraiser (http://desertbus.org)")
-		user.sendMessage(irc.RPL_INFO, ":")
+		user.sendMessage(irc.RPL_INFO, "")
 		user.sendMessage(irc.RPL_INFO, "Developed by ElementalAlchemist <ElementAlchemist7@gmail.com>")
 		user.sendMessage(irc.RPL_INFO, "Contributors:")
 		user.sendMessage(irc.RPL_INFO, "   Heufneutje")
+		user.sendMessage(irc.RPL_INFO, "")
+		user.sendMessage(irc.RPL_INFO, "Past contributors:")
 		user.sendMessage(irc.RPL_INFO, "   ekimekim")
 		user.sendMessage(irc.RPL_ENDOFINFO, "End of /INFO list")
 		return True
