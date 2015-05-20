@@ -8,7 +8,6 @@ from txircd.ircbase import IRCBase
 from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
 from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
-from traceback import format_exc
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -71,7 +70,7 @@ class IRCUser(IRCBase):
 		try:
 			IRCBase.dataReceived(self, data)
 		except Exception as ex:
-			self.ircd.log.failure("An error occurred while processing incoming data:\n{exceptionData}", exceptionData=format_exc())
+			self.ircd.log.failure("An error occurred while processing incoming data.")
 			if self.uuid in self.ircd.users:
 				self.disconnect("Error occurred")
 	
