@@ -3,9 +3,8 @@ from twisted.internet import reactor
 from twisted.internet.defer import DeferredList
 from twisted.internet.endpoints import clientFromString, serverFromString
 from twisted.internet.task import LoopingCall
-from twisted.logger import FilteringLogObserver, FileLogObserver, formatEvent, InvalidLogLevelError, LogLevel, LogLevelFilterPredicate, Logger
+from twisted.logger import FilteringLogObserver, globalLogPublisher, InvalidLogLevelError, LogLevel, LogLevelFilterPredicate, Logger
 from twisted.plugin import getPlugins
-from twisted.python.logfile import DailyLogFile
 from twisted.python.rebuild import rebuild
 from txircd.config import Config
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
@@ -57,9 +56,8 @@ class IRCd(Service):
 		self.serverNames = CaseInsensitiveDictionary()
 		
 		self.logFilter = LogLevelFilterPredicate()
-		logFile = DailyLogFile("txircd.log", "logs")
-		fileObserver = FileLogObserver(logFile, formatEvent)
-		filterObserver = FilteringLogObserver(fileObserver, (self.logFilter,))
+		global globalLogPublisher
+		filterObserver = FilteringLogObserver(globalLogPublisher, (self.logFilter,))
 		self.log = Logger("txircd", observer=filterObserver)
 		
 		self.startupTime = None
