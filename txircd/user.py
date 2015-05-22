@@ -6,7 +6,6 @@ from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
 from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
-from copy import copy
 from socket import gaierror, gethostbyaddr, gethostbyname, herror
 
 irc.ERR_ALREADYREGISTERED = "462"
