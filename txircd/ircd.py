@@ -439,7 +439,7 @@ class IRCd(Service):
 		self.log.debug("Bound endpoint '{endpointDescription}' for {portType} connections.", endpointDescription=desc, portType=portType)
 	
 	def _logNotBound(self, err, desc):
-		self.log.error("Could not bind '{endpointDescription}': {errorMsg}", endpointDescription=desk, errorMsg=err)\
+		self.log.error("Could not bind '{endpointDescription}': {errorMsg}", endpointDescription=desc, errorMsg=err)
 	
 	def createUUID(self):
 		"""
