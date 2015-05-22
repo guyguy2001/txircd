@@ -68,7 +68,7 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
 		try:
 			IRCBase.dataReceived(self, data)
-		except Exception as ex:
+		except Exception:
 			self.ircd.log.failure("An error occurred while processing incoming data.")
 			if self.uuid in self.ircd.users:
 				self.disconnect("Error occurred")
