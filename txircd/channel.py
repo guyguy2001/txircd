@@ -150,7 +150,7 @@ class IRCChannel(object):
 			oldData = self._metadata[key]
 		if setByUser and oldData and not oldData[3]:
 			return False
-		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, users=[self]) is False:
+		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, channels=[self]) is False:
 			return False
 		if value is None:
 			del self._metadata[key]
