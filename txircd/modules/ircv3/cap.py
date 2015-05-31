@@ -21,6 +21,11 @@ class Cap(ModuleData, Command):
 		self.ircd.functionCache["cap-add"] = self.newCapability
 		self.ircd.functionCache["cap-del"] = self.removeCapability
 		self.newCapability("cap-notify")
+		for user in self.ircd.users.itervalues():
+			if "capversion" in user.cache and user.cache["capversion"] >= 302:
+				if "capabilities" not in user.cache:
+					user.cache["capabilities"] = {}
+				user.cache["capabilities"]["cap-notify"] = None
 	
 	def unload(self):
 		self.removeCapability("cap-notify")
