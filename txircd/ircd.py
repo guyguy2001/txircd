@@ -6,16 +6,16 @@ from twisted.internet.task import LoopingCall
 from twisted.logger import FilteringLogObserver, globalLogPublisher, InvalidLogLevelError, LogLevel, LogLevelFilterPredicate, Logger
 from twisted.plugin import getPlugins
 from twisted.python.rebuild import rebuild
-from txircd.config import Config
+from txircd.config import Config, ConfigError, ConfigValidationError
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
 from weakref import WeakValueDictionary
-import importlib, random, shelve, string, txircd.modules
+import importlib, os, random, re, shelve, string, txircd.modules
 
 class IRCd(Service):
 	def __init__(self, configFileName):
-		self.config = Config(configFileName)
+		self.config = Config(self, configFileName)
 		
 		self.boundPorts = {}
 		self.loadedModules = {}
@@ -40,12 +40,8 @@ class IRCd(Service):
 		self.serverID = None
 		self.name = None
 		self.isupport_tokens = {
-			"CHANNELLEN": 64,
-			"CHANTYPES": "#",
 			"CASEMAPPING": "strict-rfc1459",
-			"MODES": 20,
-			"NICKLEN": 32,
-			"TOPICLEN": 328
+			"CHANTYPES": "#",
 		}
 		self._uid = self._genUID()
 		
@@ -67,20 +63,10 @@ class IRCd(Service):
 		self.startupTime = now()
 		self.log.info("Loading configuration...")
 		self.config.reload()
-		self.name = self.config["server_name"][:64]
-		if "." not in self.name:
-			raise ValueError ("Server name must look like a domain name")
-		if "server_id" in self.config:
-			self.serverID = self.config["server_id"].upper()
-		else:
-			randFromName = random.Random(self.name)
-			self.serverID = randFromName.choice(string.digits)
-			self.serverID += randFromName.choice(string.digits + string.uppercase)
-			self.serverID += randFromName.choice(string.digits + string.uppercase)
-		if len(self.serverID) != 3 or not self.serverID.isalnum() or not self.serverID[0].isdigit():
-			raise ValueError ("The server ID must be a 3-character alphanumeric string starting with a number.")
+		self.name = self.config["server_name"]
+		self.serverID = self.config["server_id"]
 		self.log.info("Loading storage...")
-		self.storage = shelve.open(self.config.get("datastore_path", "data.db"), writeback=True)
+		self.storage = shelve.open(self.config["datastore_path"], writeback=True)
 		self.storageSyncer = LoopingCall(self.storage.sync)
 		self.storageSyncer.start(self.config.get("storage_sync_interval", 5), now=False)
 		self.log.info("Loading modules...")
@@ -166,6 +152,10 @@ class IRCd(Service):
 		if module.name in self.loadedModules:
 			return
 		module.hookIRCd(self)
+		try:
+			module.verifyConfig(self.config)
+		except ConfigError as e:
+			raise ModuleLoadError(module.name, e)
 		moduleData = {
 			"channelmodes": module.channelModes(),
 			"usermodes": module.userModes(),
@@ -222,9 +212,9 @@ class IRCd(Service):
 			common = True
 		if not common or module.multipleModulesForServers:
 			common = module.requiredOnAllServers
-		
+
 		self.log.debug("Loaded data from {module.name}; committing data and calling hooks...", module=module)
-		
+
 		self.loadedModules[module.name] = module
 		self._loadedModuleData[module.name] = moduleData
 		if common:
@@ -385,7 +375,159 @@ class IRCd(Service):
 		else:
 			deferList.addCallback(lambda result: self.loadModule(moduleName))
 		return deferList
-	
+
+	def verifyConfig(self, config):
+		# IRCd
+		if "server_name" not in config:
+			raise ConfigValidationError("server_name", "required item not found in configuration file.")
+		if not isinstance(config["server_name"], basestring):
+			raise ConfigValidationError("server_name", "value must be a string")
+		if len(config["server_name"]) > 64:
+			config["server_name"] = config["server_name"][:64]
+			self.logConfigValidationWarning("server_name", "value is too long and has been truncated", config["server_name"])
+		if not re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+$", config["server_name"]):
+			raise ConfigValidationError("server_name", "server name must look like a valid hostname.")
+		if "server_id" in config:
+			if not isinstance(config["server_id"], basestring):
+				raise ConfigValidationError("server_id", "value must be a string")
+			else:
+				config["server_id"] = config["server_id"].upper()
+		else:
+			randFromName = random.Random(config["server_name"])
+			serverID = randFromName.choice(string.digits) + randFromName.choice(string.digits + string.uppercase) + randFromName.choice(string.digits + string.uppercase)
+			config["server_id"] = serverID
+		if len(config["server_id"]) != 3 or not config["server_id"].isalnum() or not config["server_id"][0].isdigit():
+			raise ConfigValidationError("server_id", "value must be a 3-character alphanumeric string starting with a number.")
+		if "server_description" not in config:
+			raise ConfigValidationError("server_description", "required item not found in configuration file.")
+		if not isinstance(config["server_description"], basestring):
+			raise ConfigValidationError("server_description", "value must be a string")
+		if not config["server_description"]:
+			raise ConfigValidationError("server_description", "value must not be an empty string")
+		if "network_name" not in config:
+			raise ConfigValidationError("network_name", "required item not found in configuration file.")
+		if not isinstance(config["network_name"], basestring):
+			raise ConfigValidationError("network_name", "value must be a string")
+		if not config["network_name"]:
+			raise ConfigValidationError("network_name", "value must not be an empty string")
+		if len(config["network_name"]) > 32:
+			config["network_name"] = config["network_name"][:32]
+			self.logConfigValidationWarning("network_name", "value is too long", config["network_name"])
+		if not "bind_client" not in config:
+			config["bind_client"] = [ "tcp:6667:interface={::}" ]
+			self.logConfigValidationWarning("bind_client", "no default client binding specified", "[ \"tcp:6667:interface={::}\" ]")
+		if not isinstance(config["bind_client"], list):
+			raise ConfigValidationError("bind_client", "value must be a list")
+		for bindDesc in config["bind_client"]:
+			if not isinstance(bindDesc, basestring):
+				raise ConfigValidationError("bind_client", "every entry must be a string")
+		if "bind_server" not in config:
+			config["bind_server"] = []
+		if not isinstance(config["bind_server"], list):
+			raise ConfigValidationError("bind_server", "value must be a list")
+		for bindDesc in config["bind_server"]:
+			if not isinstance(bindDesc, basestring):
+				raise ConfigValidationError("bind_server", "every entry must be a string")
+		if "modules" not in config:
+			config["modules"] = []
+		if not isinstance(config["modules"], list):
+			raise ConfigValidationError("modules", "value must be a list")
+		for module in config["modules"]:
+			if not isinstance(module, basestring):
+				raise ConfigValidationError("modules", "every entry must be a string")
+		if "links" in config:
+			if not isinstance(config["links"], dict):
+				raise ConfigValidationError("links", "value must be a dictionary")
+			for desc, server in config["links"].iteritems():
+				if not isinstance(desc, basestring):
+					raise ConfigValidationError("links", "\"{}\" is an invalid server description".format(desc))
+				if not isinstance(server, dict):
+					raise ConfigValidationError("links", "values for \"{}\" must be a dictionary".format(desc))
+				if "connect_descriptor" not in server:
+					raise ConfigValidationError("links", "server \"{}\" must contain a \"connect_descriptor\" value".format(desc))
+				if "in_password" in server:
+					if not isinstance(server["in_password"], basestring):
+						config["links"][desc]["in_password"] = str(server["in_password"])
+				if "out_password" in server:
+					if not isinstance(server["out_password"], basestring):
+						config["links"][desc]["out_password"] = str(server["out_password"])
+		if "datastore_path" not in config:
+			config["datastore_path"] = "data.db"
+		if self.storage is None and not os.access(config["datastore_path"], os.W_OK):
+			raise ConfigValidationError("datastore_path", "path is invalid or txircd does not have write access")
+		if "storage_sync_interval" in config and not isinstance(config["storage_sync_interval"], int):
+			raise ConfigValidationError(config["storage_sync_interval"], "invalid number")
+
+		# Channels
+		if "channel_name_length" in config:
+			if not isinstance(config["channel_name_length"], int) or config["channel_name_length"] < 0:
+				raise ConfigValidationError("channel_name_length", "invalid number")
+			elif config["channel_name_length"] > 64:
+				config["channel_name_length"] = 64
+				self.logConfigValidationWarning("channel_name_length", "value is too large", 64)
+		if "modes_per_line" in config:
+			if not isinstance(config["modes_per_line"], int) or config["modes_per_line"] < 0:
+				raise ConfigValidationError("modes_per_line", "invalid number")
+			elif config["modes_per_line"] > 20:
+				config["modes_per_line"] = 20
+				self.logConfigValidationWarning("modes_per_line", "value is too large", 20)
+		if "channel_listmode_limit" in config:
+			if not isinstance(config["channel_listmode_limit"], int) or config["channel_listmode_limit"] < 0:
+				raise ConfigValidationError("channel_listmode_limit", "invalid number")
+			if config["channel_listmode_limit"] > 256:
+				config["channel_listmode_limit"] = 256
+				self.logConfigValidationWarning("channel_listmode_limit", "value is too large", 256)
+
+		# Users
+		if "user_registration_timeout" in config:
+			if not isinstance(config["user_registration_timeout"], int) or config["user_registration_timeout"] < 0:
+				raise ConfigValidationError("user_registration_timeout", "invalid number")
+			elif config["user_registration_timeout"] < 10:
+				config["user_registration_timeout"] = 10
+				self.logConfigValidationWarning("user_registration_timeout", "timeout could be too short for clients to register in time", 10)
+		if "user_ping_frequency" in config and (not isinstance(config["user_ping_frequency"], int) or config["user_ping_frequency"] < 0):
+			raise ConfigValidationError("user_ping_frequency", "invalid number")
+		if "hostname_length" in config:
+			if not isinstance(config["hostname_length"], int) or config["hostname_length"] < 0:
+				raise ConfigValidationError("hostname_length", "invalid number")
+			elif config["hostname_length"] > 64:
+				config["hostname_length"] = 64
+				self.logConfigValidationWarning("hostname_length", "value is too large", 64)
+		if "ident_length" in config:
+			if not isinstance(config["ident_length"], int) or config["ident_length"] < 0:
+				raise ConfigValidationError("ident_length", "invalid number")
+			elif config["ident_length"] > 12:
+				config["ident_length"] = 12
+				self.logConfigValidationWarning("ident_length", "value is too large", 12)
+		if "gecos_length" in config:
+			if not isinstance(config["gecos_length"], int) or config["gecos_length"] < 0:
+				raise ConfigValidationError("gecos_length", "invalid number")
+			elif config["gecos_length"] > 128:
+				config["gecos_length"] = 128
+				self.logConfigValidationWarning("gecos_length", "value is too large", 128)
+		if "user_listmode_limit" in config:
+			if not isinstance(config["user_listmode_limit"], int) or config["user_listmode_limit"] < 0:
+				raise ConfigValidationError("user_listmode_limit", "invalid number")
+			if config["user_listmode_limit"] > 256:
+				config["user_listmode_limit"] = 256
+				self.logConfigValidationWarning("user_listmode_limit", "value is too large", 256)
+
+		# Servers
+		if "server_registration_timeout" in config:
+			if not isinstance(config["server_registration_timeout"], int) or config["server_registration_timeout"] < 0:
+				raise ConfigValidationError("server_registration_timeout", "invalid number")
+			elif config["server_registration_timeout"] < 10:
+				config["server_registration_timeout"] = 10
+				self.logConfigValidationWarning("server_registration_timeout", "timeout could be too short for servers to register in time", 10)
+		if "server_ping_frequency" in config and (not isinstance(config["server_ping_frequency"], int) or config["server_ping_frequency"] < 0):
+			raise ConfigValidationError("server_ping_frequency", "invalid number")
+
+		for module in self.loadedModules.itervalues():
+			module.verifyConfig(config)
+
+	def logConfigValidationWarning(self, key, message, default):
+		self.log.warn("Config value \"{configKey}\" is invalid ({message}); the value has been set to a default of \"{default}\".", configKey=key, message=message, default=default)
+
 	def rehash(self):
 		"""
 		Reloads the configuration file and applies changes.
@@ -470,10 +612,12 @@ class IRCd(Service):
 		isupport = self.isupport_tokens.copy()
 		statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
 		isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
+		isupport["CHANNELEN"] = self.config.get("channel_name_length", 64)
+		isupport["NETWORK"] = self.config["network_name"]
 		isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
 		isupport["STATUSMSG"] = statusSymbolOrder
 		isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
-		isupport["NETWORK"] = self.config["network_name"]
+		self.runActionStandard("buildisupport", isupport)
 		isupportList = []
 		for key, val in isupport.iteritems():
 			if val is None:
@@ -494,8 +638,6 @@ class IRCd(Service):
 		if name not in self.config.get("links", {}):
 			return None
 		serverConfig = self.config["links"][name]
-		if "connect_descriptor" not in serverConfig:
-			return None
 		endpoint = clientFromString(reactor, unescapeEndpointDescription(serverConfig["connect_descriptor"]))
 		d = endpoint.connect(ServerConnectFactory(self))
 		d.addCallback(self._completeServerConnection, name)

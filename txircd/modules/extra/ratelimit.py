@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now, timestamp
 from zope.interface import implements
@@ -10,6 +11,16 @@ class RateLimit(ModuleData):
 
 	def actions(self):
 		return [("commandpermission", 100, self.recvCommand)]
+
+	def verifyConfig(self, config):
+		if "ratelimit" in config:
+			if not isinstance(config["ratelimit"], dict):
+				raise ConfigValidationError("ratelimit", "value must be a dictionary")
+			for key, value in config["ratelimit"].itemitems():
+				if key not in ("limit", "kill_limit", "interval"):
+					continue
+				if not isinstance(value, int) or value < 0: # We might want to do some checking for insane values here
+					raise ConfigValidationError("ratelimit", "value \"{}\" is an invalid number".format(key))
 
 	def getConfig(self):
 		config = {

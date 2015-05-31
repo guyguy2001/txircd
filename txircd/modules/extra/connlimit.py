@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
@@ -13,6 +14,20 @@ class ConnectionLimit(ModuleData):
 				("remoteregister", 100, self.handleRemoteConnect),
 				("quit", 100, self.handleDisconnect),
 				("remotequit", 100, self.handleDisconnect) ]
+
+	def load(self):
+		for user in self.ircd.users:
+			self.addToConnections(user.ip)
+
+	def verifyConfig(self, config):
+		if "connlimit_globmax" in config and (not isinstance("connlimit_globmax", int) or config["connlimit_globmax"] < 0):
+			raise ConfigValidationError("connlimit_globmax", "invalid number")
+		if "connlimit_whitelist" in config:
+			if not isinstance(config["connlimit_whitelist"], list):
+				raise ConfigValidationError("connlimit_whitelist", "value must be a list")
+			for ip in config["connlimit_whitelist"]:
+				if not isinstance(ip, basestring):
+					raise ConfigValidationError("connlimit_whitelist", "every entry must be a valid ip")
 
 	def handleLocalConnect(self, user, *params):
 		ip = user.ip
@@ -40,9 +55,5 @@ class ConnectionLimit(ModuleData):
 		else:
 			self.peerConnections[ip] = 1
 		return True
-
-	def load(self):
-		for user in self.ircd.users:
-			self.addToConnections(user.ip)
 
 connLimit = ConnectionLimit()

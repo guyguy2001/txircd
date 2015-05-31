@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -20,6 +21,14 @@ class QuitCommand(ModuleData, Command):
 	def serverCommands(self):
 		return [ ("QUIT", 1, ServerQuit(self.ircd)),
 				("RQUIT", 1, RemoteQuit(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "quit_message_length" in config:
+			if not isinstance(config["quit_message_length"], int) or config["quit_message_length"] < 0:
+				raise ConfigValidationError("quit_message_length", "invalid number")
+			elif config["quit_message_length"] > 370:
+				config["quit_message_length"] = 370
+				self.ircd.logConfigValidationWarning("quit_message_length", "value is too large", 370)
 	
 	def sendQuitMessage(self, sendUserList, user, reason):
 		for destUser in sendUserList:

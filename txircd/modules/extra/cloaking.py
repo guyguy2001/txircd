@@ -1,7 +1,8 @@
 from twisted.internet.abstract import isIPAddress, isIPv6Address
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ModeType
+from txircd.utils import isValidHost, ModeType
 from zope.interface import implements
 from hashlib import sha256
 
@@ -19,6 +20,17 @@ class HostCloaking(ModuleData, Mode):
 	def actions(self):
 		return [ ("modeactioncheck-user-x-modechange-user-x", 1, self.modeChanged) ]
 
+	def verifyConfig(self, config):
+		if "cloaking_salt" in config:
+			if not isinstance(config["cloaking_salt"], basestring):
+				raise ConfigValidationError("cloaking_salt", "value must be a string")
+			if not config["cloaking_salt"]:
+				self.ircd.log.warn("No cloaking salt was found in the config. Host cloaks will be insecure!")
+		else:
+			self.ircd.log.warn("No cloaking salt was found in the config. Host cloaks will be insecure!")
+		if "cloaking_prefix" in config and not isValidHost(config["cloaking_prefix"]): # Make sure the prefix will not make the cloak an invalid hostname
+			raise ConfigValidationError("cloaking_prefix", "value must be a string and must not contain any invalid hostname characters")
+
 	def modeChanged(self, user, *params):
 		if user.uuid[:3] == self.ircd.serverID:
 			return True
@@ -32,7 +44,13 @@ class HostCloaking(ModuleData, Mode):
 			elif isIPAddress(userHost):
 				user.changeHost(self.applyIPv4Cloak(userHost))
 			else:
-				user.changeHost(self.applyHostCloak(userHost, user.ip))
+				if "." in user.host:
+					user.changeHost(self.applyHostCloak(userHost, user.ip))
+				else:
+					if isIPv6Address(user.ip):
+						return self.applyIPv6Cloak(user.ip)
+					else:
+						return self.applyIPv4Cloak(user.ip)
 		else:
 			user.resetHost()
 
@@ -40,9 +58,9 @@ class HostCloaking(ModuleData, Mode):
 		# Find the last segments of the hostname.
 		index = len(host[::-1].split(".", 3)[-1])
 		# Cloak the first part of the host and leave the last segments alone.
-		hostmask = "{}-{}{}".format(self.cloakingPrefix, sha256(self.cloakingSalt + host[:index]).hexdigest()[:8], host[index:])
+		hostmask = "{}-{}{}".format(self.ircd.config.get("cloaking_prefix", "txircd"), sha256(self.ircd.config.get("cloaking_salt", "") + host[:index]).hexdigest()[:8], host[index:])
 		# This is very rare since we only leave up to 3 segments uncloaked, but make sure the end result isn't too long.
-		if len(hostmask) > 64:
+		if len(hostmask) > self.ircd.config.get("hostname_length", 64):
 			if isIPv6Address(ip):
 				return self.applyIPv6Cloak(ip)
 			else:
@@ -56,7 +74,7 @@ class HostCloaking(ModuleData, Mode):
 		for i in range(len(pieces), 0, -1):
 			piecesGroup = pieces[:i]
 			piecesGroup.reverse()
-			hashedParts.append(sha256(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:8])
+			hashedParts.append(sha256(self.ircd.config.get("cloaking_salt", "") + "".join(piecesGroup)).hexdigest()[:8])
 		return "{}.IP".format(".".join(hashedParts))
 
 	def applyIPv6Cloak(self, ip):
@@ -78,18 +96,7 @@ class HostCloaking(ModuleData, Mode):
 		for i in range(len(pieces), 0, -1):
 			piecesGroup = pieces[:i]
 			piecesGroup.reverse()
-			hashedParts.append(sha256(self.cloakingSalt + "".join(piecesGroup)).hexdigest()[:5])
+			hashedParts.append(sha256(self.ircd.config.get("cloaking_salt", "") + "".join(piecesGroup)).hexdigest()[:5])
 		return "{}.IP".format(".".join(hashedParts))
-
-	def load(self):
-		self.rehash()
-
-	def rehash(self):
-		try:
-			self.cloakingSalt = self.ircd.config["cloaking_salt"]
-		except KeyError:
-			self.cloakingSalt = ""
-			self.ircd.log.warn("No cloaking salt was found in the config. Host cloaks will be insecure!")
-		self.cloakingPrefix = self.ircd.config.get("cloaking_prefix", "txircd")
 
 hostCloaking = HostCloaking()

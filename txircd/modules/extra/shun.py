@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
@@ -28,6 +29,14 @@ class Shun(ModuleData, XLineBase):
 	
 	def load(self):
 		self.initializeLineStorage()
+
+	def verifyConfig(self, config):
+		if "shun_commands" in config:
+			if not isinstance(config["shun_commands"], list):
+				raise ConfigValidationError("shun_commands", "value must be a list")
+			for command in config["shun_commands"]:
+				if not isinstance(command, basestring):
+					raise ConfigValidationError("shun_commands", "\"{}\" is not a valid command".format(command))
 	
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)

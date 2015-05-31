@@ -21,7 +21,7 @@ class IRCUser(IRCBase):
 				resolvedHost = gethostbyaddr(ip)[0]
 				# First half of host resolution done, run second half to prevent rDNS spoofing.
 				# Refuse hosts that are too long as well.
-				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= 64 and isValidHost(resolvedHost):
+				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= self.ircd.config.get("hostname_length", 64) and isValidHost(resolvedHost):
 					host = resolvedHost
 				else:
 					host = ip
@@ -345,7 +345,7 @@ class IRCUser(IRCBase):
 		"""
 		if newIdent == self.ident:
 			return
-		if len(newIdent) > 12:
+		if len(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent
@@ -357,7 +357,7 @@ class IRCUser(IRCBase):
 		Changes a user's host. If initiated by a remote server, that server
 		should be specified in the fromServer parameter.
 		"""
-		if len(newHost) > 64:
+		if len(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		if newHost == self.host:
 			return
@@ -377,6 +377,8 @@ class IRCUser(IRCBase):
 		Changes a user's real name. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
 		"""
+		if len(newGecos) > self.ircd.config.get("gecos_length", 128):
+			return
 		if newGecos == self.gecos:
 			return
 		oldGecos = self.gecos
@@ -572,7 +574,7 @@ class IRCUser(IRCBase):
 		setBy = self._sourceName(user.uuid)
 		setTime = now()
 		for mode in modes:
-			if len(changes) >= 20:
+			if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 				break
 			if mode == "+":
 				adding = True
@@ -600,13 +602,13 @@ class IRCUser(IRCBase):
 				continue
 			
 			for parameter in paramList:
-				if len(changes) >= 20:
+				if len(changes) >= self.ircd.config.get("modes_per_line", 20):
 					break
 				if not override and self.ircd.runActionUntilValue("modepermission-user-{}".format(mode), self, user, adding, parameter, users=[self, user]) is False:
 					continue
 				if adding:
 					if modeType == ModeType.List:
-						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+						if mode in self.modes and len(self.modes[mode]) > self.ircd.config.get("user_listmode_limit", 128):
 							user.sendMessage(irc.ERR_BANLISTFULL, self.name, parameter, "Channel +{} list is full".format(mode))
 							continue
 				if self._applyMode(adding, modeType, mode, parameter, setBy, setTime):
@@ -624,7 +626,7 @@ class IRCUser(IRCBase):
 		if adding:
 			if modeType == ModeType.List:
 				if mode in self.modes:
-					if len(self.modes[mode]) > self.ircd.config.get("user_list_limit", 128):
+					if len(self.modes[mode]) > self.ircd.config.get("user_listmode_limit", 128):
 						return False
 					for paramData in self.modes[mode]:
 						if parameter == paramData[0]:
@@ -799,7 +801,7 @@ class RemoteUser(IRCUser):
 		Changes the ident of the user. If the change was initiated by a remote
 		server, that server should be specified as the fromServer parameter.
 		"""
-		if len(newIdent) > 12:
+		if len(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent
@@ -812,7 +814,7 @@ class RemoteUser(IRCUser):
 		remote server, that server should be specified as the fromServer
 		parameter.
 		"""
-		if len(newHost) > 64:
+		if len(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		oldHost = self.host
 		self.host = newHost

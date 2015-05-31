@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -23,6 +24,14 @@ class AdminCommand(ModuleData):
 	
 	def serverCommands(self):
 		return [ ("ADMINREQ", 1, ServerAdmin(self.ircd, self.sendAdminData)) ]
+
+	def verifyConfig(self, config):
+		if "admin_server" in config and not isinstance("admin_server", basestring):
+			raise ConfigValidationError("admin_server", "value must be a string")
+		if "admin_admin" in config and not isinstance("admin_admin", basestring):
+			raise ConfigValidationError("admin_admin", "value must be a string")
+		if "admin_email" in config and not isinstance("admin_email", basestring):
+			raise ConfigValidationError("admin_email", "value must be a string")
 	
 	def sendAdminData(self, user, serverName):
 		user.sendMessage(irc.RPL_ADMINME, serverName, "Administrative info for {}".format(serverName))

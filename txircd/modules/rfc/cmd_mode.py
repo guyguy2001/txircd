@@ -17,7 +17,8 @@ class ModeCommand(ModuleData):
 				("modechanges-channel", 1, self.sendChannelModesToServers),
 				("modemessage-user", 1, self.sendUserModesToUsers),
 				("modechanges-user", 1, self.sendUserModesToServers),
-				("commandpermission-MODE", 1, self.restrictUse) ]
+				("commandpermission-MODE", 1, self.restrictUse),
+				("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("MODE", 1, UserMode(self.ircd)) ]
@@ -121,6 +122,9 @@ class ModeCommand(ModuleData):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to set channel modes")
 			return False
 		return None
+
+	def buildISupport(self, data):
+		data["MODES"] = self.ircd.config.get("modes_per_line", 20)
 
 class UserMode(Command):
 	implements(ICommand)

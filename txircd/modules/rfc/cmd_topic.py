@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import timestamp
 from zope.interface import implements
@@ -15,13 +16,22 @@ class TopicCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("topic", 1, self.onTopic),
-				("join", 2, self.sendChannelTopic) ]
+				("join", 2, self.sendChannelTopic),
+				("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("TOPIC", 1, UserTopic(self.ircd, self)) ]
 	
 	def serverCommands(self):
 		return [ ("TOPIC", 1, ServerTopic(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "topic_length" in config:
+			if not isinstance(config["topic_length"], int) or config["topic_length"] < 0:
+				raise ConfigValidationError("topic_length", "invalid number")
+			elif config["topic_length"] > 326:
+				config["topic_length"] = 326
+				self.ircd.logConfigValidationWarning("topic_length", "value is too large", 326)
 	
 	def onTopic(self, channel, setter, oldTopic):
 		for user in channel.users.iterkeys():
@@ -45,6 +55,9 @@ class TopicCommand(ModuleData):
 			user.sendMessage(irc.RPL_TOPIC, channel.name, channel.topic)
 			user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, str(timestamp(channel.topicTime)))
 
+	def buildISupport(self, data):
+		data["TOPICLEN"] = self.ircd.config.get("topic_length", 326)
+
 class UserTopic(Command):
 	implements(ICommand)
 	
@@ -64,7 +77,7 @@ class UserTopic(Command):
 			return {
 				"channel": channel
 			}
-		topic = params[1][:self.ircd.config.get("topic_length",326)]
+		topic = params[1][:self.ircd.config.get("topic_length", 326)]
 		return {
 			"channel": channel,
 			"topic": topic

@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -15,6 +16,10 @@ class PassCommand(ModuleData, Command):
 	
 	def userCommands(self):
 		return [ ("PASS", 1, self) ]
+
+	def verifyConfig(self, config):
+		if "server_password" in config and not isinstance(config["server_password"], basestring):
+			raise ConfigValidationError("server_password", "value must be a string")
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:

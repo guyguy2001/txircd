@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import isValidNick, timestamp
 from zope.interface import implements
@@ -14,13 +15,22 @@ class NickCommand(ModuleData):
 	def actions(self):
 		return [ ("changenickmessage", 1, self.sendNickMessage),
 				("changenick", 1, self.broadcastNickChange),
-				("remotechangenick", 1, self.broadcastNickChange) ]
+				("remotechangenick", 1, self.broadcastNickChange),
+		        ("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
 	
 	def serverCommands(self):
 		return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
+
+	def verifyConfig(self, config):
+		if "nick_length" in config:
+			if not isinstance(config["nick_length"], int) or config["nick_length"] < 0:
+				raise ConfigValidationError("nick_length", "invalid number")
+			elif config["nick_length"] > 32:
+				config["nick_length"] = 32
+				self.ircd.logConfigValidationWarning("nick_length", "value is too large", 32)
 	
 	def sendNickMessage(self, userShowList, user, oldNick):
 		def transformUser(sayingUser):
@@ -32,6 +42,9 @@ class NickCommand(ModuleData):
 	def broadcastNickChange(self, user, oldNick, fromServer):
 		nickTS = str(timestamp(user.nickSince))
 		self.ircd.broadcastToServers(fromServer, "NICK", nickTS, user.nick, prefix=user.uuid)
+
+	def buildISupport(self, data):
+		data["NICKLEN"] = self.ircd.config.get("nick_length", 32)
 
 class NickUserCommand(Command):
 	implements(ICommand)
@@ -45,7 +58,7 @@ class NickUserCommand(Command):
 		if not params or not params[0]:
 			user.sendSingleError("NickCmd", irc.ERR_NEEDMOREPARAMS, "NICK", "Not enough parameters")
 			return None
-		if not isValidNick(params[0]):
+		if not isValidNick(params[0]) or len(params[0]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
 		if params[0] in self.ircd.userNicks:

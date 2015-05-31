@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, now
@@ -29,6 +30,10 @@ class ZLine(ModuleData, XLineBase):
 	
 	def load(self):
 		self.initializeLineStorage()
+
+	def verifyConfig(self, config):
+		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], basestring):
+			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
 	def checkUserMatch(self, user, mask, data):
 		return fnmatchcase(user.ip, mask)

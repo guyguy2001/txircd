@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now, timestamp
 from zope.interface import implements
@@ -26,6 +27,10 @@ class Knock(ModuleData):
 
 	def channelModes(self):
 		return [ ("K", ModeType.NoParam, NoKnockMode()) ]
+
+	def verifyConfig(self, config):
+		if "knock_delay" in config and (not isinstance(config["knock_delay"], int) or config["knock_delay"] < 0):
+			raise ConfigValidationError("knock_delay", "invalid number")
 
 	def channelHasMode(self, channel, user, data):
 		if "K" in channel.modes:

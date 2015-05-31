@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implements
@@ -11,10 +12,13 @@ class DefaultModes(ModuleData):
 	
 	def actions(self):
 		return [ ("channelcreate", 110, self.setDefaults) ]
+
+	def verifyConfig(self, config):
+		if "channel_default_modes" in config and not isinstance("channel_default_modes", basestring):
+			raise ConfigValidationError("channel_default_modes", "value must be a string of mode letters")
 	
 	def setDefaults(self, channel, user):
 		modes = self.ircd.config.get("channel_default_modes", "ont")
-		statusModes = set()
 		params = modes.split(" ")
 		modeList = list(params.pop(0))
 		settingModes = []

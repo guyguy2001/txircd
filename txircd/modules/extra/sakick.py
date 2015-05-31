@@ -44,6 +44,7 @@ class SakickCommand(ModuleData, Command):
 		reason = user.nick
 		if len(params) > 2:
 			reason = params[2]
+		reason = reason[:self.ircd.config.get("kick_length", 255)]
 		return {
 			"target": target,
 			"channel": channel,
