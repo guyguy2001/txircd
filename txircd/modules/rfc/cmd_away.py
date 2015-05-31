@@ -17,11 +17,9 @@ class AwayCommand(ModuleData, Command):
 		return [ ("commandextra-PRIVMSG", 10, self.notifyAway),
 				("commandextra-NOTICE", 10, self.notifyAway),
 				("extrawhois", 10, self.addWhois),
+				("usercansetmetadata", 10, self.denyMetadataSet),
 				("buildisupport", 1, self.buildISupport) ]
-
-	def buildISupport(self, data):
-		data["AWAYLEN"] = self.ircd.config.get("away_length", 200)
-
+	
 	def verifyConfig(self, config):
 		if "away_length" in config:
 			if not isinstance(config["away_length"], int) or config["away_length"] < 0:
@@ -40,6 +38,14 @@ class AwayCommand(ModuleData, Command):
 	def addWhois(self, user, targetUser):
 		if targetUser.metadataKeyExists("away"):
 			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadataValue("away"))
+	
+	def denyMetadataSet(self, key):
+		if key == "away":
+			return False
+		return None
+	
+	def buildISupport(self, data):
+		data["AWAYLEN"] = self.ircd.config.get("away_length", 200)
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
