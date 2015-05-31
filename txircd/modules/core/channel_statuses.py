@@ -11,7 +11,7 @@ class StatusReport(ModuleData):
 	def actions(self):
 		return [ ("channelstatuses", 1, self.statuses) ]
 	
-	def statuses(self, channel, user):
+	def statuses(self, channel, user, requestingUser):
 		if user not in channel.users:
 			return None
 		if not channel.users[user]:

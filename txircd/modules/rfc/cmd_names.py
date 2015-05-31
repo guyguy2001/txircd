@@ -44,7 +44,7 @@ class NamesCommand(ModuleData, Command):
 				showAs = self.ircd.runActionUntilValue("displaychanneluser", channel, chanUser, users=[chanUser], channels=[channel])
 				if not showAs:
 					showAs = chanUser.nick
-				showChannelUsers.append("{}{}".format(self.ircd.runActionUntilValue("channelstatuses", channel, chanUser, users=[chanUser], channels=[channel]), showAs))
+				showChannelUsers.append("{}{}".format(self.ircd.runActionUntilValue("channelstatuses", channel, chanUser, user, users=[chanUser, user], channels=[channel]), showAs))
 			if showChannelUsers:
 				userLines = splitMessage(" ".join(showChannelUsers), 300)
 				for line in userLines:

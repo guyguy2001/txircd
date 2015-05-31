@@ -41,7 +41,7 @@ class WhoisCommand(ModuleData, Command):
 			chanList = []
 			for channel in targetUser.channels:
 				if self.ircd.runActionUntilValue("showchannel-whois", channel, user, targetUser) is not False:
-					chanList.append("{}{}".format(self.ircd.runActionUntilValue("channelstatuses", channel, targetUser), channel.name))
+					chanList.append("{}{}".format(self.ircd.runActionUntilValue("channelstatuses", channel, targetUser, user, users=[targetUser, user], channels=[channel]), channel.name))
 			if chanList:
 				user.sendMessage(irc.RPL_WHOISCHANNELS, targetUser.nick, " ".join(chanList))
 			if targetUser.uuid[:3] == self.ircd.serverID:
