@@ -12,12 +12,19 @@ class MultiPrefix(ModuleData):
 		         ("capabilitylist", 10, self.addCapability) ]
 	
 	def load(self):
-		if "cap-add" in self.ircd.moduleFunctionCache:
-			self.ircd.moduleFunctionCache["cap-add"]("multi-prefix")
+		if "unloading-multi-prefix" in self.ircd.dataCache:
+			del self.ircd.dataCache["unloading-multi-prefix"]
+			return
+		if "cap-add" in self.ircd.functionCache:
+			self.ircd.functionCache["cap-add"]("multi-prefix")
 	
 	def unload(self):
-		if "cap-add" in self.ircd.moduleFunctionCache:
-			self.ircd.moduleFunctionCache["cap-add"]("multi-prefix")
+		self.ircd.dataCache["unloading-multi-prefix"] = True
+	
+	def fullUnload(self):
+		del self.ircd.dataCache["unloading-multi-prefix"]
+		if "cap-del" in self.ircd.functionCache:
+			self.ircd.functionCache["cap-del"]("multi-prefix")
 	
 	def addCapability(self, capList):
 		capList.append("multi-prefix")
