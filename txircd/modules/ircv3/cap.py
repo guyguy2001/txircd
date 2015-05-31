@@ -18,14 +18,14 @@ class Cap(ModuleData, Command):
 		return [ ("CAP", 1, self) ]
 	
 	def load(self):
-		self.ircd.moduleFunctionCache["cap-add"] = self.newCapability
-		self.ircd.moduleFunctionCache["cap-del"] = self.removeCapability
+		self.ircd.functionCache["cap-add"] = self.newCapability
+		self.ircd.functionCache["cap-del"] = self.removeCapability
 		self.newCapability("cap-notify")
 	
 	def unload(self):
 		self.removeCapability("cap-notify")
-		del self.ircd.moduleFunctionCache["cap-add"]
-		del self.ircd.moduleFunctionCache["cap-del"]
+		del self.ircd.functionCache["cap-add"]
+		del self.ircd.functionCache["cap-del"]
 	
 	def listCapability(self, capList):
 		capList.append("cap-notify")
