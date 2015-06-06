@@ -52,7 +52,6 @@ class IRCd(Service):
 		self.serverNames = CaseInsensitiveDictionary()
 		
 		self._logFilter = LogLevelFilterPredicate()
-		global globalLogPublisher
 		filterObserver = FilteringLogObserver(globalLogPublisher, (self._logFilter,))
 		self.log = Logger("txircd", observer=filterObserver)
 		
