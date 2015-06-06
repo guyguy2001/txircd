@@ -10,28 +10,18 @@ class TimeCommand(ModuleData):
 	name = "TimeCommand"
 	core = True
 	
-	def actions(self):
-		return [ ("sendremoteusermessage-391", 1, self.pushTime) ]
-	
 	def userCommands(self):
-		return [ ("TIME", 1, UserTime(self.ircd, self.sendTime)) ]
+		return [ ("TIME", 1, UserTime(self.ircd)) ]
 	
 	def serverCommands(self):
-		return [ ("USERTIME", 1, ServerTime(self.ircd, self.sendTime)) ]
-	
-	def pushTime(self, user, *params, **kw):
-		self.ircd.servers[user.uuid[:3]].sendMessage("PUSH", user.uuid[:3], ":{} {} {}".format(kw["prefix"], irc.RPL_TIME, " ".join(params)), prefix=self.ircd.serverID)
-		return True
-	
-	def sendTime(self, user):
-		user.sendMessage(irc.RPL_TIME, self.ircd.name, str(now()))
+		return [ ("USERTIMEREQ", 1, ServerTimeRequest(self.ircd)),
+		         ("USERTIME", 1, ServerTime(self.ircd)) ]
 
 class UserTime(Command):
 	implements(ICommand)
 	
-	def __init__(self, ircd, sendTimeFunc):
+	def __init__(self, ircd):
 		self.ircd = ircd
-		self.sendTime = sendTimeFunc
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
@@ -48,17 +38,16 @@ class UserTime(Command):
 	def execute(self, user, data):
 		if "server" in data:
 			server = data["server"]
-			server.sendMessage("USERTIME", server.serverID, prefix=user.uuid)
+			server.sendMessage("USERTIMEREQ", server.serverID, prefix=user.uuid)
 		else:
-			self.sendTime(user)
+			user.sendMessage(irc.RPL_TIME, self.ircd.name, str(now()))
 		return True
 
-class ServerTime(Command):
+class ServerTimeRequest(Command):
 	implements(ICommand)
 	
-	def __init__(self, ircd, sendTimeFunc):
+	def __init__(self, ircd):
 		self.ircd = ircd
-		self.sendTime = sendTimeFunc
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 1:
@@ -67,9 +56,9 @@ class ServerTime(Command):
 			return None
 		if params[0] == self.ircd.serverID:
 			return {
-			"fromuser": self.ircd.users[prefix]
+				"fromuser": self.ircd.users[prefix]
 			}
-		if params[0] not in self.ircd.serverNames:
+		if params[0] not in self.ircd.servers:
 			return None
 		return {
 			"server": self.ircd.servers[params[0]],
@@ -78,10 +67,38 @@ class ServerTime(Command):
 	
 	def execute(self, server, data):
 		if "server" in data:
-			server = data["server"]
-			server.sendMessage("USERTIME", server.serverID, prefix=data["fromuser"].uuid)
+			destServer = data["server"]
+			destServer.sendMessage("USERTIMEREQ", destServer.serverID, prefix=data["fromuser"].uuid)
 		else:
-			self.sendTime(data["fromuser"])
+			server.sendMessage("USERTIME", data["fromuser"].uuid, str(now()), prefix=self.ircd.serverID)
+		return True
+
+class ServerTime(Command):
+	implements(ICommand)
+	
+	def __init__(self, ircd):
+		self.ircd = ircd
+	
+	def parseParams(self, server, params, prefix, tags):
+		if len(params) != 2:
+			return None
+		if prefix not in self.ircd.servers:
+			return None
+		if params[0] not in self.ircd.users:
+			return None
+		return {
+			"fromserver": self.ircd.servers[prefix],
+			"touser": self.ircd.users[params[0]],
+			"time": params[1]
+		}
+	
+	def execute(self, server, data):
+		fromServer = data["fromserver"]
+		toUser = data["touser"]
+		if toUser.uuid[:3] == self.ircd.serverID:
+			toUser.sendMessage(irc.RPL_TIME, fromServer.name, data["time"])
+			return True
+		self.ircd.servers[toUser.uuid[:3]].sendMessage("USERTIME", toUser.uuid, data["time"], prefix=fromServer.serverID)
 		return True
 
 timeCmd = TimeCommand()
