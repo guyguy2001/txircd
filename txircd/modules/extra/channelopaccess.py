@@ -40,7 +40,7 @@ class ChannelOpAccess(ModuleData, Mode):
 		return checkedParams
 	
 	def apply(self, actionType, channel, param, checkType, paramChannel, user):
-		status, permissionType = parameter.split(":", 1)
+		status, permissionType = param.split(":", 1)
 		if permissionType != checkType:
 			return None
 		if status not in self.ircd.channelStatuses:
