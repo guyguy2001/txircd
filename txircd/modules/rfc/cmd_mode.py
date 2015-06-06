@@ -201,7 +201,7 @@ class ServerMode(Command):
 			return None
 		
 		modes = params[2]
-		parameters = params[3]
+		parameters = params[3:]
 		parsedModes = []
 		modeTypes = {}
 		if params[0] in self.ircd.channels:
@@ -220,7 +220,7 @@ class ServerMode(Command):
 				modeType = modeTypes[mode]
 				parameter = None
 				if modeType in (ModeType.Status, ModeType.List, ModeType.ParamOnUnset) or (adding and modeType == ModeType.Param):
-					parameter = params.pop(0)
+					parameter = parameters.pop(0)
 				parsedModes.append((adding, mode, parameter))
 		
 		try:
