@@ -125,4 +125,4 @@ class XLineBase(object):
 			return
 		self.expireLines()
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
-			server.sendMessage("ADDLINE", self.lineType, lineData["mask"], lineData["setter"], str(timestamp(lineData["created"])), str(durationSeconds), reason, prefix=self.ircd.serverID)
+			server.sendMessage("ADDLINE", self.lineType, lineData["mask"], lineData["setter"], str(timestamp(lineData["created"])), str(lineData["duration"]), lineData["reason"], prefix=self.ircd.serverID)
