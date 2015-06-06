@@ -26,7 +26,6 @@ class ServerUID(ModuleData, Command):
 			nickTime = datetime.utcfromtimestamp(int(nickTS))
 		except ValueError:
 			return None
-		sourceServer = self.ircd.servers[uuid[:3]]
 		currParam = 9
 		modes = {}
 		for mode in params[8]:
@@ -45,7 +44,7 @@ class ServerUID(ModuleData, Command):
 			if modeType == ModeType.List:
 				if mode not in modes:
 					modes[mode] = []
-				modes[mode].append((param, sourceServer.name, msgTime))
+				modes[mode].append(param)
 			else:
 				modes[mode] = param
 		gecos = params[currParam]
@@ -106,7 +105,7 @@ class ServerUID(ModuleData, Command):
 			modeType = self.ircd.userModeTypes[mode]
 			if modeType == ModeType.List:
 				for paramData in param:
-					modeList.append((True, mode, paramData[0]))
+					modeList.append((True, mode, paramData))
 			else:
 				modeList.append((True, mode, param))
 		newUser.setModes(modeList, server.serverID)
