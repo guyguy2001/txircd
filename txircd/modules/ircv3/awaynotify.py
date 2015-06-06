@@ -9,7 +9,8 @@ class AwayNotify(ModuleData):
 	
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.sendAwayNotice),
-		         ("capabilitylist", 10, self.addCapability) ]
+		         ("capabilitylist", 10, self.addCapability),
+		         ("join", 10, self.tellChannelAway) ]
 	
 	def load(self):
 		if "unloading-away-notify" in self.ircd.dataCache:
@@ -32,13 +33,24 @@ class AwayNotify(ModuleData):
 	def sendAwayNotice(self, user, key, oldValue, value, visibility, setByUser, fromServer):
 		if key != "away":
 			return
+		noticeUsers = set()
+		for channel in user.channels:
+			for noticeUser in channel.users.iterkeys():
+				if noticeUser != user and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
+					noticeUsers.add(noticeUser)
 		if value:
-			for noticeUser in self.ircd.users.itervalues():
-				if "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
-					noticeUser.sendMessage("AWAY", value, sourceuser=user)
+			for noticeUser in noticeUsers:
+				noticeUser.sendMessage("AWAY", value, sourceuser=user)
 		else:
-			for noticeUser in self.ircd.users.itervalues():
-				if "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
-					noticeUser.sendMessage("AWAY", sourceuser=user)
+			for noticeUser in noticeUsers:
+				noticeUser.sendMessage("AWAY", sourceuser=user)
+	
+	def tellChannelAway(self, channel, user):
+		if not user.metadataKeyExists("away"):
+			return
+		awayReason = user.metadataValue("away")
+		for noticeUser in channel.users.iterkeys():
+			if "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
+				noticeUser.sendMessage("AWAY", awayReason, sourceuser=user)
 
 awayNotify = AwayNotify()
