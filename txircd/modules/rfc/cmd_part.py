@@ -79,7 +79,6 @@ class UserPart(Command):
 	def execute(self, user, data):
 		channel = data["channel"]
 		reason = data["reason"]
-		sendUserList = channel.users.keys()
 		user.leaveChannel(channel, "PART", { "reason": reason })
 		return True
 
