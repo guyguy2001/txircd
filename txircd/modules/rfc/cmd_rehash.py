@@ -135,9 +135,9 @@ class ServerRehashNotice(Command):
 		toUser = data["user"]
 		if toUser.uuid[:3] == self.ircd.serverID:
 			if "message" in data:
-				toUser.sendMessage(irc.RPL_REHASHING, data["filename"], data["message"], sourceserver=fromServer)
+				toUser.sendMessage(irc.RPL_REHASHING, data["filename"], data["message"], prefix=fromServer.name)
 			else:
-				toUser.sendMessage(irc.RPL_REHASHING, data["filename"], "Rehashing", sourceserver=fromServer)
+				toUser.sendMessage(irc.RPL_REHASHING, data["filename"], "Rehashing", prefix=fromServer.name)
 			return True
 		if "message" in data:
 			self.ircd.servers[toUser.uuid[:3]].sendMessage("REHASHNOTICE", toUser.uuid, data["filename"], data["message"], prefix=fromServer.serverID)

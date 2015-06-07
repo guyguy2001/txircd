@@ -25,7 +25,7 @@ class JoinCommand(ModuleData):
 	
 	def sendJoinMessage(self, messageUsers, channel, user):
 		for destUser in messageUsers:
-			destUser.sendMessage("JOIN", to=channel.name, sourceuser=user)
+			destUser.sendMessage("JOIN", to=channel.name, prefix=user.hostmask())
 		del messageUsers[:]
 	
 	def sendRJoin(self, user, channel):

@@ -95,7 +95,7 @@ class UserInvite(Command):
 		if "invites" not in targetUser.cache:
 			targetUser.cache["invites"] = {}
 		targetUser.cache["invites"][channel.name] = now()
-		targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+		targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask())
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
 		return True
 
@@ -133,7 +133,7 @@ class ServerInvite(Command):
 		if "invites" not in targetUser.cache:
 			targetUser.cache["invites"] = {}
 		targetUser.cache["invites"][channel.name] = now()
-		targetUser.sendMessage("INVITE", channel.name, sourceuser=user)
+		targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask())
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
 		return True
 

@@ -33,10 +33,9 @@ class NickCommand(ModuleData):
 				self.ircd.logConfigValidationWarning("nick_length", "value is too large", 32)
 	
 	def sendNickMessage(self, userShowList, user, oldNick):
-		def transformUser(sayingUser):
-			return "{}!{}@{}".format(oldNick, sayingUser.ident, sayingUser.host)
+		hostmask = "{}!{}@{}".format(oldNick, user.ident, user.host)
 		for targetUser in userShowList:
-			targetUser.sendMessage("NICK", to=user.nick, sourceuser=user, usertransform=transformUser)
+			targetUser.sendMessage("NICK", to=user.nick, prefix=hostmask)
 		del userShowList[:]
 	
 	def broadcastNickChange(self, user, oldNick, fromServer):

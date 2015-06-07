@@ -32,7 +32,7 @@ class QuitCommand(ModuleData, Command):
 	
 	def sendQuitMessage(self, sendUserList, user, reason):
 		for destUser in sendUserList:
-			destUser.sendMessage("QUIT", reason, to=None, sourceuser=user)
+			destUser.sendMessage("QUIT", reason, to=None, prefix=user.hostmask())
 		del sendUserList[:]
 	
 	def sendRQuit(self, user, reason):

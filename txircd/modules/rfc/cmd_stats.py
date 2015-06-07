@@ -150,7 +150,7 @@ class ServerInfo(Command):
 		if user.uuid[:3] == self.ircd.serverID:
 			sourceServer = self.ircd.servers[data["source"]]
 			for key, val in data["data"]:
-				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val, sourceserver=sourceServer)
+				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val, prefix=sourceServer.name)
 			return True
 		responseList = []
 		for key, val in data["data"]:
@@ -181,7 +181,7 @@ class ServerInfoEnd(Command):
 	def execute(self, server, data):
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:
-			user.sendMessage(irc.RPL_XINFOEND, data["type"], "End of XINFO request", sourceserver=data["source"])
+			user.sendMessage(irc.RPL_XINFOEND, data["type"], "End of XINFO request", prefix=data["source"].name)
 			return True
 		nextServer = self.ircd.servers[user.uuid[:3]]
 		nextServer.sendMessage("INFOEND", user.uuid, data["type"], prefix=data["source"].serverID)

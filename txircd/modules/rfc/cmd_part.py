@@ -43,11 +43,11 @@ class PartCommand(ModuleData):
 			reason = typeData["reason"]
 			for destUser in sendUserList:
 				if destUser.uuid[:3] == self.ircd.serverID:
-					destUser.sendMessage("PART", reason, to=channel.name, sourceuser=user)
+					destUser.sendMessage("PART", reason, to=channel.name, prefix=user.hostmask())
 		else:
 			for destUser in sendUserList:
 				if destUser.uuid[:3] == self.ircd.serverID:
-					destUser.sendMessage("PART", to=channel.name, sourceuser=user)
+					destUser.sendMessage("PART", to=channel.name, prefix=user.hostmask)
 		del sendUserList[:]
 
 class UserPart(Command):

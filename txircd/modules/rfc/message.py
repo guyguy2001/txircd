@@ -47,7 +47,7 @@ class MessageCommands(ModuleData):
 			for target, message in data["targetusers"].iteritems():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
-						target.sendMessage(command, message, sourceuser=user)
+						target.sendMessage(command, message, prefix=user.hostmask())
 					else:
 						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
@@ -57,7 +57,7 @@ class MessageCommands(ModuleData):
 		if "targetchans" in data:
 			for target, message in data["targetchans"].iteritems():
 				if message:
-					target.sendUserMessage(command, message, to=target.name, sourceuser=user, skip=[user])
+					target.sendUserMessage(command, message, to=target.name, prefix=user.hostmask(), skip=[user])
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
@@ -90,14 +90,14 @@ class MessageCommands(ModuleData):
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage(command, data["message"], sourceuser=data["from"])
+				user.sendMessage(command, data["message"], prefix=data["from"].hostmask())
 			else:
 				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
 		if "tochan" in data:
 			chan = data["tochan"]
 			fromUser = data["from"]
-			chan.sendUserMessage(command, data["message"], sourceuser=fromUser)
+			chan.sendUserMessage(command, data["message"], prefix=fromUser.hostmask())
 			chan.sendServerMessage(command, chan.name, data["message"], prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return None

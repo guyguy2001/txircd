@@ -137,9 +137,9 @@ class ServerAdminResponse(Command):
 		user = data["user"]
 		fromServer = data["fromserver"]
 		if user.uuid[:3] == self.ircd.serverID:
-			user.sendMessage(irc.RPL_ADMINLOC1, data["loc1"], sourceserver=fromServer)
-			user.sendMessage(irc.RPL_ADMINLOC2, data["loc2"], sourceserver=fromServer)
-			user.sendMessage(irc.RPL_ADMINEMAIL, data["contact"], sourceserver=fromServer)
+			user.sendMessage(irc.RPL_ADMINLOC1, data["loc1"], prefix=fromServer.name)
+			user.sendMessage(irc.RPL_ADMINLOC2, data["loc2"], prefix=fromServer.name)
+			user.sendMessage(irc.RPL_ADMINEMAIL, data["contact"], prefix=fromServer.name)
 			return True
 		tags = {
 			"loc1": data["loc1"],
