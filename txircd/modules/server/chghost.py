@@ -10,7 +10,7 @@ class ServerChgHost(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("changehost", 10, self.propagateChangeHost),
-				("remotechangehost", 10, self.propagateChangeHost) ]
+		         ("remotechangehost", 10, self.propagateChangeHost) ]
 	
 	def serverCommands(self):
 		return [ ("CHGHOST", 1, self) ]

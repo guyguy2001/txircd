@@ -10,7 +10,7 @@ class RateLimit(ModuleData):
 	name = "RateLimit"
 
 	def actions(self):
-		return [("commandpermission", 100, self.recvCommand)]
+		return [ ("commandpermission", 100, self.recvCommand) ]
 
 	def verifyConfig(self, config):
 		if "ratelimit" in config:
@@ -55,8 +55,8 @@ class RateLimit(ModuleData):
 			# only send notice once per period
 			if not rateData["noticeSent"]:
 				user.sendMessage("NOTICE", ("You are sending too many messages (limit is {limit}/{interval:.2f}s). "
-											"You cannot send any more messages for {timeToEnd:.2f} seconds."
-										).format(timeToEnd=timeToEnd, **self.getConfig()))
+				                            "You cannot send any more messages for {timeToEnd:.2f} seconds."
+				                           ).format(timeToEnd=timeToEnd, **self.getConfig()))
 				self.ircd.log.info("User {user.uuid} ({user.nick}) exceeded the message limit", user=user)
 				rateData["noticeSent"] = True
 			# we whitelist ping/pong to prevent ping timeouts

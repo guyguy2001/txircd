@@ -14,9 +14,9 @@ class NickCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("changenickmessage", 1, self.sendNickMessage),
-				("changenick", 1, self.broadcastNickChange),
-				("remotechangenick", 1, self.broadcastNickChange),
-		        ("buildisupport", 1, self.buildISupport) ]
+		         ("changenick", 1, self.broadcastNickChange),
+		         ("remotechangenick", 1, self.broadcastNickChange),
+		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("NICK", 1, NickUserCommand(self.ircd)) ]

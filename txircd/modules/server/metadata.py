@@ -12,7 +12,7 @@ class ServerMetadata(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.propagateUserMetadata),
-				("channelmetadataupdate", 10, self.propagateChannelMetadata) ]
+		         ("channelmetadataupdate", 10, self.propagateChannelMetadata) ]
 	
 	def serverCommands(self):
 		return [ ("METADATA", 1, self) ]

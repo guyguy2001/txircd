@@ -11,9 +11,9 @@ class QuitCommand(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("quitmessage", 10, self.sendQuitMessage),
-				("remotequitrequest", 10, self.sendRQuit),
-				("quit", 10, self.broadcastQuit),
-				("remotequit", 10, self.propagateQuit) ]
+		         ("remotequitrequest", 10, self.sendRQuit),
+		         ("quit", 10, self.broadcastQuit),
+		         ("remotequit", 10, self.propagateQuit) ]
 	
 	def userCommands(self):
 		return [ ("QUIT", 1, UserQuit(self.ircd)) ]

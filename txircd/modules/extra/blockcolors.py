@@ -18,7 +18,7 @@ class BlockColors(ModuleData, Mode):
 
 	def actions(self):
 		return [ ("modeactioncheck-channel-c-commandmodify-PRIVMSG", 10, self.channelHasMode),
-				("modeactioncheck-channel-c-commandmodify-NOTICE", 10, self.channelHasMode) ]
+		         ("modeactioncheck-channel-c-commandmodify-NOTICE", 10, self.channelHasMode) ]
 
 	def channelHasMode(self, channel, user, data):
 		if "c" in channel.modes:

@@ -11,18 +11,18 @@ class GlobalLoad(ModuleData):
 	
 	def actions(self):
 		return [ ("commandpermission-GLOADMODULE", 1, self.restrictGLoad),
-				("commandpermission-GUNLOADMODULE", 1, self.restrictGUnload),
-				("commandpermission-GRELOADMODULE", 1, self.restrictGReload) ]
+		         ("commandpermission-GUNLOADMODULE", 1, self.restrictGUnload),
+		         ("commandpermission-GRELOADMODULE", 1, self.restrictGReload) ]
 	
 	def userCommands(self):
 		return [ ("GLOADMODULE", 1, UserLoad(self.ircd)),
-				("GUNLOADMODULE", 1, UserUnload(self.ircd)),
-				("GRELOADMODULE", 1, UserReload(self.ircd)) ]
+		         ("GUNLOADMODULE", 1, UserUnload(self.ircd)),
+		         ("GRELOADMODULE", 1, UserReload(self.ircd)) ]
 	
 	def serverCommands(self):
 		return [ ("LOADMODULE", 1, ServerLoad(self.ircd)),
-				("UNLOADMODULE", 1, ServerUnload(self.ircd)),
-				("RELOADMODULE", 1, ServerReload(self.ircd)) ]
+		         ("UNLOADMODULE", 1, ServerUnload(self.ircd)),
+		         ("RELOADMODULE", 1, ServerReload(self.ircd)) ]
 	
 	def restrictGLoad(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gloadmodule"):

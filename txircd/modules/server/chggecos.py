@@ -10,7 +10,7 @@ class ServerChgGecos(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("changegecos", 10, self.propagateGecosChange),
-				("remotechangegecos", 10, self.propagateGecosChange) ]
+		         ("remotechangegecos", 10, self.propagateGecosChange) ]
 	
 	def serverCommands(self):
 		return [ ("CHGGECOS", 1, self) ]

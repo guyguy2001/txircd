@@ -20,8 +20,8 @@ class StatsCommand(ModuleData, Command):
 	
 	def serverCommands(self):
 		return [ ("INFOREQ", 1, ServerInfoRequest(self.ircd)),
-				("INFO", 1, ServerInfo(self.ircd)),
-				("INFOEND", 1, ServerInfoEnd(self.ircd)) ]
+		         ("INFO", 1, ServerInfo(self.ircd)),
+		         ("INFOEND", 1, ServerInfoEnd(self.ircd)) ]
 
 	def verifyConfig(self, config):
 		if "public_info" in config:

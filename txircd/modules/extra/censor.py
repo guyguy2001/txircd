@@ -30,12 +30,12 @@ class Censor(ModuleData):
 
 	def actions(self):
 		return [ ("modeactioncheck-channel-G-commandmodify-PRIVMSG", 10, self.channelHasMode),
-				("modeactioncheck-channel-G-commandmodify-NOTICE", 10, self.channelHasMode),
-				("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
-				("modeactioncheck-user-G-commandmodify-NOTICE", 10, self.userHasMode),
-				("commandpermission-CENSOR", 1, self.restrictToOpers),
-				("statsruntype-censor", 1, self.listStats),
-				("burst", 10, self.propgateOnBurst) ]
+		         ("modeactioncheck-channel-G-commandmodify-NOTICE", 10, self.channelHasMode),
+		         ("modeactioncheck-user-G-commandmodify-PRIVMSG", 10, self.userHasMode),
+		         ("modeactioncheck-user-G-commandmodify-NOTICE", 10, self.userHasMode),
+		         ("commandpermission-CENSOR", 1, self.restrictToOpers),
+		         ("statsruntype-censor", 1, self.listStats),
+		         ("burst", 10, self.propgateOnBurst) ]
 
 	def restrictToOpers(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-censor", users=[user]):

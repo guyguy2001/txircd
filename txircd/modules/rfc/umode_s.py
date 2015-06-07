@@ -21,8 +21,8 @@ class ServerNoticeMode(ModuleData, Mode):
 
 	def actions(self):
 		return [ ("modepermission-user-s", 1, self.checkModePermission),
-				("modechange-user-s", 1, self.modeChanged),
-				("sendservernotice", 1, self.sendServerNotice) ]
+		         ("modechange-user-s", 1, self.modeChanged),
+		         ("sendservernotice", 1, self.sendServerNotice) ]
 
 	def checkModePermission(self, user, settingUser, adding, param):
 		if adding:

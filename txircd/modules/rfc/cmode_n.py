@@ -19,7 +19,7 @@ class NoExtMsgMode(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-channel-n-commandmodify-PRIVMSG", 1, self.channelHasMode),
-				("modeactioncheck-channel-n-commandmodify-NOTICE", 1, self.channelHasMode) ]
+		         ("modeactioncheck-channel-n-commandmodify-NOTICE", 1, self.channelHasMode) ]
 	
 	def apply(self, actionType, channel, param, user, data):
 		if user not in channel.users and channel in data["targetchans"]:

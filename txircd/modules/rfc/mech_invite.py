@@ -16,8 +16,8 @@ class Invite(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-channel-i-joinpermission", 1, self.hasInviteMode),
-				("join", 1, self.clearInvite),
-				("commandpermission-INVITE", 1, self.checkInviteLevel) ]
+		         ("join", 1, self.clearInvite),
+		         ("commandpermission-INVITE", 1, self.checkInviteLevel) ]
 	
 	def userCommands(self):
 		return [ ("INVITE", 1, UserInvite(self.ircd)) ]

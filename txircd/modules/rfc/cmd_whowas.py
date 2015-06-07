@@ -14,8 +14,8 @@ class WhowasCommand(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("quit", 10, self.addUserToWhowas),
-				("remotequit", 10, self.addUserToWhowas),
-				("localquit", 10, self.addUserToWhowas) ]
+		         ("remotequit", 10, self.addUserToWhowas),
+		         ("localquit", 10, self.addUserToWhowas) ]
 	
 	def userCommands(self):
 		return [ ("WHOWAS", 1, self) ]

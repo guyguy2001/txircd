@@ -9,7 +9,7 @@ class SnoRemoteQuit(ModuleData):
 
 	def actions(self):
 		return [ ("remotequit", 1, self.sendRemoteQuitNotice),
-				("servernoticetype", 1, self.checkSnoType)]
+		         ("servernoticetype", 1, self.checkSnoType)]
 
 	def sendRemoteQuitNotice(self, user, reason):
 		server = self.ircd.servers[user.uuid[:3]].name

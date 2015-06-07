@@ -12,14 +12,14 @@ class ServerQuit(ModuleData):
 	
 	def actions(self):
 		return [ ("serverquit", 1, self.sendSQuit),
-				("commandpermission-SQUIT", 1, self.restrictSQuit) ]
+		         ("commandpermission-SQUIT", 1, self.restrictSQuit) ]
 	
 	def userCommands(self):
 		return [ ("SQUIT", 1, UserSQuit(self.ircd)) ]
 	
 	def serverCommands(self):
 		return [ ("SQUIT", 1, ServerSQuit(self.ircd)),
-				("RSQUIT", 1, RemoteSQuit(self.ircd)) ]
+		         ("RSQUIT", 1, RemoteSQuit(self.ircd)) ]
 	
 	def sendSQuit(self, server, reason):
 		closestHop = server

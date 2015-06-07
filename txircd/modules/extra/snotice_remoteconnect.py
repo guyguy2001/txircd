@@ -9,7 +9,7 @@ class SnoRemoteConnect(ModuleData):
 
 	def actions(self):
 		return [ ("remoteregister", 1, self.sendRemoteConnectNotice),
-				("servernoticetype", 1, self.checkSnoType)]
+		         ("servernoticetype", 1, self.checkSnoType)]
 
 	def sendRemoteConnectNotice(self, user, *params):
 		server = self.ircd.servers[user.uuid[:3]].name

@@ -14,11 +14,11 @@ class ModeCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
-				("modechanges-channel", 1, self.sendChannelModesToServers),
-				("modemessage-user", 1, self.sendUserModesToUsers),
-				("modechanges-user", 1, self.sendUserModesToServers),
-				("commandpermission-MODE", 1, self.restrictUse),
-				("buildisupport", 1, self.buildISupport) ]
+		         ("modechanges-channel", 1, self.sendChannelModesToServers),
+		         ("modemessage-user", 1, self.sendUserModesToUsers),
+		         ("modechanges-user", 1, self.sendUserModesToServers),
+		         ("commandpermission-MODE", 1, self.restrictUse),
+		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("MODE", 1, UserMode(self.ircd)) ]

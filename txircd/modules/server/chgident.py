@@ -10,7 +10,7 @@ class ServerChgIdent(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("changeident", 10, self.propagateIdentChange),
-				("remotechangeident", 10, self.propagateIdentChange) ]
+		         ("remotechangeident", 10, self.propagateIdentChange) ]
 	
 	def serverCommands(self):
 		return [ ("CHGIDENT", 1, self) ]

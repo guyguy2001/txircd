@@ -11,7 +11,7 @@ class ServerCommand(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("initiateserverconnection", 1, self.introduceSelf),
-				("serverconnect", 10, self.propagateServer) ]
+		         ("serverconnect", 10, self.propagateServer) ]
 	
 	def serverCommands(self):
 		return [ ("SERVER", 1, self) ]

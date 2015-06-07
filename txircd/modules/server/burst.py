@@ -12,7 +12,7 @@ class ServerBurst(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("burst", 100, self.startBurst),
-				("burst", 1, self.completeBurst) ]
+		         ("burst", 1, self.completeBurst) ]
 	
 	def serverCommands(self):
 		return [ ("BURST", 1, self) ]

@@ -17,12 +17,12 @@ class BanMode(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-channel-withuser", 100, self.checkAction),
-				("modechange-channel-b", 1, self.onChange),
-				("modepermission-channel-b", 1, self.checkAutostatusPermission),
-				("userbancheck", 1, self.matchBans),
-				("join", 10, self.populateBanCache),
-				("join", 9, self.autoStatus),
-				("updateuserbancache", 1, self.updateUserCaches)
+		         ("modechange-channel-b", 1, self.onChange),
+		         ("modepermission-channel-b", 1, self.checkAutostatusPermission),
+		         ("userbancheck", 1, self.matchBans),
+		         ("join", 10, self.populateBanCache),
+		         ("join", 9, self.autoStatus),
+		         ("updateuserbancache", 1, self.updateUserCaches)
 		]
 	
 	def banMatchesUser(self, user, banmask):

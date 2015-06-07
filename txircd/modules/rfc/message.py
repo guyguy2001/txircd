@@ -11,11 +11,11 @@ class MessageCommands(ModuleData):
 	
 	def userCommands(self):
 		return [ ("PRIVMSG", 1, UserPrivmsg(self)),
-				("NOTICE", 1, UserNotice(self)) ]
+		         ("NOTICE", 1, UserNotice(self)) ]
 	
 	def serverCommands(self):
 		return [ ("PRIVMSG", 1, ServerPrivmsg(self)),
-				("NOTICE", 1, ServerNotice(self)) ]
+		         ("NOTICE", 1, ServerNotice(self)) ]
 	
 	def cmdParseParams(self, user, params, prefix, tags):
 		channels = []

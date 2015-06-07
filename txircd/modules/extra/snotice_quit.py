@@ -9,7 +9,7 @@ class SnoQuit(ModuleData):
 
 	def actions(self):
 		return [ ("quit", 1, self.sendQuitNotice),
-				("servernoticetype", 1, self.checkSnoType)]
+		         ("servernoticetype", 1, self.checkSnoType)]
 
 	def sendQuitNotice(self, user, reason):
 		message =  "Client quit from {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip, reason)

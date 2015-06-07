@@ -17,7 +17,7 @@ class StripColors(ModuleData, Mode):
 
 	def actions(self):
 		return [ ("modeactioncheck-channel-S-commandmodify-PRIVMSG", 10, self.channelHasMode),
-				("modeactioncheck-channel-S-commandmodify-NOTICE", 10, self.channelHasMode) ]
+		         ("modeactioncheck-channel-S-commandmodify-NOTICE", 10, self.channelHasMode) ]
 
 	def channelHasMode(self, channel, user, data):
 		if "S" in channel.modes:

@@ -19,7 +19,7 @@ class ModeratedMode(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-channel-m-commandmodify-PRIVMSG", 10, self.channelHasMode),
-				("modeactioncheck-channel-m-commandmodify-NOTICE", 10, self.channelHasMode) ]
+		         ("modeactioncheck-channel-m-commandmodify-NOTICE", 10, self.channelHasMode) ]
 	
 	def channelHasMode(self, channel, user, data):
 		if "m" in channel.modes:

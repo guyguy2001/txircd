@@ -12,9 +12,9 @@ class JoinCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("joinmessage", 101, self.broadcastJoin),
-				("joinmessage", 1, self.sendJoinMessage),
-				("remotejoinrequest", 10, self.sendRJoin),
-				("remotejoin", 10, self.propagateJoin) ]
+		         ("joinmessage", 1, self.sendJoinMessage),
+		         ("remotejoinrequest", 10, self.sendRJoin),
+		         ("remotejoin", 10, self.propagateJoin) ]
 	
 	def userCommands(self):
 		return [ ("JOIN", 1, JoinChannel(self.ircd)) ]

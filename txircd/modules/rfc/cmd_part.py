@@ -12,7 +12,7 @@ class PartCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("leavemessage", 101, self.broadcastPart),
-		        ("leavemessage", 1, self.sendPartMessage) ]
+		         ("leavemessage", 1, self.sendPartMessage) ]
 	
 	def userCommands(self):
 		return [ ("PART", 1, UserPart(self.ircd)) ]

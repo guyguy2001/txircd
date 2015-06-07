@@ -12,15 +12,15 @@ class PingPong(ModuleData):
 	
 	def actions(self):
 		return [ ("pinguser", 10, self.pingUser),
-				("pingserver", 10, self.pingServer) ]
+		         ("pingserver", 10, self.pingServer) ]
 	
 	def userCommands(self):
 		return [ ("PING", 1, UserPing(self.ircd)),
-				("PONG", 1, UserPong()) ]
+		         ("PONG", 1, UserPong()) ]
 	
 	def serverCommands(self):
 		return [ ("PING", 1, ServerPing(self.ircd)),
-				("PONG", 1, ServerPong(self.ircd)) ]
+		         ("PONG", 1, ServerPong(self.ircd)) ]
 	
 	def pingUser(self, user):
 		if "pingtime" not in user.cache or "pongtime" not in user.cache:

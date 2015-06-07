@@ -11,9 +11,9 @@ class ConnectionLimit(ModuleData):
 
 	def actions(self):
 		return [ ("userconnect", 100, self.handleLocalConnect),
-				("remoteregister", 100, self.handleRemoteConnect),
-				("quit", 100, self.handleDisconnect),
-				("remotequit", 100, self.handleDisconnect) ]
+		         ("remoteregister", 100, self.handleRemoteConnect),
+		         ("quit", 100, self.handleDisconnect),
+		         ("remotequit", 100, self.handleDisconnect) ]
 
 	def load(self):
 		for user in self.ircd.users:

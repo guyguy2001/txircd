@@ -15,7 +15,7 @@ class InvisibleMode(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-user-i-showchanneluser", 1, self.isInvisibleChan),
-				("modeactioncheck-user-i-showuser", 1, self.isInvisibleUser) ]
+		         ("modeactioncheck-user-i-showuser", 1, self.isInvisibleUser) ]
 	
 	def userModes(self):
 		return [ ("i", ModeType.NoParam, self) ]

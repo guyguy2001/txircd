@@ -16,8 +16,8 @@ class TopicCommand(ModuleData):
 	
 	def actions(self):
 		return [ ("topic", 1, self.onTopic),
-				("join", 2, self.sendChannelTopic),
-				("buildisupport", 1, self.buildISupport) ]
+		         ("join", 2, self.sendChannelTopic),
+		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def userCommands(self):
 		return [ ("TOPIC", 1, UserTopic(self.ircd, self)) ]

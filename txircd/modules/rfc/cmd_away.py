@@ -15,10 +15,10 @@ class AwayCommand(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("commandextra-PRIVMSG", 10, self.notifyAway),
-				("commandextra-NOTICE", 10, self.notifyAway),
-				("extrawhois", 10, self.addWhois),
-				("usercansetmetadata", 10, self.denyMetadataSet),
-				("buildisupport", 1, self.buildISupport) ]
+		         ("commandextra-NOTICE", 10, self.notifyAway),
+		         ("extrawhois", 10, self.addWhois),
+		         ("usercansetmetadata", 10, self.denyMetadataSet),
+		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def verifyConfig(self, config):
 		if "away_length" in config:

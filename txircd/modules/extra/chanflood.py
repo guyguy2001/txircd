@@ -18,7 +18,7 @@ class ChannelFlood(ModuleData, Mode):
 	
 	def actions(self):
 		return [ ("modeactioncheck-channel-f-commandextra-PRIVMSG", 10, self.channelHasMode),
-				("modeactioncheck-channel-f-commandextra-NOTICE", 10, self.channelHasMode) ]
+		         ("modeactioncheck-channel-f-commandextra-NOTICE", 10, self.channelHasMode) ]
 	
 	def channelHasMode(self, channel, user, data):
 		if "f" in channel.modes:

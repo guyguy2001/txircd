@@ -9,7 +9,7 @@ class DccBlock(ModuleData):
 
 	def actions(self):
 		return [ ("commandpermission-PRIVMSG", 1, self.blockDCC),
-				("commandpermission-NOTICE", 1, self.blockDCC) ]
+		         ("commandpermission-NOTICE", 1, self.blockDCC) ]
 
 	def blockDCC(self, user, data):
 		if "targetusers" in data:

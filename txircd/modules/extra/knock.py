@@ -20,7 +20,7 @@ class Knock(ModuleData):
 
 	def actions(self):
 		return [ ("modeactioncheck-channel-K-commandpermission-KNOCK", 10, self.channelHasMode),
-				("invite", 1, self.clearKnocksOnInvite) ]
+		         ("invite", 1, self.clearKnocksOnInvite) ]
 
 	def userCommands(self):
 		return [ ("KNOCK", 1, KnockCommand(self.ircd)) ]
