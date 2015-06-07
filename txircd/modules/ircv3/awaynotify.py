@@ -34,23 +34,25 @@ class AwayNotify(ModuleData):
 		if key != "away":
 			return
 		noticeUsers = set()
+		noticePrefix = user.hostmask()
 		for channel in user.channels:
 			for noticeUser in channel.users.iterkeys():
 				if noticeUser.uuid[:3] == self.ircd.serverID and noticeUser != user and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
 					noticeUsers.add(noticeUser)
 		if value:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("AWAY", value, prefix=user.hostmask())
+				noticeUser.sendMessage("AWAY", value, prefix=noticePrefix)
 		else:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("AWAY", prefix=user.hostmask())
+				noticeUser.sendMessage("AWAY", prefix=noticePrefix)
 	
 	def tellChannelAway(self, channel, user):
 		if not user.metadataKeyExists("away"):
 			return
 		awayReason = user.metadataValue("away")
+		noticePrefix=user.hostmask()
 		for noticeUser in channel.users.iterkeys():
 			if noticeUser.uuid[:3] == self.ircd.serverID and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
-				noticeUser.sendMessage("AWAY", awayReason, prefix=user.hostmask())
+				noticeUser.sendMessage("AWAY", awayReason, prefix=noticePrefix)
 
 awayNotify = AwayNotify()

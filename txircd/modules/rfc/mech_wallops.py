@@ -44,9 +44,10 @@ class UserWallops(Command):
 	
 	def execute(self, user, data):
 		message = data["message"]
+		userPrefix = user.hostmask()
 		for u in self.ircd.users.itervalues():
 			if u.uuid[:3] == self.ircd.serverID and "w" in u.modes:
-				u.sendMessage("WALLOPS", message, prefix=user.hostmask(), to=None)
+				u.sendMessage("WALLOPS", message, prefix=userPrefix, to=None)
 		self.ircd.broadcastToServers(None, "WALLOPS", message, prefix=user.uuid)
 		return True
 
@@ -69,9 +70,10 @@ class ServerWallops(Command):
 	def execute(self, server, data):
 		fromUser = data["from"]
 		message = data["message"]
+		userPrefix = fromUser.hostmask()
 		for user in self.ircd.users.itervalues():
 			if user.uuid[:3] == self.ircd.serverID and "w" in user.modes:
-				user.sendMessage("WALLOPS", message, prefix=fromUser.hostmask(), to=None)
+				user.sendMessage("WALLOPS", message, prefix=userPrefix, to=None)
 		self.ircd.broadcastToServers(server, "WALLOPS", message, prefix=fromUser.uuid)
 		return True
 

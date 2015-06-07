@@ -31,8 +31,9 @@ class QuitCommand(ModuleData, Command):
 				self.ircd.logConfigValidationWarning("quit_message_length", "value is too large", 370)
 	
 	def sendQuitMessage(self, sendUserList, user, reason):
+		hostmask = user.hostmask()
 		for destUser in sendUserList:
-			destUser.sendMessage("QUIT", reason, to=None, prefix=user.hostmask())
+			destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask)
 		del sendUserList[:]
 	
 	def sendRQuit(self, user, reason):

@@ -43,11 +43,12 @@ class MessageCommands(ModuleData):
 	def cmdExecute(self, command, user, data):
 		sentAMessage = False
 		sentNoTextError = False
+		userPrefix = user.hostmask()
 		if "targetusers" in data:
 			for target, message in data["targetusers"].iteritems():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
-						target.sendMessage(command, message, prefix=user.hostmask())
+						target.sendMessage(command, message, prefix=userPrefix)
 					else:
 						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
@@ -57,7 +58,7 @@ class MessageCommands(ModuleData):
 		if "targetchans" in data:
 			for target, message in data["targetchans"].iteritems():
 				if message:
-					target.sendUserMessage(command, message, to=target.name, prefix=user.hostmask(), skip=[user])
+					target.sendUserMessage(command, message, to=target.name, prefix=userPrefix, skip=[user])
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:

@@ -148,9 +148,9 @@ class ServerInfo(Command):
 		typeName = data["type"]
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:
-			sourceServer = self.ircd.servers[data["source"]]
+			sourceServerName = self.ircd.servers[data["source"]].name
 			for key, val in data["data"]:
-				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val, prefix=sourceServer.name)
+				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val, prefix=sourceServerName)
 			return True
 		responseList = []
 		for key, val in data["data"]:
