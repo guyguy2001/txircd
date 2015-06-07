@@ -714,33 +714,7 @@ class RemoteUser(IRCUser):
 		self._registrationTimeoutTimer.cancel()
 	
 	def sendMessage(self, command, *params, **kw):
-		"""
-		Initiates sending a message to the remote user.
-		"""
-		if self.uuid[:3] not in self.ircd.servers:
-			raise RuntimeError ("The server for this user isn't registered in the server list!")
-		kw["prefix"] = self._getPrefix(kw)
-		if kw["prefix"] is None:
-			del kw["prefix"]
-		to = self.uuid
-		if "to" in kw:
-			to = kw["to"]
-			del kw["to"]
-		if to:
-			paramList = (to,) + params
-		else:
-			paramList = params
-		kw["users"] = [self]
-		self.ircd.runComboActionUntilTrue((("sendremoteusermessage-{}".format(command), self) + paramList, ("sendremoteusermessage", self, command) + paramList), **kw)
-	
-	def _getPrefix(self, msgKeywords):
-		if "sourceuser" in msgKeywords:
-			return msgKeywords["sourceuser"].uuid
-		if "sourceserver" in msgKeywords:
-			return msgKeywords["sourceserver"].serverID
-		if "prefix" in msgKeywords:
-			return msgKeywords["prefix"]
-		return self.ircd.serverID
+		pass # Messages can't be sent directly to remote users.
 	
 	def register(self, holdName, fromRemote = False):
 		"""
