@@ -11,9 +11,7 @@ class MessageCommands(ModuleData):
 	
 	def actions(self):
 		return [ ("sendchannelmessage-PRIVMSG", 1, self.sendChannelPrivmsg),
-				("sendchannelmessage-NOTICE", 1, self.sendChannelNotice),
-				("sendremoteusermessage-PRIVMSG", 1, self.sendRemotePrivmsg),
-				("sendremoteusermessage-NOTICE", 1, self.sendRemoteNotice) ]
+				("sendchannelmessage-NOTICE", 1, self.sendChannelNotice) ]
 	
 	def userCommands(self):
 		return [ ("PRIVMSG", 1, UserPrivmsg(self)),
@@ -60,21 +58,6 @@ class MessageCommands(ModuleData):
 	def sendChannelNotice(self, toUsers, toServers, channel, *params, **kw):
 		self.sendChannelMsg(toUsers, toServers, "NOTICE", channel, *params, **kw)
 	
-	def sendRemoteMsg(self, command, targetUser, dest, message, **kw):
-		self.ircd.servers[targetUser.uuid[:3]].sendMessage(command, targetUser.uuid, message, **kw)
-	
-	def sendRemotePrivmsg(self, targetUser, *params, **kw):
-		if len(params) != 2:
-			return None
-		self.sendRemoteMsg("PRIVMSG", targetUser, *params, **kw)
-		return True
-	
-	def sendRemoteNotice(self, targetUser, *params, **kw):
-		if len(params) != 2:
-			return None
-		self.sendRemoteMsg("NOTICE", targetUser, *params, **kw)
-		return True
-	
 	def cmdParseParams(self, user, params, prefix, tags):
 		channels = []
 		users = []
@@ -104,7 +87,10 @@ class MessageCommands(ModuleData):
 		if "targetusers" in data:
 			for target, message in data["targetusers"].iteritems():
 				if message:
-					target.sendMessage(command, message, sourceuser=user)
+					if target.uuid[:3] == self.ircd.serverID:
+						target.sendMessage(command, message, sourceuser=user)
+					else:
+						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
 					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
