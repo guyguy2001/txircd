@@ -35,15 +35,15 @@ class AdminCommand(ModuleData):
 	
 	def sendAdminData(self, user, serverName):
 		user.sendMessage(irc.RPL_ADMINME, serverName, "Administrative info for {}".format(serverName))
-		adminData = self.ircd.config.get("admin_server", "")
+		adminData = self.ircd.config.get("admin_line_1", "")
 		if not adminData: # If the line is blank, let's provide a default value
 			adminData = "This server has no admins. Anarchy!"
 		user.sendMessage(irc.RPL_ADMINLOC1, adminData)
-		adminData = self.ircd.config.get("admin_admin", "")
+		adminData = self.ircd.config.get("admin_line_2", "")
 		if not adminData:
 			adminData = "Nobody configured the second line of this."
 		user.sendMessage(irc.RPL_ADMINLOC2, adminData)
-		adminEmail = self.ircd.config.get("admin_email", "")
+		adminEmail = self.ircd.config.get("admin_contact", "")
 		if not adminEmail:
 			adminEmail = "No Admin <anarchy@example.com>"
 		user.sendMessage(irc.RPL_ADMINEMAIL, adminEmail)
