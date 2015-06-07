@@ -19,7 +19,7 @@ class IRCChannel(object):
 	
 	def sendUserMessage(self, command, *params, **kw):
 		"""
-		Sends a message to all users in a channel.
+		Sends a message to all local users in a channel.
 		Accepts a command and some parameters for that command to send.
 		Also accepts the following keyword arguments:
 		- to: allows you to override the default destination of the channel name
