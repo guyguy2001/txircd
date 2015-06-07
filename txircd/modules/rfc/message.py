@@ -9,10 +9,6 @@ class MessageCommands(ModuleData):
 	name = "MessageCommands"
 	core = True
 	
-	def actions(self):
-		return [ ("sendchannelmessage-PRIVMSG", 1, self.sendChannelPrivmsg),
-				("sendchannelmessage-NOTICE", 1, self.sendChannelNotice) ]
-	
 	def userCommands(self):
 		return [ ("PRIVMSG", 1, UserPrivmsg(self)),
 				("NOTICE", 1, UserNotice(self)) ]
@@ -20,43 +16,6 @@ class MessageCommands(ModuleData):
 	def serverCommands(self):
 		return [ ("PRIVMSG", 1, ServerPrivmsg(self)),
 				("NOTICE", 1, ServerNotice(self)) ]
-	
-	def sendChannelMsg(self, toUsers, toServers, command, channel, *params, **kw):
-		localDestServers = set()
-		for server in toServers:
-			nearestServer = server
-			while nearestServer.nextClosest != self.ircd.serverID:
-				nearestServer = self.ircd.servers[nearestServer.nextClosest]
-			localDestServers.add(nearestServer)
-		for user in toUsers:
-			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage(command, *params, **kw)
-		if "to" in kw:
-			params = (kw["to"],) + params # Prepend the destination to the parameters
-		if "sourceuser" in kw:
-			prefix = kw["sourceuser"].uuid
-			fromServer = prefix[:3]
-		elif "sourceserver" in kw:
-			prefix = kw["sourceserver"].serverID
-			fromServer = prefix
-		kw["prefix"] = prefix
-		if fromServer != self.ircd.serverID:
-			fromServer = self.ircd.servers[fromServer]
-			while fromServer.nextClosest != self.ircd.serverID:
-				fromServer = self.ircd.servers[fromServer.nextClosest]
-		else:
-			fromServer = None
-		for server in localDestServers:
-			if server != fromServer:
-				server.sendMessage(command, *params, **kw)
-		del toUsers[:]
-		del toServers[:]
-	
-	def sendChannelPrivmsg(self, toUsers, toServers, channel, *params, **kw):
-		self.sendChannelMsg(toUsers, toServers, "PRIVMSG", channel, *params, **kw)
-	
-	def sendChannelNotice(self, toUsers, toServers, channel, *params, **kw):
-		self.sendChannelMsg(toUsers, toServers, "NOTICE", channel, *params, **kw)
 	
 	def cmdParseParams(self, user, params, prefix, tags):
 		channels = []
