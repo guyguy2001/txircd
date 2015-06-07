@@ -13,17 +13,12 @@ class AdminCommand(ModuleData):
 	name = "AdminCommand"
 	core = True
 	
-	def actions(self):
-		return [ ("sendremoteusermessage-256", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINME, *params, **kw)),
-				("sendremoteusermessage-257", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINLOC1, *params, **kw)),
-				("sendremoteusermessage-258", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINLOC2, *params, **kw)),
-				("sendremoteusermessage-259", 1, lambda user, *params, **kw: self.pushMessage(user, irc.RPL_ADMINEMAIL, *params, **kw)) ]
-	
 	def userCommands(self):
-		return [ ("ADMIN", 1, UserAdmin(self.ircd, self.sendAdminData)) ]
+		return [ ("ADMIN", 1, UserAdmin(self)) ]
 	
 	def serverCommands(self):
-		return [ ("ADMINREQ", 1, ServerAdmin(self.ircd, self.sendAdminData)) ]
+		return [ ("ADMINREQ", 1, ServerAdminRequest(self)),
+		         ("ADMININFO", 1, ServerAdminResponse(self.ircd)) ]
 
 	def verifyConfig(self, config):
 		if "admin_server" in config and not isinstance("admin_server", basestring):
@@ -33,32 +28,24 @@ class AdminCommand(ModuleData):
 		if "admin_email" in config and not isinstance("admin_email", basestring):
 			raise ConfigValidationError("admin_email", "value must be a string")
 	
-	def sendAdminData(self, user, serverName):
-		user.sendMessage(irc.RPL_ADMINME, serverName, "Administrative info for {}".format(serverName))
-		adminData = self.ircd.config.get("admin_line_1", "")
-		if not adminData: # If the line is blank, let's provide a default value
-			adminData = "This server has no admins. Anarchy!"
-		user.sendMessage(irc.RPL_ADMINLOC1, adminData)
-		adminData = self.ircd.config.get("admin_line_2", "")
-		if not adminData:
-			adminData = "Nobody configured the second line of this."
-		user.sendMessage(irc.RPL_ADMINLOC2, adminData)
-		adminEmail = self.ircd.config.get("admin_contact", "")
-		if not adminEmail:
-			adminEmail = "No Admin <anarchy@example.com>"
-		user.sendMessage(irc.RPL_ADMINEMAIL, adminEmail)
-	
-	def pushMessage(self, user, numeric, *params, **kw):
-		server = self.ircd.servers[user.uuid[:3]]
-		server.sendMessage("PUSH", user.uuid, ":{} {} {}".format(kw["prefix"], numeric, " ".join(params)), prefix=self.ircd.serverID)
-		return True
+	def adminResponses(self):
+		adminLoc1 = self.ircd.config.get("admin_line_1", "")
+		if not adminLoc1: # If the line is blank, let's provide a default value
+			adminLoc1 = "This server has no admins. Anarchy!"
+		adminLoc2 = self.ircd.config.get("admin_line_2", "")
+		if not adminLoc2:
+			adminLoc2 = "Nobody configured the second line of this."
+		adminContact = self.ircd.config.get("admin_contact", "")
+		if not adminContact:
+			adminContact = "No Admin <anarchy@example.com>"
+		return (adminLoc1, adminLoc2, adminContact)
 
 class UserAdmin(Command):
 	implements(ICommand)
 	
-	def __init__(self, ircd, sendFunc):
-		self.ircd = ircd
-		self.sendFunc = sendFunc
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
@@ -77,15 +64,19 @@ class UserAdmin(Command):
 			server = data["server"]
 			server.sendMessage("ADMINREQ", server.serverID, prefix=user.uuid)
 		else:
-			self.sendFunc(user, self.ircd.name)
+			user.sendMessage(irc.RPL_ADMINME, self.ircd.name, "Administrative info for {}".format(self.ircd.name))
+			adminLoc1, adminLoc2, adminContact = self.module.adminResponses()
+			user.sendMessage(irc.RPL_ADMINLOC1, adminLoc1)
+			user.sendMessage(irc.RPL_ADMINLOC2, adminLoc2)
+			user.sendMessage(irc.RPL_ADMINEMAIL, adminContact)
 		return True
 
-class ServerAdmin(Command):
+class ServerAdminRequest(Command):
 	implements(ICommand)
 	
-	def __init__(self, ircd, sendFunc):
-		self.ircd = ircd
-		self.sendFunc = sendFunc
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
 	
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 1:
@@ -108,7 +99,54 @@ class ServerAdmin(Command):
 			server = data["server"]
 			server.sendMessage("ADMINREQ", server.serverID, prefix=data["fromuser"].uuid)
 		else:
-			self.sendFunc(data["fromuser"], self.ircd.name)
+			toUser = data["fromuser"]
+			toServer = self.ircd.servers[toUser.uuid[:3]]
+			adminLoc1, adminLoc2, adminContact = self.module.adminResponses()
+			tags = {
+				"loc1": adminLoc1,
+				"loc2": adminLoc2,
+				"contact": adminContact
+			}
+			toServer.sendMessage("ADMININFO", toUser.uuid, prefix=self.ircd.serverID, tags=tags)
+		return True
+
+class ServerAdminResponse(Command):
+	implements(ICommand)
+	
+	def __init__(self, ircd):
+		self.ircd = ircd
+	
+	def parseParams(self, server, params, prefix, tags):
+		if prefix not in self.ircd.servers:
+			return None
+		if "loc1" not in tags or "loc2" not in tags or "contact" not in tags:
+			return None
+		if len(params) != 1:
+			return None
+		if params[0] not in self.ircd.users:
+			return None
+		return {
+			"user": self.ircd.users[params[0]],
+			"fromserver": self.ircd.servers[prefix],
+			"loc1": tags["loc1"],
+			"loc2": tags["loc2"],
+			"contact": tags["contact"]
+		}
+	
+	def execute(self, server, data):
+		user = data["user"]
+		fromServer = data["fromserver"]
+		if user.uuid[:3] == self.ircd.serverID:
+			user.sendMessage(irc.RPL_ADMINLOC1, data["loc1"], sourceserver=fromServer)
+			user.sendMessage(irc.RPL_ADMINLOC2, data["loc2"], sourceserver=fromServer)
+			user.sendMessage(irc.RPL_ADMINEMAIL, data["contact"], sourceserver=fromServer)
+			return True
+		tags = {
+			"loc1": data["loc1"],
+			"loc2": data["loc2"],
+			"contact": data["contact"]
+		}
+		self.ircd.servers[user.uuid[:3]].sendMessage("ADMININFO", user.uuid, prefix=fromServer.serverID, tags=tags)
 		return True
 
 adminCmd = AdminCommand()
