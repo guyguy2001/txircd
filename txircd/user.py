@@ -93,7 +93,8 @@ class IRCUser(IRCBase):
 		    name as the prefix. Useful for when you can call sendMessage for
 		    both local and remote users from the same place.
 		"""
-		kw["prefix"] = self._getPrefix(kw)
+		if "prefix" not in kw:
+			kw["prefix"] = self.ircd.name
 		if kw["prefix"] is None:
 			del kw["prefix"]
 		to = self.nick if self.nick else "*"
@@ -104,18 +105,6 @@ class IRCUser(IRCBase):
 			IRCBase.sendMessage(self, command, to, *args, **kw)
 		else:
 			IRCBase.sendMessage(self, command, *args, **kw)
-	
-	def _getPrefix(self, msgKeywords):
-		if "sourceuser" in msgKeywords:
-			userTransform = IRCUser.hostmask
-			if "usertransform" in msgKeywords:
-				userTransform = msgKeywords["usertransform"]
-			return userTransform(msgKeywords["sourceuser"])
-		if "sourceserver" in msgKeywords:
-			return msgKeywords["sourceserver"].name
-		if "prefix" in msgKeywords:
-			return msgKeywords["prefix"]
-		return self.ircd.name
 	
 	def handleCommand(self, command, params, prefix, tags):
 		if self.uuid not in self.ircd.users:
