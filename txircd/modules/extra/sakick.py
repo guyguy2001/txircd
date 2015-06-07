@@ -56,7 +56,7 @@ class SakickCommand(ModuleData, Command):
 		targetUser = data["target"]
 		reason = data["reason"]
 		targetUser.leaveChannel(channel, "KICK", { "byuser": True, "user": user, "reason": reason })
-		self.ircd.log.debug("User {user.uuid} ({user.nick}) forcibly kicked user {targetUser.uuid} ({targetUser.nick}) from channel {channel.name}", user=user, targetUser=targetUser, channel=channel)
+		self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly kicked user {targetUser.uuid} ({targetUser.nick}) from channel {channel.name}", user=user, targetUser=targetUser, channel=channel)
 		return True
 
 sakick = SakickCommand()
