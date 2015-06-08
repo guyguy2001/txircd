@@ -38,13 +38,13 @@ class HostCloaking(ModuleData, Mode):
 
 	def apply(self, actionType, user, param, settingUser, uid, adding, *params, **kw):
 		if adding:
-			userHost = user.host
+			userHost = user.realHost
 			if isIPv6Address(userHost):
 				user.changeHost(self.applyIPv6Cloak(userHost))
 			elif isIPAddress(userHost):
 				user.changeHost(self.applyIPv4Cloak(userHost))
 			else:
-				if "." in user.host:
+				if "." in userHost:
 					user.changeHost(self.applyHostCloak(userHost, user.ip))
 				else:
 					if isIPv6Address(user.ip):
