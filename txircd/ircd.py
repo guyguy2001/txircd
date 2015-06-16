@@ -412,7 +412,7 @@ class IRCd(Service):
 		if len(config["network_name"]) > 32:
 			config["network_name"] = config["network_name"][:32]
 			self.logConfigValidationWarning("network_name", "value is too long", config["network_name"])
-		if not "bind_client" not in config:
+		if "bind_client" not in config:
 			config["bind_client"] = [ "tcp:6667:interface={::}" ]
 			self.logConfigValidationWarning("bind_client", "no default client binding specified", "[ \"tcp:6667:interface={::}\" ]")
 		if not isinstance(config["bind_client"], list):
