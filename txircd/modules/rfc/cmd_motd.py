@@ -203,7 +203,7 @@ class ServerStartMOTD(Command):
 		return True
 
 class ServerMOTD(Command):
-	implements(Command)
+	implements(ICommand)
 	
 	def __init__(self, module):
 		self.module = module
