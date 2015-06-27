@@ -20,15 +20,15 @@ class ServerUID(ModuleData, Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) < 9:
 			return None
-		uuid, signonTS, nick, realHost, displayHost, ident, ip, nickTS = params[:8]
+		uuid, signonTS, nick, realHost, displayHost, hostType, ident, ip, nickTS = params[:9]
 		try:
 			connectTime = datetime.utcfromtimestamp(int(signonTS))
 			nickTime = datetime.utcfromtimestamp(int(nickTS))
 		except ValueError:
 			return None
-		currParam = 9
+		currParam = 10
 		modes = {}
-		for mode in params[8]:
+		for mode in params[9]:
 			if mode == "+":
 				continue
 			try:
@@ -55,6 +55,7 @@ class ServerUID(ModuleData, Command):
 			"ident": ident,
 			"host": realHost,
 			"displayhost": displayHost,
+			"hosttype": hostType,
 			"ip": ip,
 			"gecos": gecos,
 			"nicktime": nickTime,
@@ -65,7 +66,7 @@ class ServerUID(ModuleData, Command):
 		connectTime = data["connecttime"]
 		nickTime = data["nicktime"]
 		newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
-		newUser.changeHost(data["displayhost"], True)
+		newUser.changeHost(data["hosttype"], data["displayhost"], True)
 		newUser.changeIdent(data["ident"], server)
 		newUser.changeGecos(data["gecos"], True)
 		newUser.connectedSince = connectTime
@@ -115,10 +116,10 @@ class ServerUID(ModuleData, Command):
 		connectTimestamp = str(timestamp(connectTime))
 		nickTimestamp = str(timestamp(nickTime))
 		modeString = newUser.modeString(None)
-		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user):
-		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host(), user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()

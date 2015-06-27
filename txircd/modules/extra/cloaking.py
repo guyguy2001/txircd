@@ -40,19 +40,19 @@ class HostCloaking(ModuleData, Mode):
 		if adding:
 			userHost = user.realHost
 			if isIPv6Address(userHost):
-				user.changeHost(self.applyIPv6Cloak(userHost))
+				user.changeHost("cloak", self.applyIPv6Cloak(userHost))
 			elif isIPAddress(userHost):
-				user.changeHost(self.applyIPv4Cloak(userHost))
+				user.changeHost("cloak", self.applyIPv4Cloak(userHost))
 			else:
 				if "." in userHost:
-					user.changeHost(self.applyHostCloak(userHost, user.ip))
+					user.changeHost("cloak", self.applyHostCloak(userHost, user.ip))
 				else:
 					if isIPv6Address(user.ip):
 						return self.applyIPv6Cloak(user.ip)
 					else:
 						return self.applyIPv4Cloak(user.ip)
 		else:
-			user.resetHost()
+			user.resetHost("cloak")
 
 	def applyHostCloak(self, host, ip):
 		# Find the last segments of the hostname.
