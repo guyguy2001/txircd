@@ -128,7 +128,7 @@ class UserOper(Command):
 		if "host" in operData:
 			hosts = ircLower(operData["host"]).split(" ")
 			for operHost in hosts:
-				userHost = ircLower("{}@{}".format(user.ident, user.host))
+				userHost = ircLower("{}@{}".format(user.ident, user.host()))
 				if fnmatchcase(userHost, operHost):
 					break
 				userHost = ircLower("{}@{}".format(user.ident, user.realHost))

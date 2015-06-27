@@ -51,7 +51,7 @@ class WhoCommand(ModuleData, Command):
 					continue
 				lowerMask = ircLower(mask)
 				serverName = self.ircd.name if targetUser.uuid[:3] == self.ircd.serverID else self.ircd.servers[targetUser.uuid[:3]].name
-				if fnmatchcase(ircLower(targetUser.host), lowerMask) or fnmatchcase(ircLower(targetUser.gecos), lowerMask) or fnmatchcase(ircLower(serverName), lowerMask) or fnmatchcase(ircLower(targetUser.nick), lowerMask):
+				if fnmatchcase(ircLower(targetUser.host()), lowerMask) or fnmatchcase(ircLower(targetUser.gecos), lowerMask) or fnmatchcase(ircLower(serverName), lowerMask) or fnmatchcase(ircLower(targetUser.nick), lowerMask):
 					matchingUsers.append(targetUser)
 		if "opersonly" in data:
 			allMatches = matchingUsers
@@ -72,7 +72,7 @@ class WhoCommand(ModuleData, Command):
 				while countingServer.nextClosest != self.ircd.serverID:
 					countingServer = self.ircd.servers[countingServer.nextClosest]
 					hopcount += 1
-			user.sendMessage(irc.RPL_WHOREPLY, mask, targetUser.ident, targetUser.host, serverName, targetUser.nick, "{}{}{}".format("G" if isAway else "H", "*" if isOper else "", status), "{} {}".format(hopcount, targetUser.gecos))
+			user.sendMessage(irc.RPL_WHOREPLY, mask, targetUser.ident, targetUser.host(), serverName, targetUser.nick, "{}{}{}".format("G" if isAway else "H", "*" if isOper else "", status), "{} {}".format(hopcount, targetUser.gecos))
 		user.sendMessage(irc.RPL_ENDOFWHO, mask, "End of /WHO list")
 		return True
 

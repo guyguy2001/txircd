@@ -39,7 +39,7 @@ class PassCommand(ModuleData, Command):
 		except KeyError:
 			return True
 		if "password" not in user.cache or serverPass != user.cache["password"]:
-			user.sendMessage("ERROR", "Closing Link: {}@{} [Access Denied]".format(user.ident, user.host), to=None, prefix=None)
+			user.sendMessage("ERROR", "Closing Link: {}@{} [Access Denied]".format(user.ident, user.host()), to=None, prefix=None)
 			return False
 		return True
 

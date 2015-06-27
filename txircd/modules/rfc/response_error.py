@@ -12,6 +12,6 @@ class ErrorResponse(ModuleData):
 		return [ ("quit", 10, self.sendError) ]
 	
 	def sendError(self, user, reason):
-		user.sendMessage("ERROR", "Closing Link: {}@{} [{}]".format(user.ident, user.host, reason), to=None, prefix=None)
+		user.sendMessage("ERROR", "Closing Link: {}@{} [{}]".format(user.ident, user.host(), reason), to=None, prefix=None)
 
 errorResponse = ErrorResponse()

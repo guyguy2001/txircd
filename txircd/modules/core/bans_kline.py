@@ -33,7 +33,7 @@ class KLine(ModuleData, Command, XLineBase):
 	
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
-		userMask = ircLower("{}@{}".format(user.ident, user.host))
+		userMask = ircLower("{}@{}".format(user.ident, user.host()))
 		if fnmatchcase(userMask, banMask):
 			return True
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
@@ -45,7 +45,7 @@ class KLine(ModuleData, Command, XLineBase):
 		return False
 	
 	def killUser(self, user, reason):
-		self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host}) against a k:line: {reason}", user=user, reason=reason)
+		self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a k:line: {reason}", user=user, reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("K:Lined: {}".format(reason))
 	
@@ -70,7 +70,7 @@ class KLine(ModuleData, Command, XLineBase):
 		banmask = params[0]
 		if banmask in self.ircd.userNicks:
 			targetUser = self.ircd.users[self.ircd.userNicks[banmask]]
-			banmask = "{}@{}".format(targetUser.ident, targetUser.host)
+			banmask = "{}@{}".format(targetUser.ident, targetUser.host())
 		else:
 			if "@" not in banmask:
 				banmask = "*@{}".format(banmask)

@@ -40,7 +40,7 @@ class Shun(ModuleData, XLineBase):
 	
 	def checkUserMatch(self, user, mask, data):
 		banMask = self.normalizeMask(mask)
-		userMask = ircLower("{}@{}".format(user.ident, user.host))
+		userMask = ircLower("{}@{}".format(user.ident, user.host()))
 		if fnmatchcase(userMask, banMask):
 			return True
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
@@ -54,7 +54,7 @@ class Shun(ModuleData, XLineBase):
 	def checkLines(self, user):
 		if self.matchUser(user):
 			user.cache["shunned"] = True
-			self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host}) against a shun", user=user)
+			self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a shun", user=user)
 		elif "shunned" in user.cache:
 			del user.cache["shunned"]
 	
@@ -89,7 +89,7 @@ class UserShun(Command):
 		shunmask = params[0]
 		if shunmask in self.module.ircd.userNicks:
 			targetUser = self.module.ircd.users[self.module.ircd.userNicks[shunmask]]
-			shunmask = "{}@{}".format(targetUser.ident, targetUser.host)
+			shunmask = "{}@{}".format(targetUser.ident, targetUser.host())
 		else:
 			if "@" not in shunmask:
 				shunmask = "*@{}".format(shunmask)

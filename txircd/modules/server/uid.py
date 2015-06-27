@@ -115,10 +115,10 @@ class ServerUID(ModuleData, Command):
 		connectTimestamp = str(timestamp(connectTime))
 		nickTimestamp = str(timestamp(nickTime))
 		modeString = newUser.modeString(None)
-		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host, newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user):
-		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host, user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host(), user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()

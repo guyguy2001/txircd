@@ -56,7 +56,7 @@ class WhowasCommand(ModuleData, Command):
 		whowasEntries.append({
 			"nick": user.nick,
 			"ident": user.ident,
-			"host": user.host,
+			"host": user.host(),
 			"gecos": user.gecos,
 			"server": serverName,
 			"when": timestamp(now())

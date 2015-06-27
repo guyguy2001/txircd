@@ -35,7 +35,7 @@ class WhoisCommand(ModuleData, Command):
 	
 	def execute(self, user, data):
 		for targetUser in data["targetusers"]:
-			user.sendMessage(irc.RPL_WHOISUSER, targetUser.nick, targetUser.ident, targetUser.host, "*", targetUser.gecos)
+			user.sendMessage(irc.RPL_WHOISUSER, targetUser.nick, targetUser.ident, targetUser.host(), "*", targetUser.gecos)
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "whois-host", users=[user]) or user == targetUser:
 				user.sendMessage(irc.RPL_WHOISHOST, targetUser.nick, "is connecting from {}@{} {}".format(targetUser.ident, targetUser.realHost, targetUser.ip))
 			chanList = []

@@ -34,7 +34,7 @@ class UserhostCommand(ModuleData, Command):
 				output += "-"
 			else:
 				output += "+"
-			output += "{}@{}".format(targetUser.ident, targetUser.host)
+			output += "{}@{}".format(targetUser.ident, targetUser.host())
 			userHosts.append(output)
 		user.sendMessage(irc.RPL_USERHOST, " ".join(userHosts))
 		return True

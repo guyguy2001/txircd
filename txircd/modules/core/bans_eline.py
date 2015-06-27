@@ -31,7 +31,7 @@ class ELine(ModuleData, XLineBase):
 	
 	def checkUserMatch(self, user, mask, data):
 		exceptMask = ircLower(mask)
-		userMask = ircLower("{}@{}".format(user.ident, user.host))
+		userMask = ircLower("{}@{}".format(user.ident, user.host()))
 		if fnmatchcase(userMask, exceptMask):
 			return True
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
@@ -69,7 +69,7 @@ class UserELine(Command):
 		banmask = params[0]
 		if banmask in self.module.ircd.userNicks:
 			targetUser = self.module.ircd.users[self.module.ircd.userNicks[banmask]]
-			banmask = "{}@{}".format(targetUser.ident, targetUser.host)
+			banmask = "{}@{}".format(targetUser.ident, targetUser.host())
 		else:
 			if "@" not in banmask:
 				banmask = "*@{}".format(banmask)
