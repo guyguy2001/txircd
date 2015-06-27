@@ -492,18 +492,27 @@ class IRCd(Service):
 			elif config["hostname_length"] > 64:
 				config["hostname_length"] = 64
 				self.logConfigValidationWarning("hostname_length", "value is too large", 64)
+			elif config["hostname_length"] < 4:
+				config["hostname_length"] = 4
+				self.logConfigValidationWarning("hostname_length", "value is too small", 4)
 		if "ident_length" in config:
 			if not isinstance(config["ident_length"], int) or config["ident_length"] < 0:
 				raise ConfigValidationError("ident_length", "invalid number")
 			elif config["ident_length"] > 12:
 				config["ident_length"] = 12
 				self.logConfigValidationWarning("ident_length", "value is too large", 12)
+			elif config["ident_length"] < 1:
+				config["ident_length"] = 1
+				self.logConfigValidationWarning("ident_length", "value is too small", 1)
 		if "gecos_length" in config:
 			if not isinstance(config["gecos_length"], int) or config["gecos_length"] < 0:
 				raise ConfigValidationError("gecos_length", "invalid number")
 			elif config["gecos_length"] > 128:
 				config["gecos_length"] = 128
 				self.logConfigValidationWarning("gecos_length", "value is too large", 128)
+			elif config["gecos_length"] < 1:
+				config["gecos_length"] = 1
+				self.logConfigValidationWarning("gecos_length", "value is too small", 1)
 		if "user_listmode_limit" in config:
 			if not isinstance(config["user_listmode_limit"], int) or config["user_listmode_limit"] < 0:
 				raise ConfigValidationError("user_listmode_limit", "invalid number")
