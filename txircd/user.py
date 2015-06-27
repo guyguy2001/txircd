@@ -27,9 +27,10 @@ class IRCUser(IRCBase):
 					host = ip
 			except (herror, gaierror):
 				host = ip
-		self.host = host
 		self.realHost = host
 		self.ip = ip
+		self._hostStack = []
+		self._hostsByType = {}
 		self.gecos = None
 		self._metadata = CaseInsensitiveDictionary()
 		self.cache = {}
@@ -288,7 +289,7 @@ class IRCUser(IRCBase):
 		"""
 		Returns the user's hostmask.
 		"""
-		return "{}!{}@{}".format(self.nick, self.ident, self.host)
+		return "{}!{}@{}".format(self.nick, self.ident, self.host())
 	
 	def hostmaskWithRealHost(self):
 		"""
@@ -341,25 +342,78 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runActionStandard("changeident", self, oldIdent, fromServer, users=[self])
 	
-	def changeHost(self, newHost, fromServer = None):
+	def host(self):
+		if not self._hostStack:
+			return self.realHost
+		return self._hostsByType[self._hostStack[-1]]
+	
+	def changeHost(self, hostType, newHost, fromServer = None):
 		"""
 		Changes a user's host. If initiated by a remote server, that server
 		should be specified in the fromServer parameter.
 		"""
+		if hostType == "*":
+			return
 		if len(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
-		if newHost == self.host:
+		if hostType in self._hostsByType and self._hostsByType[hostType] == newHost:
 			return
-		oldHost = self.host
-		self.host = newHost
+		oldHost = self.host()
+		self._hostsByType[hostType] = newHost
+		if hostType in self._hostStack:
+			self._hostStack.remove(hostType)
+		self._hostStack.append(hostType)
 		if self.isRegistered():
-			self.ircd.runActionStandard("changehost", self, oldHost, fromServer, users=[self])
+			self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer), users=[self])
 	
-	def resetHost(self):
+	def updateHost(self, hostType, newHost, fromServer = None):
+		"""
+		Updates the host of a given host type for the user. If initiated by
+		a remote server, that server should be specified in the fromServer
+		parameter.
+		"""
+		if hostType not in self._hostStack:
+			self.changeHost(hostType, newHost, fromServer)
+			return
+		if hostType == "*":
+			return
+		if len(newHost) > self.ircd.config.get("hostname_length", 64):
+			return
+		if hostType in self._hostsByType and self._hostsByType[hostType] == newHost:
+			return
+		oldHost = self.host()
+		oldHostOfType = None
+		if hostType in self._hostsByType:
+			oldHostOfType = self._hostsByType[hostType]
+		self._hostsByType[hostType] = newHost
+		changedUserHost = (oldHost != self.host())
+		changedHostOfType = (oldHostOfType != newHost)
+		if self.isRegistered():
+			if changedUserHost and changedHostOfType:
+				self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer), users=[self])
+			elif changedHostOfType:
+				self.ircd.runActionStandard("updatehost", self, hostType, oldHost, newHost, fromServer, users=[self])
+	
+	def resetHost(self, hostType, fromServer):
 		"""
 		Resets the user's host to the real host.
 		"""
-		self.changeHost(self.realHost)
+		if hostType not in self._hostsByType:
+			return
+		oldHost = self.host()
+		if hostType in self._hostStack:
+			self._hostStack.remove(hostType)
+		del self._hostsByType[hostType]
+		currentHost = self.host()
+		if currentHost != oldHost:
+			self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, None, fromServer), users=[self])
+		else:
+			self.ircd.runActionStandard("updatehost", self, hostType, oldHost, None, fromServer, users=[self])
+	
+	def currentHostType(self):
+		if self._hostStack:
+			return self._hostStack[-1]
+		return "*"
 	
 	def changeGecos(self, newGecos, fromServer = None):
 		"""
@@ -770,19 +824,6 @@ class RemoteUser(IRCUser):
 		self.ident = newIdent
 		if self.isRegistered():
 			self.ircd.runActionStandard("remotechangeident", self, oldIdent, fromServer, users=[self])
-	
-	def changeHost(self, newHost, fromServer = None):
-		"""
-		Changes the hostname of the user. If the change was initiated by a
-		remote server, that server should be specified as the fromServer
-		parameter.
-		"""
-		if len(newHost) > self.ircd.config.get("hostname_length", 64):
-			return
-		oldHost = self.host
-		self.host = newHost
-		if self.isRegistered():
-			self.ircd.runActionStandard("remotechangehost", self, oldHost, fromServer, users=[self])
 	
 	def changeGecos(self, newGecos, fromServer = None):
 		"""
