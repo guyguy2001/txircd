@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import ircLower
 from zope.interface import implements
 
 class AwayCommand(ModuleData, Command):
@@ -40,7 +41,7 @@ class AwayCommand(ModuleData, Command):
 			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadataValue("away"))
 	
 	def denyMetadataSet(self, key):
-		if key == "away":
+		if ircLower(key) == "away":
 			return False
 		return None
 	
