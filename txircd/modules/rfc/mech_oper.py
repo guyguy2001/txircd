@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ircLower, ModeType
+from txircd.utils import ircLower, isValidHost, ModeType
 from zope.interface import implements
 from fnmatch import fnmatchcase
 
@@ -27,24 +27,6 @@ class Oper(ModuleData, Mode):
 		return [ ("o", ModeType.NoParam, self) ]
 
 	def verifyConfig(self, config):
-		if "opers" in config:
-			if not isinstance(config["opers"], dict):
-				raise ConfigValidationError("opers", "value must be a dictionary")
-			for operNick, values in config["opers"].iteritems():
-				if "password" not in values:
-					raise ConfigValidationError("opers", "no password defined for oper \"{}\"".format(operNick))
-				if not isinstance(values["password"], basestring):
-					raise ConfigValidationError("opers", "value \"password\" for oper \"{}\" must be string".format(operNick))
-				if "hash" in values and not isinstance(values["hash"], basestring):
-					raise ConfigValidationError("opers", "value \"hash\" for oper \"{}\" is not a valid hashing module".format(operNick))
-				if "host" in values and not isinstance(values["host"], basestring): # We could add some hostname validation here if we really want to
-					raise ConfigValidationError("opers", "value \"host\" for oper \"{}\" must be a valid hostname".format(operNick))
-				if "types" in values:
-					if not isinstance(values["types"], list):
-						raise ConfigValidationError("opers", "value \"types\" for oper \"{}\" must be list".format(operNick))
-					for operType in values["types"]:
-						if not isinstance(operType, basestring):
-							raise ConfigValidationError("opers", "every type entry for oper \"{}\" must be string".format(operNick))
 		if "oper_types" in config:
 			if not isinstance(config["oper_types"], dict):
 				raise ConfigValidationError("oper_types", "value must be a dictionary")
@@ -56,6 +38,68 @@ class Oper(ModuleData, Mode):
 				for permission in permissions:
 					if not isinstance(permission, basestring):
 						raise ConfigValidationError("oper_types", "every permission for oper type \"{}\" must be a string".format(operType))
+		else:
+			config["oper_types"] = {}
+		
+		if "oper_groups" in config:
+			if not isinstance(config["oper_groups"], dict):
+				raise ConfigValidationError("oper_groups", "value must be a dictionary")
+			for groupName, values in config["oper_groups"].iteritems():
+				if not isinstance(groupName, basestring):
+					raise ConfigValidationError("oper_groups", "all group names must be strings")
+				if not isinstance(values, dict):
+					raise ConfigValidationError("oper_groups", "group data must be a dict")
+				for groupDataKey, groupDataValue in values.iterkeys():
+					if not isinstance(groupDataKey, basestring):
+						raise ConfigValidationError("oper_groups", "group data identifiers for oper group \"{}\" must all be strings".format(groupName))
+					if groupDataKey == "vhost" and (not isinstance(groupDataValue, basestring) or not isValidHost(groupDataValue)):
+						raise ConfigValidationError("oper_groups", "vhosts for oper group \"{}\" must all be valid hostnames".format(groupName))
+					if groupDataKey == "types":
+						if not isinstance(groupDataValue, list):
+							raise ConfigValidationError("oper_groups", "oper type lists for oper group \"{}\" must all be lists".format(groupName))
+						for operType in groupDataValue:
+							if not isinstance(operType, basestring):
+								raise ConfigValidationError("oper_groups", "all oper type names for oper group \"{}\" must be strings".format(groupName))
+							if operType not in config["oper_types"]:
+								raise ConfigValidationError("oper_groups", "the type \"{}\" for oper group \"{}\" does not exist as an oper type".format(operType, groupName))
+		else:
+			config["oper_groups"] = {}
+		
+		if "opers" in config:
+			if not isinstance(config["opers"], dict):
+				raise ConfigValidationError("opers", "value must be a dictionary")
+			for operName, values in config["opers"].iteritems():
+				if not isinstance(values, dict):
+					raise ConfigValidationError("opers", "oper data must be a dict")
+				hasPassword = False
+				for operDataKey, operDataValue in values.iteritems():
+					if not isinstance(operDataKey, basestring):
+						raise ConfigValidationError("opers", "oper data identifiers must all be strings")
+					if operDataKey == "password":
+						if not isinstance(operDataValue, basestring):
+							raise ConfigValidationError("opers", "no password defined for oper \"{}\"".format(operName))
+						hasPassword = True
+					if operDataKey == "hash" and not isinstance(operDataValue, basestring):
+						raise ConfigValidationError("opers", "hash type for oper \"{}\" must be a string name".format(operName))
+					if operDataKey == "host" and not isinstance(operDataValue, basestring):
+						raise ConfigValidationError("opers", "hosts for oper \"{}\" must be a string".format(operName))
+					if operDataKey == "vhost" and (not isinstance(operDataValue, basestring) or not isValidHost(operDataValue)):
+						raise ConfigValidationError("opers", "vhost for oper \"{}\" must be a valid hostname".format(operName))
+					if operDataKey == "types":
+						if not isinstance(operDataValue, list):
+							raise ConfigValidationError("opers", "type list for oper \"{}\" must be a list".format(operName))
+						for operType in operDataValue:
+							if not isinstance(operType, basestring):
+								raise ConfigValidationError("opers", "every type name for oper \"{}\" must be a string".format(operName))
+							if operType not in config["oper_types"]:
+								raise ConfigValidationError("opers", "the type \"{}\" for oper \"{}\" does not exist as an oper type".format(operType, operName))
+					if operDataKey == "group":
+						if not isinstance(operDataValue, basestring):
+							raise ConfigValidationError("opers", "the group name for oper \"{}\" must be a string".format(operName))
+						if operDataValue not in config["oper_groups"]:
+							raise ConfigValidationError("opers", "the group \"{}\" for oper \"{}\" does not exist as an oper group".format(operDataValue, operName))
+				if not hasPassword:
+					raise ConfigValidationError("opers", "oper \"{}\" doesn't have a password specified".format(operName))
 	
 	def operPermission(self, user, permissionType):
 		if "o" not in user.modes:
@@ -151,15 +195,25 @@ class UserOper(Command):
 		user.setModes([(True, "o", None)], self.ircd.serverID)
 		user.sendMessage(irc.RPL_YOUREOPER, "You are now an IRC operator")
 		self.reportOper(user, None)
+		vhost = None
+		if "vhost" in operData:
+			vhost = operData["vhost"]
+		operPermissions = set()
+		configuredOperTypes = self.ircd.config["oper_types"]
 		if "types" in operData:
-			configuredOperTypes = self.ircd.config.get("oper_types", {})
-			operPermissions = set()
 			for operType in operData["types"]:
-				if operType not in configuredOperTypes:
-					continue
 				operPermissions.update(configuredOperTypes[operType])
-			user.cache["oper-permissions"] = operPermissions
-			self.ircd.broadcastToServers(None, "OPER", user.uuid, *operPermissions, prefix=self.ircd.serverID)
+		if "group" in operData:
+			groupData = self.ircd.config["oper_groups"][operData["group"]]
+			if not vhost and "vhost" in groupData:
+				vhost = groupData["vhost"]
+			if "types" in groupData:
+				for operType in groupData["types"]:
+					operPermissions.update(configuredOperTypes[operType])
+		user.cache["oper-permissions"] = operPermissions
+		if vhost:
+			user.changeHost("oper", vhost)
+		self.ircd.broadcastToServers(None, "OPER", user.uuid, *operPermissions, prefix=self.ircd.serverID)
 		return True
 
 	def reportOper(self, user, reason):
