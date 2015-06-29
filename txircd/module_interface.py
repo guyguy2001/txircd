@@ -149,7 +149,7 @@ class ModuleData(object):
 	
 	def fullUnload(self):
 		pass
-
+	
 	def verifyConfig(self, config):
 		pass
 
