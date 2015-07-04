@@ -213,14 +213,15 @@ class IRCd(Service):
 			common = module.requiredOnAllServers
 
 		self.log.debug("Loaded data from {module.name}; committing data and calling hooks...", module=module)
-
+		
+		module.load()
+		
 		self.loadedModules[module.name] = module
 		self._loadedModuleData[module.name] = moduleData
 		if common:
 			self.commonModules.add(module.name)
 		
 		self.runActionStandard("moduleload", module.name)
-		module.load()
 		
 		for modeType, typeSet in enumerate(newChannelModes):
 			for mode, implementation in typeSet.iteritems():
@@ -270,6 +271,8 @@ class IRCd(Service):
 						break
 				else:
 					self.serverCommands[command].append(data)
+		
+		self.log.debug("Module {module.name} is now fully loaded.", module=module)
 	
 	def unloadModule(self, moduleName):
 		"""
