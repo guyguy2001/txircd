@@ -3,6 +3,7 @@ from twisted.internet.ssl import DefaultOpenSSLContextFactory
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
+from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 from OpenSSL import SSL
@@ -29,8 +30,11 @@ class StartTLS(ModuleData, Command):
 			return
 		if "cap-add" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-add"]("tls")
-		self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
-		self.certContext.getContext().set_verify(SSL.VERIFY_PEER, lambda connection, x509, errnum, errdepth, ok: True)
+		try:
+			self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
+			self.certContext.getContext().set_verify(SSL.VERIFY_PEER, lambda connection, x509, errnum, errdepth, ok: True)
+		except SSL.Error:
+			raise ModuleLoadError("StartTLS", "Failed to initialize SSL context")
 	
 	def unload(self):
 		self.ircd.dataCache["unloading-tls"] = True
