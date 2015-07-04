@@ -52,7 +52,7 @@ class StartTLS(ModuleData, Command):
 		else:
 			config["starttls_cert"] = config["starttls_key"]
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("tls")
 	
 	def parseParams(self, user, prefix, params, tags):

@@ -26,7 +26,7 @@ class ExtendedJoin(ModuleData):
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("extended-join")
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("extended-join")
 	
 	def sendExtJoin(self, messageUsers, channel, user):

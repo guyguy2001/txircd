@@ -95,7 +95,7 @@ class Cap(ModuleData, Command):
 					user.cache["capversion"] = 302
 					user.cache["capabilities"]["cap-notify"] = None
 			capList = []
-			self.ircd.runActionStandard("capabilitylist", capList)
+			self.ircd.runActionStandard("capabilitylist", user, capList)
 			capabilities = " ".join(capList)
 			splitCapabilities = splitMessage(capabilities, 400)
 			if splitCapabilities:
@@ -114,7 +114,8 @@ class Cap(ModuleData, Command):
 			return True
 		if subCmd == "REQ":
 			allCapabilities = []
-			self.ircd.runActionStandard("capabilitylist", allCapabilities)
+			self.ircd.runActionStandard("capabilitylist", user, allCapabilities)
+			allCapabilities = [ capability.split("=")[0] for capability in allCapabilities ]
 			requestedCapabilities = data["capabilities"]
 			changes = []
 			changeRejected = False

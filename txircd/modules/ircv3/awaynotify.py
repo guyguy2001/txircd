@@ -27,7 +27,7 @@ class AwayNotify(ModuleData):
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("away-notify")
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("away-notify")
 	
 	def sendAwayNotice(self, user, key, oldValue, value, visibility, setByUser, fromServer):

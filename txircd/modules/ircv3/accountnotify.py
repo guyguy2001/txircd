@@ -26,7 +26,7 @@ class AccountNotify(ModuleData):
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("account-notify")
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("account-notify")
 	
 	def sendAccountNotice(self, user, key, oldValue, value, visibility, setByUser, fromServer):

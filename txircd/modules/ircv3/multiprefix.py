@@ -26,7 +26,7 @@ class MultiPrefix(ModuleData):
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("multi-prefix")
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("multi-prefix")
 	
 	def allStatuses(self, channel, user, requestingUser):
