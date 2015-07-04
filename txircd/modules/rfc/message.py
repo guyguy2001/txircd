@@ -1,6 +1,8 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
+from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import splitMessage
 from zope.interface import implements
 
 class MessageCommands(ModuleData):
@@ -16,6 +18,19 @@ class MessageCommands(ModuleData):
 	def serverCommands(self):
 		return [ ("PRIVMSG", 1, ServerPrivmsg(self)),
 		         ("NOTICE", 1, ServerNotice(self)) ]
+	
+	def verifyConfig(self, config):
+		if "message_length" in config:
+			if not isinstance(config["message_length"], int) or config["message_length"] < 0:
+				raise ConfigValidationError("message_length", "invalid number")
+			elif config["message_length"] > 324:
+				config["message_length"] = 324
+				self.ircd.logConfigValidationWarning("message_length", "value is too large", 324)
+			elif config["message_length"] < 100:
+				config["message_length"] = 100
+				self.ircd.logConfigValidationWarning("message_length", "value is too small to be useful", 100)
+		else:
+			config["message_length"] = 324
 	
 	def cmdParseParams(self, user, params, prefix, tags):
 		channels = []
@@ -48,7 +63,9 @@ class MessageCommands(ModuleData):
 			for target, message in data["targetusers"].iteritems():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
-						target.sendMessage(command, message, prefix=userPrefix)
+						messageParts = splitMessage(message, self.ircd.config["message_length"])
+						for part in messageParts:
+							target.sendMessage(command, part, prefix=userPrefix)
 					else:
 						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
@@ -58,7 +75,9 @@ class MessageCommands(ModuleData):
 		if "targetchans" in data:
 			for target, message in data["targetchans"].iteritems():
 				if message:
-					target.sendUserMessage(command, message, to=target.name, prefix=userPrefix, skip=[user])
+					messageParts = splitMessage(message, self.ircd.config["message_length"])
+					for part in messageParts:
+						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user])
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
@@ -91,15 +110,20 @@ class MessageCommands(ModuleData):
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage(command, data["message"], prefix=data["from"].hostmask())
+				messageParts = splitMessage(data["message"], self.ircd.config["message_length"])
+				for part in messageParts:
+					user.sendMessage(command, part, prefix=data["from"].hostmask())
 			else:
 				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
 		if "tochan" in data:
 			chan = data["tochan"]
 			fromUser = data["from"]
-			chan.sendUserMessage(command, data["message"], prefix=fromUser.hostmask())
-			chan.sendServerMessage(command, chan.name, data["message"], prefix=fromUser.uuid, skiplocal=[server])
+			message = data["message"]
+			messageParts = splitMessage(message, self.ircd.config["message_length"])
+			for part in messageParts:
+				chan.sendUserMessage(command, part, prefix=fromUser.hostmask())
+			chan.sendServerMessage(command, chan.name, message, prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return None
 
