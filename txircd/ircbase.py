@@ -94,8 +94,16 @@ class IRCBase(LineOnlyReceiver):
 		else:
 			prefix = None
 		params = list(params)
-		if not params[-1] or " " in params[-1] or params[-1][0] == ":":
-			params[-1] = ":{}".format(params[-1])
+		if params:
+			for param in params[:-1]:
+				for badChar in (" ", "\r", "\n", "\0"):
+					if badChar in param:
+						raise ValueError("Illegal character {!r} found in parameter {!r}".format(badChar, param))
+			for badChar in ("\r", "\n", "\0"):
+				if badChar in params[-1]:
+					raise ValueError("Illegal character {!r} found in parameter {!r}".format(badChar, params[-1]))
+			if not params[-1] or " " in params[-1] or params[-1][0] == ":":
+				params[-1] = ":{}".format(params[-1])
 		lineToSend = ""
 		if tags:
 			lineToSend += "@{} ".format(tags)
@@ -107,9 +115,14 @@ class IRCBase(LineOnlyReceiver):
 	def _buildTagString(self, tags):
 		tagList = []
 		for tag, value in tags.iteritems():
+			for char in tag:
+				if not char.isalnum() and char not in ("-", "/", "."):
+					raise ValueError("Illegal character {!r} found in key {!r}".format(char, tag))
 			if value is None:
 				tagList.append(tag)
 			else:
+				if "\0" in value:
+					raise ValueError("Illegal character '\\0' found in value for key {!r}".format(tag))
 				escapedValue = value.replace("\\", "\\\\").replace(";", "\\:").replace(" ", "\\s").replace("\r", "\\r").replace("\n", "\\n")
 				tagList.append("{}={}".format(tag, escapedValue))
 		return ";".join(tagList)
