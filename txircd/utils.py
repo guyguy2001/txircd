@@ -2,7 +2,7 @@ from collections import MutableMapping
 from datetime import datetime
 import re
 
-validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\1^{}_|]+$")
+validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\^{}_|]+$")
 def isValidNick(nick):
 	"""
 	Determines whether the provided nickname is in a valid format.
@@ -27,7 +27,7 @@ def isValidChannelName(channelName):
 			return False
 	return True
 
-validMetadataKey = re.compile(r"^[A-Za-z0-9_\.:]+$")
+validMetadataKey = re.compile(r"^[A-Za-z0-9_.:]+$")
 def isValidMetadataKey(key):
 	"""
 	Determines whether the given metadata key is in a valid format.
