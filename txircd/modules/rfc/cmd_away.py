@@ -59,10 +59,10 @@ class AwayCommand(ModuleData, Command):
 	
 	def execute(self, user, data):
 		if "message" in data and data["message"]:
-			user.setMetadata("away", data["message"], "*", False)
+			user.setMetadata("away", data["message"], "internal", False)
 			user.sendMessage(irc.RPL_NOWAWAY, "You have been marked as being away")
 		else:
-			user.setMetadata("away", None, "*", False)
+			user.setMetadata("away", None, "internal", False)
 			user.sendMessage(irc.RPL_UNAWAY, "You are no longer marked as being away")
 		return True
 
