@@ -483,6 +483,7 @@ class IRCUser(IRCBase):
 		"""
 		Sets metadata for the user. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
+		If the value is None, deletes the metadata at the provided key.
 		"""
 		if not isValidMetadataKey(key):
 			return False

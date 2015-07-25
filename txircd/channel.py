@@ -142,6 +142,7 @@ class IRCChannel(object):
 		Sets metadata for the channel. Returns True if the set is successful or
 		False if it is not. If the metadata set is caused by a message from a
 		remote server, pass the server object as the fromServer parameter.
+		If value is None, deletes the key provided.
 		"""
 		if not isValidMetadataKey(key):
 			return False
