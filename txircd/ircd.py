@@ -50,6 +50,11 @@ class IRCd(Service):
 		self.channels = CaseInsensitiveDictionary(WeakValueDictionary)
 		self.servers = {}
 		self.serverNames = CaseInsensitiveDictionary()
+		self.recentlyQuitUsers = {}
+		self.recentlyQuitServers = {}
+		self.recentlyDestroyedChannels = CaseInsensitiveDictionary()
+		self.pruneRecentlyQuit = None
+		self.pruneRecentChannels = None
 		
 		self._logFilter = LogLevelFilterPredicate()
 		filterObserver = FilteringLogObserver(globalLogPublisher, (self._logFilter,))
@@ -68,6 +73,11 @@ class IRCd(Service):
 		self.storage = shelve.open(self.config["datastore_path"], writeback=True)
 		self.storageSyncer = LoopingCall(self.storage.sync)
 		self.storageSyncer.start(self.config.get("storage_sync_interval", 5), now=False)
+		self.log.info("Starting processes...")
+		self.pruneRecentlyQuit = LoopingCall(self.pruneQuit)
+		self.pruneRecentlyQuit.start(10, now=False)
+		self.pruneRecentChannels = LoopingCall(self.pruneChannels)
+		self.pruneRecentChannels.start(15, now=False)
 		self.log.info("Loading modules...")
 		self._loadModules()
 		self.log.info("Binding ports...")
@@ -103,6 +113,11 @@ class IRCd(Service):
 		moduleList = self.loadedModules.keys()
 		for module in moduleList:
 			self._unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
+		self.log.info("Stopping processes...")
+		if self.pruneRecentlyQuit.running:
+			self.pruneRecentlyQuit.stop()
+		if self.pruneRecentChannels.running:
+			self.pruneRecentChannels.stop()
 		self.log.info("Closing data storage...")
 		if self.storageSyncer.running:
 			self.storageSyncer.stop()
@@ -618,6 +633,32 @@ class IRCd(Service):
 		if uid[-1] == "Z":
 			return uid[:-1] + "0"
 		return uid[:-1] + chr(ord(uid[-1]) + 1)
+	
+	def pruneQuit(self):
+		compareTime = now() - 10
+		remove = []
+		for uuid, timeQuit in self.recentlyQuitUsers.iteritems():
+			if timeQuit < compareTime:
+				remove.append(uuid)
+		for uuid in remove:
+			del self.recentlyQuitUsers[uuid]
+		
+		remove = []
+		for serverID, timeQuit in self.recentlyQuitServers.iteritems():
+			if timeQuit < compareTime:
+				remove.append(serverID)
+		for serverID in remove:
+			del self.recentlyQuitServers[serverID]
+	
+	def pruneChannels(self):
+		removeChannels = []
+		for channel, remove in self.recentlyDestroyedChannels.iteritems():
+			if remove:
+				removeChannels.append(channel)
+			elif channel not in self.ircd.channels:
+				self.recentlyDestroyedChannels[channel] = True
+		for channel in removeChannels:
+			del self.recentlyDestroyedChannels[channel]
 	
 	def generateISupportList(self):
 		isupport = self.isupport_tokens.copy()

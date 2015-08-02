@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from txircd.ircbase import IRCBase
+from txircd.utils import now
 
 class IRCServer(IRCBase):
 	def __init__(self, ircd, ip, received):
@@ -77,6 +78,7 @@ class IRCServer(IRCBase):
 			for server in allServers:
 				if server.nextClosest == self.serverID:
 					server.disconnect(reason, netsplitQuitMsg)
+			self.ircd.recentlyQuitServers[serverID] = now()
 			del self.ircd.servers[self.serverID]
 			del self.ircd.serverNames[self.name]
 		self.bursted = None

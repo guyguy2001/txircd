@@ -212,6 +212,7 @@ class IRCUser(IRCBase):
 			if self._registrationTimeoutTimer.active():
 				self._registrationTimeoutTimer.cancel()
 			self._registrationTimeoutTimer = None
+		self.ircd.recentlyQuitUsers[self.uuid] = now()
 		del self.ircd.users[self.uuid]
 		if self.isRegistered():
 			del self.ircd.userNicks[self.nick]
@@ -521,6 +522,7 @@ class IRCUser(IRCBase):
 		if channel.name not in self.ircd.channels:
 			newChannel = True
 			self.ircd.channels[channel.name] = channel
+			self.ircd.recentlyDestroyedChannels[channel.name] = False
 		# We need to send the JOIN message before doing other processing, as chancreate will do things like
 		# mode defaulting, which will send messages about the channel before the JOIN message, which is bad.
 		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
@@ -784,6 +786,7 @@ class RemoteUser(IRCUser):
 		if fromRemote:
 			if self.isRegistered():
 				del self.ircd.userNicks[self.nick]
+			self.ircd.recentlyQuitUsers[self.uuid] = now()
 			del self.ircd.users[self.uuid]
 			userSendList = [self]
 			for channel in self.channels:
