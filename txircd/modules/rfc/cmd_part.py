@@ -93,8 +93,16 @@ class ServerPart(Command):
 		if len(params) != 2 or not params[0]:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if params[0] not in self.ircd.channels:
+			if params[0] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"lostchannel": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[prefix],
@@ -103,6 +111,8 @@ class ServerPart(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostchannel" in data:
+			return True
 		user = data["user"]
 		channel = data["channel"]
 		reason = data["reason"]

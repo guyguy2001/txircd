@@ -91,6 +91,10 @@ class MessageCommands(ModuleData):
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostsource": True
+				}
 			return None
 		if params[0] in self.ircd.users:
 			return {
@@ -104,9 +108,15 @@ class MessageCommands(ModuleData):
 				"tochan": self.ircd.channels[params[0]],
 				"message": params[1]
 			}
+		if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
+			return {
+				"losttarget": True
+			}
 		return None
 	
 	def serverExecute(self, command, server, data):
+		if "lostsource" in data or "losttarget" in data:
+			return True
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:

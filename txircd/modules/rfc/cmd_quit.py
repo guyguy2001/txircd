@@ -82,6 +82,10 @@ class ServerQuit(Command):
 	
 	def parseParams(self, server, params, prefix, tags):
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if len(params) != 1:
 			return None
@@ -91,7 +95,8 @@ class ServerQuit(Command):
 		}
 	
 	def execute(self, server, data):
-		data["user"].disconnect(data["reason"], True)
+		if "lostuser" not in data:
+			data["user"].disconnect(data["reason"], True)
 		return True
 
 class RemoteQuit(Command):
@@ -102,6 +107,10 @@ class RemoteQuit(Command):
 	
 	def parseParams(self, server, params, prefix, tags):
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if len(params) != 2:
 			return None
@@ -111,6 +120,8 @@ class RemoteQuit(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:
 			user.disconnect(data["reason"])

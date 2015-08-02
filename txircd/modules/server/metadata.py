@@ -43,6 +43,10 @@ class ServerMetadata(ModuleData, Command):
 			data["user"] = self.ircd.users[params[0]]
 		elif params[0] in self.ircd.channels:
 			data["channel"] = self.ircd.channels[params[0]]
+		elif params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
+			return {
+				"losttarget": True
+			}
 		else:
 			return None
 		try:
@@ -60,6 +64,8 @@ class ServerMetadata(ModuleData, Command):
 		return data
 	
 	def execute(self, server, data):
+		if "losttarget" in data:
+			return True
 		if "user" in data:
 			target = data["user"]
 			if data["time"] > target.connectedSince:

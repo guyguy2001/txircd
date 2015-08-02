@@ -67,6 +67,10 @@ class ServerKill(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"source": prefix,
@@ -75,6 +79,8 @@ class ServerKill(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		user = data["target"]
 		if user.uuid[:3] == self.ircd.serverID:
 			fromID = data["source"]

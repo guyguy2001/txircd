@@ -22,6 +22,10 @@ class ServerChgIdent(ModuleData, Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[params[0]],
@@ -29,7 +33,8 @@ class ServerChgIdent(ModuleData, Command):
 		}
 	
 	def execute(self, server, data):
-		data["user"].changeIdent(data["ident"], server)
+		if "lostuser" not in data:
+			data["user"].changeIdent(data["ident"], server)
 		return True
 
 chgIdent = ServerChgIdent()

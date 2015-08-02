@@ -61,6 +61,10 @@ class ServerWallops(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"message": params[0],
@@ -68,6 +72,8 @@ class ServerWallops(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		fromUser = data["from"]
 		message = data["message"]
 		userPrefix = fromUser.hostmask()

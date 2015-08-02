@@ -53,12 +53,20 @@ class ServerTimeRequest(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostsource": True
+				}
 			return None
 		if params[0] == self.ircd.serverID:
 			return {
 				"fromuser": self.ircd.users[prefix]
 			}
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"losttarget": True
+				}
 			return None
 		return {
 			"server": self.ircd.servers[params[0]],
@@ -66,6 +74,8 @@ class ServerTimeRequest(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostsource" in data or "losttarget" in data:
+			return True
 		if "server" in data:
 			destServer = data["server"]
 			destServer.sendMessage("USERTIMEREQ", destServer.serverID, prefix=data["fromuser"].uuid)

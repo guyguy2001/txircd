@@ -104,6 +104,10 @@ class ServerMOTDRequest(Command):
 		if len(params) != 1:
 			return None
 		if params[0] != self.ircd.serverID and params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"losttarget": True
+				}
 			return None
 		if prefix in self.ircd.users:
 			if params[0] == self.ircd.serverID:
@@ -123,9 +127,15 @@ class ServerMOTDRequest(Command):
 				"byserver": self.ircd.servers[prefix],
 				"destserver": self.ircd.servers[params[0]]
 			}
+		if prefix in self.ircd.recentlyQuitUsers or prefix in self.ircd.recentlyQuitServers:
+			return {
+				"lostsource": True
+			}
 		return None
 	
 	def execute(self, server, data):
+		if "lostsource" in data or "losttarget" in data:
+			return True
 		if "byuser" in data:
 			byUser = data["user"]
 			fromServer = self.ircd.servers[byUser.uuid[:3]]
@@ -162,6 +172,10 @@ class ServerStartMOTD(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostsource": True
+				}
 			return None
 		if params[0] == "*":
 			return {
@@ -182,11 +196,20 @@ class ServerStartMOTD(Command):
 				"fromserver": self.ircd.servers[prefix],
 				"destserver": self.ircd.servers[params[0]]
 			}
+		if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyQuitServers:
+			return {
+				"fromserver": self.ircd.servers[prefix],
+				"losttarget": True
+			}
 		return None
 	
 	def execute(self, server, data):
+		if "lostsource" in data:
+			return True
 		fromServer = data["fromserver"]
 		self.module.remoteMOTD[fromServer.serverID] = ([], False)
+		if "losttarget" in data:
+			return True
 		if "destuser" in data:
 			user = data["destuser"]
 			if user.uuid[:3] == self.ircd.serverID:
@@ -213,6 +236,10 @@ class ServerMOTD(Command):
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostsource": True
+				}
 			return None
 		if params[0] == "*":
 			return {
@@ -237,13 +264,22 @@ class ServerMOTD(Command):
 				"destserver": self.ircd.servers[params[0]],
 				"motdline": params[1]
 			}
+		if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyQuitServers:
+			return {
+				"fromserver": self.ircd.servers[prefix],
+				"losttarget": True
+			}
 		return None
 	
 	def execute(self, server, data):
+		if "lostsource" in data:
+			return True
 		fromServer = data["fromserver"]
 		newLine = data["motdline"]
 		if fromServer.serverID in self.module.remoteMOTD and not self.module.remoteMOTD[fromServer.serverID][1]:
 			self.module.remoteMOTD[fromServer.serverID][0].append(newLine)
+		if "losttarget" in data:
+			return True
 		if "destuser" in data:
 			user = data["destuser"]
 			if user.uuid[:3] == self.ircd.serverID:
@@ -270,6 +306,10 @@ class ServerEndMOTD(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostsource": True
+				}
 			return None
 		if params[0] == "*":
 			return {
@@ -290,14 +330,23 @@ class ServerEndMOTD(Command):
 				"fromserver": self.ircd.servers[prefix],
 				"destserver": self.ircd.servers[params[0]]
 			}
+		if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyQuitServers:
+			return {
+				"fromserver": self.ircd.servers[prefix],
+				"losttarget": True
+			}
 		return None
 	
 	def execute(self, server, data):
+		if "lostsource" in data:
+			return True
 		fromServer = data["fromserver"]
 		if fromServer.serverID in self.module.remoteMOTD:
 			self.module.remoteMOTD[fromServer.serverID] = (self.module.remoteMOTD[fromServer.serverID][0], True)
 		else:
 			self.module.remoteMOTD[fromServer.serverID] = ([], True)
+		if "losttarget" in data:
+			return True
 		if "destuser" in data:
 			user = data["destuser"]
 			if user.uuid[:3] == self.ircd.serverID:
@@ -323,12 +372,18 @@ class RemoveMOTD(Command):
 	
 	def parseParams(self, server, params, prefix, tags):
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostsource": True
+				}
 			return None
 		return {
 			"fromserver": self.ircd.servers[prefix]
 		}
 	
 	def execute(self, server, data):
+		if "lostsource" in data:
+			return True
 		fromServer = data["fromserver"]
 		if fromServer.serverID in self.module.remoteMOTD:
 			del self.module.remoteMOTD[fromServer.serverID]

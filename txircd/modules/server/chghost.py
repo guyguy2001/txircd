@@ -26,6 +26,10 @@ class ServerChgHost(ModuleData, Command):
 		if len(params) != 4:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		newHost = params[3]
 		if newHost == "*":
@@ -38,6 +42,8 @@ class ServerChgHost(ModuleData, Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		apply = data["apply"]
 		newHost = data["host"]
 		if newHost is None:

@@ -101,8 +101,16 @@ class ServerPing(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		if params[1] != self.ircd.serverID and params[1] not in self.ircd.servers:
+			if params[1] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"prefix": prefix,
@@ -111,6 +119,8 @@ class ServerPing(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostserver" in data:
+			return True
 		if data["dest"] == self.ircd.serverID:
 			server.sendMessage("PONG", data["dest"], data["source"], prefix=data["prefix"])
 			return True
@@ -127,8 +137,16 @@ class ServerPong(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		if params[1] != self.ircd.serverID and params[1] not in self.ircd.servers:
+			if params[1] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"prefix": prefix,
@@ -137,6 +155,8 @@ class ServerPong(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostserver" in data:
+			return True
 		if data["dest"] == self.ircd.serverID:
 			self.ircd.servers[data["source"]].cache["pongtime"] = now()
 			return True

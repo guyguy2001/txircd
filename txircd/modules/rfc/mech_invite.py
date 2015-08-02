@@ -108,13 +108,25 @@ class ServerInvite(Command):
 	
 	def parseParams(self, server, params, prefix, tags):
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if len(params) != 2:
 			return None
 		if params[1] not in self.ircd.channels:
+			if params[1] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"lostchannel": True
+				}
 			return None
 		if params[0] not in self.ircd.users:
-			return {} # If it's a local user who quit before we received the INVITE that was sent before the quit, that's fine
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
+			return None
 		return {
 			"inviter": self.ircd.users[prefix],
 			"invitee": self.ircd.users[params[0]],
@@ -122,7 +134,7 @@ class ServerInvite(Command):
 		}
 	
 	def execute(self, server, data):
-		if not data:
+		if "lostuser" in data or "lostchannel" in data:
 			return True
 		user = data["inviter"]
 		targetUser = data["invitee"]

@@ -78,6 +78,10 @@ class ServerSQuit(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"target": self.ircd.servers[params[0]],
@@ -85,7 +89,8 @@ class ServerSQuit(Command):
 		}
 	
 	def execute(self, server, data):
-		data["target"].disconnect(data["reason"])
+		if "lostserver" not in data:
+			data["target"].disconnect(data["reason"])
 		return True
 
 class RemoteSQuit(Command):
@@ -98,6 +103,10 @@ class RemoteSQuit(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"target": self.ircd.servers[params[0]],
@@ -105,6 +114,8 @@ class RemoteSQuit(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostserver" in data:
+			return True
 		targetServer = data["target"]
 		if targetServer.nextClosest == self.ircd.serverID:
 			targetServer.disconnect(data["reason"])

@@ -196,8 +196,16 @@ class ServerMode(Command):
 		if len(params) < 3:
 			return None
 		if prefix not in self.ircd.users and prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitUsers or prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostsource": True
+				}
 			return None # It's safe to say other servers shouldn't be sending modes sourced from us. That's our job!
 		if params[0] not in self.ircd.users and params[0] not in self.ircd.channels:
+			if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"losttarget": True
+				}
 			return None
 		
 		modes = params[2]

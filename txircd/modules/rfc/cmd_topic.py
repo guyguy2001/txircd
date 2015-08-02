@@ -103,6 +103,10 @@ class ServerTopic(Command):
 		if len(params) != 4:
 			return None
 		if params[0] not in self.ircd.channels:
+			if params[0] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"lostchannel": True
+				}
 			return None
 		return {
 			"source": prefix,
@@ -113,6 +117,8 @@ class ServerTopic(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostchannel" in data:
+			return True
 		channel = data["channel"]
 		if data["chantime"] > channel.existedSince: # Don't set the topic when our channel overrides
 			return True # Assume handled by our ignoring of it

@@ -22,6 +22,10 @@ class ServerChgGecos(ModuleData, Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[params[0]],
@@ -29,7 +33,8 @@ class ServerChgGecos(ModuleData, Command):
 		}
 	
 	def execute(self, server, data):
-		data["user"].changeGecos(data["gecos"], server)
+		if "lostuser" not in data:
+			data["user"].changeGecos(data["gecos"], server)
 		return True
 
 chgGecos = ServerChgGecos()

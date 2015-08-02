@@ -96,8 +96,16 @@ class ServerInfoRequest(Command):
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if params[0] != self.ircd.serverID and params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[prefix],
@@ -106,6 +114,8 @@ class ServerInfoRequest(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostserver" in data:
+			return True
 		serverID = data["server"]
 		typeName = data["type"]
 		if serverID == self.ircd.serverID:
@@ -131,8 +141,16 @@ class ServerInfo(Command):
 		if len(params) < 4 or len(params) % 2 != 0:
 			return None
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		response = {}
 		for i in range(2, len(params), 2):
@@ -145,6 +163,8 @@ class ServerInfo(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostserver" in data:
+			return True
 		typeName = data["type"]
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:

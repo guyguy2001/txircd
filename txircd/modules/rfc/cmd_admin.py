@@ -82,12 +82,20 @@ class ServerAdminRequest(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if params[0] == self.ircd.serverID:
 			return {
 				"fromuser": self.ircd.users[prefix]
 			}
 		if params[0] not in self.ircd.servers:
+			if params[0] in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		return {
 			"fromuser": self.ircd.users[prefix],
@@ -95,6 +103,8 @@ class ServerAdminRequest(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostserver" in data:
+			return True
 		if "server" in data:
 			server = data["server"]
 			server.sendMessage("ADMINREQ", server.serverID, prefix=data["fromuser"].uuid)
@@ -118,12 +128,20 @@ class ServerAdminResponse(Command):
 	
 	def parseParams(self, server, params, prefix, tags):
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		if "loc1" not in tags or "loc2" not in tags or "contact" not in tags:
 			return None
 		if len(params) != 1:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[params[0]],
@@ -134,6 +152,8 @@ class ServerAdminResponse(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostserver" in data:
+			return True
 		user = data["user"]
 		fromServer = data["fromserver"]
 		if user.uuid[:3] == self.ircd.serverID:

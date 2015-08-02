@@ -103,6 +103,10 @@ class ServerJoin(Command):
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		try:
 			return {
@@ -113,7 +117,8 @@ class ServerJoin(Command):
 			return None
 	
 	def execute(self, server, data):
-		data["user"].joinChannel(data["channel"], True, True)
+		if "lostuser" not in data:
+			data["user"].joinChannel(data["channel"], True, True)
 		return True
 
 class RemoteJoin(Command):
@@ -126,6 +131,10 @@ class RemoteJoin(Command):
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"prefix": prefix,
@@ -134,6 +143,8 @@ class RemoteJoin(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		user = data["user"]
 		chanName = data["channel"]
 		if user.uuid[:3] == self.ircd.serverID:

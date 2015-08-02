@@ -114,8 +114,16 @@ class ServerRehashNotice(Command):
 		if len(params) not in (2, 3):
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		if prefix not in self.ircd.servers:
+			if prefix in self.ircd.recentlyQuitServers:
+				return {
+					"lostserver": True
+				}
 			return None
 		if len(params) == 2:
 			return {
@@ -131,6 +139,8 @@ class ServerRehashNotice(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data or "lostserver" in data:
+			return True
 		fromServer = data["fromserver"]
 		toUser = data["user"]
 		if toUser.uuid[:3] == self.ircd.serverID:

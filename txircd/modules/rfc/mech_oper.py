@@ -234,6 +234,10 @@ class ServerOper(Command):
 		if not params:
 			return None
 		if params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		return {
 			"user": self.ircd.users[params[0]],
@@ -241,6 +245,8 @@ class ServerOper(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		user = data["user"]
 		permissions = set(data["permissions"])
 		user.cache["oper-permissions"] = permissions

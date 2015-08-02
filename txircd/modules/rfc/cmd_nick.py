@@ -85,6 +85,10 @@ class NickServerCommand(Command):
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
+			if prefix in self.ircd.recentlyQuitUsers:
+				return {
+					"lostuser": True
+				}
 			return None
 		user = self.ircd.users[prefix]
 		try:
@@ -117,6 +121,8 @@ class NickServerCommand(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostuser" in data:
+			return True
 		user = data["user"]
 		newNick = data["nick"]
 		if not newNick:

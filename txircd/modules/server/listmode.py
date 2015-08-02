@@ -66,9 +66,15 @@ class ListModeCmd(Command):
 				}
 			except ValueError:
 				return None
+		if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
+			return {
+				"losttarget": True
+			}
 		return None
 	
 	def execute(self, server, data):
+		if "losttarget" in data:
+			return True
 		targetTime = data["targettime"]
 		target = data["target"]
 		mode = data["mode"]
@@ -93,13 +99,18 @@ class EndListModeCmd(Command):
 		if len(params) != 1:
 			return None
 		if params[0] not in self.ircd.channels and params[0] not in self.ircd.users:
+			if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"losttarget": True
+				}
 			return None
 		return {
 			"target": params[0]
 		}
 	
 	def execute(self, server, data):
-		self.module.setModes(data["target"])
+		if "losttarget" not in data:
+			self.module.setModes(data["target"])
 		return True
 
 listModeSync = ListModeSync()

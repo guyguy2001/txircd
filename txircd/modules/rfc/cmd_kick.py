@@ -159,11 +159,23 @@ class ServerKick(Command):
 			sourceType = "user"
 		elif prefix in self.ircd.servers:
 			sourceType = "server"
+		elif prefix in self.ircd.recentlyQuitUsers or prefix in self.ircd.recentlyQuitServers:
+			return {
+				"lostsource": True
+			}
 		else:
 			return None
 		if params[0] not in self.ircd.channels:
+			if params[0] in self.ircd.recentlyDestroyedChannels:
+				return {
+					"losttarget": True
+				}
 			return None
 		if params[1] not in self.ircd.users:
+			if params[1] in self.ircd.recentlyQuitUsers:
+				return {
+					"losttarget": True
+				}
 			return None
 		return {
 			"source{}".format(sourceType): self.ircd.users[prefix] if sourceType == "user" else self.ircd.servers[prefix],
@@ -173,6 +185,8 @@ class ServerKick(Command):
 		}
 	
 	def execute(self, server, data):
+		if "lostsource" in data or "losttarget" in data:
+			return True
 		channel = data["channel"]
 		sourceUser = data["sourceuser"] if "sourceuser" in data else None
 		sourceServer = data["sourceserver"] if "sourceserver" in data else None
