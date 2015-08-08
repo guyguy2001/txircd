@@ -41,6 +41,7 @@ class IRCUser(IRCBase):
 		self.idleSince = now()
 		self._registerHolds = set(("connection", "NICK", "USER"))
 		self.disconnectedDeferred = Deferred()
+		self._messageBatches = {}
 		self._errorBatchName = None
 		self._errorBatch = []
 		self.ircd.users[self.uuid] = self
@@ -154,6 +155,23 @@ class IRCUser(IRCBase):
 		else:
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
+	
+	def createMessageBatch(self, batchName, batchType):
+		self._messageBatches[batchName] = { "type": batchType, "messages": [] }
+	
+	def sendMessageInBatch(self, batchName, command, *args, **kw):
+		if batchName not in self._messageBatches:
+			return
+		self._messageBatches[batchName]["messages"].append((command, args, kw))
+	
+	def sendBatch(self, batchName):
+		if batchName not in self._messageBatches:
+			return
+		batchType = self._messageBatches[batchName]["type"]
+		self.ircd.runActionStandard("startbatchsend", batchName, batchType)
+		for messageData in self._messageBatches[batchName]["messages"]:
+			self.sendMessage(messageData[0], *messageData[1], **messageData[2])
+		self.ircd.runActionStandard("endbatchsend", batchName, batchType)
 	
 	def startErrorBatch(self, batchName):
 		"""
