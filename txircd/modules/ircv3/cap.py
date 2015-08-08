@@ -35,16 +35,22 @@ class Cap(ModuleData, Command):
 	def listCapability(self, capList):
 		capList.append("cap-notify")
 	
-	def newCapability(self, capName):
+	def newCapability(self, capName, sendInBatch = None):
 		for user in self.ircd.users.itervalues():
 			if "capabilities" in user.cache and "cap-notify" in user.cache["capabilities"]:
-				user.sendMessage("CAP", "NEW", capName)
+				if sendInBatch:
+					user.sendMessageInBatch(sendInBatch, "CAP", "NEW", capName)
+				else:
+					user.sendMessage("CAP", "NEW", capName)
 	
-	def removeCapability(self, capName):
+	def removeCapability(self, capName, sendInBatch = None):
 		for user in self.ircd.users.itervalues():
 			if "capabilities" in user.cache:
 				if "cap-notify" in user.cache["capabilities"]:
-					user.sendMessage("CAP", "DEL", capName)
+					if sendInBatch:
+						user.sendMessageInBatch(sendInBatch, "CAP", "DEL", capName)
+					else:
+						user.sendMessage("CAP", "DEL", capName)
 				if capName in user.cache["capabilities"]:
 					del user.cache["capabilities"][capName]
 	
