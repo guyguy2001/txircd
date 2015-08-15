@@ -1,4 +1,4 @@
-twisted[tls]==15.2.1
+twisted[tls]==15.3.0
 pyyaml==3.11
 pbkdf2
 pymysql
