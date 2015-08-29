@@ -43,7 +43,12 @@ class Cap(ModuleData, Command):
 				else:
 					user.sendMessage("CAP", "NEW", capName)
 	
-	def removeCapability(self, capName, sendInBatch = None):
+	def removeCapability(self, capability, sendInBatch = None):
+		if "=" in capability:
+			capName, value = capability.split("=", 1)
+		else:
+			capName = capability
+			value = None
 		for user in self.ircd.users.itervalues():
 			if "capabilities" in user.cache:
 				if "cap-notify" in user.cache["capabilities"]:
@@ -51,7 +56,7 @@ class Cap(ModuleData, Command):
 						user.sendMessageInBatch(sendInBatch, "CAP", "DEL", capName)
 					else:
 						user.sendMessage("CAP", "DEL", capName)
-				if capName in user.cache["capabilities"]:
+				if capName in user.cache["capabilities"] and (value is None or user.cache["capabilities"][capName] == value):
 					del user.cache["capabilities"][capName]
 	
 	def parseParams(self, user, params, prefix, tags):
