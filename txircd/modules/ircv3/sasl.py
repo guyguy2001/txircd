@@ -74,13 +74,13 @@ class SASL(ModuleData, Command):
 		if "sasl-processing" in user.cache:
 			del user.cache["sasl-processing"]
 	
-	def addSASLMech(self, mechanism):
+	def addSASLMech(self, mechanism, notifyBatchName = None):
 		if "cap-add" in self.ircd.functionCache:
-			self.ircd.functionCache["cap-add"]("sasl={}".format(mechanism))
+			self.ircd.functionCache["cap-add"]("sasl={}".format(mechanism), notifyBatchName)
 	
-	def removeSASLMech(self, mechanism):
+	def removeSASLMech(self, mechanism, notifyBatchName = None):
 		if "cap-del" in self.ircd.functionCache:
-			self.ircd.functionCache["cap-del"]("sasl={}".format(mechanism))
+			self.ircd.functionCache["cap-del"]("sasl={}".format(mechanism), notifyBatchName)
 	
 	def saslMechList(self):
 		saslMechanisms = []
