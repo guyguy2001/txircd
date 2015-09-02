@@ -179,7 +179,7 @@ def unescapeEndpointDescription(desc):
 	return "".join(result)
 
 
-def splitMessage(message, maxLength):
+def splitMessage(message, maxLength, splitOnCharacter = " "):
 	"""
 	Split a string into a series of strings each with maximum length maxLength
 	and returns them in a list.
@@ -196,8 +196,8 @@ def splitMessage(message, maxLength):
 		elif limitedMessage == message:
 			msgList.append(limitedMessage)
 			message = ""
-		elif " " in limitedMessage:
-			pos = limitedMessage.rfind(" ")
+		elif splitOnCharacter in limitedMessage:
+			pos = limitedMessage.rfind(splitOnCharacter)
 			newMsg = limitedMessage[:pos]
 			if newMsg:
 				msgList.append(newMsg)
