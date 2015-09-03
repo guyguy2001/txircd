@@ -10,6 +10,7 @@ class Cap(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
 	
 	name = "Cap"
+	forRegistered = None
 	
 	def actions(self):
 		return [ ("capabilitylist", 10, self.listCapability) ]
