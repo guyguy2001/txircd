@@ -169,8 +169,10 @@ class Cap(ModuleData, Command):
 						capability = change[1]
 						value = None
 					user.cache["capabilities"][change[1]] = value
+					self.ircd.runActionStandard("addusercap", user, change[1], value)
 				elif change[1] in user.cache["capabilities"]:
 					del user.cache["capabilities"][change[1]]
+					self.ircd.runActionStandard("delusercap", user, change[1])
 			user.sendMessage("CAP", "ACK", " ".join(requestedCapabilities))
 			return True
 		if subCmd == "END":
