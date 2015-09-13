@@ -19,7 +19,7 @@ class AccountTag(ModuleData):
 			self.ircd.functionCache["cap-add"]("account-tag")
 	
 	def unload(self):
-		self.ircd.dataCache["unloading-account-tag"]
+		self.ircd.dataCache["unloading-account-tag"] = True
 	
 	def fullUnload(self):
 		del self.ircd.dataCache["unloading-account-tag"]
