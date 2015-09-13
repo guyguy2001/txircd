@@ -151,22 +151,33 @@ class IRCUser(IRCBase):
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
 	
-	def createMessageBatch(self, batchName, batchType):
-		self._messageBatches[batchName] = { "type": batchType, "messages": [] }
+	def createMessageBatch(self, batchName, batchType, batchParameters = None):
+		"""
+		Start a new message batch with the given batch name, type, and list of parameters.
+		If a batch with the given name already exists, that batch will be overwritten.
+		"""
+		self._messageBatches[batchName] = { "type": batchType, "parameters": batchParameters, "messages": [] }
 	
 	def sendMessageInBatch(self, batchName, command, *args, **kw):
+		"""
+		Adds a message to the batch with the given name.
+		"""
 		if batchName not in self._messageBatches:
 			return
 		self._messageBatches[batchName]["messages"].append((command, args, kw))
 	
 	def sendBatch(self, batchName):
+		"""
+		Sends the messages in the given batch to the user.
+		"""
 		if batchName not in self._messageBatches:
 			return
 		batchType = self._messageBatches[batchName]["type"]
-		self.ircd.runActionStandard("startbatchsend", batchName, batchType)
+		batchParameters = self._messageBatches[batchName]["parameters"]
+		self.ircd.runActionStandard("startbatchsend", batchName, batchType, batchParameters)
 		for messageData in self._messageBatches[batchName]["messages"]:
 			self.sendMessage(messageData[0], *messageData[1], **messageData[2])
-		self.ircd.runActionStandard("endbatchsend", batchName, batchType)
+		self.ircd.runActionStandard("endbatchsend", batchName, batchType, batchParameters)
 	
 	def startErrorBatch(self, batchName):
 		"""
