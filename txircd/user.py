@@ -99,9 +99,9 @@ class IRCUser(IRCBase):
 			to = kw["to"]
 			del kw["to"]
 		if to:
-			IRCBase.sendMessage(self, command, to, *args, **kw)
-		else:
-			IRCBase.sendMessage(self, command, *args, **kw)
+			args = [to] + list(args)
+		self.ircd.runActionStandard("modifyoutgoingmessage", self, command, args, kw)
+		IRCBase.sendMessage(self, command, *args, **kw)
 	
 	def handleCommand(self, command, params, prefix, tags):
 		if self.uuid not in self.ircd.users:
