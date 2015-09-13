@@ -85,15 +85,10 @@ class IRCUser(IRCBase):
 		Accepts the following keyword arguments:
 		- prefix: The message prefix or None to suppress the default prefix
 		    If not given, defaults to the server name.
-		- sourceuser: If given instead of prefix, will use the given user's
-		    hostmask as the prefix. Useful for when you can call sendMessage
-		    for both local and remote users from the same place.
-		- usertransform: If given with sourceuser, uses the function specified
-		    as this parameter's argument to convert the user into a prefix.
-		    This overrides the default conversion of using the user's hostmask.
-		- sourceserver: If given instead of prefix, will use the given server's
-		    name as the prefix. Useful for when you can call sendMessage for
-		    both local and remote users from the same place.
+		- to: The destination of the message or None if the message has no
+		    destination. The implicit destination is this user if this
+		    argument isn't specified.
+		- tags: Dict of message tags to send.
 		"""
 		if "prefix" not in kw:
 			kw["prefix"] = self.ircd.name

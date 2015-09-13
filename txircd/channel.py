@@ -21,8 +21,8 @@ class IRCChannel(object):
 		"""
 		Sends a message to all local users in a channel.
 		Accepts a command and some parameters for that command to send.
+		Accepts any keyword arguments accepted by IRCUser.sendMessage.
 		Also accepts the following keyword arguments:
-		- to: allows you to override the default destination of the channel name
 		- skip: list of users in the channel to skip when sending the message
 		"""
 		if "to" not in kw:
