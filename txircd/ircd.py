@@ -411,7 +411,7 @@ class IRCd(Service):
 				config["server_id"] = config["server_id"].upper()
 		else:
 			randFromName = random.Random(config["server_name"])
-			serverID = randFromName.choice(string.digits) + randFromName.choice(string.digits + string.uppercase) + randFromName.choice(string.digits + string.uppercase)
+			serverID = randFromName.choice(string.digits) + randFromName.choice(string.digits + string.ascii_uppercase) + randFromName.choice(string.digits + string.ascii_uppercase)
 			config["server_id"] = serverID
 		if len(config["server_id"]) != 3 or not config["server_id"].isalnum() or not config["server_id"][0].isdigit():
 			raise ConfigValidationError("server_id", "value must be a 3-character alphanumeric string starting with a number.")
