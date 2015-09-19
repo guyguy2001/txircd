@@ -128,7 +128,7 @@ class ServerInfoRequest(Command):
 			destServer.sendMessage("INFOEND", user.uuid, typeName, prefix=self.ircd.serverID)
 			return True
 		nextServer = self.ircd.servers[serverID]
-		nextServer.sendMessage("INFOREQ", serverID, typeName, prefix=data["user"])
+		nextServer.sendMessage("INFOREQ", serverID, typeName, prefix=data["user"].uuid)
 		return True
 
 class ServerInfo(Command):
