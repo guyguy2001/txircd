@@ -13,7 +13,8 @@ class Cap(ModuleData, Command):
 	forRegistered = None
 	
 	def actions(self):
-		return [ ("capabilitylist", 10, self.listCapability) ]
+		return [ ("capabilitylist", 10, self.listCapability),
+		         ("checkremovecapability", 20, self.preventRemoveOn302) ]
 	
 	def userCommands(self):
 		return [ ("CAP", 1, self) ]
@@ -35,6 +36,11 @@ class Cap(ModuleData, Command):
 	
 	def listCapability(self, capList):
 		capList.append("cap-notify")
+	
+	def preventRemoveOn302(self, user, capability):
+		if capability == "cap-notify" and "capversion" in user.cache and user.cache["capversion"] >= 302:
+			return False
+		return None
 	
 	def newCapability(self, capName, sendInBatch = None):
 		for user in self.ircd.users.itervalues():
