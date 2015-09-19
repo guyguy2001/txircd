@@ -8,7 +8,7 @@ class AccountTag(ModuleData):
 	name = "AccountTag"
 	
 	def actions(self):
-		return [ ("modifyoutgoingmessage", 1, self.addAccountTag),
+		return [ ("sendingusertags", 1, self.addAccountTag),
 		         ("capabilitylist", 10, self.addCapability) ]
 	
 	def load(self):
@@ -29,24 +29,8 @@ class AccountTag(ModuleData):
 	def addCapability(self, user, capList):
 		capList.append("account-tag")
 	
-	def addAccountTag(self, user, command, args, kw):
-		if "prefix" not in kw:
-			return
-		if "capabilities" not in user.cache or "account-tag" not in user.cache["capabilities"]:
-			return
-		prefix = kw["prefix"]
-		if "!" not in prefix or "@" not in prefix:
-			return
-		nick = prefix.split("!", 1)[0]
-		if nick not in self.ircd.userNicks:
-			return
-		sourceUser = self.ircd.users[self.ircd.userNicks[nick]]
-		if not sourceUser.metadataKeyExists("account"):
-			return
-		accountName = sourceUser.metadataValue("account")
-		if "tags" in kw:
-			kw["tags"]["account"] = accountName
-		else:
-			kw["tags"] = { "account": accountName }
+	def addAccountTag(self, fromUser, conditionalTags):
+		if fromUser.metadataKeyExists("account"):
+			conditionalTags["account"] = (fromUser.metadataValue("account"), lambda user: "capabilities" in user.cache and "account-tag" in user.cache["capabilities"])
 
 accountTag = AccountTag()

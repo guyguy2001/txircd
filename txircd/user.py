@@ -218,6 +218,14 @@ class IRCUser(IRCBase):
 			self.sendMessage(error[0], *error[1], **error[2])
 		self._clearErrorBatch()
 	
+	def filterConditionalTags(self, conditionalTags):
+		applyTags = {}
+		for tag, data in conditionalTags.iteritems():
+			value, check = data
+			if check(self):
+				applyTags[tag] = value
+		return applyTags
+	
 	def connectionLost(self, reason):
 		if self.uuid in self.ircd.users:
 			self.disconnect("Connection reset")
