@@ -25,8 +25,11 @@ class JoinCommand(ModuleData):
 	
 	def sendJoinMessage(self, messageUsers, channel, user):
 		userPrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for destUser in messageUsers:
-			destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix)
+			tags = user.filterConditionalTags(conditionalTags)
+			destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 		del messageUsers[:]
 	
 	def sendRJoin(self, user, channel):

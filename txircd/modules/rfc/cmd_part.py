@@ -40,15 +40,19 @@ class PartCommand(ModuleData):
 		if type != "PART":
 			return
 		msgPrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		if "reason" in typeData and typeData["reason"]:
 			reason = typeData["reason"]
 			for destUser in sendUserList:
 				if destUser.uuid[:3] == self.ircd.serverID:
-					destUser.sendMessage("PART", reason, to=channel.name, prefix=msgPrefix)
+					tags = destUser.filterConditionalTags(conditionalTags)
+					destUser.sendMessage("PART", reason, to=channel.name, prefix=msgPrefix, tags=tags)
 		else:
 			for destUser in sendUserList:
 				if destUser.uuid[:3] == self.ircd.serverID:
-					destUser.sendMessage("PART", to=channel.name, prefix=msgPrefix)
+					tags = destUser.filterConditionalTags(conditionalTags)
+					destUser.sendMessage("PART", to=channel.name, prefix=msgPrefix, tags=tags)
 		del sendUserList[:]
 
 class UserPart(Command):

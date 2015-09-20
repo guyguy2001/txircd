@@ -34,8 +34,11 @@ class NickCommand(ModuleData):
 	
 	def sendNickMessage(self, userShowList, user, oldNick):
 		hostmask = "{}!{}@{}".format(oldNick, user.ident, user.host())
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for targetUser in userShowList:
-			targetUser.sendMessage("NICK", to=user.nick, prefix=hostmask)
+			tags = targetUser.filterConditionalTags(conditionalTags)
+			targetUser.sendMessage("NICK", to=user.nick, prefix=hostmask, tags=tags)
 		del userShowList[:]
 	
 	def broadcastNickChange(self, user, oldNick, fromServer):

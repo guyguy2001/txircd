@@ -36,7 +36,22 @@ class IRCChannel(object):
 					userList.remove(u)
 		kw["users"] = userList
 		kw["channels"] = [self]
+		baseTags = {}
+		if "tags" in kw:
+			baseTags = kw["tags"]
+			del kw["tags"]
+		conditionalTags = {}
+		if "conditionalTags" in kw:
+			conditionalTags = kw["conditionalTags"]
+			del kw["conditionalTags"]
 		for user in userList:
+			if conditionalTags:
+				tags = baseTags.copy()
+				addTags = user.filterConditionalTags(conditionalTags)
+				tags.update(addTags)
+			else:
+				tags = baseTags
+			kw["tags"] = tags
 			user.sendMessage(command, *params, **kw)
 	
 	def sendServerMessage(self, command, *params, **kw):

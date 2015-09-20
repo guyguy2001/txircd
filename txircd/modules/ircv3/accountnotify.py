@@ -34,15 +34,19 @@ class AccountNotify(ModuleData):
 			return
 		noticeUsers = set()
 		noticePrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for channel in user.channels:
 			for noticeUser in channel.users.iterkeys():
 				if noticeUser.uuid[:3] == self.ircd.serverID and noticeUser != user and "capabilities" in noticeUser.cache and "account-notify" in noticeUser.cache["capabilities"]:
 					noticeUsers.add(noticeUser)
 		if value:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("ACCOUNT", value, prefix=noticePrefix)
+				tags = noticeUser.filterConditionalTags(conditionalTags)
+				noticeUser.sendMessage("ACCOUNT", value, prefix=noticePrefix, tags=tags)
 		else:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("ACCOUNT", "*", prefix=noticePrefix)
+				tags = noticeUser.filterConditionalTags(conditionalTags)
+				noticeUser.sendMessage("ACCOUNT", "*", prefix=noticePrefix, tags=tags)
 
 accountNotify = AccountNotify()

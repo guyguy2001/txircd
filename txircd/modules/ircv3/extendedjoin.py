@@ -31,6 +31,8 @@ class ExtendedJoin(ModuleData):
 	
 	def sendExtJoin(self, messageUsers, channel, user):
 		userPrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		if user.metadataKeyExists("account"):
 			userAccount = user.metadataValue("account")
 		else:
@@ -39,7 +41,8 @@ class ExtendedJoin(ModuleData):
 		for toUser in messageUsers:
 			if "capabilities" in user.cache and "extended-join" in user.cache["capabilities"]:
 				extJoinUsers.append(toUser)
-				toUser.sendMessage("JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix)
+				tags = toUser.filterConditionalTags(conditionalTags)
+				toUser.sendMessage("JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix, tags=tags)
 		for extUser in extJoinUsers:
 			messageUsers.remove(extUser)
 

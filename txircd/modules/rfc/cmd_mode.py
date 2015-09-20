@@ -62,11 +62,18 @@ class ModeCommand(ModuleData):
 	
 	def sendChannelModesToUsers(self, users, channel, source, sourceName, modes):
 		modeOuts = self.getOutputModes(modes, False)
+		userSource = source in self.ircd.users
+		if userSource:
+			conditionalTags = {}
+			self.ircd.runActionStandard("sendingusertags", self.ircd.users[source], conditionalTags)
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
 			for user in users:
-				user.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=channel.name)
+				tags = {}
+				if userSource:
+					tags = user.filterConditionalTags(conditionalTags)
+				user.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=channel.name, tags=tags)
 		del users[:]
 	
 	def sendChannelModesToServers(self, channel, source, sourceName, modes):
@@ -85,11 +92,18 @@ class ModeCommand(ModuleData):
 	
 	def sendUserModesToUsers(self, users, user, source, sourceName, modes):
 		modeOuts = self.getOutputModes(modes, False)
+		userSource = source in self.ircd.users
+		if userSource:
+			conditionalTags = {}
+			self.ircd.runActionStandard("sendingusertags", self.ircd.users[source], conditionalTags)
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
 			for u in set(users):
-				u.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=user.nick)
+				tags = {}
+				if userSource:
+					tags = user.filterConditionalTags(conditionalTags)
+				u.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=user.nick, tags=tags)
 		del users[:]
 	
 	def sendUserModesToServers(self, user, source, sourceName, modes):

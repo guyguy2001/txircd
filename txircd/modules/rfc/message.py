@@ -59,13 +59,16 @@ class MessageCommands(ModuleData):
 		sentAMessage = False
 		sentNoTextError = False
 		userPrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		if "targetusers" in data:
 			for target, message in data["targetusers"].iteritems():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
 						messageParts = splitMessage(message, self.ircd.config["message_length"])
+						tags = target.filterConditionalTags(conditionalTags)
 						for part in messageParts:
-							target.sendMessage(command, part, prefix=userPrefix)
+							target.sendMessage(command, part, prefix=userPrefix, tags=tags)
 					else:
 						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
@@ -77,7 +80,7 @@ class MessageCommands(ModuleData):
 				if message:
 					messageParts = splitMessage(message, self.ircd.config["message_length"])
 					for part in messageParts:
-						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user])
+						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user], conditionalTags=conditionalTags)
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
@@ -117,12 +120,16 @@ class MessageCommands(ModuleData):
 	def serverExecute(self, command, server, data):
 		if "lostsource" in data or "losttarget" in data:
 			return True
+		fromUser = data["from"]
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", fromUser, conditionalTags)
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:
 				messageParts = splitMessage(data["message"], self.ircd.config["message_length"])
+				tags = user.filterConditionalTags(conditionalTags)
 				for part in messageParts:
-					user.sendMessage(command, part, prefix=data["from"].hostmask())
+					user.sendMessage(command, part, prefix=data["from"].hostmask(), tags=tags)
 			else:
 				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
@@ -132,7 +139,7 @@ class MessageCommands(ModuleData):
 			message = data["message"]
 			messageParts = splitMessage(message, self.ircd.config["message_length"])
 			for part in messageParts:
-				chan.sendUserMessage(command, part, prefix=fromUser.hostmask())
+				chan.sendUserMessage(command, part, prefix=fromUser.hostmask(), conditionalTags=conditionalTags)
 			chan.sendServerMessage(command, chan.name, message, prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return None

@@ -32,8 +32,11 @@ class QuitCommand(ModuleData, Command):
 	
 	def sendQuitMessage(self, sendUserList, user, reason):
 		hostmask = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for destUser in sendUserList:
-			destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask)
+			tags = destUser.filterConditionalTags(conditionalTags)
+			destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask, tags=tags)
 		del sendUserList[:]
 	
 	def sendRQuit(self, user, reason):

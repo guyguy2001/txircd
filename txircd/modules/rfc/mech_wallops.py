@@ -45,9 +45,12 @@ class UserWallops(Command):
 	def execute(self, user, data):
 		message = data["message"]
 		userPrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for u in self.ircd.users.itervalues():
 			if u.uuid[:3] == self.ircd.serverID and "w" in u.modes:
-				u.sendMessage("WALLOPS", message, prefix=userPrefix, to=None)
+				tags = u.filterConditionalTags(conditionalTags)
+				u.sendMessage("WALLOPS", message, prefix=userPrefix, to=None, tags=tags)
 		self.ircd.broadcastToServers(None, "WALLOPS", message, prefix=user.uuid)
 		return True
 
@@ -77,9 +80,12 @@ class ServerWallops(Command):
 		fromUser = data["from"]
 		message = data["message"]
 		userPrefix = fromUser.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", fromUser, conditionalTags)
 		for user in self.ircd.users.itervalues():
 			if user.uuid[:3] == self.ircd.serverID and "w" in user.modes:
-				user.sendMessage("WALLOPS", message, prefix=userPrefix, to=None)
+				tags = user.filterConditionalTags(conditionalTags)
+				user.sendMessage("WALLOPS", message, prefix=userPrefix, to=None, tags=tags)
 		self.ircd.broadcastToServers(server, "WALLOPS", message, prefix=fromUser.uuid)
 		return True
 

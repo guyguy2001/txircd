@@ -34,14 +34,22 @@ class TopicCommand(ModuleData):
 				self.ircd.logConfigValidationWarning("topic_length", "value is too large", 326)
 	
 	def onTopic(self, channel, setter, oldTopic):
+		userSource = setter in self.ircd.users
+		if userSource:
+			sourceUser = self.ircd.users[setter]
+			conditionalTags = {}
+			self.ircd.runActionStandard("sendingusertags", sourceUser, conditionalTags)
 		for user in channel.users.iterkeys():
 			if user.uuid[:3] == self.ircd.serverID:
-				user.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter)
+				tags = {}
+				if userSource:
+					tags = user.filterConditionalTags(conditionalTags)
+				user.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter, tags=tags)
 		sourceServer = None
-		if setter in self.ircd.users and setter[:3] == self.ircd.serverID:
-			settingUser = self.ircd.users[setter]
-			if settingUser not in channel.users:
-				settingUser.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter)
+		if userSource and setter[:3] == self.ircd.serverID:
+			if sourceUser not in channel.users:
+				tags = sourceUser.filterConditionalTags(conditionalTags)
+				sourceUser.sendMessage("TOPIC", channel.topic, to=channel.name, prefix=channel.topicSetter, tags=tags)
 		elif setter != self.ircd.serverID:
 			sourceServer = self.ircd.servers[setter[:3]]
 			while sourceServer.nextClosest != self.ircd.serverID:

@@ -44,6 +44,8 @@ class ChangeHost(ModuleData):
 		self.sendToChannelUsers(user, userIdent, userHost, userPrefix)
 	
 	def sendToChannelUsers(self, user, userIdent, userHost, userPrefix):
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		channelUsers = set()
 		for channel in user.channels:
 			for chanUser in channel.users.iterkeys():
@@ -51,6 +53,7 @@ class ChangeHost(ModuleData):
 		for chanUser in channelUsers:
 			if "capabilities" not in chanUser.cache or "chghost" not in chanUser.cache["capabilities"]:
 				continue
-			chanUser.sendMessage("CHGHOST", userIdent, userHost, prefix=userPrefix)
+			tags = chanUser.filterConditionalTags(conditionalTags)
+			chanUser.sendMessage("CHGHOST", userIdent, userHost, prefix=userPrefix, tags=tags)
 
 changeHost = ChangeHost()

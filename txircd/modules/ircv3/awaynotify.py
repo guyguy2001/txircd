@@ -35,24 +35,31 @@ class AwayNotify(ModuleData):
 			return
 		noticeUsers = set()
 		noticePrefix = user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for channel in user.channels:
 			for noticeUser in channel.users.iterkeys():
 				if noticeUser.uuid[:3] == self.ircd.serverID and noticeUser != user and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
 					noticeUsers.add(noticeUser)
 		if value:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("AWAY", value, prefix=noticePrefix)
+				tags = noticeUser.filterConditionalTags(conditionalTags)
+				noticeUser.sendMessage("AWAY", value, prefix=noticePrefix, tags=tags)
 		else:
 			for noticeUser in noticeUsers:
-				noticeUser.sendMessage("AWAY", prefix=noticePrefix)
+				tags = noticeUser.filterConditionalTags(conditionalTags)
+				noticeUser.sendMessage("AWAY", prefix=noticePrefix, tags=tags)
 	
 	def tellChannelAway(self, channel, user):
 		if not user.metadataKeyExists("away"):
 			return
 		awayReason = user.metadataValue("away")
 		noticePrefix=user.hostmask()
+		conditionalTags = {}
+		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for noticeUser in channel.users.iterkeys():
 			if noticeUser.uuid[:3] == self.ircd.serverID and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
-				noticeUser.sendMessage("AWAY", awayReason, prefix=noticePrefix)
+				tags = noticeUser.filterConditionalTags(conditionalTags)
+				noticeUser.sendMessage("AWAY", awayReason, prefix=noticePrefix, tags=tags)
 
 awayNotify = AwayNotify()
