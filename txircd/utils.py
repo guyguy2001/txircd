@@ -92,6 +92,14 @@ def timestamp(time):
 	unixEpoch = datetime.utcfromtimestamp(0)
 	return int((time - unixEpoch).total_seconds())
 
+def isoTime(time):
+	"""
+	Converts a datetime object to an ISO-format date.
+	"""
+	if time.microsecond == 0:
+		time = time.replace(microsecond=1) # Force milliseconds to appear
+	return "{}Z".format(time.isoformat()[:-3])
+
 
 def durationToSeconds(durationStr):
 	"""
