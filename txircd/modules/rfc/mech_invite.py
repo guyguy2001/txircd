@@ -4,6 +4,8 @@ from txircd.module_interface import Command, ICommand, IModuleData, IMode, Modul
 from txircd.utils import ModeType, now
 from zope.interface import implements
 
+irc.RPL_INVITED = "345"
+
 class Invite(ModuleData, Mode):
 	implements(IPlugin, IModuleData, IMode)
 	
@@ -17,7 +19,8 @@ class Invite(ModuleData, Mode):
 	def actions(self):
 		return [ ("modeactioncheck-channel-i-joinpermission", 1, self.hasInviteMode),
 		         ("join", 1, self.clearInvite),
-		         ("commandpermission-INVITE", 1, self.checkInviteLevel) ]
+		         ("commandpermission-INVITE", 1, self.checkInviteLevel),
+		         ("notifyinvite", 1, self.sendNotification) ]
 	
 	def userCommands(self):
 		return [ ("INVITE", 1, UserInvite(self.ircd)) ]
@@ -45,6 +48,10 @@ class Invite(ModuleData, Mode):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to invite users to {}".format(channel.name))
 			return False
 		return None
+	
+	def sendNotification(self, notifyList, channel, sendingUser, invitedUser):
+		for user in notifyList:
+			user.sendMessage(irc.RPL_INVITED, channel.name, invitedUser.nick, sendingUser.nick, "{} has been invited by {}".format(invitedUser.nick, sendingUser.nick))
 	
 	def apply(self, actionName, channel, param, joiningChannel, user):
 		if "invites" not in user.cache or channel.name not in user.cache["invites"]:
@@ -99,6 +106,11 @@ class UserInvite(Command):
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		tags = user.filterConditionalTags(conditionalTags)
 		targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
+		notifyList = []
+		for chanUser in channel.users.iterkeys(): # Notify all users who can invite other users on the channel
+			if chanUser != user and chanUser != targetUser and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user):
+				notifyList.append(chanUser)
+		self.ircd.runActionProcessing("notifyinvite", notifyList, channel, user, targetUser)
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
 		return True
 
