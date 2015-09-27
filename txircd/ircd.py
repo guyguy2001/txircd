@@ -421,6 +421,9 @@ class IRCd(Service):
 			raise ConfigValidationError("server_description", "value must be a string")
 		if not config["server_description"]:
 			raise ConfigValidationError("server_description", "value must not be an empty string")
+		if len(config["server_description"]) > 255:
+			config["server_description"] = config["server_description"][:255]
+			self.logConfigValidationWarning("server_description", "value is too long and has been truncated", config["server_description"])
 		if "network_name" not in config:
 			raise ConfigValidationError("network_name", "required item not found in configuration file.")
 		if not isinstance(config["network_name"], basestring):
