@@ -430,6 +430,8 @@ class IRCd(Service):
 			raise ConfigValidationError("network_name", "value must be a string")
 		if not config["network_name"]:
 			raise ConfigValidationError("network_name", "value must not be an empty string")
+		if " " in config["network_name"]:
+			raise ConfigValidationError("network_name", "value cannot have spaces")
 		if len(config["network_name"]) > 32:
 			config["network_name"] = config["network_name"][:32]
 			self.logConfigValidationWarning("network_name", "value is too long", config["network_name"])
