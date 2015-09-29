@@ -61,7 +61,7 @@ class UserStats(Command):
 			server.sendMessage("INFOREQ", server.serverID, typeName, prefix=user.uuid)
 			return True
 		if typeName is None:
-			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-all"):
+			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-unknown"):
 				user.sendMessage(irc.ERR_NOSUCHXINFO, typeName, "No such XINFO topic available")
 			else:
 				user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
