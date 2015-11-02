@@ -5,7 +5,7 @@ from zope.interface import implements
 class DccBlock(ModuleData):
 	implements(IPlugin, IModuleData)
 
-	name = "DccBlock"
+	name = "DCCBlock"
 
 	def actions(self):
 		return [ ("commandpermission-PRIVMSG", 1, self.blockDCC),
