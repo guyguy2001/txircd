@@ -14,9 +14,9 @@ class ChannelLevel(ModuleData):
 		         ("checkexemptchanops", 1, self.exemptCheck) ]
 
 	def verifyConfig(self, config):
-		if "channel_minimum_level" in config and not isinstance("channel_minimum_level", dict):
+		if "channel_minimum_level" in config and not isinstance(config["channel_minimum_level"], dict):
 			raise ConfigValidationError("channel_minimum_level", "value must be a dictionary")
-		if "channel_exempt_level" in config and not isinstance("channel_exempt_level", dict):
+		if "channel_exempt_level" in config and not isinstance(config["channel_exempt_level"], dict):
 			raise ConfigValidationError("channel_exempt_level", "value must be a dictionary")
 	
 	def minLevelFromConfig(self, configKey, checkType, defaultLevel):
