@@ -1,0 +1,268 @@
+# txircd Configuration - Extra Modules
+
+# This file has lots of stuff for all of our extra, optional modules.
+# Everything is off by default, but feel free to configure it as you see fit.
+
+# If the config loader is complaining about this line and you didn't load any
+# modules, maybe just don't include this file.
+modules:
+
+# AutoJoin: Makes users automatically join some channels on connect. This is
+# useful in certain circumstances, but we don't recommend enabling this for
+# most networks, as outside of certain contexts, most users will find it
+# annoying. Requires some configuration to fully function (see below).
+#- AutoJoin
+
+# AutoUserModes: Automatically applies user modes to users on connect. This
+# module requires some configuration to fully function (see below).
+#- AutoUserModes
+
+# BlockColors: Provides a channel mode (+c) that blocks the use of formatting
+# in the channel.
+#- BlockColors
+
+# BlockCTCP: Provides a channel mode (+C) that blocks the use of CTCPs except
+# ACTION to that channel.
+#- BlockCTCP
+
+# Censor: Allows setting a global censor list using the CENSOR command. The
+# censor list will be enforced on channels or on private messages to users with
+# the +G mode set.
+# The command works as follows:
+# /censor <badword> <replacement>
+# where <badword> is a regex representing the text you want to censor, and
+# <replacement> is the text with which you want to replace it.
+#- Censor
+
+# ChannelFlood: Provides the +f channel mode to limit the rate at which
+# messages can be sent to a channel by a user.
+#- ChannelFlood
+
+# ChannelOpAccess: Provides fine control over which levels of op can do what in
+# a channel with the +W command. The default permission for an action (usually
+# +o for most op-only actions) can be set using +W rank:permissionName, where
+# "rank" is the minimum required status mode (e.g. 'o' or 'v'), and
+# "permissionName" is the name of the permission to allow/restrict to that
+# level.
+#- ChannelOpAccess
+
+# ConnectionLimit: Provides a way to limit the maximum number of connections
+# from a single host. This module has some optional configuration (see below).
+# We highly recommend loading it.
+#- ConnectionLimit
+
+# CustomPrefix: Provides a way to specify custom channel ranks for channels.
+# This is the way to get additional ranks beyond +ov. This module has some
+# optional configuration (see below). If it's not configured, we provide
+# owner (+q, ~), admin (+a, &), and halfop (+h, %) modes by default.
+#- CustomPrefix
+
+# DCCBlock: Blocks DCC from being initiated on this server.
+#- DCCBlock
+
+# DenyChannels: Prevents some channels from being used at all server-wide.
+# Opers with the channel-denied permission can still join and use channels that
+# are denied. This module requires some configuration (see below).
+#- DenyChannels
+
+# GlobalLoad: Provides a way to load or unload a module on all servers all at
+# once.
+#- GlobalLoad
+
+# Globops: Provides a way for an oper to send a message to all other opers.
+# The GLOBOPS command can be used by opers with the command-globops permission,
+# and the the message will be sent to all opers with the view-globops
+# permission.
+#- Globops
+
+# HostCloaking: Provides the +x user mode allowing users to cloak their
+# hostnames. This module requires some configuration (see below). If you want
+# to encourage cloaking for your users (you probably do), we also recommend
+# adding mode 'x' to your AutoUserModes configuration.
+#- HostCloaking
+
+# Knock: Allows users to KNOCK on an invite-only channel. Also provides the
+# channel mode +K to disallow knocking on a channel.
+#- Knock
+
+# ModulesCommand: Provides a command that lists all modules loaded on the
+# server.
+#- ModulesCommand
+
+# RateLimit: Allows limiting the rate at which commands are sent to the server.
+# This can help to prevent most severe flooding from small numbers of users.
+# This module has some optional configuration (see below).
+#- RateLimit
+
+# SajoinCommand: Provides the SAJOIN command, allowing opers with the
+# command-sajoin permission to join users to channels.
+#- SajoinCommand
+
+# SakickCommand: Provides the SAKICK command, allowing opers with the
+# command-sakick permission to kick users from channels.
+#- SakickCommand
+
+# SamodeCommand: Provides the SAMODE command, allowing opers with the
+# command-samode permission to set modes on other users or channels.
+#- SamodeCommand
+
+# SanickCommand: Provides the SANICK command, allowing opers with the
+# command-sanick permission to change the nicknames of other users.
+#- SanickCommand
+
+# SapartCommand: Provides the SAPART command, allowing opers with the
+# command-sapart permission to forcibly part users from channels.
+#- SapartCommand
+
+# SatopicCommand: Provides the SATOPIC command, allowing opers with the
+# command-satopic permission to set the topics of channels.
+#- SatopicCommand
+
+# Shun: Provides the SHUN command, which allows opers with the command-shun
+# permission to restrict users to a small subset of commands. This module has
+# some optional configuration (see below).
+#- Shun
+
+# ServerNoticeConnect: Provides the "connect" server notice type which notifies
+# opers of user connections.
+#- ServerNoticeConnect
+
+# ServerNoticeOper: Provides the "oper" server notice type which notifies opers
+# of successful and failed oper attempts.
+#- ServerNoticeOper
+
+# ServerNoticeQuit: Provides the "quit" server notice type which notifies opers
+# of user disconnections.
+#- ServerNoticeQuit
+
+# ServerNoticeRemoteConnect: Provides the "remoteconnect" server notice type
+# which notifies opers of user connections on remote servers.
+#- ServerNoticeRemoteConnect
+
+# ServerNoticeRemoteQuit: Provides the "remotequit" server notice type which
+# notifies opers of user disconnections on remote servers.
+#- ServerNoticeRemoteQuit
+
+# StripColors: Provides a channel mode (+S) that strips formatting from
+# messages sent to the channel.
+#- StripColors
+
+
+# AutoJoin Configuration
+# Configuring this module requires specifying which channels to have the user
+# automatically join on connect. Users will not be joined to channels to which
+# they do not have permission to join.
+#client_join_on_connect:
+#- '#welcome'
+#- '#newusers'
+
+# AutoUserModes Configuration
+# Configuring this module requires specifying which modes are set automatically
+# on connect. You can specify modes with parameters the way you normally
+# would--by separating them with spaces.
+#client_umodes_on_connect: x
+
+# ConnectionLimit Configuration
+# This module has two options to set up, the maximum connections per host and
+# IP addresses that can bypass the connection limit.
+
+# connlimit_globmax
+# This setting determines the maximum number of connections allowed from a
+# single host on the entire network. The default value is 3.
+#connlimit_globmax: 3
+
+# connlimit_whitelist
+# This setting is a list of IP addresses which are exempt from the connection
+# limit specified in connlimit_globmax. By default, there are no exempt hosts.
+#connlimit_whitelist: []
+
+# CustomPrefix Configuration
+# Configuring this module simply requires specifying all of the custom status
+# modes you want to have on your network. It's important that you know what
+# other modes are used on your network and not to reuse any of those mode
+# letters here, since otherwise you'll likely break things. By default, this
+# module makes halfop (+h, %), admin (+a, &), and owner (+q, ~) modes like
+# this:
+#custom_prefixes:
+#  h:
+#    level: 50
+#    char: '%'
+#  a:
+#    level: 150
+#    char: '&'
+#  q:
+#    level: 200
+#    char: '~'
+
+# DenyChannels Configuration
+# Configuring this module involves specifying which channels you don't want to
+# allow.
+
+# deny_channels
+# This is a list of channel names which are not allowed to be used on this
+# server. Wildcards (* and ?) may be used.
+#deny_channels:
+#- '#bad_channel'
+#- '#evil*'
+
+# allow_channels
+# This is a list of channel names which are exempt from the deny_channels list.
+# This is useful for if you have specific channels that you want to allow, but
+# they match wildcards in your deny_channels list. This list also accepts
+# wildcards. If a channel matches names or wildcards in both lists,
+# allow_channels will always override deny_channels.
+#allow_channels:
+#- '#evil_overlords'
+
+# HostCloaking Configuration
+# This module has some required configuration and some optional configuration.
+
+# cloaking_salt
+# This is REQUIRED for cloaking to work properly. Otherwise, host cloaks will
+# NOT be secure and can easily be reversed by malicious users!
+# This can be any string you like, but make sure it's reasonably long and
+# random (include symbols and other things). It doesn't matter exactly what the
+# string is as long as it's very likely to be reasonably unique for your
+# network.
+# Changing this string will change the resulting cloaks, which is likely to
+# break existing ban masks using cloaked hosts, so consider carefully before
+# changing it, and announce to your users that you're doing so.
+# For security, don't use the default value I put below. Change it to something
+# else as you uncomment it.
+#cloaking_salt: secret
+
+# cloaking_prefix
+# You may also specify an optional prefix that is placed before cloaked hosts.
+#cloaking_prefix: txircd
+
+# RateLimit Configuration
+# Configuring this module involves tweaking the parameters for the maximum
+# command rate.
+
+# rate_interval
+# Specify the number of seconds to use for the amount of time in which the
+# specified number of commands can be sent. The default value is 60 seconds.
+#rate_interval: 60
+
+# rate_soft_limit
+# This is the number of commands that can be run every rate_interval seconds.
+# If this is exceeded, the user will be warned, and commands from that user
+# (except PING and PONG) will be ignored. The default value is 60 commands.
+#rate_soft_limit: 60
+
+# rate_kill_limit
+# If a user reaches this number of commands in rate_interval seconds, the user
+# will be disconnected. The default value is 500 seconds.
+#rate_kill_limit: 500
+
+# Shun
+# For this module, you can specify the commands that are able to be sent by a
+# SHUNned user. By default, users may send JOIN, PART, QUIT, PING, and PONG.
+# We strongly recommend not removing PING or PONG from the list of allowed
+# commands.
+#shun_commands:
+#- JOIN
+#- PART
+#- QUIT
+#- PING
+#- PONG

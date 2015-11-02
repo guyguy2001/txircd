@@ -1,0 +1,491 @@
+# txircd Default Configuration
+# ----------------------------
+# Remember to copy this file to txircd.yaml!
+# Each configuration option is explained in comments immediately preceding it.
+# Some configuration options are in files in the conf/ directory. These
+# options are not pulled in by default unless you include them (see the bottom
+# of this file). Those files can also be edited to enhance the configuration
+# experience. We'll explain what happens if you include them without
+# configuring them (some come with a default configuration set, and some
+# don't).
+# The example configuration is commented out. When you configure options not to
+# have the default value, you should uncomment the values.
+
+
+# REQUIRED CONFIGURATION
+# ----------------------
+# If you want to get your server set up quickly, the next three values are the
+# only configuration that is required to get your server online. If you
+# configure these and nothing else, you can start the server with a basic
+# feature set (think just RFC 1459 with few extras) and some default
+# configuration. Configuring additional values that are not in this required
+# configuration section will allow you to add additional features.
+#
+# server_name [REQUIRED]
+# This option sets the name of the server. It must look like a hostname, but it
+# is not required that it resolves. It can't be longer than 64 characters.
+#server_name: irc.example.com
+
+# server_description [REQUIRED]
+# This option is the server description. It can be any string as long as it's
+# not longer than 255 characters.
+#server_description: This is a server description.
+
+# network_name [REQUIRED]
+# This is the name of your network. It can be up to 32 characters with no
+# spaces.
+#network_name: MyNetwork
+
+
+# ADDITIONAL GENERAL CONFIGURATION
+# --------------------------------
+# If you want your server to do anything that's not the most basic featureset,
+# you'll also want to configure these other options.
+
+# server_id
+# This option allows you to set the server ID. The server ID must be 3
+# characters long. The first character must be a number, and the other two may
+# be any alphanumeric character (for letters, only capital letters).
+# You shouldn't need to specify this unless you're trying to link this server
+# to another server and the generated IDs are colliding. We'll generate a
+# server ID automatically based on your server name if this is not specified.
+#server_id: 4B5
+
+# server_password
+# This option allows you to set a password which clients must provide in order
+# to connect to your server. If this isn't specified, no password is required.
+#server_password: null
+
+# bind_client
+# This specifies the addresses and ports to which you want to bind to accept
+# client connections. You should specify this if you want to be able to receive
+# client connections.
+# If you don't specify anything, by default we listen on all available
+# addresses to port 6667.
+# This option takes a list of values in Twisted's serverFromString format. You
+# can find some info on that in the Twisted documentation:
+# https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.serverFromString.html
+# We extend the serverFromString format only by allowing you to escape colons
+# enclosed in braces (e.g. if you need to specify an IPv6 address, you can use
+# '{dead:beef::1}' instead of 'dead\:beef\:\:1').
+# By default, Twisted looks for server.pem for your SSL certificate/key. If
+# your cert and key are in another place, you'll want to make sure you specify
+# those as described in the documentation.
+#bind_client:
+#- tcp:6667:interface={::}
+#- ssl:6697:interface={::}
+
+# bind_server
+# This specifies the addresses and ports to which you want to bind to accept
+# server connections. You should specify this if you want to be able to receive
+# server connections.
+# If you don't specify something, no server ports will be bound, so you need to
+# specify some if you want to have servers connect to this one.
+# The values work like bind_client.
+#bind_server:
+#- tcp:7000:interface=127.0.0.1
+#- ssl:7001:interface={::}
+
+# admin_line_1
+# This is the first line of the admin information. You probably want to set
+# this. You'll want to include some information about the server administrator.
+# The default is empty, so you probably really want to set this.
+#admin_line_1: Operated by <name>
+
+# admin_line_2
+# This is the second line of the admin information. You probably want to set
+# this. You'll want to include some information about the server administrator.
+# The default is empty, so you probably really want to set this.
+#admin_line_2: Hosted by <name>
+
+# admin_contact
+# This is the third line of the admin information. You probably want to set
+# this. You'll want to include contact information for the server
+# administrator, preferably at least an email address.
+#admin_contact: admin@example.com
+
+# motd_file
+# This is the file that holds the MOTD. If you don't specify this, your server
+# won't show an MOTD. Otherwise, the server will show the contents of the file
+# as the MOTD.
+#motd_file: motd.txt
+
+# channel_default_modes
+# Channels on your network will need to have some modes set by default (or they
+# can have no modes set by default, but you most likely want some). If you
+# don't specify this, channels will get +ont by default. If you want channels
+# to get no modes by default, specify this with an empty string ('').
+# If you specify a mode that takes a parameter, you may specify one by
+# separating them with spaces (as if you were defining a real mode string for a
+# channel). Don't include the preceding '+'.
+# You may also specify status modes. Status modes don't take a parameter here.
+# If you specify any status modes, the first user in the channel will get those
+# statuses. If you don't specify any status modes, the first user in the
+# channel will not get any status modes when they join (not even +o).
+#channel_default_modes: ont
+
+# client_ban_msg
+# This is the message that is shown to clients when they are banned right
+# before they are disconnected.
+#client_ban_msg: You're banned! Email abuse@example.com for assistance.
+
+# user_ping_frequency
+# This controls how often PING is sent to users. You probably want to leave
+# this at the default most of the time. Setting it too low will use lots of
+# unnecessary bandwidth, and setting it too high will take up too much of your
+# server's resources with dead connections. If not specified, the default is
+# 60 seconds.
+#user_ping_frequency: 60
+
+# user_registration_timeout
+# This controls how long a user connection may remain in an unregistered state
+# before it is terminated. This means that users must finish connecting and
+# registering their connection (selecting a nickname, ident, and gecos) within
+# this time frame. You shouldn't need to change this, but you may increase it
+# if you somehow find lots of clients having issues registering in time or if
+# you are loading a module that may block registration for a long time. If not
+# specified, the default is 10 seconds.
+#user_registration_timeout: 10
+
+# server_ping_frequency
+# This controls how often PING is sent to servers. You probably want to leave
+# this at the default most of the time. If not specified, the default is 60
+# seconds.
+#server_ping_frequency: 60
+
+# server_registration_timeout
+# This controls how long a server connection may remain in an unregistered
+# state before it is terminated. This means that servers must finish connecting
+# and registering their connection (selecting a nickname, ident, and gecos)
+# within this time frame. You shouldn't need to change this; needing to change
+# it may indicate a problem with the network connection on your servers. If not
+# specified, the default is 10 seconds.
+#server_registration_timeout: 10
+
+# whowas_duration
+# This controls how long user data is kept for the WHOWAS command. If not
+# specified, the default is one day.
+# This should be specified as a string in the format '1y2w3d4h5m6s'.
+#whowas_duration: 1d
+
+# whowas_max_entries
+# This controls the maximum number of WHOWAS entries we'll keep for a specific
+# nickname. If not specified, the default is 10.
+#whowas_max_entries: 10
+
+# public_info
+# This controls which STATS options are available to everyone rather than just
+# opers. Options not listed here will be available only to opers.
+# Specify this as a list of options. If not specified, the default is no
+# options.
+#public_info: []
+
+# log_level
+# This determines the level at which we log information to the log file after
+# startup. During startup, all information is logged at the 'info' level.
+# Valid values for this option are 'critical', 'error', 'warn', 'info', and
+# 'debug' (ordered from least to most logging). The values are case-sensitive.
+# If no value is specified or the specified value doesn't match any of the
+# valid options, messages will be logged at the log level of 'warn'.
+#log_level: info
+
+# datastore_path
+# Defines where the data file is saved. You likely won't need to change this.
+# By default, data is stored to data.db. Relative paths are from the base
+# txircd directory.
+#datastore_path: data.db
+
+# storage_sync_interval
+# You shouldn't need to change this unless you're really suffering from
+# performance problems and you're sure those performance problems are caused by
+# disk I/O.
+# This sets the interval at which the data file is saved back to the disk. The
+# default value is 5 seconds.
+# This is specified as a number of seconds.
+#storage_sync_interval: 5
+
+# channel_minimum_level
+# This is a dictionary allowing you to specify the minimum channel status
+# required to perform actions on a channel. Most channel commands require +o
+# by default. You may make commands require a different status level using
+# either status modes or numeric levels (+o corresponds to 100; +v to 10).
+# By default, nothing has a special value, but you can make your own like this:
+#channel_minimum_level:
+#  topic: o
+#  mode: o
+#  invite: o
+
+# channel_exempt_level
+# This is also a dictionary, this one allowing you to specify the minimum
+# channel status required to be exempt from certain channel restrictions. By
+# default, no user is exempt from channel restrictions, but you can make your
+# own similarly to how channel_minimum_level is specified. For example, this
+# will make ops and higher exempt from censor (+G) and stripcolor (+S):
+#channel_exempt_level:
+#  censor: o
+#  stripcolor: o
+
+
+# OPER CONFIGURATION
+# ------------------
+# This section determines what opers you have and what permissions each of
+# those opers have. If you do not configuration section, YOU WILL NOT HAVE ANY
+# OPERS FOR YOUR SERVER, so it is very important that you fill this out!
+#
+# Opers in txircd have types and can optionally be organized into groups. A
+# single oper can have as many types as needed but can only be organized into
+# one group.
+
+# oper_types
+# Oper types define what permissions your opers have. You can specify any
+# number of permissions in a type, and you can specify any number of types that
+# you need.
+# Opers with no permissions can't do anything, so it's important to give them
+# some.
+# You can specify a large number of permissions at once using wildcards.
+# If you don't specify any oper types, by default there aren't any.
+# Specify oper types as a dict of type name -> list of permissions.
+# A few example types are defined below.
+#oper_types:
+#  access-info:
+#  - info-*
+#  ban-users:
+#  - command-kill
+#  - command-gline
+#  - command-kline
+#  - command-zline
+#  - command-eline
+#  - command-qline
+#  - command-shun
+#  manage-server:
+#  - command-loadmodule
+#  - command-unloadmodule
+#  - command-reloadmodule
+#  - command-gloadmodule
+#  - command-gunloadmodule
+#  - command-greloadmodule
+#  - command-rehash
+#  - command-die
+#  - command-restart
+#  - command-connect
+#  - command-squit
+
+# oper_groups
+# Oper groups allow you to gather a set of opers in a group of settings. In
+# oper groups, you can specify a vhost and set of oper types to apply to all of
+# the opers in the group. A vhost defined in the oper configuration will
+# override the one specified in the oper group. Types specified in the oper
+# configuration will be applied to the oper in addition to the types listed in
+# the group.
+#oper_groups:
+#  netadmin:
+#    vhost: netadmin.example.com
+#    types:
+#    - access-info
+#    - ban-users
+#    - manage-server
+
+# opers
+# Opers are individual logins for your opers. For each oper, you must specify a
+# username (dict key), password, and host (wildcards allowed in host). The host
+# must be in the format 'user@host', and the user's user@host will be matched
+# against that to verify that user can log into that account. The username
+# option does NOT restrict which nicknames can be used to oper with that login;
+# it is simply the username parameter for the OPER command and is
+# case-sensitive. You can also optionally specify the following:
+# - hash: You can specify a hash method here. If you do, the module
+#   implementing the hash method specified here should be loaded (e.g. for
+#   'pbkdf2' the module 'HashPBKDF2' must be loaded). If this is specified,
+#   the password specified for the 'password' option of the oper must be hashed
+#   using that hash method.
+# - vhost: You can specify a vhost for this oper.
+# - types: You can also specify a list of oper types. It's recommended that you
+#   do this either here or in the oper group so that the oper is able to do
+#   anything.
+# - group: You can specify the group to which this oper belongs. This oper will
+#   inherit the vhost of the group (if not overridden at the oper level) and
+#   the group's types (which will be added onto the list of types specified for
+#   the oper).
+#opers:
+#  ElementalAlchemist:
+#    password: 'FNyk4sNNx8IRx2DAtlWVHSDHsfvnEmY/' # Don't use this password
+#    hash: pbkdf2
+#    group: netadmin
+#    #vhost: captain.example.com # Could use this vhost
+#    types:
+#    - manage-server # If this wasn't in the group, it'd make sense
+
+
+# LINK CONFIGURATION
+# ------------------
+# This section details which servers are allowed to link to our server and
+# which servers we can link to. This section only needs to be filled out if you
+# plan to link this server to other servers and form a network.
+
+# links
+# This holds the information of all the servers to which this server is allowed
+# to form a connection. These are specified as a dictionary with the server
+# name as the key and a dictionary with the following keys as the value:
+# - connect_descriptor: A descriptor that can be passed to Twisted's
+#     clientFromString function to connect to the server.
+#     You can find more information on this in the Twisted documentation:
+#     https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.clientFromString.html
+# - in_password: The password that this server must receive from the other
+#     server for a successful connection.
+# - out_password: The password that this server must send to the other server
+#     for a successful connection.
+#links:
+#  server2.example.com:
+#    connect_descriptor: ssl:server2.example.com:7001
+#    in_password: 1mAp4ssW0rD
+#    out_password: 1mAl50aPas5woRD
+
+# autoconnect
+# This allows you to specify a list of servers to which to automatically
+# connect. The server will periodically attempt to connect to each of the
+# servers in the list to which this server isn't already connected.
+#autoconnect:
+#- server2.example.com
+
+# autoconnect_period
+# This allows you to specify the number of seconds between autoconnect
+# attempts. The default is 60 seconds.
+#autoconnect_period: 60
+
+
+# LIMIT CONFIGURATION
+# -------------------
+# This section is optional. You probably don't want to touch it unless you're
+# really sure you both know what you're doing and have good reason to do so.
+# For extra protection, most values in this section cannot be increased above
+# the default values.
+
+# nick_length
+# This controls the maximum length of nicknames. The default value is 32.
+#nick_length: 32
+
+# ident_length
+# This controls the maximum length of user idents. The default value is 12.
+#ident_length: 12
+
+# hostname_length
+# This controls the maximum length of a hostname we'll accept and apply to
+# users. This setting does NOT apply to users' IP addreses. The default value
+# is 64.
+#hostname_length: 64
+
+# gecos_length
+# This controls the maximum length of each user's gecos (real name). The
+# default value is 128.
+#gecos_length: 128
+
+# away_length
+# This controls the maximum length of away messages. The default value is 200.
+#away_length: 200
+
+# kick_length
+# This controls the maximum length of kick reasons. The default value is 255.
+#kick_length: 255
+
+# topic_length
+# This controls the maximum length of channel topics. The default value is 326.
+
+# message_length
+# This controls the maximum length of messages sent using commands like PRIVMSG
+# and NOTICE. The default value is 324.
+#message_length: 324
+
+# part_message_length
+# This controls the maximum length of channel part messages. The default value
+# is 300.
+#part_message_length: 300
+
+# quit_message_length
+# This controls the maximum length of quit messages. The default value is 370.
+#quit_message_length: 370
+
+# channel_name_length
+# This controls the maximum length of channel names. The default value is 64.
+#channel_name_length: 64
+
+# modes_per_line
+# This controls the maximum number of modes the server will process in a single
+# line. The default value is 20.
+#modes_per_line: 20
+
+# user_listmode_limit
+# This controls the maximum number of entries a user may have in a single user
+# list mode. The default value is 128, but the value may be set as high as 256.
+#user_listmode_limit: 128
+
+# channel_listmode_limit
+# This controls the maximum number of entries a channel may have in a single
+# channel list mode. The default value is 128, but the value may be set as high
+# as 256.
+#channel_listmode_limit: 256
+
+
+# MODULE CONFIGURATION
+# --------------------
+# You might want to load extra modules that don't come with txircd. (For
+# modules that you got with txircd, see the below section.) If so, you'll want
+# to specify them here.
+
+# modules
+# This is a list of modules. It's a list of module names. If not specified, no
+# custom modules are loaded. Remember to uncomment the following line (the 
+# "modules:" header) before making your list under it.
+#modules:
+
+
+# THE REST OF THE CONFIGURATION
+# -----------------------------
+# This final section of the main configuration file includes some other
+# configuration files. All of them are optional to include. You may include
+# them without editing them, but some things won't be fully set up unless you
+# edit those files.
+
+# Uncomment this line before uncommenting any of the others below. (If you end
+# not uncommenting the other lines below, don't forget to recomment this;
+# otherwise pyyaml will complain of syntax errors.)
+#include:
+
+# This file includes all of the string hash modules that ship with txircd.
+# No configuration is required for this. It's recommended that you load these
+# modules.
+#- conf/stringhash.yaml
+
+# This file, by default, will make you mostly compliant with the IRCv3.2
+# version of the IRC spec (both base and optional extensions). A small amount
+# of setup needs to be done for some of the features.
+#- conf/ircv3.yaml
+
+# This file won't do anything by default, but it has all the optional extra
+# modules and configuration in it, so if you want any extra features, you'll
+# definitely want to give it a good look-over.
+#- conf/extra-modules.yaml
+
+# This file makes no sense to include unless you're developing on txircd.
+# You'll need to configure it before it does anything.
+#- conf/dev.yaml
+
+# client_join_on_connect
+# client_umodes_on_connect
+# custom_prefixes
+# deny_channels
+# allow_channels
+# connlimit_globmax
+# connlimit_whitelist
+# knock_delay
+# ratelimit
+# shun_commands
+# cloaking_prefix
+# cloaking_salt
+# manhole_passwd
+# manhole_bind_telnet
+# manhole_bind_ssh
+# starttls_key
+# starttls_cert
+# max_user_metadata
+# monitor_length
+# monitor_limit

@@ -1,0 +1,8 @@
+# txircd Configuration - String Hash Modules
+
+# This file has nothing in particular that's especially configurable. You may,
+# if you want, selectively load some string hashing modules, but as doing so
+# doesn't particularly help or hurt anything, there's no real point to it.
+
+modules:
+- HashPBKDF2

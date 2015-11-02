@@ -1,0 +1,122 @@
+# txircd Configuration - IRCv3 Modules
+
+# The modules in this file enable IRCv3 features. Many of them are enabled by
+# default; a few require additional setup. Regardless, we'll document all of
+# them here for completeness.
+
+modules:
+
+# Cap: This implements the CAP command, which is the basis for how most of the
+# other features here are enabled.
+- Cap
+
+# MultiPrefix: Provides a way to see all of each user's ranks in a channel on
+# NAMES or WHO. It's a base extension in 3.1 (multi-prefix).
+- MultiPrefix
+
+# SASL: Provides a base mechanism to enable SASL in CAP and allow other modules
+# to consistently use SASL for authentication. It's a base extension in 3.1
+# (sasl).
+- SASL
+
+# AccountNotify: Provides a mechanism to notify users of account changes (i.e.
+# when another user logs into or out of an account). It's an optional extension
+# in 3.1 (account-notify), but it's recommended to leave it enabled.
+- AccountNotify
+
+# AwayNotify: Provides a mechanism to notify users of changes in other users'
+# away state (i.e. when another user sets or unsets themselves as "away"). It's
+# an optional extension in 3.1 (away-notify), but it's recommended to leave it
+# enabled.
+- AwayNotify
+
+# ExtendedJoin: Provides a mechanism to give users in the channel more
+# information about joining users. It's an optional extension in 3.1
+# (extended-join), but it's recommended to leave it enabled.
+- ExtendedJoin
+
+# StartTLS: Provides STARTTLS. This module isn't enabled by default because it
+# requires some setup to function (see below). It's an optional extension in
+# 3.1 (tls). We recommend enabling all of IRCv3 if you can do the setup for it,
+# but this is one case where enabling it might be more work than the resulting
+# worth, especially since so few clients support STARTTLS (but then not
+# enabling this just continues the chicken/egg problem there).
+#- StartTLS
+
+# Metadata: Provides a way for users to manipulate user-editable metadata.
+# It has some optional but highly recommended setup (see below). It's a base
+# extension in 3.2 (metadata).
+- Metadata
+
+# Monitor: Provides a better way for users to track the online state of other
+# users than the old method of continuously querying with ISON. It has some
+# optional but hightly recommended setup (see below). It's a base extension in
+# 3.2 (monitor).
+- Monitor
+
+# AccountTag: Provides a way for users to get another user's account names in
+# contexts where extended-join and account-notify aren't sufficient to see the
+# account name of the user who messaged you (e.g. private message with a user
+# who shares no common channels). It's an optional but recommended extension in
+# 3.2 (account-tag).
+- AccountTag
+
+# Batch: Provides a mechanism of exposing message batches to users. A message
+# batch is a series of related messages caused by a single event. It's an
+# optional extension in 3.2 (batch), and we recommend enabling it.
+- Batch
+
+# EchoMessage: Provides a mechanism to send messages a user sends back to the
+# user who sends them. This allows clients to always show messages in order (as
+# opposed to showing messages you're sending before messages that were sent
+# before yours but not yet received) and with any modifications the server
+# might make to them (e.g. if you have StripColors enabled). It's an optional
+# extension in 3.2 (echo-message), and we recommend enabling it.
+- EchoMessage
+
+# InviteNotify: Provides a mechanism to notify users in a channel of a user
+# being invited to the channel. It's an optional extension in 3.2
+# (invite-notify), and we recommend enabling it.
+- InviteNotify
+
+# ServerTime: Provides the capability to clients to enable tagging messages
+# with the time at which they should apply. It's an optional extension in 3.2
+# (server-time), and we recommend enabling it.
+- ServerTime
+
+# UserhostInNames: Provides a way to get the nick!user@host instead of just the
+# nick for each user in response to a NAMES command. It's an optional extension
+# in 3.2 (userhost-in-names), and we recommend enabling it.
+- UserhostInNames
+
+
+# StartTLS Configuration
+# Configurating StartTLS simply requires setting up a cert and key to use for
+# securing connections for STARTTLS users.
+
+# starttls_key
+# This is a file containing the private key for the STARTTLS connections to
+# your server. The file must be in PEM format. Relative paths are from the base
+# txircd directory. If not specified, the default is server.pem.
+#starttls_key: server.pem
+
+# starttls_cert
+# This is a file containing the certificate for the STARTTLS connections to
+# your server. The file must be in PEM format. Relative paths are from the base
+# txircd directory. If not specified, the default is whatever the value of
+# starttls_key is.
+#starttls_cert: server.pem
+
+# Metadata Configuration
+# This configuration simply involves specifying the maximum number of user-set
+# metadata entries that can be in a single METADATA list (user or channel). The
+# default is unlimited. We recommend setting this value to something reasonable
+# like 100 entries, but you may set it to whatever you like.
+#metadata_limit: 100
+
+# Monitor Configuration
+# This configuration simply involves specifying the maximum number of nicknames
+# a single user can monitor. The default is unlimited. We recommend setting
+# this value to something reasonable like 100 entries, but you may set it to
+# whatever you like.
+#monitor_length: 100

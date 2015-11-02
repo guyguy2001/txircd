@@ -1,0 +1,45 @@
+# txircd Configuration - Development Modules
+
+# This file just enables manhole for your server. Manhole is a way to connect
+# to your server using an alternate port and get a Python REPL interpreter 
+# running in your server. When setting this up, you should make sure to take as
+# much care as possible to prevent outside/unneeded access, as this will cause
+# great problems. You probably also shouldn't load it unless you need it for
+# something (if you're running a test server, it's probably OK).
+# The manhole has access to the running IRCd object through the 'ircd'
+# variable, and everything else in the server is accessible from there.
+# If there's anything in the above paragraphs that you don't know what it
+# means, STOP and do not load this module. It will likely lead to dangerous
+# situations, and you'll probably break your server. (If you do know what all
+# the above means, go ahead and load it, but remember: with great knowledge
+# comes great responsibility.)
+
+# Uncomment both of these lines to load the manhole module:
+#modules:
+#- manhole
+
+# In order to actually be able to use it, you'll need to set a way to access
+# it. In order to do that, you'll need the configuration below.
+
+# When setting up ports, it's important to remember that "port descriptors"
+# below refers to serverFromString-style port descriptors, similar to those
+# used in bind_client and bind_server in txircd.yaml, so go back and reference
+# that if you need to.
+
+# manhole_passwd
+# This is a file with a list of valid username/password combinations. The file
+# is in this format:
+# username:password
+# with one username/password combination per line. Paths are relative to the
+# base txircd directory. If not specified, the default value is manhole.passwd.
+#manhole_passwd: manhole.passwd
+
+# manhole_bind_telnet:
+# This is a port descriptor for how to bind for telnet connections. If null or
+# not specified, no telnet ports will be bound.
+#manhole_bind_telnet: null
+
+# manhole_bind_ssh:
+# This is a port descriptor for how to bind ssh connections. If null or not
+# specified, no ssh ports will be bound.
+#manhole_bind_ssh: null
