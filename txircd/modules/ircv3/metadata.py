@@ -8,7 +8,7 @@ from zope.interface import implements
 irc.RPL_WHOISKEYVALUE = "760"
 irc.RPL_KEYVALUE = "761"
 irc.RPL_METADATAEND = "762"
-irc.RPL_METADATALIMIT = "764"
+irc.ERR_METADATALIMIT = "764"
 irc.ERR_TARGETINVALID = "765"
 irc.ERR_NOMATCHINGKEY = "766"
 irc.ERR_KEYINVALID = "767"
@@ -27,14 +27,14 @@ class Metadata(ModuleData, Command):
 		return [ ("METADATA", 1, self) ]
 	
 	def verifyConfig(self, config):
-		if "max_user_metadata" in config:
-			if config["max_user_metadata"] is not None and (not isinstance(config["max_user_metadata"], int) or config["max_user_metadata"] < 0):
-				raise ConfigValidationError("max_user_metadata", "invalid number and not null value")
+		if "metadata_limit" in config:
+			if config["metadata_limit"] is not None and (not isinstance(config["metadata_limit"], int) or config["metadata_limit"] < 0):
+				raise ConfigValidationError("metadata_limit", "invalid number and not null value")
 		else:
-			config["max_user_metadata"] = None
+			config["metadata_limit"] = None
 	
 	def addToISupport(self, iSupportList):
-		iSupportList["METADATA"] = self.ircd.config["max_user_metadata"]
+		iSupportList["METADATA"] = self.ircd.config["metadata_limit"]
 	
 	def userCanSeeMetadata(self, user, visibility):
 		if visibility == "*":
@@ -170,6 +170,13 @@ class Metadata(ModuleData, Command):
 				visibility = "*"
 			if not self.userCanSeeMetadata(user, visibility):
 				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, key, "permission denied")
+				return True
+			alreadySet = 0
+			for metadataData in target.metadataList():
+				if metadataData[3]:
+					alreadySet += 1
+			if alreadySet >= self.ircd.config["metadata_limit"]:
+				user.sendMessage(irc.ERR_METADATALIMIT, targetName, "metadata limit reached")
 				return True
 			value = data["value"] if "value" in data else None
 			if target.setMetadata(key, value, visibility, True):
