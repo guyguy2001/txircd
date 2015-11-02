@@ -64,8 +64,8 @@ class Monitor(ModuleData, Command):
 		if "monitor_length" not in config:
 			config["monitor_length"] = None
 			return
-		if not isinstance(config["topic_length"], int) or config["topic_length"] < 0:
-			raise ConfigValidationError("topic_length", "invalid number")
+		if not isinstance(config["monitor_length"], int) or config["monitor_length"] < 0:
+			raise ConfigValidationError("monitor_length", "invalid number")
 	
 	def addCapability(self, capList):
 		capList.append("metadata-notify")
