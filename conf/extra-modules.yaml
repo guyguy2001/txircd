@@ -3,8 +3,9 @@
 # This file has lots of stuff for all of our extra, optional modules.
 # Everything is off by default, but feel free to configure it as you see fit.
 
-# If the config loader is complaining about this line and you didn't load any
-# modules, maybe just don't include this file.
+# If the config loader complains about this line when you start the server and
+# you didn't load any modules from this file, maybe just don't include this
+# file. (Go back to the bottom of txircd.yaml for that.)
 modules:
 
 # AutoJoin: Makes users automatically join some channels on connect. This is
@@ -34,13 +35,13 @@ modules:
 # <replacement> is the text with which you want to replace it.
 #- Censor
 
-# ChannelFlood: Provides the +f channel mode to limit the rate at which
+# ChannelFlood: Provides a channel mode (+f) to limit the rate at which
 # messages can be sent to a channel by a user.
 #- ChannelFlood
 
 # ChannelOpAccess: Provides fine control over which levels of op can do what in
-# a channel with the +W command. The default permission for an action (usually
-# +o for most op-only actions) can be set using +W rank:permissionName, where
+# a channel with the +W mode. The default permission for an action (usually +o
+# for most op-only actions) can be set using +W rank:permissionName, where
 # "rank" is the minimum required status mode (e.g. 'o' or 'v'), and
 # "permissionName" is the name of the permission to allow/restrict to that
 # level.

@@ -220,7 +220,9 @@
 # channel status required to be exempt from certain channel restrictions. By
 # default, no user is exempt from channel restrictions, but you can make your
 # own similarly to how channel_minimum_level is specified. For example, this
-# will make ops and higher exempt from censor (+G) and stripcolor (+S):
+# will make ops and higher exempt from censor (+G) and stripcolor (+S) (the
+# Censor and StripColor modules must be loaded for this to matter; see the
+# extra modules include at the bottom of this file for more):
 #channel_exempt_level:
 #  censor: o
 #  stripcolor: o
@@ -286,13 +288,13 @@
 #    - manage-server
 
 # opers
-# Opers are individual logins for your opers. For each oper, you must specify a
-# username (dict key), password, and host (wildcards allowed in host). The host
-# must be in the format 'user@host', and the user's user@host will be matched
-# against that to verify that user can log into that account. The username
-# option does NOT restrict which nicknames can be used to oper with that login;
-# it is simply the username parameter for the OPER command and is
-# case-sensitive. You can also optionally specify the following:
+# Opers are individual logins for your network operators. For each oper, you
+# must specify a username (dict key), password, and host (wildcards allowed in
+# host). The host must be in the format 'user@host', and the user's user@host
+# will be matched against that to verify that user can log into that account.
+# The username option does NOT restrict which nicknames can be used to oper
+# with that login; it is simply the username parameter for the OPER command and
+# is case-sensitive. You can also optionally specify the following:
 # - hash: You can specify a hash method here. If you do, the module
 #   implementing the hash method specified here should be loaded (e.g. for
 #   'pbkdf2' the module 'HashPBKDF2' must be loaded). If this is specified,
@@ -370,7 +372,7 @@
 
 # hostname_length
 # This controls the maximum length of a hostname we'll accept and apply to
-# users. This setting does NOT apply to users' IP addreses. The default value
+# users. This setting does NOT apply to users' IP addresses. The default value
 # is 64.
 #hostname_length: 64
 
@@ -456,8 +458,9 @@
 #- conf/stringhash.yaml
 
 # This file, by default, will make you mostly compliant with the IRCv3.2
-# version of the IRC spec (both base and optional extensions). A small amount
-# of setup needs to be done for some of the features.
+# version of the IRC spec (both base and optional extensions). You can read
+# more about the IRCv3 specifications at http://ircv3.net. A small amount of
+# setup needs to be done for some of the features.
 #- conf/ircv3.yaml
 
 # This file won't do anything by default, but it has all the optional extra
@@ -468,24 +471,3 @@
 # This file makes no sense to include unless you're developing on txircd.
 # You'll need to configure it before it does anything.
 #- conf/dev.yaml
-
-# client_join_on_connect
-# client_umodes_on_connect
-# custom_prefixes
-# deny_channels
-# allow_channels
-# connlimit_globmax
-# connlimit_whitelist
-# knock_delay
-# ratelimit
-# shun_commands
-# cloaking_prefix
-# cloaking_salt
-# manhole_passwd
-# manhole_bind_telnet
-# manhole_bind_ssh
-# starttls_key
-# starttls_cert
-# max_user_metadata
-# monitor_length
-# monitor_limit
