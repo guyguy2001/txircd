@@ -52,6 +52,8 @@ class IRCBase(LineOnlyReceiver):
 	def _parseTags(self, tagLine):
 		tags = {}
 		for tagval in tagLine.split(";"):
+			if not tagval:
+				continue
 			if "=" in tagval:
 				tag, escapedValue = tagval.split("=", 1)
 				escaped = False
