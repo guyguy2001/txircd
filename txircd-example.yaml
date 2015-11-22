@@ -391,6 +391,7 @@
 
 # topic_length
 # This controls the maximum length of channel topics. The default value is 326.
+#topic_length: 326
 
 # message_length
 # This controls the maximum length of messages sent using commands like PRIVMSG
