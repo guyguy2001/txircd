@@ -5,7 +5,7 @@ document is divided in two sections: core permissions, that come with the core
 modules and extra permissions, that come with the extra modules that can be
 loaded.
 
-CORE PERMISSIONS
+Core Permissions
 ================
 
 Permission            | Description
@@ -33,7 +33,7 @@ info-zlines           | Allows an oper to view STATS/XINFO topic ZLINES.
 whois-host            | Allows an oper to see the real host and IP address of any user.
 
 
-EXTRA PERMISSIONS
+Extra Permissions
 =================
 
 Permission                | Module                    | Description
