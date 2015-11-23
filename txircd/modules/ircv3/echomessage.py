@@ -37,6 +37,8 @@ class EchoMessage(ModuleData):
 		self.returnMessage("NOTICE", user, data)
 	
 	def returnMessage(self, command, user, data):
+		if "capabilities" not in user.cache or "echo-message" not in user.cache["capabilities"]:
+			return
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
