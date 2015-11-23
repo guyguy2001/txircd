@@ -11,7 +11,7 @@ from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactor
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
 from weakref import WeakValueDictionary
-import importlib, os, random, re, shelve, string, txircd.modules
+import importlib, random, re, shelve, string, txircd.modules
 
 class IRCd(Service):
 	def __init__(self, configFileName):
