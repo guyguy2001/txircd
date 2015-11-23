@@ -1112,4 +1112,8 @@ class IRCd(Service):
 
 class ModuleLoadError(Exception):
 	def __init__(self, name, desc):
-		self.message = "Module {} could not be loaded: {}".format(name, desc)
+		self.moduleName = name
+		self.errorDescription = desc
+	
+	def __str__(self):
+		return "Module {} could not be loaded: {}".format(self.moduleName, self.errorDescription)
