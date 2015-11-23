@@ -1,4 +1,5 @@
 from twisted.plugin import IPlugin
+from txircd import protoVersion
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
@@ -32,7 +33,7 @@ class PassCommand(ModuleData, Command):
 				sendPassword = serverLinks[server.name]["out_password"] if "out_password" in serverLinks[server.name] else ""
 				server.sendMessage("PASS", sendPassword, prefix=self.ircd.serverID)
 			else:
-				server.sendMessage("CAPAB", "START", "300", prefix=self.ircd.serverID)
+				server.sendMessage("CAPAB", "START", protoVersion, prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "MODULES", " ".join(self.ircd.loadedModules.keys()), prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			return True
