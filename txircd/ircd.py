@@ -10,6 +10,7 @@ from txircd.config import Config, ConfigError, ConfigValidationError
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
+from datetime import timedelta
 from weakref import WeakValueDictionary
 import importlib, random, re, shelve, string, txircd.modules
 
@@ -638,7 +639,7 @@ class IRCd(Service):
 		return uid[:-1] + chr(ord(uid[-1]) + 1)
 	
 	def pruneQuit(self):
-		compareTime = now() - 10
+		compareTime = now() - timedelta(seconds=10)
 		remove = []
 		for uuid, timeQuit in self.recentlyQuitUsers.iteritems():
 			if timeQuit < compareTime:
