@@ -822,11 +822,10 @@ class RemoteUser(IRCUser):
 				del self.ircd.userNicks[self.nick]
 			self.ircd.recentlyQuitUsers[self.uuid] = now()
 			del self.ircd.users[self.uuid]
-			userSendList = [self]
+			userSendList = []
 			for channel in self.channels:
 				userSendList.extend(channel.users.keys())
 			userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-			userSendList.remove(self)
 			self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 			self.ircd.runActionStandard("remotequit", self, reason, users=[self])
 		else:
