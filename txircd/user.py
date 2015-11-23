@@ -316,7 +316,9 @@ class IRCUser(IRCBase):
 		isupportList = self.ircd.generateISupportList()
 		isupportMsgList = splitMessage(" ".join(isupportList), 350)
 		for line in isupportMsgList:
-			self.sendMessage(irc.RPL_ISUPPORT, line, "are supported by this server")
+			lineArgs = line.split(" ")
+			lineArgs.append("are supported by this server")
+			self.sendMessage(irc.RPL_ISUPPORT, *lineArgs)
 	
 	def hostmask(self):
 		"""
