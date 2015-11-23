@@ -29,7 +29,7 @@ class IRCServer(IRCBase):
 			if self.bursted is False and handler[0].forRegistered:
 				if "burst_queue" not in self.cache:
 					self.cache["burst_queue"] = []
-				self.cache["burst_queue"].append((command, prefix, params, tags))
+				self.cache["burst_queue"].append((command, params, prefix, tags))
 				return
 			registrationStatus = self.bursted
 			if registrationStatus is None:
@@ -55,8 +55,8 @@ class IRCServer(IRCBase):
 		"""
 		self.bursted = True
 		if "burst_queue" in self.cache:
-			for command, prefix, params, tags in self.cache["burst_queue"]:
-				self.handleCommand(command, prefix, params, tags)
+			for command, params, prefix, tags in self.cache["burst_queue"]:
+				self.handleCommand(command, params, prefix, tags)
 				if self.bursted is None:
 					break # Something failed to process, so we disconnected
 			del self.cache["burst_queue"]
