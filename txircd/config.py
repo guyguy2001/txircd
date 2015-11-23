@@ -13,7 +13,7 @@ class Config(object):
 	def _readConfig(self, fileName):
 		configData = {}
 		try:
-			with open(fileName, 'r') as configFile:
+			with open(fileName, "r") as configFile:
 				configData = yaml.safe_load(configFile)
 		except Exception as e:
 			raise ConfigReadError (fileName, e)
