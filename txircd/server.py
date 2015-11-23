@@ -84,6 +84,8 @@ class IRCServer(IRCBase):
 		self.bursted = None
 		if self._pinger.running:
 			self._pinger.stop()
+		if self._registrationTimeoutTimer.active():
+			self._registrationTimeoutTimer.cancel()
 		self._endConnection()
 	
 	def _endConnection(self):
