@@ -15,6 +15,8 @@ class Config(object):
 		try:
 			with open(fileName, "r") as configFile:
 				configData = yaml.safe_load(configFile)
+				if configData is None:
+					configData = {} # configData isn't allowed to be None, but an empty YAML file will result in None
 		except Exception as e:
 			raise ConfigReadError (fileName, e)
 		if "include" in configData:
