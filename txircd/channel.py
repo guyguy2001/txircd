@@ -351,6 +351,8 @@ class IRCChannel(object):
 					return False
 				statusLevel = self.ircd.channelStatuses[mode][1]
 				targetStatus = self.users[targetUser]["status"]
+				if mode in targetStatus:
+					return False
 				for index, rank in enumerate(targetStatus):
 					if self.ircd.channelStatuses[rank][1] < statusLevel:
 						statusList = list(targetStatus)
