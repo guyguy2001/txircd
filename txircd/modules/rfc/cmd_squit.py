@@ -23,7 +23,8 @@ class ServerQuit(ModuleData):
 	
 	def sendSQuit(self, server, reason):
 		if not server.bursted:
-			server.sendMessage("SQUIT", server.serverID, reason, prefix=server.nextClosest)
+			if server.serverID:
+				server.sendMessage("SQUIT", server.serverID, reason, prefix=server.nextClosest)
 			return
 		closestHop = server
 		while closestHop.nextClosest != self.ircd.serverID:
