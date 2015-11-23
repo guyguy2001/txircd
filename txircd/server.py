@@ -66,8 +66,8 @@ class IRCServer(IRCBase):
 		Disconnects the server.
 		"""
 		self.ircd.log.warn("Disconnecting server {server}: {reason}", server=self.name, reason=reason)
+		self.ircd.runActionStandard("serverquit", self, reason)
 		if self.bursted:
-			self.ircd.runActionStandard("serverquit", self, reason)
 			if netsplitQuitMsg is None:
 				netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
 			allUsers = self.ircd.users.values()

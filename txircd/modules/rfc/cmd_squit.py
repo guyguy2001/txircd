@@ -22,9 +22,13 @@ class ServerQuit(ModuleData):
 		         ("RSQUIT", 1, RemoteSQuit(self.ircd)) ]
 	
 	def sendSQuit(self, server, reason):
+		if not server.bursted:
+			server.sendMessage("SQUIT", server.serverID, reason, prefix=server.nextClosest)
 		closestHop = server
 		while closestHop.nextClosest != self.ircd.serverID:
 			closestHop = self.ircd.servers[closestHop.nextClosest]
+		if closestHop == server:
+			closestHop = None
 		self.ircd.broadcastToServers(closestHop, "SQUIT", server.serverID, reason, prefix=server.nextClosest)
 	
 	def restrictSQuit(self, user, data):
