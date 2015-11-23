@@ -8,6 +8,7 @@ class ServerCommand(ModuleData, Command):
 	
 	name = "ServerCommand"
 	core = True
+	forRegistered = False
 	
 	def actions(self):
 		return [ ("initiateserverconnection", 1, self.introduceSelf),

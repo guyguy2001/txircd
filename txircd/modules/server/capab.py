@@ -8,6 +8,7 @@ class CapabCommand(ModuleData, Command):
 	
 	name = "CapabCommand"
 	core = True
+	forRegistered = False
 	
 	def serverCommands(self):
 		return [ ("CAPAB", 1, self) ]

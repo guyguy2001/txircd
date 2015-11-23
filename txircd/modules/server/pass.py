@@ -8,6 +8,7 @@ class PassCommand(ModuleData, Command):
 	
 	name = "ServerPassCommand"
 	core = True
+	forRegistered = False
 	
 	def serverCommands(self):
 		return [ ("PASS", 1, self) ]
