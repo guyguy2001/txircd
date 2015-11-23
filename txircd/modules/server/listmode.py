@@ -21,8 +21,9 @@ class ListModeSync(ModuleData):
 		self.modeCache[target].append(modeData)
 	
 	def setModes(self, target):
-		target.setModes(self.modeCache[target])
-		del self.modeCache[target]
+		if target in self.modeCache:
+			target.setModes(self.modeCache[target])
+			del self.modeCache[target]
 	
 	def clearUser(self, userUUID):
 		for target in self.modeCache.iterkeys():
