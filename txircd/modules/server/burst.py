@@ -52,10 +52,13 @@ class ServerBurst(ModuleData, Command):
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
 			server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, nickTimestamp, modeStr, user.gecos, prefix=self.ircd.serverID)
+			sentListModes = False
 			for mode, paramList in listModes.iteritems():
 				for param, setter, time in paramList:
 					server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
-			server.sendMessage("ENDLISTMODE", user.uuid, prefix=self.ircd.serverID)
+					sentListModes = True
+			if sentListModes:
+				server.sendMessage("ENDLISTMODE", user.uuid, prefix=self.ircd.serverID)
 			for key, value, visibility, setByUser in user.metadataList():
 				server.sendMessage("METADATA", user.uuid, signonTimestamp, key, visibility, "1" if setByUser else "0", value, prefix=self.ircd.serverID)
 		for channel in self.ircd.channels.itervalues():
@@ -79,10 +82,13 @@ class ServerBurst(ModuleData, Command):
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
 			server.sendMessage("FJOIN", channel.name, channelTimestamp, modeStr, " ".join(users), prefix=self.ircd.serverID)
+			sentListModes = False
 			for mode, params in listModes.iteritems():
 				for param, setter, time in params:
 					server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
-			server.sendMessage("ENDLISTMODE", channel.name, prefix=self.ircd.serverID)
+					sentListModes = True
+			if sentListModes:
+				server.sendMessage("ENDLISTMODE", channel.name, prefix=self.ircd.serverID)
 			if channel.topic:
 				server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), channel.topic, prefix=self.ircd.serverID)
 			for key, value, visibility, setByUser in channel.metadataList():
