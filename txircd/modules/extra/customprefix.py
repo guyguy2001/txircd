@@ -19,7 +19,7 @@ class CustomPrefix(ModuleData, Mode):
 
 	def verifyConfig(self, config):
 		if "custom_prefixes" in config:
-			if not isinstance("custom_prefixes", dict):
+			if not isinstance(config["custom_prefixes"], dict):
 				raise ConfigValidationError("custom_prefixes", "value must be a dictionary")
 			for prefix, prefixValue in config["custom_prefixes"]:
 				if len(prefix) != 1:
