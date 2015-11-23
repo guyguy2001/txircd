@@ -21,7 +21,7 @@ class CustomPrefix(ModuleData, Mode):
 		if "custom_prefixes" in config:
 			if not isinstance(config["custom_prefixes"], dict):
 				raise ConfigValidationError("custom_prefixes", "value must be a dictionary")
-			for prefix, prefixValue in config["custom_prefixes"]:
+			for prefix, prefixValue in config["custom_prefixes"].iteritems():
 				if len(prefix) != 1:
 					raise ConfigValidationError("custom_prefixes", "prefix value \"{}\" should be a mode character")
 				if "level" not in prefixValue:
