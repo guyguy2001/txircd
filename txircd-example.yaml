@@ -456,19 +456,19 @@
 # This file includes all of the string hash modules that ship with txircd.
 # No configuration is required for this. It's recommended that you load these
 # modules.
-#- conf/stringhash.yaml
+#- conf/stringhash-example.yaml
 
 # This file, by default, will make you mostly compliant with the IRCv3.2
 # version of the IRC spec (both base and optional extensions). You can read
 # more about the IRCv3 specifications at http://ircv3.net. A small amount of
 # setup needs to be done for some of the features.
-#- conf/ircv3.yaml
+#- conf/ircv3-example.yaml
 
 # This file won't do anything by default, but it has all the optional extra
 # modules and configuration in it, so if you want any extra features, you'll
 # definitely want to give it a good look-over.
-#- conf/extra-modules.yaml
+#- conf/extra-modules-example.yaml
 
 # This file makes no sense to include unless you're developing on txircd.
 # You'll need to configure it before it does anything.
-#- conf/dev.yaml
+#- conf/dev-example.yaml
