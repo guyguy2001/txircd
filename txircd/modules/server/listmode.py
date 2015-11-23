@@ -23,6 +23,24 @@ class ListModeSync(ModuleData):
 	def setModes(self, target):
 		target.setModes(self.modeCache[target])
 		del self.modeCache[target]
+	
+	def clearUser(self, userUUID):
+		for target in self.modeCache.iterkeys():
+			try:
+				if target.uuid == userUUID:
+					del self.modeCache[target]
+					return
+			except AttributeError:
+				pass
+	
+	def clearChannel(self, channelName):
+		for target in self.modeCache.iterkeys():
+			try:
+				if target.name == channelName:
+					del self.modeCache[target]
+					return
+			except AttributeError:
+				pass
 
 class ListModeCmd(Command):
 	implements(ICommand)
@@ -98,18 +116,30 @@ class EndListModeCmd(Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 1:
 			return None
-		if params[0] not in self.ircd.channels and params[0] not in self.ircd.users:
-			if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
-				return {
-					"losttarget": True
-				}
-			return None
-		return {
-			"target": params[0]
-		}
+		if params[0] in self.ircd.channels:
+			return {
+				"target": self.ircd.channels[params[0]]
+			}
+		if params[0] in self.ircd.users:
+			return {
+				"target": self.ircd.users[params[0]]
+			}
+		if params[0] in self.ircd.recentlyQuitUsers:
+			return {
+				"lostuser": params[0]
+			}
+		if params[0] in self.ircd.recentlyDestroyedChannels:
+			return {
+				"lostchannel": params[0]
+			}
+		return None
 	
 	def execute(self, server, data):
-		if "losttarget" not in data:
+		if "lostuser" in data:
+			self.module.clearUser(data["lostuser"])
+		elif "lostchannel" in data:
+			self.module.clearChannel(data["lostchannel"])
+		else:
 			self.module.setModes(data["target"])
 		return True
 
