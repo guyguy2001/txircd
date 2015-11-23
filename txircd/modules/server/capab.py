@@ -48,8 +48,9 @@ class CapabCommand(ModuleData, Command):
 			return True
 		if subcmd == "MODULES":
 			moduleList = data["modules"]
-			if self.ircd.commonModules.difference(moduleList):
-				server.disconnect("Link Error: Not all required modules are loaded")
+			missingModules = self.ircd.commonModules.difference(moduleList)
+			if missingModules:
+				server.disconnect("Link Error: Not all required modules are loaded [Missing {}]".format(", ".join(missingModules)))
 				return True
 			return True
 		if subcmd == "END":
