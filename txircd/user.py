@@ -399,7 +399,7 @@ class IRCUser(IRCBase):
 			self._hostStack.remove(hostType)
 		self._hostStack.append(hostType)
 		if self.isRegistered():
-			self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer), users=[self])
+			self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer)), users=[self])
 	
 	def updateHost(self, hostType, newHost, fromServer = None):
 		"""
@@ -425,7 +425,7 @@ class IRCUser(IRCBase):
 		changedHostOfType = (oldHostOfType != newHost)
 		if self.isRegistered():
 			if changedUserHost and changedHostOfType:
-				self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer), users=[self])
+				self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer)), users=[self])
 			elif changedHostOfType:
 				self.ircd.runActionStandard("updatehost", self, hostType, oldHost, newHost, fromServer, users=[self])
 	
@@ -441,7 +441,7 @@ class IRCUser(IRCBase):
 		del self._hostsByType[hostType]
 		currentHost = self.host()
 		if currentHost != oldHost:
-			self.ircd.runComboActionStandard(("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, None, fromServer), users=[self])
+			self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, None, fromServer)), users=[self])
 		else:
 			self.ircd.runActionStandard("updatehost", self, hostType, oldHost, None, fromServer, users=[self])
 	
