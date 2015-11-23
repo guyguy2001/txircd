@@ -49,7 +49,7 @@ class Oper(ModuleData, Mode):
 					raise ConfigValidationError("oper_groups", "all group names must be strings")
 				if not isinstance(values, dict):
 					raise ConfigValidationError("oper_groups", "group data must be a dict")
-				for groupDataKey, groupDataValue in values.iterkeys():
+				for groupDataKey, groupDataValue in values.iteritems():
 					if not isinstance(groupDataKey, basestring):
 						raise ConfigValidationError("oper_groups", "group data identifiers for oper group \"{}\" must all be strings".format(groupName))
 					if groupDataKey == "vhost" and (not isinstance(groupDataValue, basestring) or not isValidHost(groupDataValue)):
