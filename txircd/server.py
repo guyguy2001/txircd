@@ -31,7 +31,7 @@ class IRCServer(IRCBase):
 					self.cache["burst_queue"] = []
 				self.cache["burst_queue"].append((command, prefix, params))
 				return
-			data = handler[0].parseParams(self, params, prefix, {})
+			data = handler[0].parseParams(self, params, prefix, tags)
 			if data is not None:
 				break
 		if data is None:
