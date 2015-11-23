@@ -475,8 +475,6 @@ class IRCd(Service):
 						config["links"][desc]["out_password"] = str(server["out_password"])
 		if "datastore_path" not in config:
 			config["datastore_path"] = "data.db"
-		if self.storage is None and not os.access(config["datastore_path"], os.W_OK):
-			raise ConfigValidationError("datastore_path", "path is invalid or txircd does not have write access")
 		if "storage_sync_interval" in config and not isinstance(config["storage_sync_interval"], int):
 			raise ConfigValidationError(config["storage_sync_interval"], "invalid number")
 
