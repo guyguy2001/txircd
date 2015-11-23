@@ -20,7 +20,7 @@ class ConnectionLimit(ModuleData):
 			self.addToConnections(user.ip)
 
 	def verifyConfig(self, config):
-		if "connlimit_globmax" in config and (not isinstance("connlimit_globmax", int) or config["connlimit_globmax"] < 0):
+		if "connlimit_globmax" in config and (not isinstance(config["connlimit_globmax"], int) or config["connlimit_globmax"] < 0):
 			raise ConfigValidationError("connlimit_globmax", "invalid number")
 		if "connlimit_whitelist" in config:
 			if not isinstance(config["connlimit_whitelist"], list):
