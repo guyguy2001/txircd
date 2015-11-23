@@ -165,12 +165,17 @@ class IRCd(Service):
 		if not module.name:
 			raise ModuleLoadError ("???", "Module did not provide a name")
 		if module.name in self.loadedModules:
+			self.log.debug("Not loading {module.name} because it's already loaded", module=module)
 			return
+		
+		self.log.debug("Beginning to load {module.name}...", module=module)
 		module.hookIRCd(self)
 		try:
 			module.verifyConfig(self.config)
 		except ConfigError as e:
 			raise ModuleLoadError(module.name, e)
+		
+		self.log.debug("Loading hooks from {module.name}...", module=module)
 		moduleData = {
 			"channelmodes": module.channelModes(),
 			"usermodes": module.userModes(),
@@ -185,6 +190,7 @@ class IRCd(Service):
 		newUserCommands = {}
 		newServerCommands = {}
 		common = False
+		self.log.debug("Processing hook data from {module.name}...", module=module)
 		for mode in moduleData["channelmodes"]:
 			if mode[0] in self.channelModeTypes:
 				raise ModuleLoadError (module.name, "Tries to implement channel mode +{} when that mode is already implemented.".format(mode[0]))
