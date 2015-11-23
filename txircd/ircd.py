@@ -658,7 +658,7 @@ class IRCd(Service):
 		for channel, remove in self.recentlyDestroyedChannels.iteritems():
 			if remove:
 				removeChannels.append(channel)
-			elif channel not in self.ircd.channels:
+			elif channel not in self.channels:
 				self.recentlyDestroyedChannels[channel] = True
 		for channel in removeChannels:
 			del self.recentlyDestroyedChannels[channel]
