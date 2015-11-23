@@ -16,7 +16,7 @@
 
 # Uncomment both of these lines to load the manhole module:
 #modules:
-#- manhole
+#- Manhole
 
 # In order to actually be able to use it, you'll need to set a way to access
 # it. In order to do that, you'll need the configuration below.
