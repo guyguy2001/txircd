@@ -898,7 +898,8 @@ class RemoteUser(IRCUser):
 		"""
 		Removes this user from the given channel.
 		"""
-		self.ircd.runActionProcessing("leavemessage", channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
+		sendUserList = channel.users.keys()
+		self.ircd.runActionProcessing("leavemessage", sendUserList, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
