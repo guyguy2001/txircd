@@ -55,12 +55,18 @@ class CapabCommand(ModuleData, Command):
 				return True
 			return True
 		if subcmd == "END":
+			if server.serverID in self.ircd.servers:
+				server.disconnect("Server {} already exists".format(server.serverID))
+				return True
+			if server.name in self.ircd.serverNames:
+				server.disconnect("Server with name {} already exists".format(server.name))
+				return True
+			server.register()
 			if server.receivedConnection:
 				server.sendMessage("CAPAB", "START", protoVersion, prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "MODULES", " ".join(self.ircd.loadedModules.keys()), prefix=self.ircd.serverID)
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			self.ircd.runActionStandard("burst", server)
-			server.register()
 			return True
 		return None
 

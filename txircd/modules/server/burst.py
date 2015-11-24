@@ -102,12 +102,6 @@ class ServerBurst(ModuleData, Command):
 		return {}
 	
 	def execute(self, server, data):
-		if server.serverID in self.ircd.servers:
-			server.disconnect("Server {} already exists".format(server.serverID))
-			return True
-		if server.name in self.ircd.serverNames:
-			server.disconnect("Server with name {} already exists".format(server.name))
-			return True
 		server.endBurst()
 		return True
 
