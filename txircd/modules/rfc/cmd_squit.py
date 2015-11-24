@@ -83,14 +83,17 @@ class ServerSQuit(Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:
 			return None
-		if params[0] not in self.ircd.servers:
-			if params[0] in self.ircd.recentlyQuitServers:
+		targetServerID = params[0]
+		if targetServerID == self.ircd.serverID:
+			targetServerID = prefix
+		if targetServerID not in self.ircd.servers:
+			if targetServerID in self.ircd.recentlyQuitServers:
 				return {
 					"lostserver": True
 				}
 			return None
 		return {
-			"target": self.ircd.servers[params[0]],
+			"target": self.ircd.servers[targetServerID],
 			"reason": params[1]
 		}
 	
