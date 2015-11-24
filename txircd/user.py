@@ -249,8 +249,10 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			del self.ircd.userNicks[self.nick]
 		userSendList = [self]
-		for channel in self.channels:
+		while self.channels:
+			channel = self.channels[0]
 			userSendList.extend(channel.users.keys())
+			self._leaveChannel(channel)
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=[self] + userSendList)
@@ -576,6 +578,9 @@ class IRCUser(IRCBase):
 			return
 		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
 		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
+		self._leaveChannel(channel)
+	
+	def _leaveChannel(self, channel):
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
@@ -823,8 +828,10 @@ class RemoteUser(IRCUser):
 			self.ircd.recentlyQuitUsers[self.uuid] = now()
 			del self.ircd.users[self.uuid]
 			userSendList = []
-			for channel in self.channels:
+			while self.channels:
+				channel = self.channels[0]
 				userSendList.extend(channel.users.keys())
+				self._leaveChannel(channel)
 			userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 			self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 			self.ircd.runActionStandard("remotequit", self, reason, users=[self])
@@ -894,12 +901,7 @@ class RemoteUser(IRCUser):
 		else:
 			self.ircd.runActionUntilTrue("remotejoinrequest", self, channel, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, partType = "PART", typeData = {}, fromServer = None):
-		"""
-		Removes this user from the given channel.
-		"""
-		sendUserList = channel.users.keys()
-		self.ircd.runActionProcessing("leavemessage", sendUserList, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
+	def _leaveChannel(self, channel):
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
