@@ -20,14 +20,25 @@ class ServerBurst(ModuleData, Command):
 	def startBurst(self, server):
 		server.bursted = False
 		serversByHopcount = []
+		serversBurstingTo = []
 		for remoteServer in self.ircd.servers.itervalues():
 			if remoteServer == server:
 				continue
 			hopCount = 1
 			servTrace = remoteServer
+			if server == servTrace:
+				serversBurstingTo.append(remoteServer.serverID)
+				continue # Don't count this server
+			burstingRemote = False
 			while servTrace.nextClosest != self.ircd.serverID:
 				servTrace = self.ircd.servers[servTrace.nextClosest]
+				if server == servTrace:
+					burstingRemote = True
+					break
 				hopCount += 1
+			if burstingRemote:
+				serversBurstingTo.append(remoteServer.serverID)
+				continue
 			while len(serversByHopcount) < hopCount:
 				serversByHopcount.append([])
 			serversByHopcount[hopCount - 1].append(remoteServer)
@@ -39,6 +50,8 @@ class ServerBurst(ModuleData, Command):
 			if user.localOnly:
 				continue
 			if not user.isRegistered():
+				continue
+			if user.uuid[:3] in serversBurstingTo: # The remote server apparently already finished its burst (or at least enough that we know this), so we need to not send it those again.
 				continue
 			signonTimestamp = str(timestamp(user.connectedSince))
 			nickTimestamp = str(timestamp(user.nickSince))
@@ -68,6 +81,8 @@ class ServerBurst(ModuleData, Command):
 			users = []
 			for user, data in channel.users.iteritems():
 				if user.localOnly:
+					continue
+				if user.uuid[:3] in serversBurstingTo: # The remote server already knows about these users
 					continue
 				ranks = data["status"]
 				users.append("{},{}".format(ranks, user.uuid))
