@@ -34,7 +34,7 @@ class Cap(ModuleData, Command):
 		del self.ircd.functionCache["cap-add"]
 		del self.ircd.functionCache["cap-del"]
 	
-	def listCapability(self, capList):
+	def listCapability(self, user, capList):
 		capList.append("cap-notify")
 	
 	def preventRemoveOn302(self, user, capability):
