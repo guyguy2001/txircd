@@ -49,11 +49,11 @@ class SamodeCommand(ModuleData, Command):
 		params = data["params"]
 		if "targetchannel" in data:
 			channel = data["targetchannel"]
-			channel.setModesByUser(user.uuid, modeStr, params, True)
+			channel.setModesByUser(user, modeStr, params, True)
 			self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly set modes {modeString} on channel {channel.name}", user=user, channel=channel, modeString=("{} {}".format(modeStr, " ".join(params)) if params else modeStr))
 		elif "targetuser" in data:
 			u = data["targetuser"]
-			u.setModesByUser(user.uuid, modeStr, params, True)
+			u.setModesByUser(user, modeStr, params, True)
 			self.ircd.log.info("User {user.uuid} ({user.nick}) forcibly set modes {modeString} on user {targetUser.uuid} ({targetUser.nick})", user=user, targetUser=u, modeString=("{} {}".format(modeStr, " ".join(params)) if params else modeStr))
 		return True
 
