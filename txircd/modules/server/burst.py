@@ -21,6 +21,8 @@ class ServerBurst(ModuleData, Command):
 		server.bursted = False
 		serversByHopcount = []
 		for remoteServer in self.ircd.servers.itervalues():
+			if remoteServer == server:
+				continue
 			hopCount = 1
 			servTrace = remoteServer
 			while servTrace.nextClosest != self.ircd.serverID:
