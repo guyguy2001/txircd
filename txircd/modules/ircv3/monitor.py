@@ -67,7 +67,7 @@ class Monitor(ModuleData, Command):
 		if not isinstance(config["monitor_length"], int) or config["monitor_length"] < 0:
 			raise ConfigValidationError("monitor_length", "invalid number")
 	
-	def addCapability(self, capList):
+	def addCapability(self, user, capList):
 		capList.append("metadata-notify")
 	
 	def reportNewUser(self, user):
