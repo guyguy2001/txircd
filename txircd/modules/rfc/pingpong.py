@@ -94,6 +94,8 @@ class UserPong(Command):
 class ServerPing(Command):
 	implements(ICommand)
 	
+	forRegistered = None
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -129,6 +131,8 @@ class ServerPing(Command):
 
 class ServerPong(Command):
 	implements(ICommand)
+	
+	forRegistered = None
 	
 	def __init__(self, ircd):
 		self.ircd = ircd
