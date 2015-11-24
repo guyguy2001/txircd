@@ -70,7 +70,7 @@ class IRCServer(IRCBase):
 		"""
 		Disconnects the server.
 		"""
-		self.ircd.log.warn("Disconnecting server {server}: {reason}", server=self.name, reason=reason)
+		self.ircd.log.warn("Disconnecting server {server.name}: {reason}", server=self, reason=reason)
 		self.ircd.runActionStandard("serverquit", self, reason)
 		if self.bursted:
 			if netsplitQuitMsg is None:
