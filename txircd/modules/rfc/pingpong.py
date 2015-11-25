@@ -102,7 +102,7 @@ class ServerPing(Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:
 			return None
-		if params[0] not in self.ircd.servers:
+		if params[0] != server.serverID and params[0] not in self.ircd.servers:
 			if params[0] in self.ircd.recentlyQuitServers:
 				return {
 					"lostserver": True
@@ -140,7 +140,7 @@ class ServerPong(Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 2:
 			return None
-		if params[0] not in self.ircd.servers:
+		if params[0] != server.serverID and params[0] not in self.ircd.servers:
 			if params[0] in self.ircd.recentlyQuitServers:
 				return {
 					"lostserver": True
