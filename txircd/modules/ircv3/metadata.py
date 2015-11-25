@@ -36,11 +36,6 @@ class Metadata(ModuleData, Command):
 	def addToISupport(self, iSupportList):
 		iSupportList["METADATA"] = self.ircd.config["metadata_limit"]
 	
-	def userCanSeeMetadata(self, user, visibility):
-		if visibility == "*":
-			return True
-		return self.ircd.runActionUntilValue("usercanseemetadata", user, visibility) is not False
-	
 	def parseParams(self, user, params, prefix, tags):
 		paramCount = len(params)
 		if paramCount < 2:
@@ -122,7 +117,7 @@ class Metadata(ModuleData, Command):
 		if subcmd == "LIST":
 			metadataList = target.metadataList()
 			for key, value, visibility, setByUser in metadataList:
-				if self.userCanSeeMetadata(user, visibility):
+				if user.canSeeMetadataVisibility(visibility):
 					user.sendMessage(irc.RPL_KEYVALUE, targetName, key, visibility, value)
 			user.sendMessage(irc.RPL_METADATAEND, "end of metadata")
 			return True
@@ -132,7 +127,7 @@ class Metadata(ModuleData, Command):
 				return True
 			metadataList = target.metadataList()
 			for key, value, visibility, setByUser in metadataList:
-				if not self.userCanSeeMetadata(user, visibility):
+				if not user.canSeeMetadataVisibility(visibility):
 					continue
 				if target.setMetadata(key, None, visibility, True):
 					user.sendMessage(irc.RPL_KEYVALUE, targetName, key, visibility)
@@ -151,7 +146,7 @@ class Metadata(ModuleData, Command):
 					continue
 				realKey = target.metadataKeyCase(key)
 				visibility = target.metadataVisibility(key)
-				if not self.userCanSeeMetadata(self, visibility):
+				if not user.canSeeMetadataVisibility(visibility):
 					user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, realKey, "permission denied")
 					continue
 				value = target.metadataValue(key)
@@ -168,7 +163,7 @@ class Metadata(ModuleData, Command):
 			visibility = self.ircd.runActionUntilValue("metadatavisibility", key)
 			if visibility is None:
 				visibility = "*"
-			if not self.userCanSeeMetadata(user, visibility):
+			if not user.canSeeMetadataVisibility(visibility):
 				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, key, "permission denied")
 				return True
 			alreadySet = 0
