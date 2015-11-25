@@ -104,12 +104,13 @@ class Monitor(ModuleData, Command):
 			# nobody's actually changing someone else's metadata (would only be opers).
 			user.sendMessage("METADATA", user.nick, key, visibility, value)
 			sentToUsers.add(user)
-		for monitoringUser in self.targetIndex[user.nick]:
-			if monitoringUser in sentToUsers:
-				continue
-			if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"] and monitoringUser.canSeeMetadataVisibility(visibility):
-				monitoringUser.sendMessage("METADATA", user.nick, key, visibility, value)
-				sentToUsers.add(monitoringUser)
+		if user.nick in self.targetIndex:
+			for monitoringUser in self.targetIndex[user.nick]:
+				if monitoringUser in sentToUsers:
+					continue
+				if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"] and monitoringUser.canSeeMetadataVisibility(visibility):
+					monitoringUser.sendMessage("METADATA", user.nick, key, visibility, value)
+					sentToUsers.add(monitoringUser)
 		for channel in user.channels:
 			for inChannelUser in channel.users.iterkeys():
 				if inChannelUser in sentToUsers:
