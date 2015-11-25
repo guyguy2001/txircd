@@ -86,11 +86,6 @@ class Monitor(ModuleData, Command):
 			for notifyUser in self.targetIndex[nick]:
 				notifyUser.sendMessage(numeric, nick)
 	
-	def userCanSeeMetadata(self, user, visibility):
-		if visibility == "*":
-			return True
-		return self.ircd.runActionUntilValue("usercanseemetadata", user, visibility) is not False
-	
 	def userSubMetadata(self, user, capability, value):
 		if capability != "metadata-notify":
 			return
@@ -103,7 +98,7 @@ class Monitor(ModuleData, Command):
 	
 	def notifyUserMetadataChange(self, user, key, oldValue, value, visibility, setByUser, fromServer):
 		sentToUsers = set()
-		if not setByUser and ("capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"]):
+		if not setByUser and ("capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"]) and user.canSeeMetadataVisibility(visibility):
 			# Technically, the spec excludes "changes made by the clients themselves" from notification. However,
 			# since we don't know WHICH user changed the metadata, we'll exclude all sets by users and hope that
 			# nobody's actually changing someone else's metadata (would only be opers).
@@ -112,20 +107,20 @@ class Monitor(ModuleData, Command):
 		for monitoringUser in self.targetIndex[user.nick]:
 			if monitoringUser in sentToUsers:
 				continue
-			if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"]:
+			if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"] and monitoringUser.canSeeMetadataVisibility(visibility):
 				monitoringUser.sendMessage("METADATA", user.nick, key, visibility, value)
 				sentToUsers.add(monitoringUser)
 		for channel in user.channels:
 			for inChannelUser in channel.users.iterkeys():
 				if inChannelUser in sentToUsers:
 					continue
-				if "capabilities" in inChannelUser.cache and "metadata-notify" in inChannelUser.cache["capabilities"]:
+				if "capabilities" in inChannelUser.cache and "metadata-notify" in inChannelUser.cache["capabilities"] and inChannelUser.canSeeMetadataVisibility(visibility):
 					inChannelUser.sendMessage("METADATA", user.nick, key, visibility, value)
 					sentToUsers.add(inChannelUser)
 	
 	def notifyChannelMetadataChange(self, channel, key, oldValue, value, visibility, setByUser, fromServer):
 		for user in channel.users.iterkeys():
-			if "capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"]:
+			if "capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"] and user.canSeeMetadataVisibility(visibility):
 				user.sendMessage("METADATA", channel.name, key, visibility, value)
 	
 	def buildISupport(self, data):
@@ -142,7 +137,7 @@ class Monitor(ModuleData, Command):
 	def sendUserMetadata(self, user, sendToUser):
 		metadataList = user.metadataList()
 		for key, value, visibility, setByUser in metadataList:
-			if self.userCanSeeMetadata(sendToUser, visibility):
+			if sendToUser.canSeeMetadataVisibility(visibility):
 				sendToUser.sendMessage(irc.RPL_KEYVALUE, user.nick, key, visibility, value)
 		sendToUser.sendMessage(irc.RPL_METADATAEND, "end of metadata")
 	
