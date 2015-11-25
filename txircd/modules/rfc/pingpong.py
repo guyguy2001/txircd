@@ -162,7 +162,10 @@ class ServerPong(Command):
 		if "lostserver" in data:
 			return True
 		if data["dest"] == self.ircd.serverID:
-			self.ircd.servers[data["source"]].cache["pongtime"] = now()
+			if data["source"] == server.serverID:
+				server.cache["pongtime"] = now()
+			else:
+				self.ircd.servers[data["source"]].cache["pongtime"] = now()
 			return True
 		self.ircd.servers[data["dest"]].sendMessage("PONG", data["source"], data["dest"], prefix=data["prefix"])
 		return True
