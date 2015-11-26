@@ -36,7 +36,7 @@ class ServerMetadata(ModuleData, Command):
 			target.setMetadata(key, None, visibility, setByUser, server)
 	
 	def parseParams(self, server, params, prefix, tags):
-		if len(params) != 4 and len(params) != 5:
+		if len(params) not in (5, 6):
 			return None
 		data = {}
 		if params[0] in self.ircd.users:
