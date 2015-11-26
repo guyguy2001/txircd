@@ -39,7 +39,7 @@ class ExtendedJoin(ModuleData):
 			userAccount = "*"
 		extJoinUsers = []
 		for toUser in messageUsers:
-			if "capabilities" in user.cache and "extended-join" in user.cache["capabilities"]:
+			if "capabilities" in toUser.cache and "extended-join" in toUser.cache["capabilities"]:
 				extJoinUsers.append(toUser)
 				tags = toUser.filterConditionalTags(conditionalTags)
 				toUser.sendMessage("JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix, tags=tags)
