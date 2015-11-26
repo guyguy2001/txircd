@@ -77,7 +77,7 @@ class ServerRehash(Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 1:
 			return None
-		if params[0] == self.ircd.name:
+		if params[0] == self.ircd.serverID:
 			return {}
 		if params[0] not in self.ircd.servers:
 			return None
