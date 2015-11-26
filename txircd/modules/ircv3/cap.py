@@ -88,6 +88,12 @@ class Cap(ModuleData, Command):
 			if len(params) < 2:
 				user.sendSingleError("CapReqParams", irc.ERR_INVALIDCAPCMD, "REQ", "Missing request list")
 				return None
+			capabilityList = params[1].split(" ")
+			while "" in capabilityList:
+				capabilityList.remove("")
+			if not capabilityList:
+				user.sendSingleError("CapReqParams", irc.ERR_INVALIDCAPCMD, "REQ", "Missing request list")
+				return None
 			return {
 				"subcmd": "REQ",
 				"capabilities": params[1].split(" ")
