@@ -16,7 +16,7 @@ class ExtendedJoin(ModuleData):
 			del self.ircd.dataCache["unloading-extended-join"]
 			return
 		if "cap-add" in self.ircd.functionCache:
-			self.ircd.functionCacne["cap-add"]("extended-join")
+			self.ircd.functionCache["cap-add"]("extended-join")
 	
 	def unload(self):
 		self.ircd.dataCache["unloading-extended-join"] = True
