@@ -130,7 +130,7 @@ class ServerTopic(Command):
 		channel = data["channel"]
 		if data["chantime"] > channel.existedSince: # Don't set the topic when our channel overrides
 			return True # Assume handled by our ignoring of it
-		if data["topictime"] <= channel.topicTime:
+		if channel.topic and data["topictime"] <= channel.topicTime:
 			return True # Don't set the topic when our topic overrides
 		if channel.setTopic(data["topic"], data["source"]):
 			return True
