@@ -99,7 +99,8 @@ class ServerBurst(ModuleData, Command):
 					if param is not None:
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-			server.sendMessage("FJOIN", channel.name, channelTimestamp, modeStr, " ".join(users), prefix=self.ircd.serverID)
+			fjoinParams = [channel.name, channelTimestamp] + modeStr.split(" ") + " ".join(users)
+			server.sendMessage("FJOIN", *fjoinParams, prefix=self.ircd.serverID)
 			sentListModes = False
 			for mode, params in listModes.iteritems():
 				for param, setter, time in params:
