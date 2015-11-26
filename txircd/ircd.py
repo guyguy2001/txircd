@@ -324,21 +324,21 @@ class IRCd(Service):
 		for modeData in moduleData["channelmodes"]:
 			if fullUnload: # Unset modes on full unload
 				if modeData[1] == ModeType.Status:
-					for channel in self.ircd.channels.itervalues():
+					for channel in self.channels.itervalues():
 						removeFromChannel = []
 						for user, userData in channel.user.iteritems():
 							if modeData[0] in userData["status"]:
 								removeFromChannel.append((False, modeData[0], user.uuid))
 						channel.setModes(removeFromChannel, self.serverID)
 				elif modeData[1] == ModeType.List:
-					for channel in self.ircd.channels.itervalues():
+					for channel in self.channels.itervalues():
 						if modeData[0] in channel.modes:
 							removeFromChannel = []
 							for paramData in channel.modes[modeData[0]]:
 								removeFromChannel.append((False, modeData[0], paramData[0]))
 							channel.setModes(removeFromChannel, self.serverID)
 				else:
-					for channel in self.ircd.channels.itervalues():
+					for channel in self.channels.itervalues():
 						if modeData[0] in channel.modes:
 							channel.setModes([(False, modeData[0], channel.modes[modeData[0]])], self.serverID)
 			
@@ -352,14 +352,14 @@ class IRCd(Service):
 		for modeData in moduleData["usermodes"]:
 			if fullUnload: # Unset modes on full unload
 				if modeData[1] == ModeType.List:
-					for user in self.ircd.users.itervalues():
+					for user in self.users.itervalues():
 						if modeData[0] in user.modes:
 							removeFromUser = []
 							for paramData in user.modes[modeData[0]]:
 								removeFromUser.append((False, modeData[0], paramData[0]))
 							user.setModes(removeFromUser, self.serverID)
 				else:
-					for user in self.ircd.users.itervalues():
+					for user in self.users.itervalues():
 						if modeData[0] in user.modes:
 							user.setModes([(False, modeData[0], user.modes[modeData[0]])], self.serverID)
 			
