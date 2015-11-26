@@ -95,6 +95,8 @@ class IRCChannel(object):
 			source = self.ircd.servers[setter].name
 		else:
 			return False
+		if topic == self.topic:
+			return True
 		oldTopic = self.topic
 		self.topic = topic
 		self.topicSetter = source
