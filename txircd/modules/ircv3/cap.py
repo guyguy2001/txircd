@@ -102,7 +102,7 @@ class Cap(ModuleData, Command):
 			return {
 				"subcmd": "END"
 			}
-		user.sendSingleError("CapSubcmd", irc.ERR_INVALIDCAPCMD, subcmd, ":Invalid subcommand")
+		user.sendSingleError("CapSubcmd", irc.ERR_INVALIDCAPCMD, subcmd, "Invalid subcommand")
 		return None
 	
 	def execute(self, user, data):
