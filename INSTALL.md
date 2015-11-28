@@ -1,4 +1,4 @@
-The following steps can be done either directly to the system or in a virtualenv. Make sure to have setuptools up-to-date, as the version of pyopenssl that will be pulled in will not install with an old version of setuptools.
+The following steps can be done either directly to the system or in a virtualenv.
 
 Install dependencies:
     pip install -r requirements.txt
