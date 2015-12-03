@@ -295,7 +295,7 @@ class IRCUser(IRCBase):
 				return
 			self.ircd.log.debug("Registering user {user.uuid} ({user.hostmask()})", user=self)
 			versionWithName = "txircd-{}".format(version)
-			self.sendMessage(irc.RPL_WELCOME, "Welcome to the Internet Relay Chat Network {}".format(self.hostmask()))
+			self.sendMessage(irc.RPL_WELCOME, "Welcome to the {} Internet Relay Chat Network {}".format(self.ircd.config["network_name"], self.hostmask()))
 			self.sendMessage(irc.RPL_YOURHOST, "Your host is {}, running version {}".format(self.ircd.name, versionWithName))
 			self.sendMessage(irc.RPL_CREATED, "This server was created {}".format(self.ircd.startupTime.replace(microsecond=0)))
 			chanModes = "".join(["".join(modes.keys()) for modes in self.ircd.channelModes])
