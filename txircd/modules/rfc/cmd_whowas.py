@@ -73,7 +73,6 @@ class WhowasCommand(ModuleData, Command):
 			return None
 		lowerParam = ircLower(params[0])
 		if lowerParam not in self.ircd.storage["whowas"]:
-			print("Nick not found in whowas.")
 			user.sendSingleError("WhowasNick", irc.ERR_WASNOSUCHNICK, params[0], "There was no such nickname")
 			return None
 		return {
@@ -85,9 +84,7 @@ class WhowasCommand(ModuleData, Command):
 		nick = data["nick"]
 		allWhowas = self.ircd.storage["whowas"]
 		whowasEntries = allWhowas[nick]
-		print("1. {}".format(whowasEntries))
 		whowasEntries = self.removeOldEntries(whowasEntries)
-		print("2. {}".format(whowasEntries))
 		if not whowasEntries:
 			del allWhowas[nick]
 			self.ircd.storage["whowas"] = allWhowas
