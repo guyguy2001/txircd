@@ -23,9 +23,8 @@ class IsonCommand(ModuleData, Command):
 	def execute(self, user, data):
 		onUsers = []
 		for nick in data["nicks"]:
-			if nick not in self.ircd.userNicks:
-				continue
-			onUsers.append(self.ircd.users[self.ircd.userNicks[nick]].nick)
+			if nick in self.ircd.userNicks:
+				onUsers.append(self.ircd.users[self.ircd.userNicks[nick]].nick)
 		user.sendMessage(irc.RPL_ISON, " ".join(onUsers))
 		return True
 
