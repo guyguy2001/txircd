@@ -27,7 +27,7 @@ class UserhostCommand(ModuleData, Command):
 				continue
 			targetUser = self.ircd.users[self.ircd.userNicks[nick]]
 			output = targetUser.nick
-			if "o" in targetUser.modes:
+			if self.ircd.runActionUntilValue("userhasoperpermission", targetUser, ""):
 				output += "*"
 			output += "="
 			if user.metadataKeyExists("away"):
