@@ -62,7 +62,7 @@ class UserStats(Command):
 			return True
 		if typeName is None:
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-unknown"):
-				user.sendMessage(irc.ERR_NOSUCHXINFO, typeName, "No such XINFO topic available")
+				user.sendMessage(irc.ERR_NOSUCHXINFO, typeName, "No such stats type available")
 			else:
 				user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
 			return True
@@ -76,7 +76,7 @@ class UserStats(Command):
 				# The spec technically allows more than one key/value pair on a line
 				# If we do that, we'll need to make sure that if there's a space in the value,
 				# it ends the line.
-		user.sendMessage(irc.RPL_XINFOEND, typeName, "End of XINFO request")
+		user.sendMessage(irc.RPL_XINFOEND, typeName, "End of STATS request")
 		return True
 	
 	def checkPermission(self, user, typeName):
@@ -201,7 +201,7 @@ class ServerInfoEnd(Command):
 	def execute(self, server, data):
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:
-			user.sendMessage(irc.RPL_XINFOEND, data["type"], "End of XINFO request", prefix=data["source"].name)
+			user.sendMessage(irc.RPL_XINFOEND, data["type"], "End of STATS request", prefix=data["source"].name)
 			return True
 		nextServer = self.ircd.servers[user.uuid[:3]]
 		nextServer.sendMessage("INFOEND", user.uuid, data["type"], prefix=data["source"].serverID)
