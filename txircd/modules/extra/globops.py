@@ -23,6 +23,7 @@ class GlobopsCommand(Command, ModuleData):
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
 			user.sendSingleError("GlobopsParams", irc.ERR_NEEDMOREPARAMS, "GLOBOPS", "Not enough parameters")
+			return None
 		return {
 			"message": " ".join(params)
 		}
