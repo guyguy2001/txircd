@@ -214,7 +214,7 @@ class ServerMode(Command):
 				return {
 					"lostsource": True
 				}
-			return None # It's safe to say other servers shouldn't be sending modes sourced from us. That's our job!
+			return None # It's safe to say other servers shouldn't be sending modes sourced from us. That's our job! (That's why we don't test for that.)
 		if params[0] not in self.ircd.users and params[0] not in self.ircd.channels:
 			if params[0] in self.ircd.recentlyQuitUsers or params[0] in self.ircd.recentlyDestroyedChannels:
 				return {
@@ -256,6 +256,8 @@ class ServerMode(Command):
 			return None
 	
 	def execute(self, server, data):
+		if "lostsource" in data or "losttarget" in data:
+			return True
 		source = data["source"]
 		target = data["target"]
 		targTS = data["timestamp"]
