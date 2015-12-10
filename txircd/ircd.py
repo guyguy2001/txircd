@@ -231,7 +231,7 @@ class IRCd(Service):
 				newServerCommands[command[0]] = []
 			newServerCommands[command[0]].append((command[2], command[1]))
 			common = True
-		if not common or module.multipleModulesForServers:
+		if not common:
 			common = module.requiredOnAllServers
 
 		self.log.debug("Loaded data from {module.name}; committing data and calling hooks...", module=module)
