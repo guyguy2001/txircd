@@ -125,8 +125,8 @@
 #channel_default_modes: ont
 
 # client_ban_msg
-# This is the message that is shown to clients when they are banned right
-# before they are disconnected.
+# This is the message that is shown to banned clients right before they are
+# disconnected.
 #client_ban_msg: You're banned! Email abuse@example.com for assistance.
 
 # user_ping_frequency
