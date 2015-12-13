@@ -102,27 +102,27 @@ class Monitor(ModuleData, Command):
 			# Technically, the spec excludes "changes made by the clients themselves" from notification. However,
 			# since we don't know WHICH user changed the metadata, we'll exclude all sets by users and hope that
 			# nobody's actually changing someone else's metadata (would only be opers).
-			user.sendMessage("METADATA", user.nick, key, visibility, value)
+			user.sendMessage("METADATA", key, visibility, value, to=user.nick)
 			sentToUsers.add(user)
 		if user.nick in self.targetIndex:
 			for monitoringUser in self.targetIndex[user.nick]:
 				if monitoringUser in sentToUsers:
 					continue
 				if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"] and monitoringUser.canSeeMetadataVisibility(visibility):
-					monitoringUser.sendMessage("METADATA", user.nick, key, visibility, value)
+					monitoringUser.sendMessage("METADATA", key, visibility, value, to=user.nick)
 					sentToUsers.add(monitoringUser)
 		for channel in user.channels:
 			for inChannelUser in channel.users.iterkeys():
 				if inChannelUser in sentToUsers:
 					continue
 				if "capabilities" in inChannelUser.cache and "metadata-notify" in inChannelUser.cache["capabilities"] and inChannelUser.canSeeMetadataVisibility(visibility):
-					inChannelUser.sendMessage("METADATA", user.nick, key, visibility, value)
+					inChannelUser.sendMessage("METADATA", key, visibility, value, to=user.nick)
 					sentToUsers.add(inChannelUser)
 	
 	def notifyChannelMetadataChange(self, channel, key, oldValue, value, visibility, setByUser, fromServer):
 		for user in channel.users.iterkeys():
 			if "capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"] and user.canSeeMetadataVisibility(visibility):
-				user.sendMessage("METADATA", channel.name, key, visibility, value)
+				user.sendMessage("METADATA", key, visibility, value, to=channel.name)
 	
 	def buildISupport(self, data):
 		data["MONITOR"] = self.ircd.config["monitor_length"]
