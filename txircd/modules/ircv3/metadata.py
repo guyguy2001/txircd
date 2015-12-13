@@ -142,7 +142,7 @@ class Metadata(ModuleData, Command):
 					user.sendMessage(irc.ERR_KEYINVALID, key, "invalid metadata key")
 					continue
 				if not target.metadataKeyExists(key):
-					user.sendMessage(irc.ERR_NOMATCHINGKEY, key, "no matching key")
+					user.sendMessage(irc.ERR_NOMATCHINGKEY, targetName, key, "no matching key")
 					continue
 				realKey = target.metadataKeyCase(key)
 				visibility = target.metadataVisibility(key)
