@@ -1,7 +1,17 @@
 from twisted.internet.protocol import ClientFactory, Factory
 from txircd.server import IRCServer
 from txircd.user import IRCUser
-from txircd.utils import unmapIPv4
+import re
+
+ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
+def unmapIPv4(ip):
+	"""
+	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
+	"""
+	mapped = ipv4MappedAddr.match(ip)
+	if mapped:
+		return mapped.group(1)
+	return ip
 
 class UserFactory(Factory):
 	protocol = IRCUser

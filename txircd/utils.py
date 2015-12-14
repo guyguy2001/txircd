@@ -133,17 +133,6 @@ def durationToSeconds(durationStr):
 	return seconds
 
 
-ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
-def unmapIPv4(ip):
-	"""
-	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
-	"""
-	mapped = ipv4MappedAddr.match(ip)
-	if mapped:
-		return mapped.group(1)
-	return ip
-
-
 def unescapeEndpointDescription(desc):
 	"""
 	Takes escaped endpoint descriptions from our configuration and unescapes
