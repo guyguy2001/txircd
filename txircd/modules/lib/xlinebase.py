@@ -93,7 +93,7 @@ class XLineBase(object):
 				"linetype": params[0],
 				"mask": params[1],
 				"setter": params[2],
-				"created": params[3],
+				"created": int(params[3]),
 				"duration": int(params[4]),
 				"reason": params[5]
 			}
