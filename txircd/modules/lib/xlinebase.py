@@ -82,6 +82,7 @@ class XLineBase(object):
 	def generateInfo(self):
 		if not self.lineType:
 			return None
+		self.expireLines()
 		lineInfo = {}
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
