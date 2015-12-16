@@ -46,7 +46,7 @@ class XLineBase(object):
 			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), str(durationSeconds), reason, prefix=self.ircd.serverID)
 		return True
 	
-	def delLine(self, mask):
+	def delLine(self, mask, fromServer = None):
 		if not self.lineType:
 			return False
 		normalMask = self.normalizeMask(mask)
@@ -54,6 +54,8 @@ class XLineBase(object):
 			lineMask = self.normalizeMask(mask)
 			if normalMask == lineMask:
 				del self.ircd.storage["xlines"][self.lineType][index]
+				if self.propagateToServers:
+					self.ircd.broadcastToServers(fromServer, "DELLINE", self.lineType, mask)
 				return True
 		return False
 	
@@ -117,7 +119,7 @@ class XLineBase(object):
 	def executeServerDelCommand(self, server, data):
 		if data["linetype"] != self.lineType:
 			return None
-		self.delLine(data["mask"])
+		self.delLine(data["mask"], server)
 		return True
 	
 	def burstLines(self, server):
