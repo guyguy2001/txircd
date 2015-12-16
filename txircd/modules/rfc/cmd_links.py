@@ -16,6 +16,7 @@ class LinksCommand(ModuleData, Command):
 		return {}
 	
 	def execute(self, user, data):
+		user.sendMessage(irc.RPL_LINKS, self.ircd.name, self.ircd.name, "0 {}".format(self.ircd.config["server_description"]))
 		for server in self.ircd.servers.itervalues():
 			hopCount = 1
 			nextServer = server.nextClosest
@@ -27,7 +28,6 @@ class LinksCommand(ModuleData, Command):
 			else:
 				nextClosestName = self.ircd.servers[server.nextClosest].name
 			user.sendMessage(irc.RPL_LINKS, server.name, nextClosestName, "{} {}".format(hopCount, server.description))
-		user.sendMessage(irc.RPL_LINKS, self.ircd.name, self.ircd.name, "0 {}".format(self.ircd.config["server_description"]))
 		user.sendMessage(irc.RPL_ENDOFLINKS, "*", "End of /LINKS list.")
 		return True
 
