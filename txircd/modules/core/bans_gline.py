@@ -79,7 +79,7 @@ class UserGLine(Command):
 		banmask = params[0]
 		if banmask in self.module.ircd.userNicks:
 			targetUser = self.module.ircd.users[self.module.ircd.userNicks[banmask]]
-			banmask = "{}@{}".format(targetUser.ident, targetUser.host())
+			banmask = "{}@{}".format(targetUser.ident, targetUser.realHost)
 		else:
 			if "@" not in banmask:
 				banmask = "*@{}".format(banmask)
