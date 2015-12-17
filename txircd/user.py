@@ -289,10 +289,12 @@ class IRCUser(IRCBase):
 				self._registerHolds.add("USER")
 			if self._registerHolds:
 				return
-			self.ircd.userNicks[self.nick] = self.uuid
+			self._registerHolds.add("registercheck") # The user shouldn't be considered registered until we complete these final checks
 			if self.ircd.runActionUntilFalse("register", self, users=[self]):
 				self.transport.loseConnection()
 				return
+			self._registerHolds.remove("registercheck")
+			self.ircd.userNicks[self.nick] = self.uuid
 			self.ircd.log.debug("Registering user {user.uuid} ({user.hostmask()})", user=self)
 			versionWithName = "txircd-{}".format(version)
 			self.sendMessage(irc.RPL_WELCOME, "Welcome to the {} Internet Relay Chat Network {}".format(self.ircd.config["network_name"], self.hostmask()))
