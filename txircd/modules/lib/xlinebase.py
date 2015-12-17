@@ -15,6 +15,8 @@ class XLineBase(object):
 	def matchUser(self, user, data = None):
 		if not self.lineType:
 			return None
+		if user.uuid[:3] != self.ircd.serverID:
+			return None # The remote server should handle the users on that server
 		self.expireLines()
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
 			mask = lineData["mask"]
