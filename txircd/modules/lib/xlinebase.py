@@ -51,7 +51,7 @@ class XLineBase(object):
 			return False
 		normalMask = self.normalizeMask(mask)
 		for index, lineData in enumerate(self.ircd.storage["xlines"][self.lineType]):
-			lineMask = self.normalizeMask(mask)
+			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
 				del self.ircd.storage["xlines"][self.lineType][index]
 				if self.propagateToServers:
