@@ -28,6 +28,8 @@ class IRCUser(IRCBase):
 			except (herror, gaierror):
 				host = ip
 		self.realHost = host
+		if ip[0] == ":": # Normalize IPv6 address for IRC
+			ip = "0{}".format(ip)
 		self.ip = ip
 		self._hostStack = []
 		self._hostsByType = {}
