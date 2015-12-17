@@ -89,6 +89,7 @@ class KLine(ModuleData, Command, XLineBase):
 		if "reason" in data:
 			if not self.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** K:Line for {} is already set.".format(banmask))
+				return True
 			badUsers = []
 			for checkUser in self.ircd.users.itervalues():
 				reason = self.matchUser(checkUser)
