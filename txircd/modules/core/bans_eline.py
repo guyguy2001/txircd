@@ -45,7 +45,7 @@ class ELine(ModuleData, XLineBase):
 	def checkException(self, lineType, user, mask, data):
 		if lineType == "E":
 			return None
-		if self.matchUser(user):
+		if self.matchUser(user) and not self.ircd.runActionUntilFalse("xlinetypeallowsexempt", lineType):
 			return False
 		return None
 	

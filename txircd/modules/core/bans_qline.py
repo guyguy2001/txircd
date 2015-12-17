@@ -19,6 +19,7 @@ class QLine(ModuleData, XLineBase):
 		         ("commandpermission-NICK", 10, self.checkNick),
 		         ("commandpermission-QLINE", 10, self.restrictToOper),
 		         ("statsruntype-qlines", 10, self.generateInfo),
+		         ("xlinetypeallowsexempt", 10, lambda *params: False),
 		         ("burst", 10, self.burstLines) ]
 	
 	def userCommands(self):
