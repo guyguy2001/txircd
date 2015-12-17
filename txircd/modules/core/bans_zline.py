@@ -76,7 +76,7 @@ class UserZLine(Command):
 			return None
 		banmask = params[0]
 		if banmask in self.module.ircd.userNicks:
-			banmask = self.module.ircd.users[self.module.ircd.userNicks[banmask]]
+			banmask = self.module.ircd.users[self.module.ircd.userNicks[banmask]].ip
 		if len(params) == 1:
 			return {
 				"mask": banmask
