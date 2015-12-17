@@ -49,7 +49,9 @@ class UserKill(Command):
 	def execute(self, user, data):
 		targetUser = data["user"]
 		if targetUser.uuid[:3] == self.ircd.serverID:
-			targetUser.disconnect("Killed by {}: {}".format(user.nick, data["reason"]))
+			reason = data["reason"]
+			targetUser.sendMessage("KILL", reason, prefix=user.hostmask())
+			targetUser.disconnect("Killed by {}: {}".format(user.nick, reason))
 			return True
 		toServer = self.ircd.servers[targetUser.uuid[:3]]
 		toServer.sendMessage("KILL", targetUser.uuid, data["reason"], prefix=user.uuid)
