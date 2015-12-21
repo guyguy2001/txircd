@@ -70,6 +70,7 @@ class UserPart(Command):
 			return None
 		channel = self.ircd.channels[params[0]]
 		if user not in channel.users:
+			user.sendSingleError("PartCmd", irc.ERR_NOTONCHANNEL, params[0], "You're not on that channel")
 			return None
 		reason = params[1] if len(params) > 1 else ""
 		reason = reason[:self.ircd.config.get("part_message_length", 300)]
