@@ -54,7 +54,7 @@ class GLine(ModuleData, XLineBase):
 	
 	def checkLines(self, user):
 		banReason = self.matchUser(user)
-		if banReason:
+		if banReason is not None:
 			self.killUser(user, banReason)
 			return False
 		return True
@@ -102,7 +102,7 @@ class UserGLine(Command):
 			badUsers = []
 			for checkUser in self.module.ircd.users.itervalues():
 				reason = self.module.matchUser(checkUser)
-				if reason:
+				if reason is not None:
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)

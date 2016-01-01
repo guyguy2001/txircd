@@ -51,7 +51,7 @@ class QLine(ModuleData, XLineBase):
 	
 	def checkLines(self, user):
 		reason = self.matchUser(user)
-		if reason:
+		if reason is not None:
 			self.changeNick(user, reason, False)
 		return True
 	
@@ -59,7 +59,7 @@ class QLine(ModuleData, XLineBase):
 		self.expireLines()
 		newNick = data["nick"]
 		reason = self.matchUser(user, { "newnick": newNick })
-		if reason:
+		if reason is not None:
 			user.sendMessage("NOTICE", "The nickname you chose was invalid. ({})".format(reason))
 			return False
 		return True
@@ -103,7 +103,7 @@ class UserQLine(Command):
 				return True
 			for checkUser in self.module.ircd.users.itervalues():
 				reason = self.module.matchUser(checkUser)
-				if reason:
+				if reason is not None:
 					self.module.changeNick(checkUser, reason, True)
 			if data["duration"] > 0:
 				user.sendMessage("NOTICE", "*** Timed q:line for {} has been set, to expire in {} seconds.".format(banmask, data["duration"]))

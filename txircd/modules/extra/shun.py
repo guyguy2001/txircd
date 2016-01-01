@@ -52,7 +52,7 @@ class Shun(ModuleData, XLineBase):
 		return False
 	
 	def checkLines(self, user):
-		if self.matchUser(user):
+		if self.matchUser(user) is not None:
 			user.cache["shunned"] = True
 			self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a shun", user=user)
 		elif "shunned" in user.cache:

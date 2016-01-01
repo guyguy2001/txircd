@@ -53,7 +53,7 @@ class ZLine(ModuleData, XLineBase):
 	
 	def checkLines(self, user):
 		reason = self.matchUser(user)
-		if reason:
+		if reason is not None:
 			self.killUser(user, reason)
 			return False
 		return True
@@ -96,7 +96,7 @@ class UserZLine(Command):
 			badUsers = []
 			for checkUser in self.module.ircd.users.itervalues():
 				reason = self.module.matchUser(checkUser)
-				if reason:
+				if reason is not None:
 					badUsers.append((checkUser, reason))
 			for badUser in badUsers:
 				self.module.killUser(*badUser)
