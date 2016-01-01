@@ -16,6 +16,8 @@ class GLine(ModuleData, XLineBase):
 	
 	def actions(self):
 		return [ ("register", 10, self.checkLines),
+		         ("changeident", 10, self.checkIdentChange),
+		         ("changehost", 10, self.checkHostChange),
 		         ("commandpermission-GLINE", 10, self.restrictToOper),
 		         ("statsruntype-glines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
@@ -58,6 +60,13 @@ class GLine(ModuleData, XLineBase):
 			self.killUser(user, banReason)
 			return False
 		return True
+	
+	def checkIdentChange(self, user, oldIdent, fromServer):
+		self.checkLines(user)
+	
+	def checkHostChange(self, user, hostType, oldHost, fromServer):
+		if user.uuid[:3] == self.ircd.serverID:
+			self.checkLines(user)
 	
 	def restrictToOper(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):

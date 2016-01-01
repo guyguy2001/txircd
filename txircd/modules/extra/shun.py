@@ -15,6 +15,8 @@ class Shun(ModuleData, XLineBase):
 	
 	def actions(self):
 		return [ ("welcome", 10, self.checkLines),
+		         ("changeident", 10, self.checkIdentChange),
+		         ("changehost", 10, self.checkHostChange),
 		         ("commandpermission", 50, self.blockShunned),
 		         ("commandpermission-SHUN", 10, self.restrictToOper),
 		         ("statsruntype-shuns", 10, self.generateInfo),
@@ -57,6 +59,13 @@ class Shun(ModuleData, XLineBase):
 			self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a shun", user=user)
 		elif "shunned" in user.cache:
 			del user.cache["shunned"]
+	
+	def checkIdentChange(self, user, oldIdent, fromServer):
+		self.checkLines(user)
+	
+	def checkHostChange(self, user, hostType, oldHost, fromServer):
+		if user.uuid[:3] == self.ircd.serverID:
+			self.checkLines(user)
 	
 	def blockShunned(self, user, command, data):
 		if "shunned" not in user.cache:

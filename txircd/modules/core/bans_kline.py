@@ -17,6 +17,8 @@ class KLine(ModuleData, Command, XLineBase):
 	
 	def actions(self):
 		return [ ("register", 10, self.checkLines),
+		         ("changeident", 10, self.checkIdentChange),
+		         ("changehost", 10, self.checkHostChange),
 		         ("commandpermission-KLINE", 10, self.restrictToOper),
 		         ("statsruntype-klines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
@@ -55,6 +57,13 @@ class KLine(ModuleData, Command, XLineBase):
 			self.killUser(user, banReason)
 			return False
 		return True
+	
+	def checkIdentChange(self, user, oldIdent, fromServer):
+		self.checkLines(user)
+	
+	def checkHostChange(self, user, hostType, oldHost, fromServer):
+		if user.uuid[:3] == self.ircd.serverID:
+			self.checkLines(user)
 	
 	def restrictToOper(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-kline", users=[user]):
