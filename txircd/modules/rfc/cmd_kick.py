@@ -95,8 +95,8 @@ class KickCommand(ModuleData):
 		reason = sourceUser.nick if byUser else sourceServer.name
 		if "reason" in typeData:
 			reason = typeData["reason"]
-		for user in sendUserList:
-			user.sendMessage("KICK", user.nick, reason, **kwArgs)
+		for msgUser in sendUserList:
+			msgUser.sendMessage("KICK", user.nick, reason, **kwArgs)
 		del sendUserList[:]
 
 
