@@ -126,7 +126,13 @@ class ServerAddQLine(Command):
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
-		return self.module.executeServerAddCommand(server, data)
+		if self.module.executeServerAddCommand(server, data):
+			for user in self.module.ircd.users.itervalues():
+				reason = self.module.matchUser(user)
+				if reason is not None:
+					self.module.changeNick(user, reason, True)
+			return True
+		return None
 
 class ServerDelQLine(Command):
 	implements(ICommand)

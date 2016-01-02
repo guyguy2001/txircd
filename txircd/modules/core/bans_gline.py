@@ -136,7 +136,16 @@ class ServerAddGLine(Command):
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
 	def execute(self, server, data):
-		return self.module.executeServerAddCommand(server, data)
+		if self.module.executeServerAddCommand(server, data):
+			badUsers = []
+			for user in self.module.ircd.users.itervalues():
+				reason = self.module.matchUser(user)
+				if reason is not None:
+					badUsers.append((user, reason))
+			for user in badUsers:
+				self.module.killUser(*user)
+			return True
+		return None
 
 class ServerDelGLine(Command):
 	implements(ICommand)
