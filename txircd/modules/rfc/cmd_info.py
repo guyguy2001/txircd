@@ -26,6 +26,8 @@ class InfoCommand(ModuleData, Command):
 		user.sendMessage(irc.RPL_INFO, "")
 		user.sendMessage(irc.RPL_INFO, "Past contributors:")
 		user.sendMessage(irc.RPL_INFO, "   ekimekim")
+		user.sendMessage(irc.RPL_INFO, "")
+		user.sendMessage(irc.RPL_INFO, "Created and initially developed by ojii, Fugiman, and ElementalAlchemist")
 		user.sendMessage(irc.RPL_ENDOFINFO, "End of /INFO list")
 		return True
 
