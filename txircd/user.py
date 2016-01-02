@@ -130,7 +130,7 @@ class IRCUser(IRCBase):
 					break
 			if data is None:
 				if spewRegWarning:
-					if self.isRegistered() == 0:
+					if self.isRegistered():
 						self.sendMessage(irc.ERR_ALREADYREGISTERED, "You may not reregister")
 					else:
 						self.sendMessage(irc.ERR_NOTREGISTERED, command, "You have not registered")
