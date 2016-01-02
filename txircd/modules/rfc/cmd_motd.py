@@ -139,7 +139,7 @@ class ServerMOTDRequest(Command):
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		if "byuser" in data:
-			byUser = data["user"]
+			byUser = data["byuser"]
 			fromServer = self.ircd.servers[byUser.uuid[:3]]
 			byID = byUser.uuid
 		elif "byserver" in data:
