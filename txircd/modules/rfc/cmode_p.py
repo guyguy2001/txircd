@@ -21,8 +21,10 @@ class PrivateMode(ModuleData, Mode):
 			return True
 		return None
 	
-	def apply(self, actionName, channel, param, displayData, sameChannel, user):
-		if user not in channel.users:
+	def apply(self, actionName, channel, param, displayData, sameChannel, user, usedSearchMask):
+		if usedSearchMask:
+			displayData.clear()
+		elif user not in channel.users:
 			displayData["name"] = "*"
 			displayData["modestopic"] = "[]"
 

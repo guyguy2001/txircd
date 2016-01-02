@@ -37,8 +37,10 @@ class ListCommand(ModuleData, Command):
 	def execute(self, user, data):
 		if "channels" in data:
 			channels = data["channels"]
+			usedSearchMask = True
 		else:
 			channels = self.ircd.channels.values()
+			usedSearchMask = False
 		
 		user.sendMessage(irc.RPL_LISTSTART, "Channel", "Users Name")
 		for channel in channels:
@@ -47,7 +49,7 @@ class ListCommand(ModuleData, Command):
 				"usercount": len(channel.users),
 				"modestopic": "[{}] {}".format(channel.modeString(user), channel.topic)
 			}
-			self.ircd.runActionProcessing("displaychannel", displayData, channel, user, users=[user], channels=[channel])
+			self.ircd.runActionProcessing("displaychannel", displayData, channel, user, usedSearchMask, users=[user], channels=[channel])
 			if "name" not in displayData or "usercount" not in displayData or "modestopic" not in displayData:
 				continue
 			user.sendMessage(irc.RPL_LIST, displayData["name"], str(displayData["usercount"]), displayData["modestopic"])

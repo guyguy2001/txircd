@@ -21,7 +21,7 @@ class SecretMode(ModuleData, Mode):
 			return True
 		return None
 	
-	def apply(self, actionName, channel, param, displayData, sameChannel, user):
+	def apply(self, actionName, channel, param, displayData, sameChannel, user, usedSearchMask):
 		if user not in channel.users:
 			displayData.clear() # Let's make it not show the channel at all
 
