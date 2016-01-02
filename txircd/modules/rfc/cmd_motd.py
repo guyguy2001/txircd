@@ -87,7 +87,7 @@ class UserMOTD(Command):
 	
 	def execute(self, user, data):
 		if not data:
-			self.module.showMOTD(user, self.ircd.name)
+			self.module.showMOTD(user)
 			return True
 		toServer = data["server"]
 		toServer.sendMessage("MOTDREQ", toServer.serverID, prefix=user.uuid)
