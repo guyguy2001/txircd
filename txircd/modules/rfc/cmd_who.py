@@ -57,7 +57,7 @@ class WhoCommand(ModuleData, Command):
 			allMatches = matchingUsers
 			matchingUsers = []
 			for targetUser in allMatches:
-				if self.ircd.runActionUntilValue("userhasoperpermission", user, "", users=[user]):
+				if self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "", users=[user]):
 					matchingUsers.append(targetUser)
 		for targetUser in matchingUsers:
 			server = self.ircd if targetUser.uuid[:3] == self.ircd.serverID else self.ircd.servers[targetUser.uuid[:3]]
