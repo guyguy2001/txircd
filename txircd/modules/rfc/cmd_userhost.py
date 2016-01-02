@@ -30,7 +30,7 @@ class UserhostCommand(ModuleData, Command):
 			if self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "", users=[targetUser]):
 				output += "*"
 			output += "="
-			if user.metadataKeyExists("away"):
+			if targetUser.metadataKeyExists("away"):
 				output += "-"
 			else:
 				output += "+"
