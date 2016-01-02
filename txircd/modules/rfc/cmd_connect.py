@@ -36,7 +36,7 @@ class ConnectCommand(ModuleData, Command):
 		elif self.ircd.connectServer(serverName):
 			user.sendMessage("NOTICE", "*** Connecting to {}".format(serverName))
 		else:
-			user.sendMessage("NOTICE", "*** Failed to connect to {}".format(serverName))
+			user.sendMessage("NOTICE", "*** Failed to connect to {}; it's likely not configured.".format(serverName))
 		return True
 
 connectCmd = ConnectCommand()
