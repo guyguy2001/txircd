@@ -150,7 +150,7 @@ class ServerMOTDRequest(Command):
 		if "destserver" in data:
 			toServer = data["destserver"]
 			if toServer.serverID in self.module.remoteMOTD and self.module.remoteMOTD[toServer.serverID][1]:
-				server.sendMessage("STARTMOTD", byID)
+				server.sendMessage("STARTMOTD", toServer.serverID, prefix=byID)
 				for line in self.module.remoteMOTD[toServer.serverID][0]:
 					server.sendMessage("MOTD", byID, line, prefix=toServer.serverID)
 				server.sendMessage("ENDMOTD", byID, prefix=toServer.serverID)
