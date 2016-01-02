@@ -53,16 +53,17 @@ class MessageOfTheDay(ModuleData, Command):
 	
 	def showRemoteMOTD(self, user, server):
 		if server.serverID not in self.remoteMOTD:
-			return
+			return False
 		if not self.remoteMOTD[server.serverID][1]:
-			return
+			return False
 		if not self.remoteMOTD[server.serverID][0]:
 			user.sendMessage(irc.ERR_NOMOTD, "Message of the day file is missing.")
-			return
+			return True
 		user.sendMessage(irc.RPL_MOTDSTART, "{} Message of the Day".format(server.name))
 		for line in self.remoteMOTD[server.serverID][0]:
 			user.sendMessage(irc.RPL_MOTD, line)
 		user.sendMessage(irc.RPL_ENDOFMOTD, "End of message of the day")
+		return True
 	
 	def removeFromCache(self, server, reason):
 		if server.serverID in self.remoteMOTD:
@@ -90,7 +91,8 @@ class UserMOTD(Command):
 			self.module.showMOTD(user)
 			return True
 		toServer = data["server"]
-		toServer.sendMessage("MOTDREQ", toServer.serverID, prefix=user.uuid)
+		if not self.module.showRemoteMOTD(user, toServer):
+			toServer.sendMessage("MOTDREQ", toServer.serverID, prefix=user.uuid)
 		return True
 
 class ServerMOTDRequest(Command):
