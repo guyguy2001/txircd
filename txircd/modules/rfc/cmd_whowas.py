@@ -95,7 +95,7 @@ class WhowasCommand(ModuleData, Command):
 		for entry in whowasEntries:
 			entryNick = entry["nick"]
 			user.sendMessage(irc.RPL_WHOWASUSER, entryNick, entry["ident"], entry["host"], "*", entry["gecos"])
-			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], datetime.utcfromtimestamp(entry["when"]))
+			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], str(datetime.utcfromtimestamp(entry["when"])))
 		user.sendMessage(irc.RPL_ENDOFWHOWAS, nick, "End of WHOWAS")
 		return True
 
