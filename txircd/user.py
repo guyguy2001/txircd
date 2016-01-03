@@ -435,7 +435,7 @@ class IRCUser(IRCBase):
 			elif changedHostOfType:
 				self.ircd.runActionStandard("updatehost", self, hostType, oldHost, newHost, fromServer, users=[self])
 	
-	def resetHost(self, hostType, fromServer):
+	def resetHost(self, hostType, fromServer = None):
 		"""
 		Resets the user's host to the real host.
 		"""
