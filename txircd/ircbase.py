@@ -45,7 +45,7 @@ class IRCBase(LineOnlyReceiver):
 			params = []
 		while "" in params:
 			params.remove("")
-		if lastParam:
+		if lastParam is not None:
 			params.append(lastParam)
 		return command.upper(), params, prefix, tags
 	
