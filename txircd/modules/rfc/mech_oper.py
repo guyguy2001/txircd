@@ -250,6 +250,7 @@ class ServerOper(Command):
 		user = data["user"]
 		permissions = set(data["permissions"])
 		user.cache["oper-permissions"] = permissions
+		self.ircd.runActionStandard("oper", user)
 		self.ircd.broadcastToServers(server, "OPER", user.uuid, *permissions, prefix=user.uuid[:3])
 		return True
 
