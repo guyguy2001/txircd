@@ -34,13 +34,10 @@ class ServerNoticeMode(ModuleData, Mode):
 
 	def modeChanged(self, user, source, adding, param, *params):
 		if adding:
-			if self.ircd.runActionUntilTrue("servernoticetype", user, param):
-				if param not in self.subscribeLists:
-					self.subscribeLists[param] = WeakSet()
-				if user.uuid[:3] == self.ircd.serverID:
-					self.subscribeLists[param].add(user)
-			else:
-				user.sendMessage(irc.ERR_INVALIDSNOTYPE, param, "Invalid server notice type")
+			if param not in self.subscribeLists:
+				self.subscribeLists[param] = WeakSet()
+			if user.uuid[:3] == self.ircd.serverID:
+				self.subscribeLists[param].add(user)
 		else:
 			if param in self.subscribeLists and user in self.subscribeLists[param]:
 				self.subscribeLists[param].remove(user)
@@ -52,6 +49,14 @@ class ServerNoticeMode(ModuleData, Mode):
 				u.sendMessage("NOTICE", "*** {}".format(snodata["message"]))
 
 	def checkSet(self, user, param):
+		noticeTypes = ircLower(param).split(",")
+		badTypes = []
+		for noticeType in noticeTypes:
+			if not self.ircd.runActionUntilTrue("servernoticetype", user, noticeType):
+				user.sendMessage(irc.ERR_INVALIDSNOTYPE, noticeType, "Invalid server notice type")
+				badTypes.append(noticeType)
+		for noticeType in badTypes:
+			noticeTypes.remove(noticeType)
 		return ircLower(param).split(",")
 
 	def checkUnset(self, user, param):
