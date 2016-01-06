@@ -130,7 +130,7 @@ class NickServerCommand(Command):
 		newNick = data["nick"]
 		if not newNick:
 			return True # Handled collision by not changing the user's nick
-		if newNick in self.ircd.userNicks:
+		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != user.uuid:
 			user.changeNick(user.uuid)
 			return True
 		user.changeNick(data["nick"], server)
