@@ -1,9 +1,9 @@
 from twisted.plugin import IPlugin
-from txircd.module_interface import IModuleData, ModuleData
+from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implements
 
-class SnoOper(ModuleData):
-	implements(IPlugin, IModuleData)
+class SnoOper(ModuleData, Command):
+	implements(IPlugin, IModuleData, ICommand)
 	
 	name = "ServerNoticeOper"
 	
