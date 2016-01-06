@@ -34,7 +34,7 @@ class SnoOper(ModuleData, Command):
 			"message": "Failed OPER attempt from {} ({})".format(user.nick, reason)
 		}
 		self.ircd.runActionProcessing("sendservernotice", snodata)
-		self.ircd.broadcastToServers(None, "OPERFAILNOTICE", user, reason, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "OPERFAILNOTICE", user.uuid, reason, prefix=self.ircd.serverID)
 	
 	def checkSnoType(self, user, typename):
 		if typename == "oper":
@@ -66,7 +66,7 @@ class SnoOper(ModuleData, Command):
 			"message": "Failed OPER attempt from {} ({}) (from {})".format(user.nick, reason, fromServer.name)
 		}
 		self.ircd.runActionProcessing("sendservernotice", snodata)
-		self.ircd.broadcastToServers(server, "OPERFAILNOTICE", user, reason, prefix=fromServer.serverID)
+		self.ircd.broadcastToServers(server, "OPERFAILNOTICE", user.uuid, reason, prefix=fromServer.serverID)
 		return True
 
 snoOper = SnoOper()
