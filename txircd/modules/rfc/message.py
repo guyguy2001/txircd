@@ -70,7 +70,7 @@ class MessageCommands(ModuleData):
 						for part in messageParts:
 							target.sendMessage(command, part, prefix=userPrefix, tags=tags)
 					else:
-						self.ircd.servers[target.uuid[:3]].sendMessage("PRIVMSG", target.uuid, message, prefix=user.uuid)
+						self.ircd.servers[target.uuid[:3]].sendMessage(command, target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
 					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
