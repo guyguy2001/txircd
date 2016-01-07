@@ -129,12 +129,12 @@ class ServerRehashNotice(Command):
 			return None
 		if len(params) == 2:
 			return {
-				"fromserver": self.ircd.server[prefix],
+				"fromserver": self.ircd.servers[prefix],
 				"user": self.ircd.users[params[0]],
 				"filename": params[1]
 			}
 		return {
-			"fromserver": self.ircd.server[prefix],
+			"fromserver": self.ircd.servers[prefix],
 			"user": self.ircd.users[params[0]],
 			"filename": params[1],
 			"message": params[2]
