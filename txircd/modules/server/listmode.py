@@ -20,9 +20,9 @@ class ListModeSync(ModuleData):
 			self.modeCache[target] = []
 		self.modeCache[target].append(modeData)
 	
-	def setModes(self, target):
+	def setModes(self, target, fromServer):
 		if target in self.modeCache:
-			target.setModes(self.modeCache[target])
+			target.setModes(self.modeCache[target], fromServer.serverID)
 			del self.modeCache[target]
 	
 	def clearUser(self, userUUID):
@@ -141,7 +141,7 @@ class EndListModeCmd(Command):
 		elif "lostchannel" in data:
 			self.module.clearChannel(data["lostchannel"])
 		else:
-			self.module.setModes(data["target"])
+			self.module.setModes(data["target"], server)
 		return True
 
 listModeSync = ListModeSync()
