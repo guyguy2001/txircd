@@ -77,7 +77,7 @@ class IRCServer(IRCBase):
 		else:
 			self.ircd.log.warn("Removing server {server.name}: {reason}", server=self, reason=reason)
 		self.ircd.runActionStandard("serverquit", self, reason)
-		if self.bursted:
+		if self.serverID in self.ircd.servers:
 			if netsplitQuitMsg is None:
 				netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
 			allUsers = self.ircd.users.values()
