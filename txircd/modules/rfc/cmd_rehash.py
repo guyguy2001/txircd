@@ -78,7 +78,9 @@ class ServerRehash(Command):
 		if len(params) != 1:
 			return None
 		if params[0] == self.ircd.serverID:
-			return {}
+			return {
+				"source": prefix
+			}
 		if params[0] not in self.ircd.servers:
 			return None
 		return {
