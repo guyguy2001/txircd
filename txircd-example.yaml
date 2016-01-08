@@ -425,7 +425,7 @@
 # This controls the maximum number of entries a channel may have in a single
 # channel list mode. The default value is 128, but the value may be set as high
 # as 256.
-#channel_listmode_limit: 256
+#channel_listmode_limit: 128
 
 
 # MODULE CONFIGURATION
