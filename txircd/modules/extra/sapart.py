@@ -35,7 +35,7 @@ class SapartCommand(ModuleData, Command):
 		if target not in channel.users:
 			user.sendSingleError("SapartCmd", irc.ERR_USERNOTINCHANNEL, params[1], "They are not on that channel")
 			return None
-		reason = params[2] if len(params) > 2 else ""
+		reason = " ".join(params[2:]) if len(params) > 2 else ""
 		reason = reason[:self.ircd.config.get("part_message_length", 300)]
 		return {
 			"target": target,

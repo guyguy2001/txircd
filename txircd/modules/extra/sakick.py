@@ -43,7 +43,7 @@ class SakickCommand(ModuleData, Command):
 			return None
 		reason = user.nick
 		if len(params) > 2:
-			reason = params[2]
+			reason = " ".join(params[2:])
 		reason = reason[:self.ircd.config.get("kick_length", 255)]
 		return {
 			"target": target,
