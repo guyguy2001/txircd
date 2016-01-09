@@ -36,7 +36,7 @@ class SamodeCommand(ModuleData, Command):
 				"modes": params[1],
 				"params": params[2:]
 			}
-		user.sendSingleError("SamodeCmd", irc.ERR_NOSUCHNICK, "No such nick/channel")
+		user.sendSingleError("SamodeCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick/channel")
 		return None
 
 	def affectedChannels(self, user, data):
