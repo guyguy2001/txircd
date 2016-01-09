@@ -34,7 +34,7 @@ class SakickCommand(ModuleData, Command):
 			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
 		if params[1] not in self.ircd.userNicks:
-			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHNICK, params[1], "No such nick/channel")
+			user.sendSingleError("SakickCmd", irc.ERR_NOSUCHNICK, params[1], "No such nick")
 			return None
 		channel = self.ircd.channels[params[0]]
 		target = self.ircd.users[self.ircd.userNicks[params[1]]]

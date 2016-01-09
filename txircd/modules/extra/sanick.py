@@ -26,7 +26,7 @@ class SanickCommand(ModuleData, Command):
 			user.sendSingleError("SanickCmd", irc.ERR_NEEDMOREPARAMS, "SANICK", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("SanickCmd", irc.ERR_NOSUCHSERVER, "No such nick/channel")
+			user.sendSingleError("SanickCmd", irc.ERR_NOSUCHSERVER, "No such nick")
 			return None
 		if not isValidNick(params[1]) or len(params[1]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("SanickCmd", irc.ERR_ERRONEUSNICKNAME, params[1], "Erroneous nickname")

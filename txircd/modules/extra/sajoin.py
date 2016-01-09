@@ -26,7 +26,7 @@ class SajoinCommand(ModuleData, Command):
 			user.sendSingleError("SajoinCmd", irc.ERR_NEEDMOREPARAMS, "SAJOIN", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("SajoinCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick/channel")
+			user.sendSingleError("SajoinCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
 		channame = params[1]
 		if channame[0] != "#":

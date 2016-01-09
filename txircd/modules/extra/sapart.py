@@ -25,7 +25,7 @@ class SapartCommand(ModuleData, Command):
 			user.sendSingleError("SapartCmd", irc.ERR_NEEDMOREPARAMS, "SAPART", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.userNicks:
-			user.sendSingleError("SapartCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick/channel")
+			user.sendSingleError("SapartCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
 		if params[1] not in self.ircd.channels:
 			user.sendSingleError("SapartCmd", irc.ERR_NOSUCHCHANNEL, params[1], "No such channel")
