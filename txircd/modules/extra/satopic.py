@@ -22,7 +22,7 @@ class SatopicCommand(ModuleData, Command):
 
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 2:
-			user.sendSingleError("SatopicCmd", irc.ERR_NEEDMOREPARAMS, "SATOPIC", "Not enough paramters")
+			user.sendSingleError("SatopicCmd", irc.ERR_NEEDMOREPARAMS, "SATOPIC", "Not enough parameters")
 			return None
 		if params[0] not in self.ircd.channels:
 			user.sendSingleError("SatopicCmd", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
