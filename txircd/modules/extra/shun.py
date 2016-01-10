@@ -128,6 +128,7 @@ class UserShun(Command):
 			user.sendMessage("NOTICE", "*** Shun for {} doesn't exist.".format(shunmask))
 			return True
 		user.sendMessage("NOTICE", "*** Shun for {} has been removed.".format(shunmask))
+		self.module.onShunUpdate()
 		return True
 
 class ServerAddShun(Command):
