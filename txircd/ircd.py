@@ -367,10 +367,16 @@ class IRCd(Service):
 			del self.userModeTypes[modeData[0]]
 		for actionData in moduleData["actions"]:
 			self.actions[actionData[0]].remove((actionData[2], actionData[1]))
+			if not self.actions[actionData[0]]:
+				del self.actions[actionData[0]]
 		for commandData in moduleData["usercommands"]:
 			self.userCommands[commandData[0]].remove((commandData[2], commandData[1]))
+			if not self.userCommands[commandData[0]]:
+				del self.userCommands[commandData[0]]
 		for commandData in moduleData["servercommands"]:
 			self.serverCommands[commandData[0]].remove((commandData[2], commandData[1]))
+			if not self.serverCommands[commandData[0]]:
+				del self.serverCommands[commandData[0]]
 		
 		del self.loadedModules[moduleName]
 		del self._loadedModuleData[moduleName]
