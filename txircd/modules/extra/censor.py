@@ -136,9 +136,6 @@ class UserCensorCommand(Command):
 
 	def execute(self, user, data):
 		badword = data["badword"]
-		if badword not in self.censor.badwords:
-			user.sendMessage(irc.ERR_NOSUCHBADWORD, badword, "That's not a bad word on the badword list")
-			return True
 		if "replacement" in data:
 			replacement = data["replacement"]
 			self.censor.badwords[badword] = replacement
@@ -146,6 +143,9 @@ class UserCensorCommand(Command):
 			self.censor.propagateBadword(badword, replacement)
 			user.sendMessage(irc.RPL_BADWORDADDED, badword, replacement)
 		else:
+			if badword not in self.censor.badwords:
+				user.sendMessage(irc.ERR_NOSUCHBADWORD, badword, "That's not a bad word on the badword list")
+				return True
 			del self.censor.badwords[badword]
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
 			self.censor.propagateBadword(badword, None)
