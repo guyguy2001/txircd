@@ -120,13 +120,13 @@ class UserCensorCommand(Command):
 
 	def parseParams(self, user, params, prefix, tags):
 		if not params or not params[0]:
-			user.sendSingleError("CensorCmd", irc.ERR_NEEDMOREPARAMS, "CENSOR", ":Not enough parameters")
+			user.sendSingleError("CensorCmd", irc.ERR_NEEDMOREPARAMS, "CENSOR", "Not enough parameters")
 			return None
 		if len(params) == 1:
 			# Removing a badword
 			badword = params[0]
 			if badword not in self.censor.badwords:
-				user.sendSingleError("CensorCmd", irc.ERR_NOSUCHBADWORD, badword, ":No such badword")
+				user.sendSingleError("CensorCmd", irc.ERR_NOSUCHBADWORD, badword, "No such badword")
 				return None
 			return {
 				"badword": params[0]
