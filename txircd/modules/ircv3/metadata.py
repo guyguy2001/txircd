@@ -157,7 +157,7 @@ class Metadata(ModuleData, Command):
 			if not isValidMetadataKey(key):
 				user.sendMessage(irc.ERR_KEYINVALID, key, "invalid metadata key")
 				return True
-			if target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, "*"):
+			if target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, key):
 				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, key, "permission denied")
 				return True
 			visibility = self.ircd.runActionUntilValue("metadatavisibility", key)
