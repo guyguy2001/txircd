@@ -107,9 +107,11 @@ class Metadata(ModuleData, Command):
 				targetName = "*"
 			else:
 				targetName = target.nick
+			targetIsChannel = False
 		elif "targetchan" in data:
 			target = data["targetchan"]
 			targetName = target.name
+			targetIsChannel = True
 		else:
 			return None
 		
@@ -122,7 +124,10 @@ class Metadata(ModuleData, Command):
 			user.sendMessage(irc.RPL_METADATAEND, "end of metadata")
 			return True
 		if subcmd == "CLEAR":
-			if target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, "*"):
+			if not targetIsChannel and target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, "*"):
+				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, "*", "permission denied")
+				return True
+			if targetIsChannel and (not self.ircd.runActionUntilValue("checkchannellevel", "metadata", target, user, users=[user], channels=[target]) or self.ircd.runActionUntilValue("metadatasetpermission", user, target, "*") is False):
 				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, "*", "permission denied")
 				return True
 			metadataList = target.metadataList()
@@ -157,7 +162,10 @@ class Metadata(ModuleData, Command):
 			if not isValidMetadataKey(key):
 				user.sendMessage(irc.ERR_KEYINVALID, key, "invalid metadata key")
 				return True
-			if target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, key):
+			if not targetIsChannel and target != user and not self.ircd.runActionUntilValue("metadatasetpermission", user, target, key):
+				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, key, "permission denied")
+				return True
+			if targetIsChannel and (not self.ircd.runActionUntilValue("checkchannellevel", "metadata", target, user, users=[user], channels=[target]) or self.ircd.runActionUntilValue("metadatasetpermission", user, target, key) is False):
 				user.sendMessage(irc.ERR_KEYNOPERMISSION, targetName, key, "permission denied")
 				return True
 			visibility = self.ircd.runActionUntilValue("metadatavisibility", key)
