@@ -483,7 +483,7 @@ class IRCUser(IRCBase):
 		"""
 		if key not in self._metadata:
 			return None
-		return self.metadata[key][0]
+		return self._metadata[key][0]
 	
 	def metadataValue(self, key):
 		"""
