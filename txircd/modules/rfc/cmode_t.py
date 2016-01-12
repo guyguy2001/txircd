@@ -25,7 +25,7 @@ class TopicLockMode(ModuleData, Mode):
 	def apply(self, actionType, channel, param, user, data):
 		if "topic" not in data:
 			return None
-		if not self.ircd.runActionUntilValue("checkchannellevel", "topic", channel, user):
+		if not self.ircd.runActionUntilValue("checkchannellevel", "topic", channel, user, users=[user], channels=[channel]):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to change the topic on this channel")
 			return False
 		return None
