@@ -175,7 +175,10 @@ class Metadata(ModuleData, Command):
 				return True
 			value = data["value"] if "value" in data else None
 			if target.setMetadata(key, value, visibility, True):
-				user.sendMessage(irc.RPL_KEYVALUE, targetName, key, visibility, value)
+				if value is None:
+					user.sendMessage(irc.RPL_KEYVALUE, targetName, key, visibility)
+				else:
+					user.sendMessage(irc.RPL_KEYVALUE, targetName, key, visibility, value)
 				user.sendMessage(irc.RPL_METADATAEND, "end of metadata")
 			else:
 				user.sendMessage(irc.ERR_KEYNOTSET, targetName, key, "key not set")
