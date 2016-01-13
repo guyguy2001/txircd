@@ -66,6 +66,10 @@ modules:
 # optional extension in 3.2 (batch), and we recommend enabling it.
 - Batch
 
+# ChangeHost: Provides notification when a user's host changes. It's an optional
+# extension in 3.2 (chghost), and we recommend enabling it.
+- ChangeHost
+
 # EchoMessage: Provides a mechanism to send messages a user sends back to the
 # user who sends them. This allows clients to always show messages in order (as
 # opposed to showing messages you're sending before messages that were sent
