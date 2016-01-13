@@ -96,19 +96,18 @@ class UserInvite(Command):
 			user.sendMessage(irc.ERR_USERONCHANNEL, targetUser.nick, channel.name, "is already on channel")
 			return True
 		user.sendMessage(irc.RPL_INVITING, targetUser.nick, channel.name)
-		if targetUser.uuid[:3] != self.ircd.serverID:
-			self.ircd.servers[targetUser.uuid[:3]].sendMessage("INVITE", targetUser.uuid, channel.name, prefix=user.uuid)
-			return True
-		if "invites" not in targetUser.cache:
-			targetUser.cache["invites"] = {}
-		targetUser.cache["invites"][channel.name] = now()
-		conditionalTags = {}
-		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
-		tags = user.filterConditionalTags(conditionalTags)
-		targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
+		self.ircd.broadcastToServers(None, "INVITE", targetUser.uuid, channel.name, prefix=user.uuid)
+		if targetUser.uuid[:3] == self.ircd.serverID:
+			if "invites" not in targetUser.cache:
+				targetUser.cache["invites"] = {}
+			targetUser.cache["invites"][channel.name] = now()
+			conditionalTags = {}
+			self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
+			tags = user.filterConditionalTags(conditionalTags)
+			targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
 		notifyList = []
 		for chanUser in channel.users.iterkeys(): # Notify all users who can invite other users on the channel
-			if chanUser != user and chanUser != targetUser and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user):
+			if chanUser != user and chanUser != targetUser and chanUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, chanUser, users=[chanUser], channels=[channel]):
 				notifyList.append(chanUser)
 		self.ircd.runActionProcessing("notifyinvite", notifyList, channel, user, targetUser)
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
@@ -154,16 +153,20 @@ class ServerInvite(Command):
 		user = data["inviter"]
 		targetUser = data["invitee"]
 		channel = data["channel"]
-		if targetUser.uuid[:3] != self.ircd.serverID: # Needs more hops.
-			self.ircd.servers[targetUser.uuid[:3]].sendMessage("INVITE", targetUser.uuid, channel.name, prefix=user.uuid)
-			return True
-		if "invites" not in targetUser.cache:
-			targetUser.cache["invites"] = {}
-		targetUser.cache["invites"][channel.name] = now()
-		conditionalTags = {}
-		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
-		tags = user.filterConditionalTags(conditionalTags)
-		targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
+		self.ircd.broadcastToServers(server, "INVITE", targetUser.uuid, channel.name, prefix=user.uuid)
+		if targetUser.uuid[:3] == self.ircd.serverID:
+			if "invites" not in targetUser.cache:
+				targetUser.cache["invites"] = {}
+			targetUser.cache["invites"][channel.name] = now()
+			conditionalTags = {}
+			self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
+			tags = user.filterConditionalTags(conditionalTags)
+			targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
+		notifyList = []
+		for chanUser in channel.users.iterkeys():
+			if chanUser != user and chanUser != targetUser and chanUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, chanUser, users=[chanUser], channels=[channel]):
+				notifyList.append(chanUser)
+		self.ircd.runActionProcessing("notifyinvite", notifyList, channel, user, targetUser)
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
 		return True
 
