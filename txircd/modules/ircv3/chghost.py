@@ -54,6 +54,6 @@ class ChangeHost(ModuleData):
 			if "capabilities" not in chanUser.cache or "chghost" not in chanUser.cache["capabilities"]:
 				continue
 			tags = chanUser.filterConditionalTags(conditionalTags)
-			chanUser.sendMessage("CHGHOST", userIdent, userHost, prefix=userPrefix, tags=tags)
+			chanUser.sendMessage("CHGHOST", userIdent, userHost, to=None, prefix=userPrefix, tags=tags)
 
 changeHost = ChangeHost()
