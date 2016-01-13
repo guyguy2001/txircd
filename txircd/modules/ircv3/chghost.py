@@ -7,7 +7,7 @@ class ChangeHost(ModuleData):
 	
 	name = "ChangeHost"
 	
-	def action(self):
+	def actions(self):
 		return [ ("changehost", 1, self.updateHosts),
 		         ("changeident", 1, self.updateIdents),
 		         ("remotechangeident", 1, self.updateIdents),
