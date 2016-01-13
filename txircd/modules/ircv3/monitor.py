@@ -194,8 +194,9 @@ class Monitor(ModuleData, Command):
 				offlineLines = splitMessage(",".join(offlineList), 400, ",")
 				for line in offlineLines:
 					user.sendMessage(irc.RPL_MONOFFLINE, line)
-			for targetUser in onlineUserList:
-				self.sendUserMetadata(targetUser, user)
+			if "capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"]:
+				for targetUser in onlineUserList:
+					self.sendUserMetadata(targetUser, user)
 			return True
 		if subcmd == "-":
 			if "monitor" not in user.cache:
