@@ -119,4 +119,4 @@ modules:
 # a single user can monitor. The default is unlimited. We recommend setting
 # this value to something reasonable like 100 entries, but you may set it to
 # whatever you like.
-#monitor_length: 100
+#monitor_limit: 100

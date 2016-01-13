@@ -61,11 +61,11 @@ class Monitor(ModuleData, Command):
 			self.ircd.functionCache["cap-del"]("metadata-notify")
 	
 	def verifyConfig(self, config):
-		if "monitor_length" not in config:
-			config["monitor_length"] = None
+		if "monitor_limit" not in config:
+			config["monitor_limit"] = None
 			return
-		if not isinstance(config["monitor_length"], int) or config["monitor_length"] < 0:
-			raise ConfigValidationError("monitor_length", "invalid number")
+		if not isinstance(config["monitor_limit"], int) or config["monitor_limit"] < 0:
+			raise ConfigValidationError("monitor_limit", "invalid number")
 	
 	def addCapability(self, user, capList):
 		capList.append("metadata-notify")
@@ -125,7 +125,7 @@ class Monitor(ModuleData, Command):
 				user.sendMessage("METADATA", key, visibility, value, to=channel.name)
 	
 	def buildISupport(self, data):
-		data["MONITOR"] = self.ircd.config["monitor_length"]
+		data["MONITOR"] = self.ircd.config["monitor_limit"]
 	
 	def cleanIndex(self):
 		removeKeys = []
