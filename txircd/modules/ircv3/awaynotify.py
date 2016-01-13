@@ -44,11 +44,11 @@ class AwayNotify(ModuleData):
 		if value:
 			for noticeUser in noticeUsers:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
-				noticeUser.sendMessage("AWAY", value, prefix=noticePrefix, tags=tags)
+				noticeUser.sendMessage("AWAY", value, to=None, prefix=noticePrefix, tags=tags)
 		else:
 			for noticeUser in noticeUsers:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
-				noticeUser.sendMessage("AWAY", prefix=noticePrefix, tags=tags)
+				noticeUser.sendMessage("AWAY", to=None, prefix=noticePrefix, tags=tags)
 	
 	def tellChannelAway(self, channel, user):
 		if not user.metadataKeyExists("away"):
@@ -60,6 +60,6 @@ class AwayNotify(ModuleData):
 		for noticeUser in channel.users.iterkeys():
 			if noticeUser.uuid[:3] == self.ircd.serverID and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
-				noticeUser.sendMessage("AWAY", awayReason, prefix=noticePrefix, tags=tags)
+				noticeUser.sendMessage("AWAY", awayReason, to=None, prefix=noticePrefix, tags=tags)
 
 awayNotify = AwayNotify()

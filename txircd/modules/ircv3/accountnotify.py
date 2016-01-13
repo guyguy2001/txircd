@@ -43,10 +43,10 @@ class AccountNotify(ModuleData):
 		if value:
 			for noticeUser in noticeUsers:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
-				noticeUser.sendMessage("ACCOUNT", value, prefix=noticePrefix, tags=tags)
+				noticeUser.sendMessage("ACCOUNT", value, to=None, prefix=noticePrefix, tags=tags)
 		else:
 			for noticeUser in noticeUsers:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
-				noticeUser.sendMessage("ACCOUNT", "*", prefix=noticePrefix, tags=tags)
+				noticeUser.sendMessage("ACCOUNT", "*", to=None, prefix=noticePrefix, tags=tags)
 
 accountNotify = AccountNotify()
