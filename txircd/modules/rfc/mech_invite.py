@@ -44,7 +44,7 @@ class Invite(ModuleData, Mode):
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
 			return False
-		if not self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user):
+		if not self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user, users=[user], channels=[channel]):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to invite users to {}".format(channel.name))
 			return False
 		return None

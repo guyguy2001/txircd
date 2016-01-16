@@ -132,7 +132,7 @@ class ModeCommand(ModuleData):
 			else:
 				return None # All the modes are list modes, and there are no parameters, so we're listing list mode parameters
 		channel = data["channel"]
-		if not self.ircd.runActionUntilValue("checkchannellevel", "mode", channel, user):
+		if not self.ircd.runActionUntilValue("checkchannellevel", "mode", channel, user, users=[user], channels=[channel]):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have access to set channel modes")
 			return False
 		return None

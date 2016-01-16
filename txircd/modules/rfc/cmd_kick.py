@@ -38,7 +38,7 @@ class KickCommand(ModuleData):
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
 			return False
-		if not self.ircd.runActionUntilValue("checkchannellevel", "kick", channel, user):
+		if not self.ircd.runActionUntilValue("checkchannellevel", "kick", channel, user, users=[user], channels=[channel]):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You don't have permission to kick users from {}".format(channel.name))
 			return False
 		if channel.userRank(user) < channel.userRank(data["user"]):

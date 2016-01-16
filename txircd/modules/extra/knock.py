@@ -77,7 +77,7 @@ class KnockCommand(Command):
 		user.cache["knocks"][channel] = timestamp(now())
 		reason = data["reason"]
 		for targetUser in channel.users:
-			if self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user):
+			if self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user, users=[user], channels=[channel]):
 				targetUser.sendMessage(irc.RPL_KNOCK, channel.name, user.nick, reason)
 		user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
 		return True
