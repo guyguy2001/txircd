@@ -72,7 +72,7 @@ class UserKnock(Command):
 			user.sendSingleError("KnockParams", irc.ERR_CHANOPEN, channel.name, "Can't KNOCK on {}, channel is open".format(channel.name))
 			return None
 		if "knocks" in user.cache and channel in user.cache["knocks"]:
-			user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, channel.name, "Can't KNOCK on {}, (only one KNOCK per {} seconds allowed)".format(channel.name, self.ircd.config.get("knock_delay", 300)))
+			user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, channel.name, "Can't KNOCK on {} (only one KNOCK per {} seconds allowed)".format(channel.name, self.ircd.config.get("knock_delay", 300)))
 			return None
 		if "knocks" not in user.cache:
 			user.cache["knocks"] = WeakKeyDictionary()
