@@ -67,13 +67,13 @@ class UserKnock(Command):
 		channel = data["channel"]
 		self.expireKnocks(user)
 		if user in channel.users:
-			user.sendSingleError("KnockParams", irc.ERR_KNOCKONCHAN, channel.name, "Can't KNOCK on {}, you are already on that channel".format(channel.name))
+			user.sendMessage(irc.ERR_KNOCKONCHAN, channel.name, "Can't KNOCK on {}, you are already on that channel".format(channel.name))
 			return True
 		if "i" not in channel.modes:
-			user.sendSingleError("KnockParams", irc.ERR_CHANOPEN, channel.name, "Can't KNOCK on {}, channel is open".format(channel.name))
+			user.sendMessage(irc.ERR_CHANOPEN, channel.name, "Can't KNOCK on {}, channel is open".format(channel.name))
 			return True
 		if "knocks" in user.cache and channel in user.cache["knocks"]:
-			user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, channel.name, "Can't KNOCK on {} (only one KNOCK per {} seconds allowed)".format(channel.name, self.ircd.config.get("knock_delay", 300)))
+			user.sendMessage(irc.ERR_TOOMANYKNOCK, channel.name, "Can't KNOCK on {} (only one KNOCK per {} seconds allowed)".format(channel.name, self.ircd.config.get("knock_delay", 300)))
 			return True
 		if "knocks" not in user.cache:
 			user.cache["knocks"] = WeakKeyDictionary()
