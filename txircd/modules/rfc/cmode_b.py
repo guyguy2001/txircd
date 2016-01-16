@@ -244,7 +244,7 @@ class BanMode(ModuleData, Mode):
 			lowerBanmask = ircLower(fullBanmask)
 			for existingParamData in channel.modes["b"]:
 				if ircLower(existingParamData[0]) == lowerBanmask:
-					validParams.append(existingParamData)
+					validParams.append(existingParamData[0])
 					break
 			else:
 				validParams.append(fullBanmask)
