@@ -121,7 +121,7 @@ class ServerKnock(Command):
 	def execute(self, server, data):
 		channel = data["channel"]
 		fromUser = data["user"]
-		reason = data["reason"]
+		reason = data["message"]
 		for targetUser in channel.users:
 			if targetUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, targetUser, users=[targetUser], channels=[channel]):
 				targetUser.sendMessage(irc.RPL_KNOCK, channel.name, fromUser.nick, reason)
