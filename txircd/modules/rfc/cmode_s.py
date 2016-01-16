@@ -16,7 +16,7 @@ class SecretMode(ModuleData, Mode):
 	def actions(self):
 		return [ ("modeactioncheck-channel-s-displaychannel", 1, self.chanIsSecret) ]
 	
-	def chanIsSecret(self, channel, displayData, sameChannel, user):
+	def chanIsSecret(self, channel, displayData, sameChannel, user, usedSearchMask):
 		if "s" in channel.modes:
 			return True
 		return None

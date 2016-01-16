@@ -16,7 +16,7 @@ class PrivateMode(ModuleData, Mode):
 	def actions(self):
 		return [ ("modeactioncheck-channel-p-displaychannel", 1, self.chanIsPrivate) ]
 	
-	def chanIsPrivate(self, channel, displayData, sameChannel, user):
+	def chanIsPrivate(self, channel, displayData, sameChannel, user, usedSearchMask):
 		if "p" in channel.modes:
 			return True
 		return None
