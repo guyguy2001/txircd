@@ -57,7 +57,7 @@ class ServerNoticeMode(ModuleData, Mode):
 				badTypes.append(noticeType)
 		for noticeType in badTypes:
 			noticeTypes.remove(noticeType)
-		return ircLower(param).split(",")
+		return noticeTypes
 
 	def checkUnset(self, user, param):
 		return ircLower(param).split(",")
