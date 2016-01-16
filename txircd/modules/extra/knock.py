@@ -2,8 +2,9 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ModeType, now, timestamp
+from txircd.utils import ModeType, now
 from zope.interface import implements
+from datetime import timedelta
 from weakref import WeakKeyDictionary
 
 irc.ERR_CANNOTKNOCK  = "480"
@@ -76,7 +77,7 @@ class UserKnock(Command):
 			return None
 		if "knocks" not in user.cache:
 			user.cache["knocks"] = WeakKeyDictionary()
-		user.cache["knocks"][channel] = timestamp(now())
+		user.cache["knocks"][channel] = now()
 		reason = data["reason"]
 		for targetUser in channel.users:
 			if targetUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, targetUser, users=[targetUser], channels=[channel]):
@@ -92,9 +93,10 @@ class UserKnock(Command):
 		if "knocks" not in user.cache:
 			return
 		expiredKnocks = []
-		nowTS = timestamp(now())
+		nowTime = now()
+		timeDiff = timedelta(seconds=self.ircd.config.get("knock_delay", 300))
 		for channel, knockTime in user.cache["knocks"].iteritems():
-			if knockTime + self.ircd.config.get("knock_delay", 300) <= nowTS:
+			if knockTime + timeDiff < nowTime:
 				expiredKnocks.append(channel)
 		for channel in expiredKnocks:
 			del user.cache["knocks"][channel]
