@@ -241,7 +241,13 @@ class BanMode(ModuleData, Mode):
 				fullBanmask += "!*@*"
 			elif "@" not in banmask:
 				fullBanmask += "@*"
-			validParams.append(fullBanmask)
+			lowerBanmask = ircLower(fullBanmask)
+			for existingParamData in channel.modes["b"]:
+				if ircLower(existingParamData) == lowerBanmask:
+					validParams.append(existingParamData)
+					break
+			else:
+				validParams.append(fullBanmask)
 		return validParams
 	
 	def apply(self, actionType, channel, param, actionChannel, user): # We spell the parameters out because the only action we accept is joinpermission
