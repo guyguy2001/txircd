@@ -51,7 +51,6 @@ class UserKnock(Command):
 		self.ircd = ircd
 	
 	def parseParams(self, user, params, prefix, tags):
-		self.expireKnocks(user)
 		if not params:
 			user.sendSingleError("KnockParams", irc.ERR_NEEDMOREPARAMS, "KNOCK", "Not enough paramters")
 			return None
@@ -65,6 +64,7 @@ class UserKnock(Command):
 	
 	def execute(self, user, data):
 		channel = data["channel"]
+		self.expireKnocks(user)
 		if user in channel.users:
 			user.sendSingleError("KnockParams", irc.ERR_KNOCKONCHAN, channel.name, "Can't KNOCK on {}, you are already on that channel".format(channel.name))
 			return None
