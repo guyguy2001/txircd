@@ -21,7 +21,7 @@ class Knock(ModuleData):
 	def actions(self):
 		return [ ("modeactioncheck-channel-K-commandpermission-KNOCK", 10, self.channelHasMode),
 		         ("invite", 1, self.clearKnocksOnInvite) ]
-
+	
 	def userCommands(self):
 		return [ ("KNOCK", 1, KnockCommand(self.ircd)) ]
 
@@ -31,22 +31,22 @@ class Knock(ModuleData):
 	def verifyConfig(self, config):
 		if "knock_delay" in config and (not isinstance(config["knock_delay"], int) or config["knock_delay"] < 0):
 			raise ConfigValidationError("knock_delay", "invalid number")
-
+	
 	def channelHasMode(self, channel, user, data):
 		if "K" in channel.modes:
 			return ""
 		return None
-
+	
 	def clearKnocksOnInvite(self, user, targetUser, channel):
 		if "knocks" in targetUser.cache and channel in targetUser.cache["knocks"]:
 			del targetUser.cache["knocks"][channel]
 
 class KnockCommand(Command):
 	implements(ICommand)
-
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
-
+	
 	def parseParams(self, user, params, prefix, tags):
 		self.expireKnocks(user)
 		if not params:
@@ -55,7 +55,13 @@ class KnockCommand(Command):
 		if params[0] not in self.ircd.channels:
 			user.sendSingleError("KnockParams", irc.ERR_NOSUCHCHANNEL, params[0], "No such channel")
 			return None
-		channel = self.ircd.channels[params[0]]
+		return {
+			"channel": self.ircd.channels[params[0]],
+			"reason": " ".join(params[1:]) if len(params) > 1 else "has asked for an invite"
+		}
+	
+	def execute(self, user, data):
+		channel = data["channel"]
 		if user in channel.users:
 			user.sendSingleError("KnockParams", irc.ERR_KNOCKONCHAN, params[0], "Can't KNOCK on {}, you are already on that channel".format(params[0]))
 			return None
@@ -65,26 +71,20 @@ class KnockCommand(Command):
 		if "knocks" in user.cache and channel in user.cache["knocks"]:
 			user.sendSingleError("KnockParams", irc.ERR_TOOMANYKNOCK, params[0], "Can't KNOCK on {}, (only one KNOCK per {} seconds allowed)".format(params[0], self.ircd.config.get("knock_delay", 300)))
 			return None
-		return {
-			"channel": channel,
-			"reason": " ".join(params[1:]) if len(params) > 1 else "has asked for an invite"
-		}
-
-	def execute(self, user, data):
-		channel = data["channel"]
 		if "knocks" not in user.cache:
 			user.cache["knocks"] = WeakKeyDictionary()
 		user.cache["knocks"][channel] = timestamp(now())
 		reason = data["reason"]
 		for targetUser in channel.users:
-			if self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user, users=[user], channels=[channel]):
+			if targetUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, user, users=[user], channels=[channel]):
 				targetUser.sendMessage(irc.RPL_KNOCK, channel.name, user.nick, reason)
+		self.ircd.broadcastToServers(None, "KNOCK", channel.name, reason, prefix=user.uuid)
 		user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
 		return True
-
+	
 	def affectedChannels(self, user, data):
 		return [data["channel"]]
-
+	
 	def expireKnocks(self, user):
 		if "knocks" not in user.cache:
 			return
