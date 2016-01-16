@@ -40,7 +40,7 @@ class WhoisCommand(ModuleData, Command):
 				user.sendMessage(irc.RPL_WHOISHOST, targetUser.nick, "is connecting from {}@{} {}".format(targetUser.ident, targetUser.realHost, targetUser.ip))
 			chanList = []
 			for channel in targetUser.channels:
-				if self.ircd.runActionUntilValue("showchannel-whois", channel, user, targetUser) is not False:
+				if self.ircd.runActionUntilValue("showchannel-whois", channel, user, targetUser, users=[user, targetUser], channels=[channel]) is not False:
 					chanList.append("{}{}".format(self.ircd.runActionUntilValue("channelstatuses", channel, targetUser, user, users=[targetUser, user], channels=[channel]), channel.name))
 			if chanList:
 				user.sendMessage(irc.RPL_WHOISCHANNELS, targetUser.nick, " ".join(chanList))
