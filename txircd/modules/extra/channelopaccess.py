@@ -22,7 +22,7 @@ class ChannelOpAccess(ModuleData, Mode):
 	def checkMode(self, channel, checkType, paramChannel, user):
 		if "W" not in channel.modes:
 			return None
-		for paramData in channel.mode["W"]:
+		for paramData in channel.modes["W"]:
 			level, permType = paramData[0].split(":", 1)
 			if permType == checkType:
 				return paramData[0]
