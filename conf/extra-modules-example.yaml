@@ -236,6 +236,14 @@ modules:
 # You may also specify an optional prefix that is placed before cloaked hosts.
 #cloaking_prefix: txircd
 
+# Knock Configuration
+# This module has some optional configuration.
+
+# knock_delay
+# The amount of time (in seconds) after knocking a user must wait before
+# knocking again. The default value is 5 minutes (300 seconds).
+#knock_delay: 300
+
 # RateLimit Configuration
 # Configuring this module involves tweaking the parameters for the maximum
 # command rate.
