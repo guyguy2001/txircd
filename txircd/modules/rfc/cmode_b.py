@@ -241,6 +241,8 @@ class BanMode(ModuleData, Mode):
 				fullBanmask += "!*@*"
 			elif "@" not in banmask:
 				fullBanmask += "@*"
+			
+			# Make ban unsetting case-insensitive
 			lowerBanmask = ircLower(fullBanmask)
 			for existingParamData in channel.modes["b"]:
 				if ircLower(existingParamData[0]) == lowerBanmask:
