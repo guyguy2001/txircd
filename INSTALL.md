@@ -1,12 +1,15 @@
+Installation instructions
+=========================
+
 The following steps can be done either directly to the system or in a virtualenv.
 
-Install dependencies:
-    pip install -r requirements.txt
+1. Install dependencies:  
+`pip install -r requirements.txt`
 
-Create a config file in the current directory:
-    edit txircd.yaml
+2. Copy `txircd-example.yaml` to `txircd.yaml`, and edit the configuration. Do the same for included files in the `conf/` directory.
 
-Run txircd in the foreground:
-    twistd -n txircd
-or allow it to daemonise:
-    twistd txircd
+3. Allow txircd to deamonize:  
+`twistd txircd`  
+or run it in the foreground:  
+`twistd -n txircd`  
+(If you're running in a virtualenv, start txircd with the twistd in your virtualenv.)
