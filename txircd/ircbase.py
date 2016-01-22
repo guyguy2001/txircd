@@ -112,7 +112,7 @@ class IRCBase(LineOnlyReceiver):
 		if prefix:
 			lineToSend += ":{} ".format(prefix)
 		lineToSend += "{} {}".format(command, " ".join(params))
-		self.sendLine("{}\r".format(lineToSend.replace("\0", "")))
+		self.sendLine(lineToSend.replace("\0", ""))
 	
 	def _buildTagString(self, tags):
 		tagList = []
@@ -128,3 +128,6 @@ class IRCBase(LineOnlyReceiver):
 				escapedValue = value.replace("\\", "\\\\").replace(";", "\\:").replace(" ", "\\s").replace("\r", "\\r").replace("\n", "\\n")
 				tagList.append("{}={}".format(tag, escapedValue))
 		return ";".join(tagList)
+	
+	def sendLine(self, line):
+		return self.transport.writeSequence((line, "\r\n"))
