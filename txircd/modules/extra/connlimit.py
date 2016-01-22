@@ -16,7 +16,7 @@ class ConnectionLimit(ModuleData):
 		         ("remotequit", 100, self.handleDisconnect) ]
 
 	def load(self):
-		for user in self.ircd.users:
+		for user in self.ircd.users.itervalues():
 			self.addToConnections(user.ip)
 
 	def verifyConfig(self, config):
