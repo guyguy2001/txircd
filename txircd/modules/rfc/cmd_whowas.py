@@ -41,7 +41,7 @@ class WhowasCommand(ModuleData, Command):
 		return whowasEntries
 	
 	def addUserToWhowas(self, user, reason):
-		if user.nick is None:
+		if not user.isRegistered():
 			# user never registered a nick, so no whowas entry to add
 			return
 		lowerNick = ircLower(user.nick)
