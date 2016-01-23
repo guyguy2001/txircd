@@ -30,6 +30,9 @@ class StartTLS(ModuleData, Command):
 			return
 		if "cap-add" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-add"]("tls")
+		self.rehash()
+	
+	def rehash(self):
 		try:
 			self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
 			self.certContext.getContext().set_verify(SSL.VERIFY_PEER, lambda connection, x509, errnum, errdepth, ok: True)
