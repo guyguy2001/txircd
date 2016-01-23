@@ -30,14 +30,20 @@ class StartTLS(ModuleData, Command):
 			return
 		if "cap-add" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-add"]("tls")
-		self.rehash()
-	
-	def rehash(self):
 		try:
 			self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
 			self.certContext.getContext().set_verify(SSL.VERIFY_PEER, lambda connection, x509, errnum, errdepth, ok: True)
 		except SSL.Error:
 			raise ModuleLoadError("StartTLS", "Failed to initialize SSL context")
+	
+	def rehash(self):
+		oldContext = self.certContext
+		try:
+			self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
+			self.certContext.getContext().set_verify(SSL.VERIFY_PEER, lambda connection, x509, errnum, errdepth, ok: True)
+		except SSL.Error:
+			self.ircd.log.error("Failed to initialize new SSL context for StartTLS; keeping old context")
+			self.certContext = oldContext
 	
 	def unload(self):
 		self.ircd.dataCache["unloading-tls"] = True
