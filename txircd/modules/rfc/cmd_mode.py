@@ -274,8 +274,8 @@ class ServerMode(Command):
 							modeUnsetList.append((False, mode, paramData[0]))
 					else:
 						modeUnsetList.append((False, mode, param))
-				for user, data in channel.users.iteritems():
-					for status in data["status"]:
+				for user, userData in channel.users.iteritems():
+					for status in userData["status"]:
 						modeUnsetList.append((False, mode, user.uuid))
 				if modeUnsetList:
 					channel.setModes(modeUnsetList, source)
