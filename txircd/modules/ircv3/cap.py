@@ -96,7 +96,7 @@ class Cap(ModuleData, Command):
 				return None
 			return {
 				"subcmd": "REQ",
-				"capabilities": params[1].split(" ")
+				"capabilities": capabilityList
 			}
 		if subcmd == "END":
 			return {
