@@ -65,7 +65,7 @@ class QLine(ModuleData, XLineBase):
 		return True
 	
 	def restrictToOper(self, user, data):
-		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline"):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None

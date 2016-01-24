@@ -25,7 +25,7 @@ class DenyChannels(ModuleData):
 						raise ConfigValidationError(option, "\"{}\" is an invalid channel name".format(chanName))
 	
 	def blockNonDenied(self, channel, user):
-		if self.ircd.runActionUntilValue("userhasoperpermission", user, "channel-denied") is True:
+		if self.ircd.runActionUntilValue("userhasoperpermission", user, "channel-denied", users=[user]) is True:
 			return None
 		deniedChannels = self.ircd.config.get("deny_channels", [])
 		allowedChannels = self.ircd.config.get("allow_channels", [])

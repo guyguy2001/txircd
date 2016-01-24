@@ -61,7 +61,7 @@ class UserStats(Command):
 			server.sendMessage("INFOREQ", server.serverID, typeName, prefix=user.uuid)
 			return True
 		if typeName is None:
-			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-unknown"):
+			if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-unknown", users=[user]):
 				user.sendMessage(irc.ERR_NOSUCHXINFO, typeName, "No such stats type available")
 			else:
 				user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
@@ -82,7 +82,7 @@ class UserStats(Command):
 	def checkPermission(self, user, typeName):
 		if typeName in self.ircd.config.get("public_info", []):
 			return True
-		if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-{}".format(typeName.lower())):
+		if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-{}".format(typeName.lower()), users=[user]):
 			return True
 		return False
 

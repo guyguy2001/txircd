@@ -59,7 +59,7 @@ class ZLine(ModuleData, XLineBase):
 		return True
 	
 	def restrictToOper(self, user, data):
-		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline"):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None

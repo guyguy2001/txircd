@@ -25,19 +25,19 @@ class GlobalLoad(ModuleData):
 		         ("RELOADMODULE", 1, ServerReload(self.ircd)) ]
 	
 	def restrictGLoad(self, user, data):
-		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gloadmodule"):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
 	def restrictGUnload(self, user, data):
-		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gunloadmodule"):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gunloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
 	def restrictGReload(self, user, data):
-		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-greloadmodule"):
+		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-greloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
