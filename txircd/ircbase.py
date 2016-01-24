@@ -95,6 +95,10 @@ class IRCBase(LineOnlyReceiver):
 			prefix = kw["prefix"]
 		else:
 			prefix = None
+		if "alwaysPrefixLastParam" in kw:
+			alwaysPrefixLastParam = kw["alwaysPrefixLastParam"]
+		else:
+			alwaysPrefixLastParam = False
 		params = list(params)
 		if params:
 			for param in params[:-1]:
@@ -104,7 +108,7 @@ class IRCBase(LineOnlyReceiver):
 			for badChar in ("\r", "\n", "\0"):
 				if badChar in params[-1]:
 					raise ValueError("Illegal character {!r} found in parameter {!r}".format(badChar, params[-1]))
-			if not params[-1] or " " in params[-1] or params[-1][0] == ":":
+			if alwaysPrefixLastParam or not params[-1] or " " in params[-1] or params[-1][0] == ":":
 				params[-1] = ":{}".format(params[-1])
 		lineToSend = ""
 		if tags:

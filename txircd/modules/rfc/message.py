@@ -68,7 +68,7 @@ class MessageCommands(ModuleData):
 						messageParts = splitMessage(message, self.ircd.config["message_length"])
 						tags = target.filterConditionalTags(conditionalTags)
 						for part in messageParts:
-							target.sendMessage(command, part, prefix=userPrefix, tags=tags)
+							target.sendMessage(command, part, prefix=userPrefix, tags=tags, alwaysPrefixLastParam=True)
 					else:
 						self.ircd.servers[target.uuid[:3]].sendMessage(command, target.uuid, message, prefix=user.uuid)
 					sentAMessage = True
@@ -80,7 +80,7 @@ class MessageCommands(ModuleData):
 				if message:
 					messageParts = splitMessage(message, self.ircd.config["message_length"])
 					for part in messageParts:
-						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user], conditionalTags=conditionalTags)
+						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user], conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
 					sentAMessage = True
 				elif not sentNoTextError:
@@ -129,7 +129,7 @@ class MessageCommands(ModuleData):
 				messageParts = splitMessage(data["message"], self.ircd.config["message_length"])
 				tags = user.filterConditionalTags(conditionalTags)
 				for part in messageParts:
-					user.sendMessage(command, part, prefix=data["from"].hostmask(), tags=tags)
+					user.sendMessage(command, part, prefix=data["from"].hostmask(), tags=tags, alwaysPrefixLastParam=True)
 			else:
 				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
@@ -139,7 +139,7 @@ class MessageCommands(ModuleData):
 			message = data["message"]
 			messageParts = splitMessage(message, self.ircd.config["message_length"])
 			for part in messageParts:
-				chan.sendUserMessage(command, part, prefix=fromUser.hostmask(), conditionalTags=conditionalTags)
+				chan.sendUserMessage(command, part, prefix=fromUser.hostmask(), conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
 			chan.sendServerMessage(command, chan.name, message, prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return None
