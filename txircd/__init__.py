@@ -1,2 +1,2 @@
-version = "0.4.0b2"
+version = "0.4.0b3"
 protoVersion = "400"
