@@ -1,10 +1,13 @@
-Twisted IRC Deamon
-==================
+txircd
+======
 
-A modular IRC deamon written in Python using the Twisted library.
+txircd is a modular IRC deamon written in Python using the Twisted library.
 
-To install, see the INSTALL file.
+For installation instructions, see the INSTALL file.
 
-This is a development version, and not everything is guaranteed to work yet.
-Please report bugs to our Github bug tracker or talk to us about txircd at
-irc.desertbus.org.
+By default, txircd supplies all of the required functionality for a basic,
+RFC-compliant IRC server. When you configure the server, you can add additional
+functionality to make the server work how you want it to.
+
+If you find any bugs or have any questions about txircd, please talk to us in
+#dev at irc.dbcommunity.org.
