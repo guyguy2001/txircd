@@ -73,6 +73,8 @@ class IRCBase(LineOnlyReceiver):
 							valueChars.append("\n")
 						elif char == "s":
 							valueChars.append(" ")
+						else:
+							valueChars.append(char)
 						escaped = False
 						continue
 					valueChars.append(char)
