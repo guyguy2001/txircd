@@ -9,7 +9,7 @@ def isValidNick(nick):
 	"""
 	return validNick.match(nick)
 
-validHost = re.compile(r"^[a-zA-Z0-9.-]+$")
+validHost = re.compile(r"^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$")
 def isValidHost(host):
 	"""
 	Determines whether the provided hostname is in a valid format.
