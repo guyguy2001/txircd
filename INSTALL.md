@@ -8,7 +8,7 @@ The following steps can be done either directly to the system or in a virtualenv
 
 2. Copy `txircd-example.yaml` to `txircd.yaml`, and edit the configuration. Do the same for included files in the `conf/` directory.
 
-3. Allow txircd to deamonize:  
+3. Allow txircd to daemonize:  
 `twistd txircd`  
 or run it in the foreground:  
 `twistd -n txircd`  
