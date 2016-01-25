@@ -91,6 +91,9 @@ class IRCUser(IRCBase):
 		    destination. The implicit destination is this user if this
 		    argument isn't specified.
 		- tags: Dict of message tags to send.
+		- alwaysPrefixLastParam: For compatibility with some broken clients,
+		    you might want some messages to always have the last parameter
+		    prefixed with a colon. To do that, pass this as True.
 		"""
 		if "prefix" not in kw:
 			kw["prefix"] = self.ircd.name
