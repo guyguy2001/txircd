@@ -85,12 +85,12 @@ class KickCommand(ModuleData):
 			if "user" not in typeData:
 				return
 			sourceUser = typeData["user"]
-			kwArgs["sourceuser"] = sourceUser
+			kwArgs["prefix"] = sourceUser.hostmask()
 		else:
 			if "server" not in typeData:
 				return
 			sourceServer = typeData["server"]
-			kwArgs["sourceserver"] = sourceServer
+			kwArgs["prefix"] = sourceServer.name
 		
 		reason = sourceUser.nick if byUser else sourceServer.name
 		if "reason" in typeData:
