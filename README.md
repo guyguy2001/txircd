@@ -1,7 +1,7 @@
 txircd
 ======
 
-txircd is a modular IRC deamon written in Python using the Twisted library.
+txircd is a modular IRC daemon written in Python using the Twisted library.
 
 For installation instructions, see the INSTALL file.
 
