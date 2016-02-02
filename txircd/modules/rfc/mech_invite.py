@@ -20,7 +20,8 @@ class Invite(ModuleData, Mode):
 		return [ ("modeactioncheck-channel-i-joinpermission", 1, self.hasInviteMode),
 		         ("join", 1, self.clearInvite),
 		         ("commandpermission-INVITE", 1, self.checkInviteLevel),
-		         ("notifyinvite", 1, self.sendNotification) ]
+		         ("notifyinvite", 1, self.sendNotification),
+		         ("checkchannellevel", 3, self.allowAllWithoutMode) ]
 	
 	def userCommands(self):
 		return [ ("INVITE", 1, UserInvite(self.ircd)) ]
@@ -52,6 +53,13 @@ class Invite(ModuleData, Mode):
 	def sendNotification(self, notifyList, channel, sendingUser, invitedUser):
 		for user in notifyList:
 			user.sendMessage(irc.RPL_INVITED, channel.name, invitedUser.nick, sendingUser.nick, "{} has been invited by {}".format(invitedUser.nick, sendingUser.nick))
+	
+	def allowAllWithoutMode(self, exemptType, channel, user):
+		if exemptType != "invite":
+			return None
+		if "i" in channel.modes:
+			return None
+		return True
 	
 	def apply(self, actionName, channel, param, joiningChannel, user):
 		if "invites" not in user.cache or channel.name not in user.cache["invites"]:
