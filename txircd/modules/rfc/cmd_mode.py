@@ -188,7 +188,7 @@ class UserMode(Command):
 		if "modes" not in data:
 			if "channel" in data:
 				channel = data["channel"]
-				user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, channel.modeString(user))
+				user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, *(channel.modeString(user).split(" ")))
 				user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
 				return True
 			user.sendMessage(irc.RPL_UMODEIS, user.modeString(user))
