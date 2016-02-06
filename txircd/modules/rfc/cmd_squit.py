@@ -99,7 +99,7 @@ class ServerSQuit(Command):
 	
 	def execute(self, server, data):
 		if "lostserver" not in data:
-			data["target"].disconnect(data["reason"])
+			data["target"].disconnect("Received SQUIT from remote server: {}".format(data["reason"]))
 		return True
 
 class RemoteSQuit(Command):
