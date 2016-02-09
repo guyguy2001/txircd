@@ -14,7 +14,7 @@ class Cap(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("capabilitylist", 10, self.listCapability),
-		         ("checkremovecapability", 20, self.preventRemoveOn302) ]
+		         ("checkremovecapability", 20, self.preventNotifyRemoveOn302) ]
 	
 	def userCommands(self):
 		return [ ("CAP", 1, self) ]
@@ -37,7 +37,7 @@ class Cap(ModuleData, Command):
 	def listCapability(self, user, capList):
 		capList.append("cap-notify")
 	
-	def preventRemoveOn302(self, user, capability):
+	def preventNotifyRemoveOn302(self, user, capability):
 		if capability == "cap-notify" and "capversion" in user.cache and user.cache["capversion"] >= 302:
 			return False
 		return None
@@ -174,7 +174,7 @@ class Cap(ModuleData, Command):
 				user.cache["capabilities"] = {}
 			for change in changes:
 				if change[0]:
-					if "=" in change:
+					if "=" in change[1]:
 						capAndValue = change[1].split("=", 1)
 						capability = capAndValue[0]
 						value = capAndValue[1]
