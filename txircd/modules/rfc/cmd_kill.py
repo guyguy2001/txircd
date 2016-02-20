@@ -39,7 +39,7 @@ class UserKill(Command):
 			user.sendSingleError("KillTarget", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
 		return {
-			"user": self.ircd.users[self.ircd.userNicks[params[0]]],
+			"user": self.ircd.userNicks[params[0]],
 			"reason": " ".join(params[1:])
 		}
 	

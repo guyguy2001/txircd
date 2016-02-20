@@ -30,7 +30,7 @@ class SapartCommand(ModuleData, Command):
 		if params[1] not in self.ircd.channels:
 			user.sendSingleError("SapartCmd", irc.ERR_NOSUCHCHANNEL, params[1], "No such channel")
 			return None
-		target = self.ircd.users[self.ircd.userNicks[params[0]]]
+		target = self.ircd.userNicks[params[0]]
 		channel = self.ircd.channels[params[1]]
 		if target not in channel.users:
 			user.sendSingleError("SapartCmd", irc.ERR_USERNOTINCHANNEL, params[1], "They are not on that channel")

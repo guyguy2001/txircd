@@ -40,7 +40,7 @@ class SajoinCommand(ModuleData, Command):
 				user.sendSingleError("SajoinCmd", irc.ERR_BADCHANMASK, channame, "Bad channel mask")
 				return None
 		return {
-			"user": self.ircd.users[self.ircd.userNicks[params[0]]],
+			"user": self.ircd.userNicks[params[0]],
 			"channel": channel
 		}
 

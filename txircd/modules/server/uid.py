@@ -73,7 +73,7 @@ class ServerUID(ModuleData, Command):
 		newUser.nickSince = nickTime
 		newUser.idleSince = now()
 		if data["nick"] in self.ircd.userNicks: # Handle nick collisions
-			otherUser = self.ircd.users[self.ircd.userNicks[data["nick"]]]
+			otherUser = self.ircd.userNicks[data["nick"]]
 			if otherUser.localOnly:
 				changeOK = self.ircd.runActionUntilValue("localnickcollision", otherUser, newUser, server, users=[otherUser, newUser])
 				if changeOK is None:

@@ -195,7 +195,7 @@ class Monitor(ModuleData, Command):
 				userMonitorList.add(target)
 				if target in self.ircd.userNicks:
 					onlineList.append(target)
-					onlineUserList.append(self.ircd.users[self.ircd.userNicks[target]])
+					onlineUserList.append(self.ircd.userNicks[target])
 				else:
 					offlineList.append(target)
 			if onlineList:

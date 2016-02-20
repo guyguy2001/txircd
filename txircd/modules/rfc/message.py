@@ -40,7 +40,7 @@ class MessageCommands(ModuleData):
 			if target in self.ircd.channels:
 				channels.append(self.ircd.channels[target])
 			elif target in self.ircd.userNicks:
-				users.append(self.ircd.users[self.ircd.userNicks[target]])
+				users.append(self.ircd.userNicks[target])
 			else:
 				user.sendBatchedError("MsgCmd", irc.ERR_NOSUCHNICK, target, "No such nick/channel")
 		message = params[1]

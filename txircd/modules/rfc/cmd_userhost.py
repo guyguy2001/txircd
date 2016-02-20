@@ -25,7 +25,7 @@ class UserhostCommand(ModuleData, Command):
 		for nick in data["nicks"]:
 			if nick not in self.ircd.userNicks:
 				continue
-			targetUser = self.ircd.users[self.ircd.userNicks[nick]]
+			targetUser = self.ircd.userNicks[nick]
 			output = targetUser.nick
 			if self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "", users=[targetUser]):
 				output += "*"

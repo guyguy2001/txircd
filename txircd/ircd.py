@@ -47,10 +47,10 @@ class IRCd(Service):
 		self._uid = self._genUID()
 		
 		self.users = {}
-		self.userNicks = CaseInsensitiveDictionary()
+		self.userNicks = CaseInsensitiveDictionary(WeakValueDictionary)
 		self.channels = CaseInsensitiveDictionary(WeakValueDictionary)
 		self.servers = {}
-		self.serverNames = CaseInsensitiveDictionary()
+		self.serverNames = CaseInsensitiveDictionary(WeakValueDictionary)
 		self.recentlyQuitUsers = {}
 		self.recentlyQuitServers = {}
 		self.recentlyDestroyedChannels = CaseInsensitiveDictionary()

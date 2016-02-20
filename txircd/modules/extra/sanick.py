@@ -32,12 +32,12 @@ class SanickCommand(ModuleData, Command):
 			user.sendSingleError("SanickCmd", irc.ERR_ERRONEUSNICKNAME, params[1], "Erroneous nickname")
 			return None
 		if params[1] in self.ircd.userNicks:
-			otherUserID = self.ircd.userNicks[params[1]]
-			if user.uuid != otherUserID:
+			otherUser = self.ircd.userNicks[params[1]]
+			if user != otherUser:
 				user.sendSingleError("SanickCmd", irc.ERR_NICKNAMEINUSE, params[1], "Nickname is already in use")
 				return None
 		return {
-			"target": self.ircd.users[self.ircd.userNicks[params[0]]],
+			"target": self.ircd.userNicks[params[0]],
 			"nick": params[1]
 		}
 

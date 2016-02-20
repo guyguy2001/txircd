@@ -26,7 +26,7 @@ class WhoisCommand(ModuleData, Command):
 			if nick not in self.ircd.userNicks:
 				user.sendMessage(irc.ERR_NOSUCHNICK, nick, "No such nick")
 				continue
-			targetUsers.append(self.ircd.users[self.ircd.userNicks[nick]])
+			targetUsers.append(self.ircd.userNicks[nick])
 		if not targetUsers:
 			return None
 		return {

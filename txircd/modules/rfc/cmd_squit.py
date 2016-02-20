@@ -58,7 +58,7 @@ class UserSQuit(Command):
 			return None
 		return {
 			"source": source,
-			"target": self.ircd.servers[self.ircd.serverNames[params[0]]],
+			"target": self.ircd.serverNames[params[0]],
 			"reason": params[1]
 		}
 	

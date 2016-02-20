@@ -50,7 +50,7 @@ class Metadata(ModuleData, Command):
 		if target == "*":
 			targetUser = user
 		elif target in self.ircd.userNicks:
-			targetUser = self.ircd.users[self.ircd.userNicks[target]]
+			targetUser = self.ircd.userNicks[target]
 		elif target in self.ircd.channels:
 			targetIsChannel = True
 			targetChannel = self.ircd.channels[target]

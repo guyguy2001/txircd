@@ -154,7 +154,7 @@ class UserMode(Command):
 		if params[0] in self.ircd.channels:
 			channel = self.ircd.channels[params[0]]
 		elif params[0] in self.ircd.userNicks:
-			if self.ircd.userNicks[params[0]] != user.uuid:
+			if self.ircd.userNicks[params[0]] != user:
 				user.sendSingleError("ModeCmd", irc.ERR_USERSDONTMATCH, "Can't operate on modes for other users")
 				return None
 		else:

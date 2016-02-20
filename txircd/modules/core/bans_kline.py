@@ -78,7 +78,7 @@ class KLine(ModuleData, Command, XLineBase):
 		
 		banmask = params[0]
 		if banmask in self.ircd.userNicks:
-			targetUser = self.ircd.users[self.ircd.userNicks[banmask]]
+			targetUser = self.ircd.userNicks[banmask]
 			banmask = "{}@{}".format(targetUser.ident, targetUser.realHost)
 		else:
 			if "@" not in banmask:

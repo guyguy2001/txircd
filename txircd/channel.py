@@ -300,7 +300,7 @@ class IRCChannel(object):
 				if adding:
 					if modeType == ModeType.Status:
 						try:
-							targetUser = self.ircd.users[self.ircd.userNicks[parameter]]
+							targetUser = self.ircd.userNicks[parameter]
 						except KeyError:
 							continue
 						if targetUser not in self.users:
@@ -319,7 +319,7 @@ class IRCChannel(object):
 				else:
 					if modeType == ModeType.Status:
 						try:
-							targetUser = self.ircd.users[self.ircd.userNicks[parameter]]
+							targetUser = self.ircd.userNicks[parameter]
 						except KeyError:
 							continue
 						if mode not in self.users[targetUser]["status"]:

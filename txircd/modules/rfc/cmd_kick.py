@@ -117,7 +117,7 @@ class UserKick(Command):
 			user.sendSingleError("KickCmd", irc.ERR_NOSUCHNICK, params[1], "No such nick")
 			return None
 		channel = self.ircd.channels[params[0]]
-		targetUser = self.ircd.users[self.ircd.userNicks[params[1]]]
+		targetUser = self.ircd.userNicks[params[1]]
 		if targetUser not in channel.users:
 			user.sendSingleError("KickCmd", irc.ERR_USERNOTINCHANNEL, targetUser.nick, channel.name, "They are not on that channel")
 			return None

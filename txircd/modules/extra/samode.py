@@ -32,7 +32,7 @@ class SamodeCommand(ModuleData, Command):
 			}
 		if params[0] in self.ircd.userNicks:
 			return {
-				"targetuser": self.ircd.users[self.ircd.userNicks[params[0]]],
+				"targetuser": self.ircd.userNicks[params[0]],
 				"modes": params[1],
 				"params": params[2:]
 			}

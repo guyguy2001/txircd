@@ -64,8 +64,8 @@ class NickUserCommand(Command):
 			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
 		if params[0] in self.ircd.userNicks:
-			otherUserID = self.ircd.userNicks[params[0]]
-			if user.uuid != otherUserID:
+			otherUser = self.ircd.userNicks[params[0]]
+			if user != otherUser:
 				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, params[0], "Nickname is already in use")
 				return None
 		return {
@@ -99,7 +99,7 @@ class NickServerCommand(Command):
 		except ValueError:
 			return None
 		if params[1] in self.ircd.userNicks:
-			localUser = self.ircd.users[self.ircd.userNicks[params[1]]]
+			localUser = self.ircd.userNicks[params[1]]
 			if localUser != user:
 				if localUser.localOnly:
 					allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, server, users=[localUser, user])
@@ -130,7 +130,7 @@ class NickServerCommand(Command):
 		newNick = data["nick"]
 		if not newNick:
 			return True # Handled collision by not changing the user's nick
-		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != user.uuid:
+		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != user:
 			user.changeNick(user.uuid)
 			return True
 		user.changeNick(data["nick"], server)

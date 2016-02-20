@@ -121,7 +121,7 @@ class IRCServer(IRCBase):
 		if not self.name:
 			return
 		self.ircd.servers[self.serverID] = self
-		self.ircd.serverNames[self.name] = self.serverID
+		self.ircd.serverNames[self.name] = self
 		self.ircd.runActionStandard("serverconnect", self)
 		if self.nextClosest != self.ircd.serverID:
 			self.bursted = True # Indicate that this server is fully connected and synced NOW since it's a remote server and we've either already gotten or are about to get all the interesting tidbits

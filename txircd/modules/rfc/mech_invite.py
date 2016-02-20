@@ -90,7 +90,7 @@ class UserInvite(Command):
 			user.sendSingleError("InviteCmd", irc.ERR_NOSUCHCHANNEL, params[1], "No such channel")
 			return None
 		return {
-			"invitee": self.ircd.users[self.ircd.userNicks[params[0]]],
+			"invitee": self.ircd.userNicks[params[0]],
 			"channel": self.ircd.channels[params[1]]
 		}
 	

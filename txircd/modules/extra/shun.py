@@ -97,7 +97,7 @@ class UserShun(Command):
 		
 		shunmask = params[0]
 		if shunmask in self.module.ircd.userNicks:
-			targetUser = self.module.ircd.users[self.module.ircd.userNicks[shunmask]]
+			targetUser = self.module.ircd.userNicks[shunmask]
 			shunmask = "{}@{}".format(targetUser.ident, targetUser.host())
 		else:
 			if "@" not in shunmask:

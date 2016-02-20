@@ -48,7 +48,7 @@ class UserStats(Command):
 				return None
 			return {
 				"type": typeName,
-				"server": self.ircd.servers[self.ircd.serverNames[params[1]]]
+				"server": self.ircd.serverNames[params[1]]
 			}
 		return {
 			"type": typeName

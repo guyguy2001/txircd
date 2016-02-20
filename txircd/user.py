@@ -299,7 +299,7 @@ class IRCUser(IRCBase):
 				self.transport.loseConnection()
 				return
 			self._registerHolds.remove("registercheck")
-			self.ircd.userNicks[self.nick] = self.uuid
+			self.ircd.userNicks[self.nick] = self
 			self.ircd.log.debug("Registering user {user.uuid} ({user.hostmask()})", user=self)
 			versionWithName = "txircd-{}".format(version)
 			self.sendMessage(irc.RPL_WELCOME, "Welcome to the {} Internet Relay Chat Network {}".format(self.ircd.config["network_name"], self.hostmask()))
@@ -356,15 +356,15 @@ class IRCUser(IRCBase):
 		"""
 		if newNick == self.nick:
 			return
-		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != self.uuid:
+		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != self:
 			return
 		oldNick = self.nick
 		if oldNick and oldNick in self.ircd.userNicks:
-			del self.ircd.userNicks[self.nick]
+			del self.ircd.userNicks[oldNick]
 		self.nick = newNick
 		self.nickSince = now()
 		if self.isRegistered():
-			self.ircd.userNicks[self.nick] = self.uuid
+			self.ircd.userNicks[self.nick] = self
 			userSendList = [self]
 			for channel in self.channels:
 				userSendList.extend(channel.users.keys())
@@ -825,7 +825,7 @@ class RemoteUser(IRCUser):
 		self._registerHolds.remove(holdName)
 		if not self._registerHolds:
 			self.ircd.runActionStandard("remoteregister", self, users=[self])
-			self.ircd.userNicks[self.nick] = self.uuid
+			self.ircd.userNicks[self.nick] = self
 	
 	def addRegisterHold(self, holdName):
 		pass # We're just not going to allow this here.
@@ -857,10 +857,10 @@ class RemoteUser(IRCUser):
 		parameter.
 		"""
 		oldNick = self.nick
-		if self.nick and self.nick in self.ircd.userNicks and self.ircd.userNicks[self.nick] == self.uuid:
+		if oldNick and oldNick in self.ircd.userNicks and self.ircd.userNicks[oldNick] == self:
 			del self.ircd.userNicks[self.nick]
 		self.nick = newNick
-		self.ircd.userNicks[self.nick] = self.uuid
+		self.ircd.userNicks[self.nick] = self
 		if self.isRegistered():
 			userSendList = [self]
 			for channel in self.channels:
@@ -935,7 +935,7 @@ class LocalUser(IRCUser):
 		self.gecos = gecos
 		self.ircd.log.debug("Created new local user {user.uuid} ({user.hostmask()})", user=self)
 		self.ircd.runActionStandard("localregister", self, users=[self])
-		self.ircd.userNicks[self.nick] = self.uuid
+		self.ircd.userNicks[self.nick] = self
 	
 	def register(self, holdName):
 		pass

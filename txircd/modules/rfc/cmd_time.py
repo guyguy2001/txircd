@@ -32,7 +32,7 @@ class UserTime(Command):
 			user.sendSingleError("TimeServer", irc.ERR_NOSUCHSERVER, params[0], "No such server")
 			return None
 		return {
-			"server": self.ircd.servers[self.ircd.serverNames[params[0]]]
+			"server": self.ircd.serverNames[params[0]]
 		}
 	
 	def execute(self, user, data):
