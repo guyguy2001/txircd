@@ -177,8 +177,12 @@
 # This controls which STATS options are available to everyone rather than just
 # opers. Options not listed here will be available only to opers.
 # Specify this as a list of options. If not specified, the default is no
-# options.
-#public_info: []
+# options. The example shown below requires the StatsOnlineOpers and
+# StatsUptime modules to be loaded; see the extra modules include at the bottom
+# of this file for more.
+#public_info:
+#- onlineopers
+#- uptime
 
 # log_level
 # This determines the level at which we log information to the log file after
