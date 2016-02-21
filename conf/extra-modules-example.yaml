@@ -18,6 +18,10 @@ modules:
 # module requires some configuration to fully function (see below).
 #- AutoUserModes
 
+# BlockChannelNotices: Provides a channel mode (+T) that blocks sending NOTICE
+# commands to that channel.
+#- BlockChannelNotices
+
 # BlockColors: Provides a channel mode (+c) that blocks the use of formatting
 # in the channel.
 #- BlockColors
