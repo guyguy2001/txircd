@@ -83,14 +83,39 @@ def now():
 	"""
 	Returns a datetime object representing now.
 	"""
-	return datetime.utcnow().replace(microsecond=0)
+	return datetime.utcnow()
 
 def timestamp(time):
 	"""
 	Converts a datetime object to a Unix timestamp.
 	"""
 	unixEpoch = datetime.utcfromtimestamp(0)
-	return int((time - unixEpoch).total_seconds())
+	return (time - unixEpoch).total_seconds()
+
+def timestampStringFromTime(time):
+	"""
+	Converts a datetime object to the string representation of its Unix timestamp.
+	"""
+	return timestampStringFromTimestamp(timestamp(time))
+
+def timestampStringFromTimeSeconds(time):
+	"""
+	Converts a datetime object to the string representation of its Unix timestamp,
+	truncated to whole seconds.
+	"""
+	return timestampStringFromTimestampSeconds(timestamp(time))
+
+def timestampStringFromTimestamp(timestamp):
+	"""
+	Converts a Unix timestamp to its string representation.
+	"""
+	return format(timestamp, ".6f").rstrip("0").rstrip(".")
+
+def timestampStringFromTimestampSeconds(timestamp):
+	"""
+	Converts a Unix timestamp to its string representation, truncated to whole seconds.
+	"""
+	return str(round(timestamp))
 
 def isoTime(time):
 	"""
