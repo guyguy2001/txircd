@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import now, timestamp
+from txircd.utils import now, timestampStringFromTimeSeconds
 from zope.interface import implements
 
 irc.RPL_WHOISHOST = "378"
@@ -58,9 +58,9 @@ class WhoisCommand(ModuleData, Command):
 				user.sendMessage(irc.RPL_WHOISSECURE, targetUser.nick, "is using a secure connection")
 			self.ircd.runActionStandard("extrawhois", user, targetUser)
 			if targetUser.uuid[:3] == self.ircd.serverID: # Idle time will only be accurate for local users
-				signonTS = timestamp(user.connectedSince)
+				signonTSString = timestampStringFromTimeSeconds(targetUser.connectedSince)
 				idleTime = int((now() - user.idleSince).total_seconds())
-				user.sendMessage(irc.RPL_WHOISIDLE, targetUser.nick, str(idleTime), str(signonTS), "seconds idle, signon time")
+				user.sendMessage(irc.RPL_WHOISIDLE, targetUser.nick, str(idleTime), signonTSString, "seconds idle, signon time")
 			user.sendMessage(irc.RPL_ENDOFWHOIS, targetUser.nick, "End of /WHOIS list")
 		return True
 

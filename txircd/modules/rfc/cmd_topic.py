@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import timestamp
+from txircd.utils import timestampStringFromTime, timestampStringFromTimeSeconds
 from zope.interface import implements
 from datetime import datetime
 
@@ -54,14 +54,14 @@ class TopicCommand(ModuleData):
 			sourceServer = self.ircd.servers[setter[:3]]
 			while sourceServer.nextClosest != self.ircd.serverID:
 				sourceServer = self.ircd.servers[sourceServer.nextClosest]
-		self.ircd.broadcastToServers(sourceServer, "TOPIC", channel.name, str(timestamp(channel.existedSince)), str(timestamp(channel.topicTime)), channel.topic, prefix=setter)
+		self.ircd.broadcastToServers(sourceServer, "TOPIC", channel.name, timestampStringFromTime(channel.existedSince), timestampStringFromTime(channel.topicTime), channel.topic, prefix=setter)
 	
 	def sendChannelTopic(self, channel, user):
 		if not channel.topic:
 			user.sendMessage(irc.RPL_NOTOPIC, channel.name, "No topic is set")
 		else:
 			user.sendMessage(irc.RPL_TOPIC, channel.name, channel.topic)
-			user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, str(timestamp(channel.topicTime)))
+			user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, timestampStringFromTimeSeconds(channel.topicTime))
 
 	def buildISupport(self, data):
 		data["TOPICLEN"] = self.ircd.config.get("topic_length", 326)
@@ -116,13 +116,16 @@ class ServerTopic(Command):
 					"lostchannel": True
 				}
 			return None
-		return {
-			"source": prefix,
-			"channel": self.ircd.channels[params[0]],
-			"chantime": datetime.utcfromtimestamp(int(params[1])),
-			"topictime": datetime.utcfromtimestamp(int(params[2])),
-			"topic": params[3]
-		}
+		try:
+			return {
+				"source": prefix,
+				"channel": self.ircd.channels[params[0]],
+				"chantime": datetime.utcfromtimestamp(float(params[1])),
+				"topictime": datetime.utcfromtimestamp(float(params[2])),
+				"topic": params[3]
+			}
+		except (TypeError, ValueError):
+			return None
 	
 	def execute(self, server, data):
 		if "lostchannel" in data:

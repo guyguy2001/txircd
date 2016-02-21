@@ -2,9 +2,9 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import durationToSeconds, ircLower, now, timestamp
+from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import implements
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class WhowasCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
@@ -35,7 +35,8 @@ class WhowasCommand(ModuleData, Command):
 		maxCount = self.ircd.config.get("whowas_max_entries", 10)
 		while whowasEntries and len(whowasEntries) > maxCount:
 			whowasEntries.pop(0)
-		expireTime = timestamp(now()) - expireDuration
+		expireDifference = timedelta(seconds=expireDuration)
+		expireTime = now() - expireDifference
 		while whowasEntries and whowasEntries[0]["when"] < expireTime:
 			whowasEntries.pop(0)
 		return whowasEntries
@@ -59,7 +60,7 @@ class WhowasCommand(ModuleData, Command):
 			"host": user.host(),
 			"gecos": user.gecos,
 			"server": serverName,
-			"when": timestamp(now())
+			"when": now()
 		})
 		whowasEntries = self.removeOldEntries(whowasEntries)
 		if whowasEntries:

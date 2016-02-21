@@ -18,7 +18,7 @@ class FJoinCommand(ModuleData, Command):
 		if len(params) < 4:
 			return None
 		try:
-			time = datetime.utcfromtimestamp(int(params[1]))
+			time = datetime.utcfromtimestamp(float(params[1]))
 		except ValueError:
 			return None
 		modes = {}

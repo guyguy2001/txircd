@@ -1,4 +1,4 @@
-from txircd.utils import ircLower, now, timestamp
+from txircd.utils import ircLower, now, timestampStringFromTime, timestampStringFromTimeSeconds
 from datetime import datetime, timedelta
 
 class XLineBase(object):
@@ -45,7 +45,7 @@ class XLineBase(object):
 			"reason": reason
 		})
 		if self.propagateToServers:
-			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, str(timestamp(createdTime)), str(durationSeconds), reason, prefix=self.ircd.serverID)
+			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, timestampStringFromTime(createdTime), str(durationSeconds), reason, prefix=self.ircd.serverID)
 		return True
 	
 	def delLine(self, mask, fromServer = None):
@@ -87,7 +87,7 @@ class XLineBase(object):
 		self.expireLines()
 		lineInfo = {}
 		for lineData in self.ircd.storage["xlines"][self.lineType]:
-			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestamp(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
+			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestampStringFromTimeSeconds(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
 		return lineInfo
 	
 	def handleServerAddParams(self, server, params, prefix, tags):
@@ -98,7 +98,7 @@ class XLineBase(object):
 				"linetype": params[0],
 				"mask": params[1],
 				"setter": params[2],
-				"created": int(params[3]),
+				"created": datetime.utcfromtimestamp(float(params[3])),
 				"duration": int(params[4]),
 				"reason": params[5]
 			}
@@ -108,7 +108,7 @@ class XLineBase(object):
 	def executeServerAddCommand(self, server, data):
 		if data["linetype"] != self.lineType:
 			return None
-		self.addLine(data["mask"], datetime.utcfromtimestamp(data["created"]), data["duration"], data["setter"], data["reason"], server)
+		self.addLine(data["mask"], data["created"], data["duration"], data["setter"], data["reason"], server)
 		return True
 	
 	def handleServerDelParams(self, server, params, prefix, tags):
@@ -131,4 +131,4 @@ class XLineBase(object):
 		self.expireLines()
 		if self.propagateToServers:
 			for lineData in self.ircd.storage["xlines"][self.lineType]:
-				server.sendMessage("ADDLINE", self.lineType, lineData["mask"], lineData["setter"], str(timestamp(lineData["created"])), str(lineData["duration"]), lineData["reason"], prefix=self.ircd.serverID)
+				server.sendMessage("ADDLINE", self.lineType, lineData["mask"], lineData["setter"], timestampStringFromTime(lineData["created"]), str(lineData["duration"]), lineData["reason"], prefix=self.ircd.serverID)

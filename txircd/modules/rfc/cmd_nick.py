@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import isValidNick, timestamp
+from txircd.utils import isValidNick, timestampStringFromTime
 from zope.interface import implements
 from datetime import datetime
 
@@ -42,8 +42,7 @@ class NickCommand(ModuleData):
 		del userShowList[:]
 	
 	def broadcastNickChange(self, user, oldNick, fromServer):
-		nickTS = str(timestamp(user.nickSince))
-		self.ircd.broadcastToServers(fromServer, "NICK", nickTS, user.nick, prefix=user.uuid)
+		self.ircd.broadcastToServers(fromServer, "NICK", timestampStringFromTime(user.nickSince), user.nick, prefix=user.uuid)
 
 	def buildISupport(self, data):
 		data["NICKLEN"] = self.ircd.config.get("nick_length", 32)
@@ -95,7 +94,7 @@ class NickServerCommand(Command):
 			return None
 		user = self.ircd.users[prefix]
 		try:
-			time = datetime.utcfromtimestamp(int(params[0]))
+			time = datetime.utcfromtimestamp(float(params[0]))
 		except ValueError:
 			return None
 		if params[1] in self.ircd.userNicks:

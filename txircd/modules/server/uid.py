@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.user import RemoteUser
-from txircd.utils import ModeType, now, timestamp
+from txircd.utils import ModeType, now, timestampStringFromTime
 from zope.interface import implements
 from datetime import datetime
 
@@ -22,8 +22,8 @@ class ServerUID(ModuleData, Command):
 			return None
 		uuid, signonTS, nick, realHost, displayHost, hostType, ident, ip, nickTS = params[:9]
 		try:
-			connectTime = datetime.utcfromtimestamp(int(signonTS))
-			nickTime = datetime.utcfromtimestamp(int(nickTS))
+			connectTime = datetime.utcfromtimestamp(float(signonTS))
+			nickTime = datetime.utcfromtimestamp(float(nickTS))
 		except ValueError:
 			return None
 		currParam = 10
@@ -113,13 +113,13 @@ class ServerUID(ModuleData, Command):
 		newUser.register("connection", True)
 		newUser.register("USER", True)
 		newUser.register("NICK", True)
-		connectTimestamp = str(timestamp(connectTime))
-		nickTimestamp = str(timestamp(nickTime))
+		connectTimestamp = timestampStringFromTime(connectTime)
+		nickTimestamp = timestampStringFromTime(nickTime)
 		modeString = newUser.modeString(None)
 		self.ircd.broadcastToServers(server, "UID", newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, newUser.ip, nickTimestamp, modeString, newUser.gecos, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user):
-		self.ircd.broadcastToServers(None, "UID", user.uuid, str(timestamp(user.connectedSince)), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, str(timestamp(user.nickSince)), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(None, "UID", user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, timestampStringFromTime(user.nickSince), user.modeString(None), user.gecos, prefix=self.ircd.serverID)
 
 serverUID = ServerUID()

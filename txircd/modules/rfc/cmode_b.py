@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ircLower, ModeType, timestamp
+from txircd.utils import ircLower, ModeType, timestampStringFromTimeSeconds
 from zope.interface import implements
 from fnmatch import fnmatchcase
 
@@ -271,7 +271,7 @@ class BanMode(ModuleData, Mode):
 			user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, "End of channel ban list")
 			return
 		for paramData in channel.modes["b"]:
-			user.sendMessage(irc.RPL_BANLIST, channel.name, paramData[0], paramData[1], str(timestamp(paramData[2])))
+			user.sendMessage(irc.RPL_BANLIST, channel.name, paramData[0], paramData[1], timestampStringFromTimeSeconds(paramData[2]))
 		user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, "End of channel ban list")
 
 banMode = BanMode()

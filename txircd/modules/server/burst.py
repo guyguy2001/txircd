@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ModeType, timestamp
+from txircd.utils import ModeType, timestampStringFromTime
 from zope.interface import implements
 
 class ServerBurst(ModuleData, Command):
@@ -53,8 +53,8 @@ class ServerBurst(ModuleData, Command):
 				continue
 			if user.uuid[:3] in serversBurstingTo: # The remote server apparently already finished its burst (or at least enough that we know this), so we need to not send it those again.
 				continue
-			signonTimestamp = str(timestamp(user.connectedSince))
-			nickTimestamp = str(timestamp(user.nickSince))
+			signonTimestamp = timestampStringFromTime(user.connectedSince)
+			nickTimestamp = timestampStringFromTime(user.nickSince)
 			modes = []
 			params = []
 			listModes = {}
@@ -70,14 +70,14 @@ class ServerBurst(ModuleData, Command):
 			sentListModes = False
 			for mode, paramList in listModes.iteritems():
 				for param, setter, time in paramList:
-					server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
+					server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, timestampStringFromTime(time), prefix=self.ircd.serverID)
 					sentListModes = True
 			if sentListModes:
 				server.sendMessage("ENDLISTMODE", user.uuid, prefix=self.ircd.serverID)
 			for key, value, visibility, setByUser in user.metadataList():
 				server.sendMessage("METADATA", user.uuid, signonTimestamp, key, visibility, "1" if setByUser else "0", value, prefix=self.ircd.serverID)
 		for channel in self.ircd.channels.itervalues():
-			channelTimestamp = str(timestamp(channel.existedSince))
+			channelTimestamp = timestampStringFromTime(channel.existedSince)
 			users = []
 			for user, data in channel.users.iteritems():
 				if user.localOnly:
@@ -104,12 +104,12 @@ class ServerBurst(ModuleData, Command):
 			sentListModes = False
 			for mode, params in listModes.iteritems():
 				for param, setter, time in params:
-					server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, str(timestamp(time)), prefix=self.ircd.serverID)
+					server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, timestampStringFromTime(time), prefix=self.ircd.serverID)
 					sentListModes = True
 			if sentListModes:
 				server.sendMessage("ENDLISTMODE", channel.name, prefix=self.ircd.serverID)
 			if channel.topic:
-				server.sendMessage("TOPIC", channel.name, channelTimestamp, str(timestamp(channel.topicTime)), channel.topic, prefix=self.ircd.serverID)
+				server.sendMessage("TOPIC", channel.name, channelTimestamp, timestampStringFromTime(channel.topicTime), channel.topic, prefix=self.ircd.serverID)
 			for key, value, visibility, setByUser in channel.metadataList():
 				server.sendMessage("METADATA", channel.name, channelTimestamp, key, visibility, "1" if setByUser else "0", value, prefix=self.ircd.serverID)
 	

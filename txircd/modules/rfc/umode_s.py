@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ircLower, ModeType, timestamp
+from txircd.utils import ircLower, ModeType, timestampStringFromTimeSeconds
 from zope.interface import implements
 from weakref import WeakSet
 
@@ -65,7 +65,7 @@ class ServerNoticeMode(ModuleData, Mode):
 	def showListParams(self, user, target):
 		if "s" in target.modes:
 			for mask in target.modes["s"]:
-				target.sendMessage(irc.RPL_LISTMODE, "s", mask[0], mask[1], str(timestamp(mask[2])))
+				target.sendMessage(irc.RPL_LISTMODE, "s", mask[0], mask[1], timestampStringFromTimeSeconds(mask[2]))
 		target.sendMessage(irc.RPL_ENDOFLISTMODE, "End of server notice type list")
 
 snoMode = ServerNoticeMode()

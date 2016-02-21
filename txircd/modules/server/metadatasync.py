@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import timestamp
+from txircd.utils import timestampStringFromTime
 from zope.interface import implements
 from datetime import datetime
 
@@ -25,10 +25,10 @@ class ServerMetadata(ModuleData, Command):
 			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, visibility, "1" if setByUser else "0", value, prefix=serverPrefix)
 	
 	def propagateUserMetadata(self, user, key, oldValue, value, visibility, setByUser, fromServer):
-		self.propagateMetadata(user.uuid, str(timestamp(user.connectedSince)), key, value, visibility, setByUser, fromServer)
+		self.propagateMetadata(user.uuid, timestampStringFromTime(user.connectedSince), key, value, visibility, setByUser, fromServer)
 	
 	def propagateChannelMetadata(self, channel, key, oldValue, value, visibility, setByUser, fromServer):
-		self.propagateMetadata(channel.name, str(timestamp(channel.existedSince)), key, value, visibility, setByUser, fromServer)
+		self.propagateMetadata(channel.name, timestampStringFromTime(channel.existedSince), key, value, visibility, setByUser, fromServer)
 	
 	def clearMetadata(self, target, server):
 		metadataToClear = target.metadataList()
@@ -50,7 +50,7 @@ class ServerMetadata(ModuleData, Command):
 		else:
 			return None
 		try:
-			data["time"] = datetime.utcfromtimestamp(int(params[1]))
+			data["time"] = datetime.utcfromtimestamp(float(params[1]))
 		except ValueError:
 			return None
 		data["key"] = params[2]

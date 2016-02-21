@@ -61,11 +61,11 @@ class ListModeCmd(Command):
 			try:
 				return {
 					"target": self.ircd.channels[params[0]],
-					"targettime": datetime.utcfromtimestamp(int(params[1])),
+					"targettime": datetime.utcfromtimestamp(float(params[1])),
 					"mode": params[2],
 					"param": params[3],
 					"setter": params[4],
-					"modetime": datetime.utcfromtimestamp(int(params[5]))
+					"modetime": datetime.utcfromtimestamp(float(params[5]))
 				}
 			except ValueError:
 				return None
@@ -77,11 +77,11 @@ class ListModeCmd(Command):
 			try:
 				return {
 					"target": self.ircd.users[params[0]],
-					"targettime": datetime.utcfromtimestamp(int(params[1])),
+					"targettime": datetime.utcfromtimestamp(float(params[1])),
 					"mode": params[2],
 					"param": params[3],
 					"setter": params[4],
-					"modetime": datetime.utcfromtimestamp(int(params[5]))
+					"modetime": datetime.utcfromtimestamp(float(params[5]))
 				}
 			except ValueError:
 				return None

@@ -1,8 +1,9 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ModeType, timestamp
+from txircd.utils import ModeType, timestampStringFromTime, timestampStringFromTimeSeconds
 from zope.interface import implements
+from datetime import datetime
 
 irc.RPL_CREATIONTIME = "329"
 
@@ -88,7 +89,7 @@ class ModeCommand(ModuleData):
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
-			self.ircd.broadcastToServers(fromServer, "MODE", channel.name, str(timestamp(channel.existedSince)), modeStr, *params, prefix=source)
+			self.ircd.broadcastToServers(fromServer, "MODE", channel.name, timestampStringFromTime(channel.existedSince), modeStr, *params, prefix=source)
 	
 	def sendUserModesToUsers(self, users, user, source, sourceName, modes):
 		modeOuts = self.getOutputModes(modes, False)
@@ -120,7 +121,7 @@ class ModeCommand(ModuleData):
 		for modeOut in modeOuts:
 			modeStr = modeOut[0]
 			params = modeOut[1:]
-			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, str(timestamp(user.connectedSince)), modeStr, *params, prefix=source)
+			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, timestampStringFromTime(user.connectedSince), modeStr, *params, prefix=source)
 	
 	def restrictUse(self, user, data):
 		if "channel" not in data or "modes" not in data:
@@ -189,7 +190,7 @@ class UserMode(Command):
 			if "channel" in data:
 				channel = data["channel"]
 				user.sendMessage(irc.RPL_CHANNELMODEIS, channel.name, *(channel.modeString(user).split(" ")))
-				user.sendMessage(irc.RPL_CREATIONTIME, channel.name, str(timestamp(channel.existedSince)))
+				user.sendMessage(irc.RPL_CREATIONTIME, channel.name, timestampStringFromTimeSeconds(channel.existedSince))
 				return True
 			user.sendMessage(irc.RPL_UMODEIS, user.modeString(user))
 			return True
@@ -222,6 +223,12 @@ class ServerMode(Command):
 				}
 			return None
 		
+		time = None
+		try:
+			time = datetime.utcfromtimestamp(float(params[1]))
+		except (TypeError, ValueError):
+			return None
+		
 		modes = params[2]
 		parameters = params[3:]
 		parsedModes = []
@@ -245,27 +252,24 @@ class ServerMode(Command):
 					parameter = parameters.pop(0)
 				parsedModes.append((adding, mode, parameter))
 		
-		try:
-			return {
-				"source": prefix,
-				"target": params[0],
-				"timestamp": int(params[1]),
-				"modes": parsedModes
-			}
-		except ValueError:
-			return None
+		return {
+			"source": prefix,
+			"target": params[0],
+			"time": time,
+			"modes": parsedModes
+		}
 	
 	def execute(self, server, data):
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		source = data["source"]
 		target = data["target"]
-		targTS = data["timestamp"]
+		targetTime = data["time"]
 		if target in self.ircd.channels:
 			channel = self.ircd.channels[target]
-			if targTS > timestamp(channel.existedSince):
+			if targetTime > channel.existedSince:
 				return True
-			if targTS < timestamp(channel.existedSince):
+			if targetTime < channel.existedSince:
 				# We need to remove all of the channel's modes
 				modeUnsetList = []
 				for mode, param, in channel.modes.iteritems():
@@ -283,9 +287,9 @@ class ServerMode(Command):
 			channel.setModes(data["modes"], source)
 			return True
 		user = self.ircd.users[target]
-		if targTS > timestamp(user.connectedSince):
+		if targetTime > user.connectedSince:
 			return True
-		if targTS < timestamp(user.connectedSince):
+		if targetTime < user.connectedSince:
 			modeUnsetList = []
 			for mode, param in user.modes.iteritems():
 				if self.ircd.userModeTypes[mode] == ModeType.List:

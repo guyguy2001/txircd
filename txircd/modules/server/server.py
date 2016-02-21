@@ -31,13 +31,16 @@ class ServerCommand(ModuleData, Command):
 	def parseParams(self, server, params, prefix, tags):
 		if len(params) != 5:
 			return None
-		return {
-			"name": params[0],
-			"id": params[1],
-			"hops": params[2],
-			"nextclosest": params[3],
-			"description": params[4]
-		}
+		try:
+			return {
+				"name": params[0],
+				"id": params[1],
+				"hops": int(params[2]),
+				"nextclosest": params[3],
+				"description": params[4]
+			}
+		except ValueError:
+			return None
 	
 	def execute(self, server, data):
 		serverID = data["id"]
@@ -48,7 +51,7 @@ class ServerCommand(ModuleData, Command):
 		if name in self.ircd.serverNames:
 			server.disconnect("Server with name {} already exists".format(name))
 			return True
-		hopCount = int(data["hops"])
+		hopCount = data["hops"]
 		if hopCount == 0:
 			nextClosest = self.ircd.serverID
 		else:
