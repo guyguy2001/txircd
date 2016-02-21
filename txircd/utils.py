@@ -115,7 +115,7 @@ def timestampStringFromTimestampSeconds(timestamp):
 	"""
 	Converts a Unix timestamp to its string representation, truncated to whole seconds.
 	"""
-	return str(round(timestamp))
+	return str(int(timestamp))
 
 def isoTime(time):
 	"""
