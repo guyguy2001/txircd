@@ -11,7 +11,7 @@ class SnoRemoteQuit(ModuleData):
 		return [ ("remotequit", 1, self.sendRemoteQuitNotice),
 		         ("servernoticetype", 1, self.checkSnoType)]
 
-	def sendRemoteQuitNotice(self, user, reason):
+	def sendRemoteQuitNotice(self, user, reason, fromServer):
 		server = self.ircd.servers[user.uuid[:3]].name
 		message =  "Client quit from {}: {} ({}) [{}]".format(server, user.hostmaskWithRealHost(), user.ip, reason)
 		snodata = {

@@ -830,25 +830,22 @@ class RemoteUser(IRCUser):
 	def addRegisterHold(self, holdName):
 		pass # We're just not going to allow this here.
 	
-	def disconnect(self, reason, fromRemote = False):
+	def disconnect(self, reason, fromServer = None):
 		"""
 		Disconnects the remote user from the remote server.
 		"""
-		if fromRemote:
-			if self.isRegistered():
-				del self.ircd.userNicks[self.nick]
-			self.ircd.recentlyQuitUsers[self.uuid] = now()
-			del self.ircd.users[self.uuid]
-			userSendList = []
-			while self.channels:
-				channel = self.channels[0]
-				userSendList.extend(channel.users.keys())
-				self._leaveChannel(channel)
-			userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-			self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
-			self.ircd.runActionStandard("remotequit", self, reason, users=[self])
-		else:
-			self.ircd.runActionUntilTrue("remotequitrequest", self, reason, users=[self])
+		if self.isRegistered():
+			del self.ircd.userNicks[self.nick]
+		self.ircd.recentlyQuitUsers[self.uuid] = now()
+		del self.ircd.users[self.uuid]
+		userSendList = []
+		while self.channels:
+			channel = self.channels[0]
+			userSendList.extend(channel.users.keys())
+			self._leaveChannel(channel)
+		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
+		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
+		self.ircd.runActionStandard("remotequit", self, reason, fromServer, users=[self])
 	
 	def changeNick(self, newNick, fromServer = None):
 		"""

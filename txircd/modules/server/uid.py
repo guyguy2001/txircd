@@ -110,9 +110,9 @@ class ServerUID(ModuleData, Command):
 			else:
 				modeList.append((True, mode, param))
 		newUser.setModes(modeList, server.serverID)
-		newUser.register("connection", True)
-		newUser.register("USER", True)
-		newUser.register("NICK", True)
+		newUser.register("connection", server)
+		newUser.register("USER", server)
+		newUser.register("NICK", server)
 		connectTimestamp = timestampStringFromTime(connectTime)
 		nickTimestamp = timestampStringFromTime(nickTime)
 		modeString = newUser.modeString(None)

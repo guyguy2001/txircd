@@ -41,7 +41,7 @@ class WhowasCommand(ModuleData, Command):
 			whowasEntries.pop(0)
 		return whowasEntries
 	
-	def addUserToWhowas(self, user, reason):
+	def addUserToWhowas(self, user, reason, fromServer = None):
 		if not user.isRegistered():
 			# user never registered a nick, so no whowas entry to add
 			return

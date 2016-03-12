@@ -47,10 +47,10 @@ class QuitCommand(ModuleData, Command):
 		if user.isRegistered():
 			self.ircd.broadcastToServers(None, "QUIT", reason, prefix=user.uuid)
 	
-	def propagateQuit(self, user, reason):
-		fromServer = self.ircd.servers[user.uuid[:3]]
-		while fromServer.nextClosest != self.ircd.serverID:
-			fromServer = self.ircd.servers[fromServer.nextClosest]
+	def propagateQuit(self, user, reason, fromServer):
+		if fromServer:
+			while fromServer.nextClosest != self.ircd.serverID:
+				fromServer = self.ircd.servers[fromServer.nextClosest]
 		self.ircd.broadcastToServers(fromServer, "QUIT", reason, prefix=user.uuid)
 
 class UserQuit(Command):
