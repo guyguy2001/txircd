@@ -83,7 +83,7 @@ class IRCServer(IRCBase):
 			allUsers = self.ircd.users.values()
 			for user in allUsers:
 				if user.uuid[:3] == self.serverID:
-					user.disconnect(netsplitQuitMsg, True)
+					user.disconnect(netsplitQuitMsg, self)
 			allServers = self.ircd.servers.values()
 			for server in allServers:
 				if server.nextClosest == self.serverID:
