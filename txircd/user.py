@@ -260,7 +260,7 @@ class IRCUser(IRCBase):
 			self._leaveChannel(channel)
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
-		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=[self] + userSendList)
+		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=[self] + userSendList)
 		self.ircd.runActionStandard("quit", self, reason, users=self)
 		self.transport.loseConnection()
 	
@@ -834,6 +834,14 @@ class RemoteUser(IRCUser):
 		"""
 		Disconnects the remote user from the remote server.
 		"""
+		userSendList = self.disconnectDeferNotify(self, reason, fromServer)
+		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
+	
+	def disconnectDeferNotify(self, reason, fromServer = None):
+		"""
+		Disconnects the remote user from the remote server.
+		Returns the list of users to notify for manual later notification.
+		"""
 		if self.isRegistered():
 			del self.ircd.userNicks[self.nick]
 		self.ircd.recentlyQuitUsers[self.uuid] = now()
@@ -844,8 +852,8 @@ class RemoteUser(IRCUser):
 			userSendList.extend(channel.users.keys())
 			self._leaveChannel(channel)
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
 		self.ircd.runActionStandard("remotequit", self, reason, fromServer, users=[self])
+		return userSendList
 	
 	def changeNick(self, newNick, fromServer = None):
 		"""
@@ -961,7 +969,7 @@ class LocalUser(IRCUser):
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
 		self.ircd.log.debug("Removing local user {user.uuid} ({user.hostmask()}): {reason}", user=self, reason=reason)
-		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, users=userSendList)
+		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
 		self.ircd.runActionStandard("localquit", self, reason, users=[self])
 	
 	def joinChannel(self, channel, override = False):

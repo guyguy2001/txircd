@@ -30,13 +30,16 @@ class QuitCommand(ModuleData, Command):
 				config["quit_message_length"] = 370
 				self.ircd.logConfigValidationWarning("quit_message_length", "value is too large", 370)
 	
-	def sendQuitMessage(self, sendUserList, user, reason):
+	def sendQuitMessage(self, sendUserList, user, reason, batchName):
 		hostmask = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for destUser in sendUserList:
 			tags = destUser.filterConditionalTags(conditionalTags)
-			destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask, tags=tags)
+			if batchName:
+				destUser.sendMessageInBatch(batchName, "QUIT", reason, to=None, prefix=hostmask, tags=tags)
+			else:
+				destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask, tags=tags)
 		del sendUserList[:]
 	
 	def sendRQuit(self, user, reason):
