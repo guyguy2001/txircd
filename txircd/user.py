@@ -183,6 +183,7 @@ class IRCUser(IRCBase):
 		for messageData in self._messageBatches[batchName]["messages"]:
 			self.sendMessage(messageData[0], *messageData[1], **messageData[2])
 		self.ircd.runActionStandard("endbatchsend", self, batchName, batchType, batchParameters)
+		del self._messageBatches[batchName]
 	
 	def startErrorBatch(self, batchName):
 		"""
