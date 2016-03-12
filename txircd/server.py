@@ -68,7 +68,7 @@ class IRCServer(IRCBase):
 			self.disconnect("Connection reset")
 		self.disconnectedDeferred.callback(None)
 	
-	def disconnect(self, reason, netsplitQuitMsg = None):
+	def disconnect(self, reason, netsplitFromServerName = None, netsplitToServerName = None):
 		"""
 		Disconnects the server.
 		"""
@@ -78,12 +78,24 @@ class IRCServer(IRCBase):
 			self.ircd.log.warn("Removing server {server.name}: {reason}", server=self, reason=reason)
 		self.ircd.runActionStandard("serverquit", self, reason)
 		if self.serverID in self.ircd.servers:
-			if netsplitQuitMsg is None:
-				netsplitQuitMsg = "{} {}".format(self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name, self.name)
+			if netsplitFromServerName is None or netsplitToServerName is None:
+				netsplitFromServerName = self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name
+				netsplitToServerName = self.name
+			netsplitQuitMsg = "{} {}".format(netsplitFromServerName, netsplitToServerName)
 			allUsers = self.ircd.users.values()
+			notifyUserBatches = set()
+			notifyUsersQuitting = {}
 			for user in allUsers:
 				if user.uuid[:3] == self.serverID:
-					user.disconnect(netsplitQuitMsg, self)
+					notifyUsersForUser = user.disconnectDeferNotify(netsplitQuitMsg, self)
+					notifyUserBatches.extend(notifyUsersForUser)
+					notifyUsersQuitting[user] = notifyUsersForUser
+			for user in notifyUserBatches:
+				user.createMessageBatch("Netsplit", "netsplit", (netsplitFromServerName, netsplitToServerName))
+			for user, notifyUsers in notifyUsersQuitting.iteritems():
+				self.ircd.runActionProcessing("quitmessage", notifyUsers, user, netsplitQuitMsg, "Netsplit", users=notifyUsers)
+			for user in notifyUserBatches:
+				user.sendBatch("Netsplit")
 			allServers = self.ircd.servers.values()
 			for server in allServers:
 				if server.nextClosest == self.serverID:
