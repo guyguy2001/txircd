@@ -928,7 +928,7 @@ class LocalUser(IRCUser):
 		self.localOnly = True
 		self._sendMsgFunc = lambda self, command, *args, **kw: None
 		self._registrationTimeoutTimer.cancel()
-		del self._registerHolds
+		del self._registerHolds[:]
 		self._pinger = None
 		self.nick = nick
 		self.ident = ident
