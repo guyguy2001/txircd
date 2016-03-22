@@ -25,11 +25,11 @@ command-squit         | Allows the use of the SQUIT command to disconnect a serv
 command-unloadmodule  | Allows the use of the UNLOADMODULE command to unload a module on the server. Note that core modules cannot be unloaded.
 command-wallops       | Allows the use of the WALLOPS command to send a WALLOPS message.
 command-zline         | Allows the use of the ZLINE command to globally ban an IP address.
-info-elines           | Allows an oper to view the ELINES STATS type.
-info-klines           | Allows an oper to view the KLINES STATS type.
-info-glines           | Allows an oper to view the GLINES STATS type.
-info-qlines           | Allows an oper to view the QLINES STATS type.
-info-zlines           | Allows an oper to view the ZLINES STATS type.
+info-elines           | Allows an oper to view the elines STATS type.
+info-klines           | Allows an oper to view the klines STATS type.
+info-glines           | Allows an oper to view the glines STATS type.
+info-qlines           | Allows an oper to view the qlines STATS type.
+info-zlines           | Allows an oper to view the zlines STATS type.
 whois-host            | Allows an oper to see the real host and IP address of any user.
 
 
@@ -51,7 +51,10 @@ command-sanick            | SanickCommand             | Allows the use of the SA
 command-sapart            | SapartCommand             | Allows the use of the SAPART command to force part a user from a channel.
 command-satopic           | SatopicCommand            | Allows the use of the SATOPIC command to force change the topic of any channel.
 command-shun              | ShunCommand               | Allows the use of the SHUN command to ban a user from sending most commands.
-info-shuns                | ShunCommand               | Allows an oper to view the SHUNS STATS type.
+info-onlineopers          | StatsOnlineOpers          | Allows an oper to view the onlineopers STATS type.
+info-ports                | StatsPorts                | Allows an oper to view the ports STATS type.
+info-shuns                | ShunCommand               | Allows an oper to view the shuns STATS type.
+info-uptime               | StatsOnlineUptime         | Allows an oper to view the uptime STATS type.
 view-globops              | Globops                   | Allows an oper to see GLOBOPS messages.
 servernotice-connect      | ServerNoticeConnect       | Allows an oper to set usermode +s on themselves and grants permission for local connect notices.
 servernotice-oper         | ServerNoticeOper          | Allows an oper to set usermode +s on themselves and grants permission for oper notices.

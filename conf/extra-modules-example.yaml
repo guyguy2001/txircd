@@ -148,6 +148,18 @@ modules:
 # notifies opers of user disconnections on remote servers.
 #- ServerNoticeRemoteQuit
 
+# StatsOnlineOpers: Provides the onlineopers STATS type, which lists all opers
+# that are currently online.
+#- StatsOnlineOpers
+
+# StatsPorts: Provides the ports STATS type, which lists all client and server
+# ports the server is currently listening on.
+#- StatsPorts
+
+# StatsUptime: Provides the uptime STATS type, which shows how long the server
+# has been running for.
+#- StatsUptime
+
 # StripColors: Provides a channel mode (+S) that strips formatting from
 # messages sent to the channel.
 #- StripColors
