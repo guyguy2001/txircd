@@ -21,27 +21,19 @@ class JoinCommand(ModuleData):
 	def serverCommands(self):
 		return [ ("JOIN", 1, ServerJoin(self.ircd)) ]
 	
-	def sendJoinMessage(self, messageUsers, channel, user):
+	def sendJoinMessage(self, messageUsers, channel, user, batchName):
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for destUser in messageUsers:
 			tags = user.filterConditionalTags(conditionalTags)
-			destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix, tags=tags)
+			if batchName is None:
+				destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix, tags=tags)
+			else:
+				destUser.sendMessageInBatch(batchName, "JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 		del messageUsers[:]
 	
-	def broadcastJoin(self, messageUsers, channel, user):
-		userClosest = None
-		if user.uuid[:3] != self.ircd.serverID:
-			userClosest = self.ircd.servers[user.uuid[:3]]
-			while userClosest.nextClosest != self.ircd.serverID:
-				userClosest = self.ircd.servers[userClosest.nextClosest]
-		self.ircd.broadcastToServers(userClosest, "JOIN", channel.name, prefix=user.uuid)
-	
-	def propagateJoin(self, channel, user):
-		fromServer = self.ircd.servers[user.uuid[:3]]
-		while fromServer.nextClosest != self.ircd.serverID:
-			fromServer = self.ircd.servers[fromServer.nextClosest]
+	def broadcastJoin(self, messageUsers, channel, user, fromServer):
 		self.ircd.broadcastToServers(fromServer, "JOIN", channel.name, prefix=user.uuid)
 
 class JoinChannel(Command):
