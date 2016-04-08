@@ -56,7 +56,7 @@ class TopicCommand(ModuleData):
 				sourceServer = self.ircd.servers[sourceServer.nextClosest]
 		self.ircd.broadcastToServers(sourceServer, "TOPIC", channel.name, timestampStringFromTime(channel.existedSince), timestampStringFromTime(channel.topicTime), channel.topic, prefix=setter)
 	
-	def sendChannelTopic(self, channel, user):
+	def sendChannelTopic(self, channel, user, fromServer):
 		if not channel.topic:
 			user.sendMessage(irc.RPL_NOTOPIC, channel.name, "No topic is set")
 		else:

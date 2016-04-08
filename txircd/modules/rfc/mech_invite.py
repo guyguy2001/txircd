@@ -34,7 +34,7 @@ class Invite(ModuleData, Mode):
 			return True
 		return None
 	
-	def clearInvite(self, channel, user):
+	def clearInvite(self, channel, user, fromServer):
 		if "invites" not in user.cache:
 			return
 		if channel.name in user.cache["invites"]:

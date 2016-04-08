@@ -16,7 +16,7 @@ class NamesCommand(ModuleData, Command):
 	def actions(self):
 		return [ ("join", 2, self.namesOnJoin) ]
 	
-	def namesOnJoin(self, channel, user):
+	def namesOnJoin(self, channel, user, fromServer):
 		self.execute(user, { "channels": [ channel ] })
 	
 	def parseParams(self, user, params, prefix, tags):

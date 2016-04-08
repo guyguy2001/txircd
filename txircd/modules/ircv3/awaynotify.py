@@ -10,7 +10,8 @@ class AwayNotify(ModuleData):
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.sendAwayNotice),
 		         ("capabilitylist", 10, self.addCapability),
-		         ("join", 10, self.tellChannelAway) ]
+		         ("join", 10, self.tellChannelAway),
+		         ("remotejoin", 10, self.tellChannelAway) ]
 	
 	def load(self):
 		if "unloading-away-notify" in self.ircd.dataCache:
@@ -50,7 +51,7 @@ class AwayNotify(ModuleData):
 				tags = noticeUser.filterConditionalTags(conditionalTags)
 				noticeUser.sendMessage("AWAY", to=None, prefix=noticePrefix, tags=tags)
 	
-	def tellChannelAway(self, channel, user):
+	def tellChannelAway(self, channel, user, fromServer):
 		if not user.metadataKeyExists("away"):
 			return
 		awayReason = user.metadataValue("away")

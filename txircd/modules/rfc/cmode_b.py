@@ -156,7 +156,7 @@ class BanMode(ModuleData, Mode):
 			return False
 		return None
 	
-	def populateBanCache(self, channel, user):
+	def populateBanCache(self, channel, user, fromServer):
 		if "b" not in channel.modes:
 			return
 		if "bans" not in channel.users[user]:
@@ -174,7 +174,7 @@ class BanMode(ModuleData, Mode):
 			if self.banMatchesUser(user, param):
 				channel.users[user]["bans"][actionExtban] = actionParam
 	
-	def autoStatus(self, channel, user):
+	def autoStatus(self, channel, user, fromServer):
 		if "bans" not in channel.users[user]:
 			return
 		applyModes = []
