@@ -11,17 +11,15 @@ class JoinCommand(ModuleData):
 	core = True
 	
 	def actions(self):
-		return [ ("joinmessage", 101, self.broadcastJoin),
-		         ("joinmessage", 1, self.sendJoinMessage),
-		         ("remotejoinrequest", 10, self.sendRJoin),
-		         ("remotejoin", 10, self.propagateJoin) ]
+		return [ ("join", 20, self.broadcastJoin),
+		         ("remotejoin", 20, self.broadcastJoin),
+		         ("joinmessage", 1, self.sendJoinMessage) ]
 	
 	def userCommands(self):
 		return [ ("JOIN", 1, JoinChannel(self.ircd)) ]
 	
 	def serverCommands(self):
-		return [ ("JOIN", 1, ServerJoin(self.ircd)),
-				("RJOIN", 1, RemoteJoin(self.ircd)) ]
+		return [ ("JOIN", 1, ServerJoin(self.ircd)) ]
 	
 	def sendJoinMessage(self, messageUsers, channel, user):
 		userPrefix = user.hostmask()
@@ -31,10 +29,6 @@ class JoinCommand(ModuleData):
 			tags = user.filterConditionalTags(conditionalTags)
 			destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 		del messageUsers[:]
-	
-	def sendRJoin(self, user, channel):
-		self.ircd.servers[user.uuid[:3]].sendMessage("RJOIN", user.uuid, channel.name, prefix=self.ircd.serverID)
-		return True
 	
 	def broadcastJoin(self, messageUsers, channel, user):
 		userClosest = None
@@ -122,39 +116,6 @@ class ServerJoin(Command):
 	def execute(self, server, data):
 		if "lostuser" not in data:
 			data["user"].joinChannel(data["channel"], True, True)
-		return True
-
-class RemoteJoin(Command):
-	implements(ICommand)
-	
-	def __init__(self, ircd):
-		self.ircd = ircd
-	
-	def parseParams(self, server, params, prefix, tags):
-		if len(params) != 2:
-			return None
-		if params[0] not in self.ircd.users:
-			if params[0] in self.ircd.recentlyQuitUsers:
-				return {
-					"lostuser": True
-				}
-			return None
-		return {
-			"prefix": prefix,
-			"user": self.ircd.users[params[0]],
-			"channel": params[1]
-		}
-	
-	def execute(self, server, data):
-		if "lostuser" in data:
-			return True
-		user = data["user"]
-		chanName = data["channel"]
-		if user.uuid[:3] == self.ircd.serverID:
-			channel = self.ircd.channels[chanName] if chanName in self.ircd.channels else IRCChannel(self.ircd, chanName)
-			user.joinChannel(channel, True)
-		else:
-			self.ircd.servers[user.uuid[:3]].sendMessage("RJOIN", user.uuid, chanName, prefix=data["prefix"])
 		return True
 
 joinCommand = JoinCommand()
