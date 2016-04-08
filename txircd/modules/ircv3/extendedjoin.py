@@ -29,7 +29,7 @@ class ExtendedJoin(ModuleData):
 	def addCapability(self, user, capList):
 		capList.append("extended-join")
 	
-	def sendExtJoin(self, messageUsers, channel, user):
+	def sendExtJoin(self, messageUsers, channel, user, batchName):
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
@@ -42,7 +42,10 @@ class ExtendedJoin(ModuleData):
 			if "capabilities" in toUser.cache and "extended-join" in toUser.cache["capabilities"]:
 				extJoinUsers.append(toUser)
 				tags = toUser.filterConditionalTags(conditionalTags)
-				toUser.sendMessage("JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix, tags=tags)
+				if batchName is None:
+					toUser.sendMessage("JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix, tags=tags)
+				else:
+					toUser.sendMessageInBatch(batchName, "JOIN", userAccount, user.gecos, to=channel.name, prefix=userPrefix, tags=tags)
 		for extUser in extJoinUsers:
 			messageUsers.remove(extUser)
 
