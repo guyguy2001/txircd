@@ -555,16 +555,31 @@ class IRCUser(IRCBase):
 			return True
 		return self.ircd.runActionUntilValue("usercanseemetadata", self, visibility) is not False
 	
-	def joinChannel(self, channel, override = False):
+	def joinChannel(self, channel, override = False, fromServer = None):
 		"""
 		Joins the user to a channel. Specify the override parameter only if all
 		permission checks should be bypassed.
 		"""
-		if channel in self.channels:
+		joinChannelData = self.joinChannelNoAnnounceIncomplete(channel, override, fromServer)
+		if not joinChannelData:
 			return
-		if not override:
+		messageUsers = self.joinChannelNoAnnounceNotifyUsers(joinChannelData)
+		self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, None, users=messageUsers, channels=[channel])
+		self.joinChannelNoAnnounceFinish(joinChannelData)
+	
+	def joinChannelNoAnnounceIncomplete(self, channel, override = False, fromServer = None):
+		"""
+		Joins the user to a channel, but doesn't announce or do any actions to complete
+		the join. As with joinChannel, specify the override parameter only if all
+		permission checks should be bypassed.
+		Returns a dict of data that MUST be passed to joinChannelNoAnnounceFinish.
+		For a list of users to notify, pass the dict to joinChannelNoAnnounceNotifyUsers.
+		"""
+		if channel in self.channels:
+			return None
+		if not override and not fromServer:
 			if self.ircd.runActionUntilValue("joinpermission", channel, self, users=[self], channels=[channel]) is False:
-				return
+				return None
 		channel.users[self] = { "status": "" }
 		self.channels.append(channel)
 		newChannel = False
@@ -572,13 +587,30 @@ class IRCUser(IRCBase):
 			newChannel = True
 			self.ircd.channels[channel.name] = channel
 			self.ircd.recentlyDestroyedChannels[channel.name] = False
-		# We need to send the JOIN message before doing other processing, as chancreate will do things like
-		# mode defaulting, which will send messages about the channel before the JOIN message, which is bad.
 		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-		self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, users=messageUsers, channels=[channel])
-		if newChannel:
+		return {
+			"channel": channel,
+			"newChannel": newChannel,
+			"notifyUsers": messageUsers,
+			"fromServer": fromServer
+		}
+	
+	def joinChannelNoAnnounceNotifyUsers(self, joinChannelData):
+		"""
+		Returns a list of users to notify from channel join data.
+		"""
+		return joinChannelData["notifyUsers"]
+	
+	def joinChannelNoAnnounceFinish(self, joinChannelData):
+		"""
+		Completes joining a user.
+		Do it AFTER announcing.
+		"""
+		channel = joinChannelData["channel"]
+		fromServer = joinChannelData["fromServer"]
+		if joinChannelData["newChannel"]:
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
-		self.ircd.runActionStandard("join", channel, self, users=[self], channels=[channel])
+		self.ircd.runActionStandard("join", channel, self, fromServer, users=[self], channels=[channel])
 	
 	def leaveChannel(self, channel, partType = "PART", typeData = {}, fromServer = None):
 		"""
@@ -898,26 +930,16 @@ class RemoteUser(IRCUser):
 		if self.isRegistered():
 			self.ircd.runActionStandard("remotechangegecos", self, oldGecos, fromServer, users=[self])
 	
-	def joinChannel(self, channel, override = False, fromRemote = False):
+	def joinChannelNoAnnounceFinish(self, joinChannelData):
 		"""
-		Joins the user to a channel.
+		Completes joining a user.
+		Do it AFTER announcing.
 		"""
-		if fromRemote:
-			if channel in self.channels:
-				return
-			newChannel = False
-			if channel.name not in self.ircd.channels:
-				newChannel = True
-				self.ircd.channels[channel.name] = channel
-			channel.users[self] = { "status": "" }
-			self.channels.append(channel)
-			messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
-			self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, users=[self], channels=[channel])
-			if newChannel:
-				self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
-			self.ircd.runActionStandard("remotejoin", channel, self, users=[self], channels=[channel])
-		else:
-			self.ircd.runActionUntilTrue("remotejoinrequest", self, channel, users=[self], channels=[channel])
+		channel = joinChannelData["channel"]
+		fromServer = joinChannelData["fromServer"]
+		if joinChannelData["newChannel"]:
+			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
+		self.ircd.runActionStandard("remotejoin", channel, self, fromServer, users=[self], channels=[channel])
 	
 	def _leaveChannel(self, channel):
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
