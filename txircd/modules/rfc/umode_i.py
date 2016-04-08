@@ -38,6 +38,8 @@ class InvisibleMode(ModuleData, Mode):
 	def applyChannels(self, user, channel, fromUser, sameUser):
 		if user != sameUser:
 			return None
+		if self.ircd.runActionUntilValue("userhasoperpermission", fromUser, "override-invisible", users=[fromUser]):
+			return None
 		if not channel or fromUser not in channel.users:
 			return False
 		return None

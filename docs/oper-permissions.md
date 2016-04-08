@@ -30,6 +30,7 @@ info-klines           | Allows an oper to view the klines STATS type.
 info-glines           | Allows an oper to view the glines STATS type.
 info-qlines           | Allows an oper to view the qlines STATS type.
 info-zlines           | Allows an oper to view the zlines STATS type.
+override-invisible    | Allows an oper to view users in /NAMES, /WHO, and other lists even if they wouldn't be able to due to the user mode +i being set.
 whois-host            | Allows an oper to see the real host and IP address of any user.
 
 
