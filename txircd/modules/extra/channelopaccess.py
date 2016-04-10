@@ -34,7 +34,7 @@ class ChannelOpAccess(ModuleData, Mode):
 			if ":" not in parameter:
 				continue
 			status, permissionType = parameter.split(":", 1)
-			if status not in self.ircd.channelStatuses:
+			if status not in self.ircd.channelStatuses and status not in ("*", "-"):
 				continue
 			checkedParams.append(parameter)
 		return checkedParams
@@ -43,6 +43,10 @@ class ChannelOpAccess(ModuleData, Mode):
 		status, permissionType = param.split(":", 1)
 		if permissionType != checkType:
 			return None
+		if status == "*": # Specifying all users
+			return True
+		if status == "-": # Specifying no users
+			return False
 		if status not in self.ircd.channelStatuses:
 			return False # For security, we'll favor those that were restricting permissions while a certain status was loaded.
 		level = self.ircd.channelStatuses[status][1]
