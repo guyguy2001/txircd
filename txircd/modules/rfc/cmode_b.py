@@ -10,7 +10,10 @@ class BanMode(ModuleData, Mode):
 	
 	name = "BanMode"
 	core = True
-	affectedActions = { "joinpermission": 10 }
+	affectedActions = { "joinpermission": 10,
+	                    "commandmodify-PRIVMSG": 10,
+	                    "commandmodify-NOTICE": 10
+	                  }
 	
 	def channelModes(self):
 		return [ ("b", ModeType.List, self) ]
@@ -252,19 +255,35 @@ class BanMode(ModuleData, Mode):
 				validParams.append(fullBanmask)
 		return validParams
 	
-	def apply(self, actionType, channel, param, actionChannel, user): # We spell the parameters out because the only action we accept is joinpermission
-		# When we get in this function, the user is trying to join, so the cache will always either not exist or be invalid
-		# so we'll go straight to analyzing the ban list
-		if "b" not in channel.modes:
+	def apply(self, actionType, channel, param, *params):
+		if actionType == "joinpermission":
+			actionChannel, user = params
+			# When we get in this function, the user is trying to join, so the cache will always either not exist or be invalid
+			# so we'll go straight to analyzing the ban list
+			if "b" not in channel.modes:
+				return None
+			for paramData in channel.modes["b"]:
+				param = paramData[0]
+				if ";" in param:
+					continue # Ignore entries with action extbans
+				if self.banMatchesUser(user, param):
+					user.sendMessage(irc.ERR_BANNEDFROMCHAN, channel.name, "Cannot join channel (You're banned)")
+					return False
 			return None
-		for paramData in channel.modes["b"]:
-			param = paramData[0]
-			if ";" in param:
-				continue # Ignore entries with action extbans
-			if self.banMatchesUser(user, param):
-				user.sendMessage(irc.ERR_BANNEDFROMCHAN, channel.name, "Cannot join channel (You're banned)")
-				return False
-		return None
+		if actionType in ("commandmodify-PRIVMSG", "commandmodify-NOTICE"):
+			messagingUser, data = params
+			if channel not in data["targetchans"]:
+				return
+			if messagingUser in channel.users: # We're only applying this to users not in the channel
+				return
+			for paramData in channel.modes["b"]:
+				param = paramData[0]
+				if ";" in param:
+					continue # We don't care about action extbans here
+				if self.banMatchesUser(user, param):
+					user.sendMessage(irc.ERR_BANNEDFROMCHAN, channel.name, "Cannot send message to channel (You're banned)")
+					del data["targetchans"][channel]
+					return
 	
 	def showListParams(self, user, channel):
 		if user not in channel.users or "b" not in channel.modes:
