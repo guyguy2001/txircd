@@ -63,7 +63,7 @@ class SASL(ModuleData, Command):
 	def clearSASLonRegister(self, user):
 		if "sasl-mech" in user.cache and "sasl-processing" not in user.cache:
 			user.sendMessage(irc.ERR_SASLABORTED, "SASL authentication aborted")
-			user.cleanup()
+			self.cleanup(user)
 		return True
 	
 	def cleanup(self, user):
