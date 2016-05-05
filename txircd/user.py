@@ -51,6 +51,7 @@ class IRCUser(IRCBase):
 		self.secureConnection = False
 		self._pinger = LoopingCall(self._ping)
 		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("user_registration_timeout", 10), self._timeoutRegistration)
+		self._connectHandlerTimer = None
 	
 	def connectionMade(self):
 		# We need to callLater the connect action call because the connection isn't fully set up yet,
@@ -58,11 +59,12 @@ class IRCUser(IRCBase):
 		# when the connection is closed.
 		# The "connection" register hold is used basically solely for the purposes of this to prevent potential
 		# race conditions with registration.
-		reactor.callLater(0.1, self._callConnectAction)
+		self._connectHandlerTimer = reactor.callLater(0.1, self._callConnectAction)
 		if ISSLTransport.providedBy(self.transport):
 			self.secureConnection = True
 	
 	def _callConnectAction(self):
+		self._connectHandlerTimer = None
 		if self.ircd.runActionUntilFalse("userconnect", self, users=[self]):
 			self.transport.loseConnection()
 		else:
@@ -249,6 +251,9 @@ class IRCUser(IRCBase):
 			if self._registrationTimeoutTimer.active():
 				self._registrationTimeoutTimer.cancel()
 			self._registrationTimeoutTimer = None
+		if self._connectHandlerTimer and self._connectHandlerTimer.active():
+			self._connectHandlerTimer.cancel()
+			self._connectHandlerTimer = None
 		self.ircd.recentlyQuitUsers[self.uuid] = now()
 		del self.ircd.users[self.uuid]
 		if self.isRegistered():
