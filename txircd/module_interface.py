@@ -157,6 +157,12 @@ class ICommand(Interface):
 		This flag is ignored for servers, except that non-True commands will be executed
 		immediately upon receiving instead of going on the burst queue during bursting.
 		""")
+	burstQueuePriority = Attribute("""
+		The priority of this command on the burst queue. Applies to server commands only.
+		If the priority is None, the command is processed immediately instead of being
+		placed on the burst queue.
+		Otherwise, commands are processed in order from highest to lowest priority.
+		""")
 	
 	def parseParams(source, params, prefix, tags):
 		"""
@@ -189,6 +195,7 @@ class ICommand(Interface):
 class Command(object):
 	resetsIdleTime = True
 	forRegistered = True
+	burstQueuePriority = None
 	
 	def parseParams(self, source, params, prefix, tags):
 		return None

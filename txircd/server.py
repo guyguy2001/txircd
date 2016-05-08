@@ -18,6 +18,8 @@ class IRCServer(IRCBase):
 		self.receivedConnection = received
 		self._pinger = LoopingCall(self._ping)
 		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("server_registration_timeout", 10), self._timeoutRegistration)
+		self._burstQueueCommands = []
+		self._burstQueueHandlers = {}
 	
 	def handleCommand(self, command, params, prefix, tags):
 		if command not in self.ircd.serverCommands:
@@ -26,10 +28,16 @@ class IRCServer(IRCBase):
 		handlers = self.ircd.serverCommands[command]
 		data = None
 		for handler in handlers:
-			if self.bursted is False and handler[0].forRegistered:
-				if "burst_queue" not in self.cache:
-					self.cache["burst_queue"] = []
-				self.cache["burst_queue"].append((command, params, prefix, tags))
+			if self.bursted is False and handler[0].burstQueuePriority is not None:
+				if command not in self._burstQueueCommands:
+					handlerPriority = handler[0].burstQueuePriority
+					for cmdIndex, queueCommand in enumerate(self._burstQueueCommands):
+						queueCommandPriority = self.ircd.commands[queueCommand][0].burstQueuePriority
+						if queueCommandPriority < handlerPriority:
+							self._burstQueueCommands.insert(cmdIndex, command)
+							break
+					self._burstQueueHandlers[command] = []
+				self._burstQueueHandlers[command].append((params, prefix, tags))
 				return
 			registrationStatus = self.bursted
 			if registrationStatus is None:
@@ -55,13 +63,19 @@ class IRCServer(IRCBase):
 		"""
 		Called at the end of bursting.
 		"""
+		if self.bursted:
+			return
 		self.bursted = True
-		if "burst_queue" in self.cache:
-			for command, params, prefix, tags in self.cache["burst_queue"]:
+		for command in self._burstQueueCommands:
+			self.ircd.runActionStandard("startburstcommand", self, command)
+			for params, prefix, tags in self._burstQueueHandlers[command]:
 				self.handleCommand(command, params, prefix, tags)
 				if self.bursted is None:
-					break # Something failed to process, so we disconnected
-			del self.cache["burst_queue"]
+					# Something failed to process, so we disconnected
+					return
+			self.ircd.runActionStandard("endburstcommand", self, command)
+		self._burstQueueCommands = None
+		self._burstQueueHandlers = None
 	
 	def connectionLost(self, reason):
 		if self.serverID in self.ircd.servers:
