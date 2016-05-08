@@ -287,7 +287,7 @@ class IRCUser(IRCBase):
 	
 	def register(self, holdName):
 		"""
-		Removes the specified hold on a user's registratrion. If this is the
+		Removes the specified hold on a user's registration. If this is the
 		last hold on a user, completes registration on the user.
 		"""
 		if holdName not in self._registerHolds:
