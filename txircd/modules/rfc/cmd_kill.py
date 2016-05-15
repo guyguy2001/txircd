@@ -60,6 +60,8 @@ class UserKill(Command):
 class ServerKill(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 55
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

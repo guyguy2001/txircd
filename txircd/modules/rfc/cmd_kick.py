@@ -148,6 +148,8 @@ class UserKick(Command):
 class ServerKick(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 79
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

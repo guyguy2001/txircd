@@ -7,6 +7,7 @@ class ServerChgIdent(ModuleData, Command):
 	
 	name = "ServerChangeIdent"
 	core = True
+	burstQueuePriority = 10
 	
 	def actions(self):
 		return [ ("changeident", 10, self.propagateIdentChange),

@@ -125,6 +125,8 @@ class UserInvite(Command):
 class ServerInvite(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 71
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

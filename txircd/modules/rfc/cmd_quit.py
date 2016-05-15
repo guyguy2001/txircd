@@ -76,6 +76,8 @@ class UserQuit(Command):
 class ServerQuit(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 81
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

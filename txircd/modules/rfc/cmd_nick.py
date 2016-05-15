@@ -80,6 +80,8 @@ class NickUserCommand(Command):
 class NickServerCommand(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 89
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -15,6 +15,7 @@ class Censor(ModuleData):
 	name = "Censor"
 	exemptLevel = 100
 	badwords = None
+	burstQueuePriority = 40
 
 	def userCommands(self):
 		return [ ("CENSOR", 1, UserCensorCommand(self)) ]

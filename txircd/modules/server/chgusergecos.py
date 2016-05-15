@@ -7,6 +7,7 @@ class ServerChgGecos(ModuleData, Command):
 	
 	name = "ServerChangeGecos"
 	core = True
+	burstQueuePriority = 10
 	
 	def actions(self):
 		return [ ("changegecos", 10, self.propagateGecosChange),

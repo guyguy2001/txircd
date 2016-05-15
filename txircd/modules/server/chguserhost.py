@@ -7,6 +7,7 @@ class ServerChgHost(ModuleData, Command):
 	
 	name = "ServerChangeHost"
 	core = True
+	burstQueuePriority = 10
 	
 	def actions(self):
 		return [ ("updatehost", 10, self.propagateChangeHost) ]

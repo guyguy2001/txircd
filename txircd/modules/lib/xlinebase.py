@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 class XLineBase(object):
 	lineType = None
 	propagateToServers = True
+	burstQueuePriority = 50
 	
 	def initializeLineStorage(self):
 		if "xlines" not in self.ircd.storage:

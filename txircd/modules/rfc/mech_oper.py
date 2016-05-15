@@ -227,6 +227,8 @@ class UserOper(Command):
 class ServerOper(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 85
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

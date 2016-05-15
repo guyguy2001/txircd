@@ -104,6 +104,8 @@ class UserTopic(Command):
 class ServerTopic(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 79
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

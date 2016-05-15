@@ -91,6 +91,8 @@ class UserPart(Command):
 class ServerPart(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 72
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

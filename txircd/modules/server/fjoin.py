@@ -10,6 +10,7 @@ class FJoinCommand(ModuleData, Command):
 	
 	name = "FJoinCommand"
 	core = True
+	burstQueuePriority = 80
 	
 	def serverCommands(self):
 		return [ ("FJOIN", 1, self) ]

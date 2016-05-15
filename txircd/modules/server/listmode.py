@@ -10,6 +10,7 @@ class ListModeSync(ModuleData):
 	name = "ListModeSync"
 	core = True
 	modeCache = {}
+	burstQueuePriority = 70
 	
 	def serverCommands(self):
 		return [ ("LISTMODE", 1, ListModeCmd(self)),

@@ -85,6 +85,8 @@ class JoinChannel(Command):
 class ServerJoin(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 80
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -9,6 +9,7 @@ class ServerCommand(ModuleData, Command):
 	name = "ServerCommand"
 	core = True
 	forRegistered = None
+	burstQueuePriority = 100
 	
 	def actions(self):
 		return [ ("initiateserverconnection", 1, self.introduceSelf),

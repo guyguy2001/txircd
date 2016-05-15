@@ -10,6 +10,7 @@ class ServerUID(ModuleData, Command):
 	
 	name = "ServerUID"
 	core = True
+	burstQueuePriority = 90
 	
 	def actions(self):
 		return [ ("welcome", 500, self.broadcastUID) ]

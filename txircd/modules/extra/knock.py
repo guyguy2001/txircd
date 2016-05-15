@@ -104,6 +104,8 @@ class UserKnock(Command):
 class ServerKnock(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 72
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

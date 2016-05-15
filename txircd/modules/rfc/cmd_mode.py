@@ -204,6 +204,8 @@ class UserMode(Command):
 class ServerMode(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 70
+	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

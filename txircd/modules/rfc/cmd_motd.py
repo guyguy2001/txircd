@@ -98,6 +98,8 @@ class UserMOTD(Command):
 class ServerMOTDRequest(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 5
+	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -166,6 +168,8 @@ class ServerMOTDRequest(Command):
 class ServerStartMOTD(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 5
+	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -229,6 +233,8 @@ class ServerStartMOTD(Command):
 
 class ServerMOTD(Command):
 	implements(ICommand)
+	
+	burstQueuePriority = 4
 	
 	def __init__(self, module):
 		self.module = module
@@ -299,6 +305,8 @@ class ServerMOTD(Command):
 
 class ServerEndMOTD(Command):
 	implements(ICommand)
+	
+	burstQueuePriority = 3
 	
 	def __init__(self, module):
 		self.module = module

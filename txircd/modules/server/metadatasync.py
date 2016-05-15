@@ -9,6 +9,7 @@ class ServerMetadata(ModuleData, Command):
 	
 	name = "ServerMetadata"
 	core = True
+	burstQueuePriority = 70
 	
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.propagateUserMetadata),
