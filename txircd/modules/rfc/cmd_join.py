@@ -109,7 +109,7 @@ class ServerJoin(Command):
 	
 	def execute(self, server, data):
 		if "lostuser" not in data:
-			data["user"].joinChannel(data["channel"], True, True)
+			data["user"].joinChannel(data["channel"], True, server)
 		return True
 
 joinCommand = JoinCommand()
