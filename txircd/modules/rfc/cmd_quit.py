@@ -13,14 +13,13 @@ class QuitCommand(ModuleData, Command):
 		return [ ("quitmessage", 10, self.sendQuitMessage),
 		         ("remotequitrequest", 10, self.sendRQuit),
 		         ("quit", 10, self.broadcastQuit),
-		         ("remotequit", 10, self.propagateQuit) ]
+		         ("remotequit", 10, self.broadcastQuit) ]
 	
 	def userCommands(self):
 		return [ ("QUIT", 1, UserQuit(self.ircd)) ]
 	
 	def serverCommands(self):
-		return [ ("QUIT", 1, ServerQuit(self.ircd)),
-				("RQUIT", 1, RemoteQuit(self.ircd)) ]
+		return [ ("QUIT", 1, ServerQuit(self.ircd)) ]
 
 	def verifyConfig(self, config):
 		if "quit_message_length" in config:
@@ -46,15 +45,9 @@ class QuitCommand(ModuleData, Command):
 		self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", user.uuid, reason, prefix=self.ircd.serverID)
 		return True
 	
-	def broadcastQuit(self, user, reason):
+	def broadcastQuit(self, user, reason, fromServer = None):
 		if user.isRegistered():
-			self.ircd.broadcastToServers(None, "QUIT", reason, prefix=user.uuid)
-	
-	def propagateQuit(self, user, reason, fromServer):
-		if fromServer:
-			while fromServer.nextClosest != self.ircd.serverID:
-				fromServer = self.ircd.servers[fromServer.nextClosest]
-		self.ircd.broadcastToServers(fromServer, "QUIT", reason, prefix=user.uuid)
+			self.ircd.broadcastToServers(fromServer, "QUIT", reason, prefix=user.uuid)
 
 class UserQuit(Command):
 	implements(ICommand)
@@ -102,36 +95,7 @@ class ServerQuit(Command):
 	
 	def execute(self, server, data):
 		if "lostuser" not in data:
-			data["user"].disconnect(data["reason"], True)
+			data["user"].disconnect(data["reason"], server)
 		return True
-
-class RemoteQuit(Command):
-	implements(ICommand)
-	
-	def __init__(self, ircd):
-		self.ircd = ircd
-	
-	def parseParams(self, server, params, prefix, tags):
-		if params[0] not in self.ircd.users:
-			if params[0] in self.ircd.recentlyQuitUsers:
-				return {
-					"lostuser": True
-				}
-			return None
-		if len(params) != 2:
-			return None
-		return {
-			"user": self.ircd.users[params[0]],
-			"reason": params[1]
-		}
-	
-	def execute(self, server, data):
-		if "lostuser" in data:
-			return True
-		user = data["user"]
-		if user.uuid[:3] == self.ircd.serverID:
-			user.disconnect(data["reason"])
-			return True
-		self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", data["reason"], prefix=user.uuid)
 
 quitCommand = QuitCommand()

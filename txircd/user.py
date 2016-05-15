@@ -239,7 +239,7 @@ class IRCUser(IRCBase):
 			self.disconnect("Connection reset")
 		self.disconnectedDeferred.callback(None)
 	
-	def disconnect(self, reason):
+	def disconnect(self, reason, fromServer = None):
 		"""
 		Disconnects the user from the server.
 		"""
@@ -267,7 +267,7 @@ class IRCUser(IRCBase):
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=[self] + userSendList)
-		self.ircd.runActionStandard("quit", self, reason, users=self)
+		self.ircd.runActionStandard("quit", self, reason, fromServer, users=self)
 		self.transport.loseConnection()
 	
 	def _timeoutRegistration(self):

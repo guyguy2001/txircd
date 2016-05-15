@@ -77,7 +77,7 @@ class Monitor(ModuleData, Command):
 		self._doNotify(oldNick, irc.RPL_MONOFFLINE)
 		self._doNotify(user.nick, irc.RPL_MONONLINE)
 	
-	def reportGoneUser(self, user, reason):
+	def reportGoneUser(self, user, reason, fromServer):
 		if user.isRegistered():
 			self._doNotify(user.nick, irc.RPL_MONOFFLINE)
 	
