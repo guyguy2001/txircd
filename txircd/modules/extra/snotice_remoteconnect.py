@@ -17,9 +17,10 @@ class SnoRemoteConnect(ModuleData):
 		         ("endburstcommand", 1, self.markEndBurst) ]
 	
 	def sendRemoteConnectNotice(self, user, *params):
-		server = self.ircd.servers[user.uuid[:3]].name
+		server = self.ircd.servers[user.uuid[:3]]
 		if server == self.burstingServer:
 			return
+		server = server.name
 		message =  "Client connected on {}: {} ({}) [{}]".format(server, user.hostmaskWithRealHost(), user.ip, user.gecos)
 		snodata = {
 			"mask": "connect",
