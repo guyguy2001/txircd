@@ -113,7 +113,7 @@ class IRCServer(IRCBase):
 			allServers = self.ircd.servers.values()
 			for server in allServers:
 				if server.nextClosest == self.serverID:
-					server.disconnect(reason, netsplitQuitMsg)
+					server.disconnect(reason, netsplitFromServerName, netsplitToServerName)
 			self.ircd.recentlyQuitServers[self.serverID] = now()
 			del self.ircd.servers[self.serverID]
 			del self.ircd.serverNames[self.name]
