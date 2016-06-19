@@ -12,10 +12,81 @@ class FJoinCommand(ModuleData, Command):
 	core = True
 	burstQueuePriority = 80
 	
+	def __init__(self):
+		self.serverBurstData = None
+	
+	def actions(self):
+		return [ ("startburstcommand", 10, self.prepareJoinBurst),
+		         ("endburstcommand", 10, self.completeJoinBurst) ]
+	
 	def serverCommands(self):
 		return [ ("FJOIN", 1, self) ]
 	
+	def prepareJoinBurst(self, server, command):
+		if command != "FJOIN":
+			return
+		self.serverBurstData = {}
+	
+	def completeJoinBurst(self, server, command):
+		if command != "FJOIN":
+			return
+		openBatchUsers = set()
+		channelStatusesToSet = {}
+		joinsToComplete = []
+		closeBurstServerName = self.ircd.servers[server.nextClosest].name if server.nextClosest in self.ircd.servers else self.ircd.name
+		farBurstServerName = server.name
+		
+		# First, start processing all the joins. We don't finish this here because we want to send only one netjoin batch,
+		# so we accumulate all the joins, then flush the batch, then complete all the joins and do modes/other post-processing.
+		for channel, channelData in self.serverBurstData.iteritems():
+			for user, ranks in channelData["users"]:
+				joinChannelData = user.joinChannelNoAnnounceIncomplete(channel, False, server)
+				if not joinChannelData:
+					continue
+				joinNotifyUsers = user.joinChannelNoAnnounceNotifyUsers(joinChannelData)
+				for notifyUser in joinNotifyUsers:
+					if notifyUser not in openBatchUsers:
+						notifyUser.startBatch("netjoin", "netjoin", (closeBurstServerName, farBurstServerName))
+						openBatchUsers.add(notifyUser)
+				self.ircd.runActionProcessing("joinmessage", joinNotifyUsers, channel, user, "netjoin", users=joinNotifyUsers, channels=[channel])
+				joinsToComplete.append((user, joinChannelData))
+				if channel not in channelStatusesToSet:
+					channelStatusesToSet[channel] = []
+				for rank in ranks:
+					channelStatusesToSet[channel].append((True, rank, user.uuid))
+		# Flush batches
+		for notifyUser in openBatchUsers:
+			notifyUser.sendBatch("netjoin")
+		# Complete joining
+		for user, joinChannelData in joinsToComplete:
+			user.joinChannelNoAnnounceFinish(joinChannelData)
+		# Manage modes
+		for channel, channelData in self.serverBurstData.iteritems():
+			channelSetModes = []
+			time = channelData["time"]
+			if time < channel.existedSince:
+				for mode, param in channel.modes.iteritems():
+					modeType = self.ircd.channelModeTypes[mode]
+					if modeType == ModeType.List:
+						for paramData in param:
+							channelSetModes.append((False, mode, paramData[0]))
+					else:
+						channelSetModes.append((False, mode, param))
+				for user, data in channel.users.iteritems():
+					for rank in data["status"]:
+						channelSetModes.append((False, rank, user.uuid))
+				channel.existedSince = time
+			if time == channel.existedSince:
+				for mode, param in data["modes"].iteritems():
+					channelSetModes.append((True, mode, param))
+				if channel in channelStatusesToSet:
+					channelSetModes.extend(channelStatusesToSet[channel])
+			if channelSetModes:
+				channel.setModes(channelSetModes, self.ircd.serverID)
+	
 	def parseParams(self, server, params, prefix, tags):
+		if self.serverBurstData is None:
+			return None
 		if len(params) < 4:
 			return None
 		try:
@@ -71,34 +142,10 @@ class FJoinCommand(ModuleData, Command):
 		channel = data["channel"]
 		time = data["time"]
 		remoteModes = data["modes"]
-		remoteStatuses = []
-		for user, ranks in data["users"].iteritems():
-			user.joinChannel(channel, True, server)
-			for rank in ranks:
-				remoteStatuses.append((user.uuid, rank))
-		if time < channel.existedSince:
-			modeUnsetList = []
-			for mode, param in channel.modes.iteritems():
-				modeType = self.ircd.channelModeTypes[mode]
-				if modeType == ModeType.List:
-					for paramData in param:
-						modeUnsetList.append((False, mode, paramData[0]))
-				else:
-					modeUnsetList.append((False, mode, param))
-			for user, data in channel.users.iteritems():
-				for rank in data["status"]:
-					modeUnsetList.append((False, rank, user.uuid))
-			if modeUnsetList:
-				channel.setModes(modeUnsetList, self.ircd.serverID)
-			channel.existedSince = time
-		if time == channel.existedSince:
-			modeSetList = []
-			for mode, param in remoteModes.iteritems():
-				modeSetList.append((True, mode, param))
-			for status in remoteStatuses:
-				modeSetList.append((True, status[1], status[0]))
-			if modeSetList:
-				channel.setModes(modeSetList, self.ircd.serverID)
+		if channel not in self.serverBurstData:
+			self.serverBurstData[channel] = { "time": time, "modes": remoteModes, "users": data["users"] }
+		else:
+			self.serverBurstData[channel] = { "time": time, "modes": remoteModes, "users": self.serverBurstData[channel] + data["users"] }
 		return True
 
 fjoinCmd = FJoinCommand()
