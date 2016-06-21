@@ -10,7 +10,7 @@ class Batch(ModuleData):
 	
 	def actions(self):
 		return [ ("startbatchsend", 10, self.startBatch),
-		         ("modifyoutgoingmessage", 10, self.addBatchTag),
+		         ("outgoingmessagetags", 10, self.addBatchTag),
 		         ("endbatchsend", 10, self.endBatch),
 		         ("capabilitylist", 10, self.addCapability) ]
 	
@@ -42,12 +42,9 @@ class Batch(ModuleData):
 		user.cache["currentBatch"] = uniqueReferenceTag
 		user.sendMessage("BATCH", "+{}".format(uniqueReferenceTag), batchType, *batchParameters)
 	
-	def addBatchTag(self, user, command, args, kw):
+	def addBatchTag(self, user, command, to, tags):
 		if "currentBatch" in user.cache:
-			if "tags" in kw:
-				kw["tags"]["batch"] = user.cache["currentBatch"]
-			else:
-				kw["tags"] = { "batch": user.cache["currentBatch"] }
+			tags["batch"] = user.cache["currentBatch"]
 	
 	def endBatch(self, user, batchName, batchType, batchParameters):
 		if "currentBatch" not in user.cache:

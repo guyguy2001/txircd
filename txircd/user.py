@@ -107,7 +107,8 @@ class IRCUser(IRCBase):
 			del kw["to"]
 		if to:
 			args = [to] + list(args)
-		self.ircd.runActionStandard("modifyoutgoingmessage", self, command, args, kw)
+		tags = kw["tags"] if "tags" in kw else {}
+		self.ircd.runActionStandard("outgoingmessagetags", self, command, to, tags)
 		IRCBase.sendMessage(self, command, *args, **kw)
 	
 	def handleCommand(self, command, params, prefix, tags):
