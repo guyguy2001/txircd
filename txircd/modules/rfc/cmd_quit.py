@@ -11,7 +11,6 @@ class QuitCommand(ModuleData, Command):
 	
 	def actions(self):
 		return [ ("quitmessage", 10, self.sendQuitMessage),
-		         ("remotequitrequest", 10, self.sendRQuit),
 		         ("quit", 10, self.broadcastQuit),
 		         ("remotequit", 10, self.broadcastQuit) ]
 	
@@ -40,10 +39,6 @@ class QuitCommand(ModuleData, Command):
 			else:
 				destUser.sendMessage("QUIT", reason, to=None, prefix=hostmask, tags=tags)
 		del sendUserList[:]
-	
-	def sendRQuit(self, user, reason):
-		self.ircd.servers[user.uuid[:3]].sendMessage("RQUIT", user.uuid, reason, prefix=self.ircd.serverID)
-		return True
 	
 	def broadcastQuit(self, user, reason, fromServer = None):
 		if user.isRegistered():
