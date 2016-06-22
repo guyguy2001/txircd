@@ -17,23 +17,15 @@ class SnoOper(ModuleData, Command):
 	
 	def sendOperNotice(self, user):
 		if user.uuid[:3] == self.ircd.serverID:
-			snodata = {
-				"mask": "oper",
-				"message": "{} has opered.".format(user.nick)
-			}
+			mask = "oper"
+			message = "{} has opered.".format(user.nick)
 		else:
-			snodata = {
-				"mask": "remoteoper",
-				"message": "{} has opered. (from {})".format(user.nick, self.ircd.servers[user.uuid[:3]].name)
-			}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+			mask = "remoteoper"
+			message = "{} has opered. (from {})".format(user.nick, self.ircd.servers[user.uuid[:3]].name)
+		self.ircd.runActionStandard("sendservernotice", mask, message)
 	
 	def sendOperFailNotice(self, user, reason):
-		snodata = {
-			"mask": "oper",
-			"message": "Failed OPER attempt from {} ({})".format(user.nick, reason)
-		}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+		self.ircd.runActionStandard("sendservernotice", "oper", "Failed OPER attempt from {} ({})".format(user.nick, reason))
 		self.ircd.broadcastToServers(None, "OPERFAILNOTICE", user.uuid, reason, prefix=self.ircd.serverID)
 	
 	def checkSnoType(self, user, typename):
@@ -61,11 +53,7 @@ class SnoOper(ModuleData, Command):
 		user = data["user"]
 		reason = data["reason"]
 		fromServer = data["fromserver"]
-		snodata = {
-			"mask": "remoteoper",
-			"message": "Failed OPER attempt from {} ({}) (from {})".format(user.nick, reason, fromServer.name)
-		}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+		self.ircd.runActionStandard("sendservernotice", "remoteoper", "Failed OPER attempt from {} ({}) (from {})".format(user.nick, reason, fromServer.name))
 		self.ircd.broadcastToServers(server, "OPERFAILNOTICE", user.uuid, reason, prefix=fromServer.serverID)
 		return True
 

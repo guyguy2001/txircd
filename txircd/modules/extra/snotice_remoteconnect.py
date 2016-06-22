@@ -20,13 +20,7 @@ class SnoRemoteConnect(ModuleData):
 		server = self.ircd.servers[user.uuid[:3]]
 		if server == self.burstingServer:
 			return
-		server = server.name
-		message =  "Client connected on {}: {} ({}) [{}]".format(server, user.hostmaskWithRealHost(), user.ip, user.gecos)
-		snodata = {
-			"mask": "connect",
-			"message": message
-		}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+		self.ircd.runActionStandard("sendservernotice", "remoteconnect", "Client connected on {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), user.ip, user.gecos))
 	
 	def checkSnoType(self, user, typename):
 		return typename == "remoteconnect"

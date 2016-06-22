@@ -15,13 +15,7 @@ class SnoRemoteQuit(ModuleData):
 		server = self.ircd.servers[user.uuid[:3]]
 		if not server.bursted: # Server is disconnecting
 			return
-		server = server.name
-		message =  "Client quit from {}: {} ({}) [{}]".format(server, user.hostmaskWithRealHost(), user.ip, reason)
-		snodata = {
-			"mask": "quit",
-			"message": message
-		}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+		self.ircd.runActionStandard("sendservernotice", "remotequit", "Client quit from {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), user.ip, reason))
 	
 	def checkSnoType(self, user, typename):
 		return typename == "remotequit"

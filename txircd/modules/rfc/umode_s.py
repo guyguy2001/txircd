@@ -42,11 +42,11 @@ class ServerNoticeMode(ModuleData, Mode):
 			if param in self.subscribeLists and user in self.subscribeLists[param]:
 				self.subscribeLists[param].remove(user)
 
-	def sendServerNotice(self, snodata):
-		mask = snodata["mask"]
+	def sendServerNotice(self, mask, message):
 		if mask in self.subscribeLists:
+			message = "*** {}".format(message)
 			for u in self.subscribeLists[mask]:
-				u.sendMessage("NOTICE", "*** {}".format(snodata["message"]))
+				u.sendMessage("NOTICE", message)
 
 	def checkSet(self, user, param):
 		noticeTypes = ircLower(param).split(",")

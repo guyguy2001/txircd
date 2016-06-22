@@ -12,12 +12,7 @@ class SnoConnect(ModuleData):
 		         ("servernoticetype", 1, self.checkSnoType)]
 
 	def sendConnectNotice(self, user, *params):
-		message =  "Client connected on {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip, user.gecos)
-		snodata = {
-			"mask": "connect",
-			"message": message
-		}
-		self.ircd.runActionProcessing("sendservernotice", snodata)
+		self.ircd.runActionStandard("sendservernotice", "connect", "Client connected on {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip, user.gecos))
 		return True
 
 	def checkSnoType(self, user, typename):
