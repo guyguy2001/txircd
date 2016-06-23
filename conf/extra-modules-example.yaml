@@ -132,6 +132,10 @@ modules:
 # opers of user connections.
 #- ServerNoticeConnect
 
+# ServerNoticeLinks: Provides the "links" server notice type which notifies
+# opers of server connections and disconnections.
+#- ServerNoticeLinks
+
 # ServerNoticeOper: Provides the "oper" server notice type which notifies opers
 # of successful and failed oper attempts.
 #- ServerNoticeOper
