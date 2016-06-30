@@ -272,19 +272,7 @@ class ServerMode(Command):
 			if targetTime > channel.existedSince:
 				return True
 			if targetTime < channel.existedSince:
-				# We need to remove all of the channel's modes
-				modeUnsetList = []
-				for mode, param, in channel.modes.iteritems():
-					if self.ircd.channelModeTypes[mode] == ModeType.List:
-						for paramData in param:
-							modeUnsetList.append((False, mode, paramData[0]))
-					else:
-						modeUnsetList.append((False, mode, param))
-				for user, userData in channel.users.iteritems():
-					for status in userData["status"]:
-						modeUnsetList.append((False, mode, user.uuid))
-				if modeUnsetList:
-					channel.setModes(modeUnsetList, source)
+				channel.setCreationTime(targetTime)
 			# We'll need to transform the user parameters of status modes before we're done here
 			channel.setModes(data["modes"], source)
 			return True

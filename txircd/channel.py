@@ -191,7 +191,7 @@ class IRCChannel(object):
 		    mode
 		- setBy: Optional, only used for list modes; a human-readable string
 		    (typically server name or nick!user@host) for who/what set this
-		    mode)
+		    mode
 		- setTime: Optional, only used for list modes; a datetime object
 		    containing when the mode was set
 		
@@ -463,6 +463,34 @@ class IRCChannel(object):
 		if not status:
 			return 0
 		return self.ircd.channelStatuses[status[0]][1]
+	
+	def setCreationTime(self, time, fromServer):
+		if time >= self.existedSince:
+			return
+		fromServerID = fromServer.serverID if fromServer else self.ircd.serverID
+		self.setTopic("", fromServerID)
+		
+		modeResetList = []
+		for mode, param in self.modes:
+			modeType = self.ircd.channelModeTypes[mode]
+			if modeType == ModeType.List:
+				for paramValue, setBy, setTime in param:
+					modeResetList.append((False, mode, paramValue, setBy, setTime))
+			else:
+				modeResetList.append((False, mode, param))
+		for user, data in self.users.iteritems():
+			if "status" not in data:
+				continue
+			for status in data["status"]:
+				modeResetList.append((False, status, user.uuid))
+		self.setModes(modeResetList, fromServerID)
+		# Reset metadata
+		metadataList = self.metadataList().copy()
+		for key, value, visibility, setByUser in metadataList:
+			self.setMetadata(key, None, visibility, False)
+		
+		self.existedSince = time
+		self.ircd.runActionStandard("channelchangetime", self, fromServer)
 
 class InvalidChannelNameError(Exception):
 	def __str__(self):

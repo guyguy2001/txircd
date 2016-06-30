@@ -69,13 +69,13 @@ class ServerMetadata(ModuleData, Command):
 			return True
 		if "user" in data:
 			target = data["user"]
-			if data["time"] > target.connectedSince:
+			if data["time"] < target.connectedSince:
 				self.clearMetadata(target, server)
 				return True
 		else:
 			target = data["channel"]
-			if data["time"] > target.existedSince:
-				self.clearMetadata(target, server)
+			if data["time"] < target.existedSince:
+				target.setCreationTime(data["time"], server)
 				return True
 		if "value" in data:
 			value = data["value"]

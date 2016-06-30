@@ -36,7 +36,13 @@ class FJoinCommand(ModuleData, Command):
 		closeBurstServerName = self.ircd.servers[server.nextClosest].name if server.nextClosest in self.ircd.servers else self.ircd.name
 		farBurstServerName = server.name
 		
-		# First, start processing all the joins. We don't finish this here because we want to send only one netjoin batch,
+		# First, handle channel timestamps
+		for channel, channelData in self.serverBurstData.iteritems():
+			channelTime = channelData["time"]
+			if channelTime < channel.existedSince:
+				channel.setCreationTime(channelTime, server)
+		
+		# Next, start processing all the joins. We don't finish this here because we want to send only one netjoin batch,
 		# so we accumulate all the joins, then flush the batch, then complete all the joins and do modes/other post-processing.
 		for channel, channelData in self.serverBurstData.iteritems():
 			for user, ranks in channelData["users"]:
@@ -64,20 +70,8 @@ class FJoinCommand(ModuleData, Command):
 		for channel, channelData in self.serverBurstData.iteritems():
 			channelSetModes = []
 			time = channelData["time"]
-			if time < channel.existedSince:
-				for mode, param in channel.modes.iteritems():
-					modeType = self.ircd.channelModeTypes[mode]
-					if modeType == ModeType.List:
-						for paramData in param:
-							channelSetModes.append((False, mode, paramData[0]))
-					else:
-						channelSetModes.append((False, mode, param))
-				for user, data in channel.users.iteritems():
-					for rank in data["status"]:
-						channelSetModes.append((False, rank, user.uuid))
-				channel.existedSince = time
 			if time == channel.existedSince:
-				for mode, param in data["modes"].iteritems():
+				for mode, param in channelData["modes"].iteritems():
 					channelSetModes.append((True, mode, param))
 				if channel in channelStatusesToSet:
 					channelSetModes.extend(channelStatusesToSet[channel])

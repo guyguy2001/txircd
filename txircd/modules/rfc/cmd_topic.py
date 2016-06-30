@@ -133,8 +133,11 @@ class ServerTopic(Command):
 		if "lostchannel" in data:
 			return True
 		channel = data["channel"]
-		if data["chantime"] > channel.existedSince: # Don't set the topic when our channel overrides
+		remoteChannelTime = data["chantime"]
+		if remoteChannelTime > channel.existedSince: # Don't set the topic when our channel overrides
 			return True # Assume handled by our ignoring of it
+		if remoteChannelTime < channel.existedSince:
+			channel.setCreationTime(remoteChannelTime)
 		if channel.topic and data["topictime"] <= channel.topicTime:
 			return True # Don't set the topic when our topic overrides
 		if channel.setTopic(data["topic"], data["source"]):
