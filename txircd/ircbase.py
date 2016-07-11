@@ -136,4 +136,4 @@ class IRCBase(LineOnlyReceiver):
 		return ";".join(tagList)
 	
 	def sendLine(self, line):
-		return self.transport.writeSequence((line, "\r\n"))
+		return self.transport.write("{}\r\n".format(line))
