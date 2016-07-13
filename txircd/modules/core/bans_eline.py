@@ -81,7 +81,7 @@ class UserELine(Command):
 		return {
 			"mask": banmask,
 			"duration": durationToSeconds(params[1]),
-			"reason": " ".format(params[2:])
+			"reason": " ".join(params[2:])
 		}
 	
 	def execute(self, user, data):
