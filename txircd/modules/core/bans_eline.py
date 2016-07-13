@@ -95,7 +95,7 @@ class UserELine(Command):
 			else:
 				user.sendMessage("NOTICE", "*** Permanent e:line for {} has been set.".format(banmask))
 			return True
-		if not self.module.delLine(banmask):
+		if not self.module.delLine(banmask, user.hostmask()):
 			user.sendMessage("NOTICE", "*** E:Line for {} doesn't exist.".format(banmask))
 			return True
 		user.sendMessage("NOTICE", "*** E:Line for {} has been removed.".format(banmask))
