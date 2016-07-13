@@ -1,5 +1,5 @@
 from twisted.plugin import IPlugin
-from txircd.modbase import IModuleData, ModuleData
+from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
 class SnoLinks(ModuleData):
