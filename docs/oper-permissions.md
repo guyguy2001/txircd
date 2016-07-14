@@ -57,6 +57,7 @@ info-ports                | StatsPorts                | Allows an oper to view t
 info-shuns                | Shun                      | Allows an oper to view the shuns STATS type.
 info-uptime               | StatsUptime               | Allows an oper to view the uptime STATS type.
 servernotice-connect      | ServerNoticeConnect       | Allows an oper to set usermode +s on themselves and grants permission for local connect notices.
+servernotice-links        | ServerNoticeLinks         | Allows an oper to set usermode +s on themselves and grants permission for server link notices.
 servernotice-oper         | ServerNoticeOper          | Allows an oper to set usermode +s on themselves and grants permission for oper notices.
 servernotice-quit         | ServerNoticeQuit          | Allows an oper to set usermode +s on themselves and grants permission for local quit notices.
 servernotice-remoteconnect| ServerNoticeRemoteConnect | Allows an oper to set usermode +s on themselves and grants permission for remote connect notices.
