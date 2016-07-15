@@ -62,4 +62,5 @@ servernotice-oper         | ServerNoticeOper          | Allows an oper to set us
 servernotice-quit         | ServerNoticeQuit          | Allows an oper to set usermode +s on themselves and grants permission for local quit notices.
 servernotice-remoteconnect| ServerNoticeRemoteConnect | Allows an oper to set usermode +s on themselves and grants permission for remote connect notices.
 servernotice-remotequit   | ServerNoticeRemoteQuit    | Allows an oper to set usermode +s on themselves and grants permission for remote quit notices.
+servernotice-xline        | ServerNoticeRemoteXLine   | Allows an oper to set usermode +s on themselves and grants permission for x:line notices.
 view-globops              | Globops                   | Allows an oper to see GLOBOPS messages.

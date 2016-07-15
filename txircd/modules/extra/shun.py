@@ -124,7 +124,7 @@ class UserShun(Command):
 			else:
 				user.sendMessage("NOTICE", "*** Permanent shun for {} has been set.".format(shunmask))
 			return True
-		if not self.module.delLine(shunmask):
+		if not self.module.delLine(shunmask, user.hostmask()):
 			user.sendMessage("NOTICE", "*** Shun for {} doesn't exist.".format(shunmask))
 			return True
 		user.sendMessage("NOTICE", "*** Shun for {} has been removed.".format(shunmask))

@@ -45,11 +45,12 @@ class XLineBase(object):
 			"setter": setter,
 			"reason": reason
 		})
+		self.ircd.runActionStandard("addxline", self.lineType, mask, durationSeconds, setter, reason)
 		if self.propagateToServers:
 			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, timestampStringFromTime(createdTime), str(durationSeconds), reason, prefix=self.ircd.serverID)
 		return True
 	
-	def delLine(self, mask, fromServer = None):
+	def delLine(self, mask, setter, fromServer = None):
 		if not self.lineType:
 			return False
 		normalMask = self.normalizeMask(mask)
@@ -57,8 +58,9 @@ class XLineBase(object):
 			lineMask = self.normalizeMask(lineData["mask"])
 			if normalMask == lineMask:
 				del self.ircd.storage["xlines"][self.lineType][index]
+				self.ircd.runActionStandard("delxline", self.lineType, mask, setter)
 				if self.propagateToServers:
-					self.ircd.broadcastToServers(fromServer, "DELLINE", self.lineType, mask)
+					self.ircd.broadcastToServers(fromServer, "DELLINE", self.lineType, mask, setter)
 				return True
 		return False
 	
@@ -113,17 +115,18 @@ class XLineBase(object):
 		return True
 	
 	def handleServerDelParams(self, server, params, prefix, tags):
-		if len(params) != 2:
+		if len(params) != 3:
 			return None
 		return {
 			"linetype": params[0],
-			"mask": params[1]
+			"mask": params[1],
+			"setter": params[2]
 		}
 	
 	def executeServerDelCommand(self, server, data):
 		if data["linetype"] != self.lineType:
 			return None
-		self.delLine(data["mask"], server)
+		self.delLine(data["mask"], data["setter"], server)
 		return True
 	
 	def burstLines(self, server):

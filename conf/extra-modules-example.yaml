@@ -152,6 +152,10 @@ modules:
 # notifies opers of user disconnections on remote servers.
 #- ServerNoticeRemoteQuit
 
+# ServerNoticeXLine: Provides the "xline" server notice type which notifies
+# opers of x:lines being set and removed.
+#- ServerNoticeXLine
+
 # StatsOnlineOpers: Provides the onlineopers STATS type, which lists all opers
 # that are currently online.
 #- StatsOnlineOpers

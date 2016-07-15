@@ -90,7 +90,7 @@ class UserZLine(Command):
 	def execute(self, user, data):
 		banmask = data["mask"]
 		if "reason" in data:
-			if not self.module.addLine(data["mask"], now(), data["duration"], user.hostmask(), data["reason"]):
+			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** Z:Line for {} is already set.".format(banmask))
 				return True
 			badUsers = []
@@ -105,7 +105,7 @@ class UserZLine(Command):
 			else:
 				user.sendMessage("NOTICE", "*** Permanent z:line for {} has been set.".format(banmask))
 			return True
-		if not self.module.delLine(data["mask"]):
+		if not self.module.delLine(banmask, user.hostmask()):
 			user.sendMessage("NOTICE", "*** Z:Line for {} doesn't exist.".format(banmask))
 			return True
 		user.sendMessage("NOTICE", "*** Z:Line for {} has been removed.".format(banmask))

@@ -111,7 +111,7 @@ class KLine(ModuleData, Command, XLineBase):
 			else:
 				user.sendMessage("NOTICE", "*** Permanent k:line for {} has been set.".format(banmask))
 			return True
-		if not self.delLine(banmask):
+		if not self.delLine(banmask, user.hostmask()):
 			user.sendMessage("NOTICE", "*** K:Line for {} doesn't exist.".format(banmask))
 			return True
 		user.sendMessage("NOTICE", "*** K:Line for {} has been removed.".format(banmask))
