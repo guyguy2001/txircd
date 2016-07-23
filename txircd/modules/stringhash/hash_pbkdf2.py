@@ -18,12 +18,15 @@ class HashPBKDF2(ModuleData):
 	def load(self):
 		self.ircd.functionCache["hash-pbkdf2"] = self.hash
 		self.ircd.functionCache["compare-pbkdf2"] = self.compare
+		self.ircd.functionCache["validate-pbkdf2"] = self.checkValidHash
 	
 	def unload(self):
 		if self.ircd.functionCache["hash-pbkdf2"] == self.hash:
 			del self.ircd.functionCache["hash-pbkdf2"]
 		if self.ircd.functionCache["compare-pbkdf2"] == self.compare:
 			del self.ircd.functionCache["compare-pbkdf2"]
+		if self.ircd.functionCache["validate-pbkdf2"]:
+			del self.ircd.functionCache["validate-pbkdf2"]
 	
 	def hash(self, string, salt=None, iterations=1000, algorithm="sha256", dataBytes=24):
 		possibleAlgorithms = {
@@ -63,6 +66,8 @@ class HashPBKDF2(ModuleData):
 		return b64encode("".join([pack("@H", randint(0, 0xffff)) for i in range(3)]))
 	
 	def compare(self, string, compareWith):
+		if not self.checkValidHash(compareWith):
+			return False
 		# The algorithm outputs strings with all the parameters
 		# So we'll pull them apart and feed them to the hash function
 		# to make sure the string we're comparing gets hashed the same way
@@ -72,5 +77,17 @@ class HashPBKDF2(ModuleData):
 		dataBytes = len(b64decode(oldHash))
 		
 		return self.hash(string, salt, iterations, algorithm, dataBytes) == compareWith
+	
+	def checkValidHash(self, string):
+		if len(string.split(":")) != 4:
+			return False
+		algorithm, iterations, salt, hashedString = string.split(":")
+		if algorithm not in ("md5", "sha1", "sha224", "sha256", "sha384", "sha512"):
+			return False
+		try:
+			int(iterations)
+		except ValueError:
+			return False
+		return True
 
 pbkdf2Hash = HashPBKDF2()

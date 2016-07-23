@@ -157,6 +157,11 @@ class UserOper(Command):
 			return True
 		password = data["password"]
 		if "hash" in operData:
+			validateFunc = "validate-{}".format(operData["hash"])
+			if validateFunc in self.ircd.functionCache and not self.ircd.functionCache[validateFunc](operData["password"]):
+				self.ircd.log.error("The password for {username} is not a correct hash of the type configured!", username=username)
+				self.reportOper(user, "Misconfigured password hash")
+				return True
 			compareFunc = "compare-{}".format(operData["hash"])
 			if compareFunc not in self.ircd.functionCache:
 				user.sendMessage(irc.ERR_NOOPERHOST, "Invalid oper credentials")
