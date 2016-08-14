@@ -172,6 +172,10 @@ modules:
 # messages sent to the channel.
 #- StripColors
 
+# TimedModes: Provides the TIMEDMODE command, which allows users to set modes
+# that automatically unset after a specified period of time.
+#- TimedModes
+
 
 # AutoJoin Configuration
 # Configuring this module requires specifying which channels to have the user
