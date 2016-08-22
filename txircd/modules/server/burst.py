@@ -66,7 +66,10 @@ class ServerBurst(ModuleData, Command):
 					if param is not None:
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-			server.sendMessage("UID", user.uuid, signonTimestamp, user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, nickTimestamp, modeStr, user.gecos, prefix=self.ircd.serverID)
+			uidParams = [user.uuid, signonTimestamp, user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, nickTimestamp, "S" if user.secureConnection else "*", "+{}".format("".join(modes))]
+			uidParams.extend(params)
+			uidParams.append(user.gecos)
+			server.sendMessage("UID", *uidParams, prefix=self.ircd.serverID)
 			sentListModes = False
 			for mode, paramList in listModes.iteritems():
 				for param, setter, time in paramList:
