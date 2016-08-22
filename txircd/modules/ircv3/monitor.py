@@ -36,7 +36,7 @@ class Monitor(ModuleData, Command):
 		return [ ("MONITOR", 1, self) ]
 	
 	def load(self):
-		self.targetIndex = CaseInsensitiveDictionary()
+		self.ircd.dataCache["monitor-index"] = CaseInsensitiveDictionary()
 		# We'll run a cleaner every minute. The reason we do this is that, since there can be multiple
 		# notified users for a target, the index is implemented as a CaseInsensitiveDictionary pointing
 		# to WeakSets as opposed to simply a CaseInsensitiveDictionary(WeakValueDictionary). Because of
@@ -82,8 +82,8 @@ class Monitor(ModuleData, Command):
 			self._doNotify(user.nick, irc.RPL_MONOFFLINE)
 	
 	def _doNotify(self, nick, numeric):
-		if nick in self.targetIndex:
-			for notifyUser in self.targetIndex[nick]:
+		if nick in self.ircd.dataCache["monitor-index"]:
+			for notifyUser in self.ircd.dataCache["monitor-index"][nick]:
 				notifyUser.sendMessage(numeric, nick)
 	
 	def userSubMetadata(self, user, capability, value):
@@ -107,8 +107,8 @@ class Monitor(ModuleData, Command):
 			else:
 				user.sendMessage("METADATA", key, visibility, value, to=user.nick)
 			sentToUsers.add(user)
-		if user.nick in self.targetIndex:
-			for monitoringUser in self.targetIndex[user.nick]:
+		if user.nick in self.ircd.dataCache["monitor-index"]:
+			for monitoringUser in self.ircd.dataCache["monitor-index"][user.nick]:
 				if monitoringUser in sentToUsers:
 					continue
 				if "capabilities" in monitoringUser.cache and "metadata-notify" in monitoringUser.cache["capabilities"] and monitoringUser.canSeeMetadataVisibility(visibility):
@@ -141,11 +141,11 @@ class Monitor(ModuleData, Command):
 	
 	def cleanIndex(self):
 		removeKeys = []
-		for target, notifyList in self.targetIndex.iteritems():
+		for target, notifyList in self.ircd.dataCache["monitor-index"].iteritems():
 			if not notifyList:
 				removeKeys.append(target)
 		for target in removeKeys:
-			del self.targetIndex[target]
+			del self.ircd.dataCache["monitor-index"][target]
 	
 	def sendUserMetadata(self, user, sendToUser):
 		metadataList = user.metadataList()
