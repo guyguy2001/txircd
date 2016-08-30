@@ -11,8 +11,6 @@ class HostCloaking(ModuleData, Mode):
 
 	name = "HostCloaking"
 	affectedActions = { "modechange-user-x": 10 }
-	cloakingSalt = None
-	cloakingPrefix = None
 
 	def userModes(self):
 		return [ ("x", ModeType.NoParam, self) ]
