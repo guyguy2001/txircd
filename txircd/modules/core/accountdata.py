@@ -11,7 +11,7 @@ irc.RPL_LOGGEDOUT = "901"
 class Accounts(ModuleData):
 	implements(IPlugin, IModuleData)
 	
-	name = "Accounts"
+	name = "AccountData"
 	core = True
 	
 	def actions(self):
