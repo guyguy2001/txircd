@@ -25,7 +25,7 @@ class ChannelKeyMode(ModuleData, Mode):
 	def checkSet(self, channel, param):
 		if not param:
 			return None
-		password = param.split(" ")[0]
+		password = param.split(" ")[0].replace(",", "")
 		if not password:
 			return None
 		return [password]
