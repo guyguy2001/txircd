@@ -33,7 +33,7 @@ class JoinCommand(ModuleData):
 				destUser.sendMessageInBatch(batchName, "JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 		del messageUsers[:]
 	
-	def broadcastJoin(self, messageUsers, channel, user, fromServer):
+	def broadcastJoin(self, channel, user, fromServer):
 		self.ircd.broadcastToServers(fromServer, "JOIN", channel.name, prefix=user.uuid)
 
 class JoinChannel(Command):
