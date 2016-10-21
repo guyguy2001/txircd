@@ -39,6 +39,10 @@ modules:
 # <replacement> is the text with which you want to replace it.
 #- Censor
 
+# ChannelHistory: Provides a channel mode (+H) to provide a joining user with
+# the last messages of a channel within a given timespan.
+#- ChannelHistory
+
 # ChannelFlood: Provides a channel mode (+f) to limit the rate at which
 # messages can be sent to a channel by a user.
 #- ChannelFlood
@@ -190,6 +194,12 @@ modules:
 # on connect. You can specify modes with parameters the way you normally
 # would--by separating them with spaces.
 #client_umodes_on_connect: x
+
+# ChannelHistory Configuration
+# This module requires a maximum number of lines that are to be kept in history
+# to be specified, to avoid taking up too many system resources. The default
+# value is 50 and the hard cap is 100.
+#chanhistory_maxlines = 50
 
 # ConnectionLimit Configuration
 # This module has two options to set up, the maximum connections per host and
