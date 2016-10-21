@@ -192,6 +192,9 @@ class BanMode(ModuleData, Mode):
 			self.populateBanCache(channel, user)
 			self.autoStatus(channel, user)
 	
+	def banmaskHasMatchingExtban(self, banmask):
+		return (":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")))
+	
 	def checkSet(self, channel, param):
 		actionExtban = ""
 		actionParam = ""
@@ -216,8 +219,22 @@ class BanMode(ModuleData, Mode):
 					continue
 				if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
 					continue
-			if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
-				matchingExtban, banmask = banmask.split(":", 1)
+				actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkSet(channel, actionParam)
+				for actionParam in actionParamList:
+					updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
+					if self.banmaskHasMatchingExtban(banmask):
+						matchingExtban = banmask.split(":", 1)[0]
+						if not matchingExtban:
+							continue
+					else:
+						if "!" not in banmask:
+							updatedBanmask = "{}!*@*".format(updatedBanmask)
+						elif "@" not in banmask:
+							updatedBanmask = "{}@*".format(updatedBanmask)
+					validParams.append(updatedBanmask)
+				continue
+			if self.banmaskHasMatchingExtban(banmask):
+				matchingExtban = banmask.split(":", 1)[0]
 				if not matchingExtban:
 					continue
 			else:
@@ -235,8 +252,26 @@ class BanMode(ModuleData, Mode):
 			banmask = fullBanmask
 			if ";" in banmask:
 				actionExtban, banmask = banmask.split(";", 1)
-				# We don't care about the rest of actionExtban here
-			if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
+				if actionExtban in self.ircd.channelModeTypes:
+					actionModeType = self.ircd.channelModeTypes[actionExtban]
+					actionParam = None
+					if ":" in actionExtban:
+						actionExtban, actionParam = actionExtban.split(":", 1)
+					actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkUnset(channel, actionParam)
+					for actionParam in actionParamList:
+						updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
+						if self.banmaskHasMatchingExtban(banmask):
+							validParams.append(updatedBanmask)
+							continue
+						if "!" not in banmask:
+							updatedBanmask = "{}!*@*".format(updatedBanmask)
+						elif "@" not in banmask:
+							updatedBanmask = "{}@*".format(updatedBanmask)
+						validParams.append(updatedBanmask)
+				else:
+					validParams.append(fullBanmask) # If the mode module was unloaded, just let it out of the system
+				continue
+			if self.banmaskHasMatchingExtban(banmask):
 				validParams.append(fullBanmask)
 				continue # Just allow this; the other checks will be managed by checking whether the parameter is actually set on the channel
 			# If there's no matching extban, make sure the ident and host are given
