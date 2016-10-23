@@ -199,7 +199,7 @@ modules:
 # This module requires a maximum number of lines that are to be kept in history
 # to be specified, to avoid taking up too many system resources. The default
 # value is 50 and the hard cap is 100.
-#chanhistory_maxlines = 50
+#chanhistory_maxlines: 50
 
 # ConnectionLimit Configuration
 # This module has two options to set up, the maximum connections per host and
