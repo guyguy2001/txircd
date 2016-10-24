@@ -401,10 +401,18 @@ class IRCd(Service):
 		"""
 		deferList = self._unloadModule(moduleName, False)
 		if deferList is None:
-			deferList = self.loadModule(moduleName)
+			try:
+				deferList = self.loadModule(moduleName)
+			except ModuleLoadError as err:
+				self.log.critical("Module {moduleName} couldn't be reloaded! The server may be left in an unstable state; consider restarting. Error details: {err}", moduleName=moduleName, err=err)
+				raise
 		else:
 			deferList.addCallback(lambda result: self.loadModule(moduleName))
+			deferList.addErrback(self._logReloadModuleError, moduleName)
 		return deferList
+	
+	def _logReloadModuleError(self, failure, moduleName):
+		self.log.critical("Module {moduleName} couldn't be reloaded! The server may be left in an unstable state; consider restarting. Error details: {failure.getErrorMessage()}", moduleName=moduleName, failure=failure)
 
 	def verifyConfig(self, config):
 		# IRCd
