@@ -20,6 +20,8 @@ class IRCServer(IRCBase):
 		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("server_registration_timeout", 10), self._timeoutRegistration)
 	
 	def handleCommand(self, command, params, prefix, tags):
+		if self.serverID not in self.ircd.servers:
+			return # Don't process leftover commands for disconnected servers
 		if command not in self.ircd.serverCommands:
 			self.disconnect("Unknown command {}".format(command)) # If we receive a command we don't recognize, abort immediately to avoid a desync
 			return
