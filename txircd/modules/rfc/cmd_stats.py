@@ -120,7 +120,7 @@ class ServerInfoRequest(Command):
 		typeName = data["type"]
 		if serverID == self.ircd.serverID:
 			user = data["user"]
-			destServer = user.uuid[:3]
+			destServer = self.ircd.servers[user.uuid[:3]]
 			results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName),)), users=[user])
 			if results:
 				for key, val in results.iteritems():
