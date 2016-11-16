@@ -204,9 +204,9 @@
 # performance problems and you're sure those performance problems are caused by
 # disk I/O.
 # This sets the interval at which the data file is saved back to the disk. The
-# default value is 5 seconds.
+# default value is 15 seconds.
 # This is specified as a number of seconds.
-#storage_sync_interval: 5
+#storage_sync_interval: 15
 
 # channel_minimum_level
 # This is a dictionary allowing you to specify the minimum channel status
