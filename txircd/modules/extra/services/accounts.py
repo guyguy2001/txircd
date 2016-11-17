@@ -113,6 +113,7 @@ class Accounts(ModuleData):
 		if email:
 			newAccountInfo["email"] = email
 		newAccountInfo["registered"] = timestamp(registrationTime)
+		newAccountInfo["settings"] = {}
 		
 		self.accountData["data"][lowerUsername] = newAccountInfo
 		if lowerUsername in self.accountData["deleted"]:
