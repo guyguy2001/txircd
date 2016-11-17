@@ -6,6 +6,8 @@ from zope.interface import implements
 from validate_email import validate_email as validateEmail
 from datetime import datetime, timedelta
 
+accountFormatVersion = "0"
+
 class Accounts(ModuleData):
 	implements(IPlugin, IModuleData)
 	
@@ -23,7 +25,8 @@ class Accounts(ModuleData):
 			("accountchangeemail", 1, self.setEmail),
 			("accountaddnick", 1, self.addAltNick),
 			("accountremovenick", 1, self.removeAltNick),
-			("usermetadataupdate", 10, self.updateLastLoginTime) ]
+			("usermetadataupdate", 10, self.updateLastLoginTime),
+			("burst", 5, self.startBurst) ]
 	
 	def serverCommands(self):
 		return [ ("CREATEACCOUNT", 1, CreateAccountCommand(self)),
@@ -32,12 +35,14 @@ class Accounts(ModuleData):
 			("UPDATEACCOUNTPASS", 1, UpdateAccountPassCommand(self)),
 			("UPDATEACCOUNTEMAIL", 1, UpdateAccountEmailCommand(self)),
 			("ADDACCOUNTNICK", 1, AddAccountNickCommand(self)),
-			("REMOVEACCOUNTNICK", 1, RemoveAccountNickCommand(self)) ]
+			("REMOVEACCOUNTNICK", 1, RemoveAccountNickCommand(self)),
+			("ACCOUNTBURSTINIT", 1, AccountBurstInitCommand(self)) ]
 	
 	def load(self):
 		if "services" not in self.ircd.storage:
 			self.ircd.storage["services"] = {}
-			self.ircd.storage["audit"] = []
+			self.ircd.storage["services"]["journal"] = []
+			self.ircd.storage["services"]["serverupdates"] = {}
 		if "accounts" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["accounts"] = {}
 			self.ircd.storage["services"]["accounts"]["data"] = {}
@@ -112,7 +117,8 @@ class Accounts(ModuleData):
 		newAccountInfo["nick"] = [(username, timestamp(registrationTime))]
 		if email:
 			newAccountInfo["email"] = email
-		newAccountInfo["registered"] = timestamp(registrationTime)
+		if "registered" not in newAccountInfo:
+			newAccountInfo["registered"] = timestamp(registrationTime)
 		newAccountInfo["settings"] = {}
 		
 		self.accountData["data"][lowerUsername] = newAccountInfo
@@ -122,11 +128,12 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", username)
 		
 		serializedAccountInfo = serializeAccount(newAccountInfo)
-		self._updateAudit(registrationTime, "CREATEACCOUNT", serializedAccountInfo)
+		self.servicesData["journal"].append(registrationTime, "CREATEACCOUNT", serializedAccountInfo)
 		self.ircd.broadcastToServers(fromServer, "CREATEACCOUNT", timestampStringFromTime(registrationTime), serializedAccountInfo, prefix=self.ircd.serverID)
 		if user and user.uuid[:3] == self.ircd.serverID:
 			user.setMetadata("account", username, "internal", False)
 		
+		self._serverUpdateTime(registrationTime)
 		self.ircd.runActionStandard("accountcreated", username)
 		return True, None
 	
@@ -224,8 +231,9 @@ class Accounts(ModuleData):
 		deleteTime = now()
 		del self.accountData["data"][lowerUsername]
 		self.accountData["deleted"][lowerUsername] = timestamp(deleteTime)
-		self._updateAudit(deleteTime, "DELETEACCOUNT", username)
+		self.servicesData["journal"].append(deleteTime, "DELETEACCOUNT", username)
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTimestamp(createTimestamp), prefix=self.ircd.serverID)
+		self._serverUpdateTime(deleteTime)
 	
 	def changeAccountName(self, oldAccountName, newAccountName, fromServer):
 		"""
@@ -256,8 +264,9 @@ class Accounts(ModuleData):
 			accountInfo["oldnames"] = []
 		accountInfo["oldNames"].append((oldAccountName, timestamp(updateTime)))
 		self.accountData["data"][lowerNewAccountName] = accountInfo
-		self._updateAudit(updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName)
+		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTimestamp), newAccountName, prefix=self.ircd.serverID)
+		self._serverUpdateTime(updateTime)
 		return True, None
 	
 	def setPassword(self, accountName, password, hashMethod, fromServer):
@@ -285,8 +294,9 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
 		updateTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self._updateAudit(updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod)
+		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), hashedPassword, hashMethod, prefix=self.ircd.serverID)
+		self._serverUpdateTime(updateTime)
 		return True, None
 	
 	def setEmail(self, accountName, email, fromServer):
@@ -310,8 +320,9 @@ class Accounts(ModuleData):
 			del self.accountData["data"][lowerAccountName]["email"]
 		updateTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self._updateAudit(updateTime, "UPDATEACCOUNTEMAIL", accountName, email)
+		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTEMAIL", accountName, email)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), email, prefix=self.ircd.serverID)
+		self._serverUpdateTime(updateTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None
 	
@@ -335,8 +346,9 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(now())))
 		addTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self._updateAudit(addTime, "ADDACCOUNTNICK", accountName, newNick)
+		self.servicesData["journal"].append(addTime, "ADDACCOUNTNICK", accountName, newNick)
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTimestamp(registerTimestamp), newNick, prefix=self.ircd.serverID)
+		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None
 	
@@ -362,20 +374,11 @@ class Accounts(ModuleData):
 				break
 		removeTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self._updateAudit(removeTime, "REMOVEACCOUNTNICK", accountName, oldNick)
+		self.servicesData["journal"].append(removeTime, "REMOVEACCOUNTNICK", accountName, oldNick)
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTimestamp(registerTimestamp), oldNick, prefix=self.ircd.serverID)
+		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True
-	
-	def _updateAudit(self, time, type, *params):
-		oneDay = timedelta(days=1)
-		yesterday = time - oneDay
-		auditData = self.servicesData["audit"]
-		while auditData and datetime.utcfromtimestamp(auditData[0][0]) < yesterday:
-			auditData.pop(0)
-		newAuditItem = [timestamp(time), type]
-		newAuditItem.extend(params)
-		auditData.append(newAuditItem)
 	
 	def cleanOldDeleted(self):
 		"""
@@ -389,6 +392,17 @@ class Accounts(ModuleData):
 				removeAccounts.append(account)
 		for account in removeAccounts:
 			del self.accountData["deleted"][account]
+	
+	def _serverUpdateTime(self, time):
+		syncTimestamp = timestamp(time)
+		for server in self.ircd.servers.itervalues():
+			self.servicesData["serverupdates"][server.serverID] = syncTimestamp
+	
+	def startBurst(self, server):
+		lastSyncTimestamp = 0
+		if server.serverID in self.servicesData["serverupdates"]:
+			lastSyncTimestamp = self.servicesData["serverupdates"][server.serverID]
+		server.sendMessage("ACCOUNTBURSTINFO", accountFormatVersion, timestampStringFromTimestamp(lastSyncTimestamp), prefix=self.ircd.serverID)
 
 class CreateAccountCommand(Command):
 	implements(ICommand)
@@ -690,6 +704,36 @@ class RemoveAccountNickCommand(Command):
 		if self.module.removeAltNick(accountName, data["removenick"], server)[0]:
 			return True
 		return False
+
+class AccountBurstInitCommand(Command):
+	implements(ICommand)
+	
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, server, params, prefix, tags):
+		if len(params) != 2:
+			return None
+		lastSyncTime = None
+		try:
+			lastSyncTime = datetime.utcfromtimestamp(float(params[1]))
+		except (TypeError, ValueError):
+			return None
+		return {
+			"version": params[0],
+			"synctime": lastSyncTime
+		}
+	
+	def execute(self, server, data):
+		if data["version"] != accountFormatVersion:
+			return False
+		lastSyncTime = data["synctime"]
+		for journalData in self.module.servicesData["journal"]:
+			if datetime.utcfromtimestamp(journalData[0]) >= lastSyncTime:
+				server.sendMessage(journalData[1], journalData[0], *journalData[2])
+		self.module.servicesData["serverupdates"][server.serverID] = timestamp(now())
+		return True
 
 accountController = Accounts()
 
