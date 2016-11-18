@@ -30,13 +30,13 @@ class AccountIdentify(ModuleData):
 	def execute(self, user, data):
 		resultValue = self.ircd.runActionUntilValue("accountauthenticate", user, data["accountname"] if "accountname" in data else user.nick, data["password"])
 		if not resultValue:
-			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", "This server doesn't have accounts set up.")
+			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
 			return True
 		if resultValue[0]:
 			return True
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", resultValue[1])
-		user.sendMessage("NOTICE", resultValue[1])
+		user.sendMessage("NOTICE", resultValue[2])
 		return True
 
 class IdentifyCommand(Command):

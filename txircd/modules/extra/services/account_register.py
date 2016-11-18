@@ -22,7 +22,7 @@ class AccountRegister(ModuleData, Command):
 			emailAddr = params[1]
 			if not validateEmail(emailAddr):
 				user.startErrorBatch("RegisterEmail")
-				user.sendBatchedError("RegisterEmail", irc.ERR_SERVICES, "ACCOUNT", "EMAIL", "The entered email address is invalid.")
+				user.sendBatchedError("RegisterEmail", irc.ERR_SERVICES, "ACCOUNT", "EMAIL", "INVALID")
 				user.sendBatchedError("RegisterEmail", "NOTICE", "The entered email address is invalid.")
 				return None
 			return {
@@ -39,13 +39,13 @@ class AccountRegister(ModuleData, Command):
 	def execute(self, user, data):
 		createResult = self.ircd.runActionUntilValue("createnewaccount", user.nick, data["password"], None, data["email"] if "email" in data else None)
 		if not createResult:
-			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "CREATE", "This server doesn't have accounts set up.")
+			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "CREATE", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
 			return True
 		if createResult[0]:
 			return True
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "CREATE", createResult[1])
-		user.sendMessage("NOTICE", "Your account couldn't be registered: {}".format(createResult[1]))
+		user.sendMessage("NOTICE", "Your account couldn't be registered: {}".format(createResult[2]))
 		return True
 
 registerCommand = AccountRegister()

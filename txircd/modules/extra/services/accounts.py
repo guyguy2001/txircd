@@ -70,42 +70,42 @@ class Accounts(ModuleData):
 		If passwordHashedMethod is None, assumes an unhashed password is passed in. We'll hash it for you.
 		Otherwise, the password is already hashed with the entered hash method, and that hash method module must be loaded.
 		An email address is optional here, but one may be required by other modules.
-		Returns (True, None) if account creation succeeds. Returns (False, "error message") otherwise.
+		Returns (True, None, None) if account creation succeeds. Returns (False, "ERRCODE", "error message") otherwise.
 		"""
 		if not username:
-			return False, "No username entered."
+			return False, "BADPARAM", "No username entered."
 		if not password:
-			return False, "No password entered."
+			return False, "BADPARAM", "No password entered."
 		if not passwordHashedMethod is None and len(password) < self.ircd.config["account_password_minimum_length"]:
-			return False, "Password is not at least {} characters long.".format(self.ircd.config["account_password_minimum_length"])
+			return False, "BADPASS", "Password is not at least {} characters long.".format(self.ircd.config["account_password_minimum_length"])
 		
 		if email:
 			if not validateEmail(email):
-				return False, "The provided email address is in an invalid format."
+				return False, "INVALIDEMAIL", "The provided email address is in an invalid format."
 			if "email" not in self.accountData["index"]:
 				self.accountData["index"]["email"] = {}
 			if email in self.accountData["index"]["email"]:
-				return False, "That email address is already used by another account."
+				return False, "DUPEMAIL", "That email address is already used by another account."
 		elif self.ircd.config["account_require_email"]:
-			return False, "An email address is required but was not provided."
+			return False, "EMAILREQUIRED", "An email address is required but was not provided."
 		
 		if not isValidNick(username) or len(username) > self.ircd.config.get("nick_length", 32):
-			return False, "The username is not a valid nickname"
+			return False, "INVALIDUSERNAME", "The username is not a valid nickname"
 		
 		lowerUsername = ircLower(username)
 		if lowerUsername in self.accountData["data"]:
-			return False, "An account with that name already exists."
+			return False, "DUPNAME", "An account with that name already exists."
 		if lowerUsername in self.accountData["index"]["nick"]:
-			return False, "That nickname is already in use on a different account."
+			return False, "DUPNICK", "That nickname is already in use on a different account."
 		
 		if passwordHashedMethod is None:
 			passwordHashMethod = self.ircd.config["account_password_hash"]
 			if "hash-{}".format(passwordHashMethod) not in self.ircd.functionCache:
-				return False, "Can't hash password with configured hash method."
+				return False, "BADHASH", "Can't hash password with configured hash method."
 			hashedPassword = self.ircd.functionCache["hash-{}".format(passwordHashMethod)](password)
 		else:
 			if "compare-{}".format(passwordHashedMethod) not in self.ircd.functionCache:
-				return False, "Provided hash method isn't loaded."
+				return False, "BADHASH", "Provided hash method isn't loaded."
 			passwordHashMethod = passwordHashedMethod
 			hashedPassword = password
 		
@@ -135,7 +135,7 @@ class Accounts(ModuleData):
 		
 		self._serverUpdateTime(registrationTime)
 		self.ircd.runActionStandard("accountcreated", username)
-		return True, None
+		return True, None, None
 	
 	def indexAccount(self, accountName):
 		"""
@@ -178,9 +178,9 @@ class Accounts(ModuleData):
 		and password, and it checks whether the user is allowed to be signed into that account.
 		"""
 		if not username:
-			return False, "No username entered."
+			return False, "BADPARAM", "No username entered."
 		if not password:
-			return False, "No password entered."
+			return False, "BADPARAM", "No password entered."
 		lowerUsername = username
 		if lowerUsername not in self.accountData["data"]:
 			return False, "Account does not exist."
@@ -188,17 +188,17 @@ class Accounts(ModuleData):
 		
 		passwordHashMethod = self.accountData["data"][lowerUsername]["password-hash"]
 		if "compare-{}".format(passwordHashMethod) not in self.ircd.functionCache:
-			return False, "Could not verify password"
+			return False, "BADHASH", "Could not verify password"
 		if not self.ircd.functionCache["compare-{}".format(passwordHashMethod)](password, hashedAccountPassword):
-			return False, "Login credentials were incorrect."
+			return False, "WRONG", "Login credentials were incorrect."
 		
 		loginExtraCheckResult = self.ircd.runActionUntilValue("accountloginextracheck", user, lowerUsername, users=[user])
-		if loginExtraCheckResult[0] is False:
+		if loginExtraCheckResult and loginExtraCheckResult[0] is False:
 			return loginExtraCheckResult
 		
 		username = self.accountData["data"][lowerUsername]["username"]
 		user.setMetadata("account", username, "internal", False)
-		return True, None
+		return True, None, None
 	
 	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer):
 		if key != "account":
@@ -221,7 +221,7 @@ class Accounts(ModuleData):
 		"""
 		lowerUsername = ircLower(username)
 		if lowerUsername not in self.accountData["data"]:
-			return
+			return False
 		self.ircd.runActionStandard("accountremoveindices", lowerUsername)
 		username = self.accountData["data"][lowerUsername]["username"]
 		for user in self.ircd.users.itervalues():
@@ -240,23 +240,23 @@ class Accounts(ModuleData):
 	def changeAccountName(self, oldAccountName, newAccountName, fromServer):
 		"""
 		Changes the account name for an account.
-		Returns (True, None) if successful or (False, error message) if not.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
 		lowerOldAccountName = ircLower(oldAccountName)
 		
 		self.cleanOldDeleted()
 		if lowerOldAccountName not in self.accountData["data"]:
-			return False, "The account does not exist."
+			return False, "BADACCOUNT", "The account does not exist."
 		
 		if not isValidNick(newAccountName) or len(newAccountName) > self.ircd.config.get("nick_length", 32):
-			return False, "The username is not a valid nickname"
+			return False, "BADUSER", "The username is not a valid nickname"
 		
 		lowerNewAccountName = ircLower(newAccountName)
 		for nickname, registrationTime in self.accountData["data"][lowerOldAccountName]["nick"]:
 			if lowerNewAccountName == ircLower(nickname):
 				break
 		else:
-			return False, "The new account name isn't associated with the account. The new account should be grouped with the existing account as an alternate nickname."
+			return False, "NONICKLINK", "The new account name isn't associated with the account. The new account should be grouped with the existing account as an alternate nickname."
 		accountInfo = self.accountData["data"][lowerOldAccountName]
 		del self.accountData["data"][lowerOldAccountName]
 		accountInfo["username"] = newAccountName
@@ -269,28 +269,28 @@ class Accounts(ModuleData):
 		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTimestamp), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
-		return True, None
+		return True, None, None
 	
 	def setPassword(self, accountName, password, hashMethod, fromServer):
 		"""
 		Set the password for an account.
 		For plain passwords, the hashMethod is None.
 		If it's not, the password must be hashed with that hash method, and the hash method module must be loaded.
-		Returns (True, None) if successful or (False, error message) if not.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
 		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
-			return False, "The account does not exist."
+			return False, "BADACCOUNT", "The account does not exist."
 		
 		if hashMethod is None:
 			hashMethod = self.ircd.config["account_password_hash"]
 			if "hash-{}".format(hashMethod) not in self.ircd.functionCache:
-				return False, "Can't hash password with the configured hash method."
+				return False, "BADHASH", "Can't hash password with the configured hash method."
 			hashedPassword = self.ircd.functionCache["hash-{}".format(hashMethod)](password)
 		else:
 			if "compare-{}".format(hashMethod) not in self.ircd.functionCache:
-				return False, "Provided hash method isn't loaded."
+				return False, "BADHASH", "Provided hash method isn't loaded."
 			hashedPassword = password
 		self.accountData["data"][lowerAccountName]["password"] = hashedPassword
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
@@ -299,21 +299,21 @@ class Accounts(ModuleData):
 		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), hashedPassword, hashMethod, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
-		return True, None
+		return True, None, None
 	
 	def setEmail(self, accountName, email, fromServer):
 		"""
 		Sets the email address for an account.
-		Returns (True, None) if successful or (False, error message) if not.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
 		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
-			return False, "The account does not exist."
+			return False, "BADACCOUNT", "The account does not exist."
 		if not email and self.ircd.config["account_require_email"]:
-			return False, "An email address is required, so the email address associated with this account cannot be removed."
+			return False, "EMAILREQUIRED", "An email address is required, so the email address associated with this account cannot be removed."
 		if email and not validateEmail(email):
-			return False, "The provided email address is invalid."
+			return False, "BADEMAIL", "The provided email address is invalid."
 		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		if email:
@@ -326,23 +326,23 @@ class Accounts(ModuleData):
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), email, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
-		return True, None
+		return True, None, None
 	
 	def addAltNick(self, accountName, newNick, fromServer):
 		"""
 		Adds a nickname to an account.
-		Returns (True, None) if successful or (False, error message) if not.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
 		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
-			return False, "The account does not exist."
+			return False, "BADACCOUNT", "The account does not exist."
 		
 		lowerNewNick = ircLower(newNick)
 		if lowerNewNick in self.accountData["index"]["nick"]:
 			if self.accountData["index"]["nick"][lowerNewNick] == lowerAccountName:
-				return False, "That nickname is already associated with your account."
-			return False, "That nickname is already associated with a different account."
+				return False, "NICKALREADYLINKED", "That nickname is already associated with your account."
+			return False, "NICKINUSE", "That nickname is already associated with a different account."
 		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(now())))
@@ -352,23 +352,23 @@ class Accounts(ModuleData):
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTimestamp(registerTimestamp), newNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
-		return True, None
+		return True, None, None
 	
 	def removeAltNick(self, accountName, oldNick, fromServer):
 		"""
 		Removes a nickname from an account.
-		Returns (True, None) if successful or (False, error message) if not.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
 		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
-			return False, "The account does not exist."
+			return False, "BADACCOUNT", "The account does not exist."
 		
 		lowerOldNick = ircLower(oldNick)
 		if lowerOldNick not in self.accountData["index"]["nick"]:
-			return False, "That nickname is not associated with an account."
+			return False, "NICKNOLINK", "That nickname is not associated with an account."
 		if self.accountData["index"]["nick"][lowerOldNick] != lowerAccountName:
-			return False, "That nickname is associated with a different account."
+			return False, "NICKINUSE", "That nickname is associated with a different account."
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		for index, nickData in enumerate(self.accountData["data"][lowerAccountName]["nick"]):
 			if ircLower(nickData[0]) == lowerOldNick:
@@ -380,7 +380,7 @@ class Accounts(ModuleData):
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTimestamp(registerTimestamp), oldNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
-		return True
+		return True, None, None
 	
 	def cleanOldDeleted(self):
 		"""

@@ -18,7 +18,7 @@ class AccountLogout(ModuleData, Command):
 	
 	def execute(self, user, data):
 		if not user.metadataKeyExists("account"):
-			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "LOGOUT", "You're not logged in.")
+			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "LOGOUT", "ALREADYOUT")
 			user.sendMessage("NOTICE", "You're not logged in.")
 			return True
 		self.ircd.runActionUntilTrue("accountlogout", user)
