@@ -110,7 +110,7 @@ class Accounts(ModuleData):
 			hashedPassword = password
 		
 		registrationTime = now()
-		newAccountInfo = extraInfo.copy()
+		newAccountInfo = extraInfo.copy() if extraInfo else {}
 		newAccountInfo["username"] = username
 		newAccountInfo["password"] = hashedPassword
 		newAccountInfo["password-hash"] = passwordHashMethod
