@@ -234,6 +234,9 @@ class Accounts(ModuleData):
 		self.accountData["deleted"][lowerUsername] = timestamp(deleteTime)
 		self.servicesData["journal"].append(deleteTime, "DELETEACCOUNT", username)
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTimestamp(createTimestamp), prefix=self.ircd.serverID)
+		for user in self.ircd.users.itervalues():
+			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
+				user.setMetadata("account", None, "internal", False)
 		self._serverUpdateTime(deleteTime)
 		return True
 	
