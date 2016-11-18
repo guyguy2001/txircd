@@ -213,6 +213,7 @@ class Accounts(ModuleData):
 		Logs a user out of the account into which they are logged.
 		"""
 		user.setMetadata("account", None, "internal", False)
+		return True
 	
 	def deleteAccount(self, username, fromServer):
 		"""
@@ -234,6 +235,7 @@ class Accounts(ModuleData):
 		self.servicesData["journal"].append(deleteTime, "DELETEACCOUNT", username)
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTimestamp(createTimestamp), prefix=self.ircd.serverID)
 		self._serverUpdateTime(deleteTime)
+		return True
 	
 	def changeAccountName(self, oldAccountName, newAccountName, fromServer):
 		"""

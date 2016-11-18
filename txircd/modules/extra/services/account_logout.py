@@ -21,7 +21,7 @@ class AccountLogout(ModuleData, Command):
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "LOGOUT", "You're not logged in.")
 			user.sendMessage("NOTICE", "You're not logged in.")
 			return True
-		self.ircd.runActionStandard("accountlogout", user)
+		self.ircd.runActionUntilTrue("accountlogout", user)
 		user.sendMessage("NOTICE", "You are now logged out.")
 		return True
 
