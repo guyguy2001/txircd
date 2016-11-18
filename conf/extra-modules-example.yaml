@@ -55,6 +55,10 @@ modules:
 # level.
 #- ChannelOpAccess
 
+# CommandAlias: Provides a way to make custom commands that act as an alias to 
+# an existing command.
+#- CommandAlias
+
 # ConnectionLimit: Provides a way to limit the maximum number of connections
 # from a single host. This module has some optional configuration (see below).
 # We highly recommend loading it.
@@ -200,6 +204,16 @@ modules:
 # to be specified, to avoid taking up too many system resources. The default
 # value is 50 and the hard cap is 100.
 #chanhistory_maxlines: 50
+
+# CommandAlias Configuration
+# This module requires a dictionary that specifies the aliases and the commands
+# they are replacing. The special value "%p" can be used to specify where the
+# given command parameters for the alias should be.
+# The given example would result in:
+# Input: user!ident@host HELP :I would like some help.
+# Output: user!ident@host PRIVMSG UsefulOper :I would like some help.
+#command_aliases:
+#  HELP: PRIVMSG UsefulOper %p
 
 # ConnectionLimit Configuration
 # This module has two options to set up, the maximum connections per host and
