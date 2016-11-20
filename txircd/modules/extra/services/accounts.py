@@ -62,6 +62,9 @@ class Accounts(ModuleData):
 			config["account_require_email"] = False
 		if not isinstance(config["account_require_email"], bool):
 			raise ConfigValidationError("account_require_email", "must be true or false")
+		if "account_max_nicks" in config:
+			if not isinstance(config["account_max_nicks"], int) or config["account_max_nicks"] < 1:
+				raise ConfigValidationError("account_max_nicks", "invalid number")
 	
 	def createAccount(self, username, password, passwordHashedMethod, email, user, extraInfo, fromServer):
 		"""
@@ -346,6 +349,10 @@ class Accounts(ModuleData):
 			if self.accountData["index"]["nick"][lowerNewNick] == lowerAccountName:
 				return False, "NICKALREADYLINKED", "That nickname is already associated with your account."
 			return False, "NICKINUSE", "That nickname is already associated with a different account."
+		
+		maxNicks = self.ircd.config.get("account_max_nicks", None)
+		if maxNicks is not None and len(self.accountData["data"][lowerAccountName]["nicks"]) >= maxNicks:
+			return False, "LIMITREACHED", "The maximum number of allowable nicknames is already registered to your account."
 		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(now())))
