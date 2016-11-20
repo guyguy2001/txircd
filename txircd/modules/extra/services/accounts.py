@@ -56,7 +56,7 @@ class Accounts(ModuleData):
 			raise ConfigValidationError("account_password_hash", "A password hash must be defined for accounts to work.")
 		if "account_password_minimum_length" not in config or not config["account_password_minimum_length"]:
 			config["account_password_minimum_length"] = 10
-		if not isinstance(config["account_password_minimum_length"], int):
+		if not isinstance(config["account_password_minimum_length"], int) or config["account_password_minimum_length"] < 1:
 			raise ConfigValidationError("account_password_minimum_length", "invalid number")
 		if "account_require_email" not in config:
 			config["account_require_email"] = False
