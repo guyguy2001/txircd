@@ -66,7 +66,7 @@ class Accounts(ModuleData):
 			if not isinstance(config["account_max_nicks"], int) or config["account_max_nicks"] < 1:
 				raise ConfigValidationError("account_max_nicks", "invalid number")
 	
-	def createAccount(self, username, password, passwordHashedMethod, email, user, extraInfo, fromServer):
+	def createAccount(self, username, password, passwordHashedMethod, email, user, extraInfo, fromServer = None):
 		"""
 		Creates a new services account.
 		Requires a username and password to be entered.
@@ -203,7 +203,7 @@ class Accounts(ModuleData):
 		user.setMetadata("account", username, "internal", False)
 		return True, None, None
 	
-	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
 		if key != "account":
 			return
 		lowerAccountName = ircLower(value)
@@ -218,7 +218,7 @@ class Accounts(ModuleData):
 		user.setMetadata("account", None, "internal", False)
 		return True
 	
-	def deleteAccount(self, username, fromServer):
+	def deleteAccount(self, username, fromServer = None):
 		"""
 		Deletes an account.
 		"""
@@ -243,7 +243,7 @@ class Accounts(ModuleData):
 		self._serverUpdateTime(deleteTime)
 		return True
 	
-	def changeAccountName(self, oldAccountName, newAccountName, fromServer):
+	def changeAccountName(self, oldAccountName, newAccountName, fromServer = None):
 		"""
 		Changes the account name for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -277,7 +277,7 @@ class Accounts(ModuleData):
 		self._serverUpdateTime(updateTime)
 		return True, None, None
 	
-	def setPassword(self, accountName, password, hashMethod, fromServer):
+	def setPassword(self, accountName, password, hashMethod, fromServer = None):
 		"""
 		Set the password for an account.
 		For plain passwords, the hashMethod is None.
@@ -307,7 +307,7 @@ class Accounts(ModuleData):
 		self._serverUpdateTime(updateTime)
 		return True, None, None
 	
-	def setEmail(self, accountName, email, fromServer):
+	def setEmail(self, accountName, email, fromServer = None):
 		"""
 		Sets the email address for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -334,7 +334,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
-	def addAltNick(self, accountName, newNick, fromServer):
+	def addAltNick(self, accountName, newNick, fromServer = None):
 		"""
 		Adds a nickname to an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -364,7 +364,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
-	def removeAltNick(self, accountName, oldNick, fromServer):
+	def removeAltNick(self, accountName, oldNick, fromServer = None):
 		"""
 		Removes a nickname from an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
