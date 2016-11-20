@@ -107,6 +107,8 @@ class IRCBase(LineOnlyReceiver):
 				for badChar in (" ", "\r", "\n", "\0"):
 					if badChar in param:
 						raise ValueError("Illegal character {!r} found in parameter {!r}".format(badChar, param))
+				if param[0] == ":":
+					raise ValueError("Parameter {!r} formatted like a final parameter, but it isn't last".format(param))
 			for badChar in ("\r", "\n", "\0"):
 				if badChar in params[-1]:
 					raise ValueError("Illegal character {!r} found in parameter {!r}".format(badChar, params[-1]))
