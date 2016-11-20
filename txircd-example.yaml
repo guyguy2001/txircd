@@ -473,6 +473,11 @@
 # definitely want to give it a good look-over.
 #- conf/extra-modules-example.yaml
 
+# This file holds extra module configuration related to services
+# (functionality like NickServ, ChanServ, etc.). If you'd like to have this
+# functionality built into the server, you may want to consider these as well.
+#- conf/services-example.yaml
+
 # This file makes no sense to include unless you're developing on txircd.
 # You'll need to configure it before it does anything.
 #- conf/dev-example.yaml

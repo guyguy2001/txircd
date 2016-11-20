@@ -1,0 +1,64 @@
+# txircd Configuration - Services
+
+# This file has services configuration. Some things depend on others to work
+# properly, so make sure to read everything carefully.
+
+modules:
+
+# Accounts: Provides the accounts infrastructure for server-to-server
+# communication and for other account-related modules. This module MUST be
+# loaded for any account-related functionality to function properly!
+- Accounts
+
+# AccountRegister: Allows users to register a new account using the REGISTER
+# command.
+- AccountRegister
+
+# AccountIdentify: Allows users to identify to their account using the IDENTIFY
+# or ID command.
+- AccountIdentify
+
+# AccountLogout: Allows logged-in users to log out of their accounts using the
+# LOGOUT command. Without this, disconnecting or authenticating to a different
+# account would be required to stop being logged into an account.
+- AccountLogout
+
+# AccountDrop: Allows users to delete their accounts using the DROP command.
+- AccountDrop
+
+# AccountGhost: Allows users to disconnect other users signed into the same
+# account. This is useful when the user's connection drops, but the old
+# connection hasn't timed out yet, and the user reconnects with a new nickname
+# while the old nickname is still claimed by the ghost connection.
+- AccountGhost
+
+# AccountGroup: Allows users to group and ungroup additional nicknames to their
+# account.
+- AccountGroup
+
+# AccountEmail: Allows users to change the email address associated with their
+# account.
+- AccountEmail
+
+# Accounts configuration
+# There are various options for accounts.
+
+# account_password_hash
+# This option specifies the default hash method for passwords. This must be
+# specified and must be a string hash method loaded in the IRCd.
+account_password_hash: pbkdf2
+
+# account_password_minimum_length
+# This option specifies the minimum length of a password in characters. The
+# default value is 10.
+#account_password_minimum_length: 10
+
+# account_require_email
+# This option is used to determine whether an email address is required for
+# accounts. The default value is false.
+#account_require_email: false
+
+# account_max_nicks
+# This option is used to limit the number of nicknames a single account can
+# have associated with it. By default, there is no limit.
+#account_max_nicks: 20
