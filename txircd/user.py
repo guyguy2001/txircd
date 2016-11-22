@@ -5,8 +5,7 @@ from twisted.internet.task import LoopingCall
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
-from socket import gaierror, gethostbyaddr, gethostbyname, herror
+from txircd.utils import CaseInsensitiveDictionary, isValidMetadataKey, ModeType, now, resolveHost, splitMessage
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -19,16 +18,7 @@ class IRCUser(IRCBase):
 		if ip[0] == ":": # Normalize IPv6 address for IRC
 			ip = "0{}".format(ip)
 		if host is None:
-			try:
-				resolvedHost = gethostbyaddr(ip)[0]
-				# First half of host resolution done, run second half to prevent rDNS spoofing.
-				# Refuse hosts that are too long as well.
-				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= self.ircd.config.get("hostname_length", 64) and isValidHost(resolvedHost):
-					host = resolvedHost
-				else:
-					host = ip
-			except (herror, gaierror):
-				host = ip
+			host = resolveHost(ip, self.ircd.config.get("hostname_length", 64))
 		self.realHost = host
 		self.ip = ip
 		self._hostStack = []

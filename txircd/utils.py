@@ -1,5 +1,6 @@
 from collections import MutableMapping
 from datetime import datetime
+from socket import gaierror, gethostbyaddr, gethostbyname, herror
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\^{}_|]*$")
@@ -243,3 +244,14 @@ def stripFormatting(message):
 	Removes IRC formatting from the provided message.
 	"""
 	return format_chars.sub('', message)
+
+def resolveHost(ip, maxLength):
+	try:
+		resolvedHost = gethostbyaddr(ip)[0]
+		# First half of host resolution done, run second half to prevent rDNS spoofing.
+		# Refuse hosts that are too long as well.
+		if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= maxLength and isValidHost(resolvedHost):
+			return resolvedHost
+		return ip
+	except (gaierror, herror):
+		return ip
