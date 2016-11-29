@@ -140,7 +140,6 @@ class ModeCommand(ModuleData):
 
 	def buildISupport(self, data):
 		data["MODES"] = self.ircd.config.get("modes_per_line", 20)
-		data["MAXLIST"] = "{}:{}".format("".join(self.ircd.channelModes[0].keys()), self.ircd.config.get("channel_listmode_limit", 128))
 
 class UserMode(Command):
 	implements(ICommand)
