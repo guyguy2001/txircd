@@ -180,6 +180,10 @@ modules:
 # that automatically unset after a specified period of time.
 #- TimedModes
 
+# WebIRC: Provides the WEBIRC command, which provides support for automatically
+# setting the IP and host of a user through the WEBIRC protocol from services
+# like Mibbit and KiwiIRC.
+#- WebIRC
 
 # AutoJoin Configuration
 # Configuring this module requires specifying which channels to have the user
@@ -313,3 +317,10 @@ modules:
 #- QUIT
 #- PING
 #- PONG
+
+# WebIRC
+# For this module it is necessary to specify which IPs and/or hosts are allowed
+# to request WEBIRC and the passwords that will be used for the connection.
+#webirc_allowed_sources:
+#  127.0.0.1: foo
+#  somehost.example.com: bar
