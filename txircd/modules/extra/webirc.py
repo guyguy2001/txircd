@@ -28,11 +28,16 @@ class WebIRC(ModuleData, Command):
 					raise ConfigValidationError("webirc_allowed_sources", "password value must be a string")
 
 	def checkSourceAndPass(self, user, data):
-		if user.ip not in self.ircd.config.get("webirc_allowed_sources", {}) and user.realHost not in self.ircd.config.get("webirc_allowed_sources", {}):
-			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip}\", but the IP does not match any WEBIRC configuration.", user=user)
+		entry = None
+		if user.ip in self.ircd.config.get("webirc_allowed_sources", {}):
+			entry = user.ip
+		if entry is None and user.realHost in self.ircd.config.get("webirc_allowed_sources", {}):
+			entry = user.realHost
+		if entry is None:
+			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip}\" and host \"{user.realHost}\", but the IP and host do not match any WEBIRC configuration.", user=user)
 			return False
-		if self.ircd.config["webirc_allowed_sources"][user.ip] != data["password"]:
-			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip}\" with password \"{password}\", but this password does not match the WEBIRC configuration for this IP.", user=user, password=data)
+		if self.ircd.config["webirc_allowed_sources"][entry] != data["password"]:
+			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip}\" and host \"{user.realHost}\" with password \"{password}\", but this password does not match the WEBIRC configuration for this IP.", user=user, password=data)
 			return False
 		return None
 
