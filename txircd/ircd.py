@@ -680,7 +680,7 @@ class IRCd(Service):
 		isupport = self.isupport_tokens.copy()
 		statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
 		isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
-		isupport["CHANNELEN"] = self.config.get("channel_name_length", 64)
+		isupport["CHANNELLEN"] = self.config.get("channel_name_length", 64)
 		isupport["NETWORK"] = self.config["network_name"]
 		isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
 		isupport["STATUSMSG"] = statusSymbolOrder
