@@ -26,6 +26,7 @@ class CommandAlias(ModuleData):
 					raise ConfigValidationError("command_aliases", "alias \"{}\" is not a valid command".format(command))
 				if not isinstance(replacement, basestring):
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" must be a string".format(replacement))
+				replacementParts = replacement.split(" ")
 				if any(replacementPart.startswith(":") for replacementPart in replacementParts) and "%p" in replacement:
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" cannot have a final parameter in conjunction with %p".format(replacement))
 				replaceCommand = replacement.split(' ', 1)[0]
