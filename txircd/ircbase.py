@@ -59,9 +59,6 @@ class IRCBase(LineOnlyReceiver):
 				escaped = False
 				valueChars = []
 				for char in escapedValue:
-					if char == "\\":
-						escaped = True
-						continue
 					if escaped:
 						if char == "\\":
 							valueChars.append("\\")
@@ -76,6 +73,9 @@ class IRCBase(LineOnlyReceiver):
 						else:
 							valueChars.append(char)
 						escaped = False
+						continue
+					if char == "\\":
+						escaped = True
 						continue
 					valueChars.append(char)
 				value = "".join(valueChars)
