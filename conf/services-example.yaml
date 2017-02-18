@@ -40,6 +40,9 @@ modules:
 # account.
 - AccountEmail
 
+# AccountName: Allows users to change their primary account name.
+- AccountName
+
 # Accounts configuration
 # There are various options for accounts.
 
