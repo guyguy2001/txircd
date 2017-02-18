@@ -211,13 +211,17 @@ modules:
 
 # CommandAlias Configuration
 # This module requires a dictionary that specifies the aliases and the commands
-# they are replacing. The special value "%p" can be used to specify where the
-# given command parameters for the alias should be.
+# they are replacing. Prefixing a number with $ allows you to insert a parameter
+# at the given position; for example, $2 will be replaced with the second
+# parameter. Suffixing a hyphen (e.g. $3-) will replace it with the specified
+# parameter and all parameters after it.
+# If you'd like to use a literal dollar sign or a backslash in the replacement,
+# you may put a backslash before it (e.g. "\$3.50" or "C:\\Users").
 # The given example would result in:
-# Input: user!ident@host HELP :I would like some help.
+# Input: user!ident@host HELP I would like some help.
 # Output: user!ident@host PRIVMSG UsefulOper :I would like some help.
 #command_aliases:
-#  HELP: PRIVMSG UsefulOper %p
+#  HELP: PRIVMSG UsefulOper :$1-
 
 # ConnectionLimit Configuration
 # This module has two options to set up, the maximum connections per host and

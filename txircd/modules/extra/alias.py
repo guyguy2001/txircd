@@ -26,14 +26,30 @@ class CommandAlias(ModuleData):
 					raise ConfigValidationError("command_aliases", "alias \"{}\" is not a valid command".format(command))
 				if not isinstance(replacement, basestring):
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" must be a string".format(replacement))
-				replacementParts = replacement.split(" ")
-				if any(replacementPart.startswith(":") for replacementPart in replacementParts) and "%p" in replacement:
-					raise ConfigValidationError("command_aliases", "replacement \"{}\" cannot have a final parameter in conjunction with %p".format(replacement))
-				replaceCommand = replacement.split(' ', 1)[0]
+				replaceCommand, replacementParams = replacement.split(" ", 1)
 				if not validCommand.match(replaceCommand):
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" is not a valid command".format(replaceCommand))
 				if replaceCommand in config["command_aliases"]: # Prevent infinite recursion by disallowing aliases of aliases
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" may not be used as a replacement because it is an alias".format(replaceCommand))
+				escaped = False
+				previousWasDollar = False
+				for character in replacementParams:
+					if previousWasDollar:
+						if not character.isdigit():
+							raise ConfigValidationError("command_aliases", "replacement \"{}\" doesn't correctly pass parameters; parameters must be passed using only numbers, e.g. $2 or $4-".format(replaceCommand))
+						previousWasDollar = False
+						continue
+					if escaped:
+						escaped = False
+						continue
+					if character == "$":
+						previousWasDollar = True
+					elif character == "\\":
+						escaped = True
+				if escaped:
+					raise ConfigValidationError("command_aliases", "replacement \"{}\" escapes the end of the string".format(replaceCommand))
+				if previousWasDollar:
+					raise ConfigValidationError("command_aliases", "replacement \"{}\" terminates with an incomplete parameter replacement".format(replaceCommand))
 
 class UserAlias(Command):
 	implements(ICommand)
@@ -49,15 +65,49 @@ class UserAlias(Command):
 		}
 
 	def execute(self, user, data):
-		if " :" in self.replacement:
-			params, lastParam = self.replacement.split(" :", 1)
-		else:
-			params = self.replacement
-			lastParam = None
-		replacementParts = [x if x != "%p" else " ".join(data["params"]) for x in params.split(" ")]
+		origParams = data["params"]
+		command, replaceParams = self.replacement.split(" ", 1)
+		assembledParams = []
+		escaped = False
+		readingVariable = False
+		variableParameterData = []
+		for paramChar in replaceParams:
+			if escaped:
+				assembledParams.append(paramChar)
+				escaped = False
+				continue
+			if readingVariable:
+				if paramChar.isdigit():
+					variableParameterData.append(paramChar)
+					continue
+				startingParamNumber = int("".join(variableParameterData)) - 1
+				variableParameterData = []
+				readingVariable = False
+				if paramChar == "-":
+					assembledParams.append(" ".join(origParams[startingParamNumber:]))
+					continue
+				if startingParamNumber < len(origParams):
+					assembledParams.append(origParams[startingParamNumber])
+			if paramChar == "$":
+				readingVariable = True
+				continue
+			if paramChar == "\\":
+				escaped = True
+				continue
+			assembledParams.append(paramChar)
+		if readingVariable:
+			startingParamNumber = int("".join(variableParameterData)) - 1
+			if startingParamNumber < len(origParams):
+				assembledParams.append(origParams[startingParamNumber])
+		
+		paramsString = "".join(assembledParams)
+		lastParam = None
+		if " :" in paramsString:
+			paramsString, lastParam = paramsString.split(" :", 1)
+		params = paramsString.split(" ")
 		if lastParam:
-			replacementParts.append(lastParam)
-		user.handleCommand(replacementParts[0], replacementParts[1:], data["prefix"], data["tags"])
+			params.append(lastParam)
+		user.handleCommand(command, params, data["prefix"], data["tags"])
 		return True
 
 commandAlias = CommandAlias()
