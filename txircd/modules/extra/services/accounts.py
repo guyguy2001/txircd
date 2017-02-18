@@ -262,7 +262,7 @@ class Accounts(ModuleData):
 			if lowerNewAccountName == ircLower(nickname):
 				break
 		else:
-			return False, "NONICKLINK", "The new account name isn't associated with the account. The new account should be grouped with the existing account as an alternate nickname."
+			return False, "NONICKLINK", "The new account name isn't associated with the account. The new account name should be grouped with the existing account as an alternate nickname."
 		accountInfo = self.accountData["data"][lowerOldAccountName]
 		del self.accountData["data"][lowerOldAccountName]
 		accountInfo["username"] = newAccountName
