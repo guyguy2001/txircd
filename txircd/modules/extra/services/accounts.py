@@ -275,6 +275,10 @@ class Accounts(ModuleData):
 		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTimestamp), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
+		if not fromServer:
+			for user in self.ircd.users.itervalues():
+				if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerOldAccountName:
+					user.setMetadata("account", newAccountName, "internal", False)
 		return True, None, None
 	
 	def setPassword(self, accountName, password, hashMethod, fromServer = None):
