@@ -307,7 +307,7 @@ class IRCd(Service):
 	def _unloadModule(self, moduleName, fullUnload):
 		unloadDeferreds = []
 		if moduleName not in self.loadedModules:
-			return
+			return None
 		module = self.loadedModules[moduleName]
 		if fullUnload and module.core:
 			raise ValueError ("The module you're trying to unload is a core module.")
@@ -389,6 +389,7 @@ class IRCd(Service):
 			self._unloadingModules[moduleName] = deferList
 			deferList.addCallback(self._removeFromUnloadingList, moduleName)
 			return deferList
+		return None
 	
 	def _removeFromUnloadingList(self, _, moduleName):
 		del self._unloadingModules[moduleName]
