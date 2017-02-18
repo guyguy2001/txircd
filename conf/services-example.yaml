@@ -43,6 +43,9 @@ modules:
 # AccountName: Allows users to change their primary account name.
 - AccountName
 
+# AccountExtban: Allows using the R: matching extban to match account names.
+- AccountExtban
+
 # Accounts configuration
 # There are various options for accounts.
 
