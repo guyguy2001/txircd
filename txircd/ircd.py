@@ -1169,7 +1169,7 @@ class IRCd(Service):
 		if "users" in keywords:
 			# Stop an action if all users have disconnected
 			for user in keywords["users"]:
-				if user.uuid in self.ircd.users:
+				if user.uuid in self.users:
 					return False
 			return True
 		return False
