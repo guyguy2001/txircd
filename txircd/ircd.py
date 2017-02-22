@@ -855,6 +855,8 @@ class IRCd(Service):
 		actionList = self._getActionFunctionList(actionName, *params, **kw)
 		for action in actionList:
 			action[0](*params)
+			if self._shouldStopAction(actionName, params, kw):
+				break
 	
 	def runActionUntilTrue(self, actionName, *params, **kw):
 		"""
@@ -868,6 +870,8 @@ class IRCd(Service):
 		for action in actionList:
 			if action[0](*params):
 				return True
+			if self._shouldStopAction(actionName, params, kw):
+				break
 		return False
 	
 	def runActionUntilFalse(self, actionName, *params, **kw):
@@ -882,6 +886,8 @@ class IRCd(Service):
 		for action in actionList:
 			if not action[0](*params):
 				return True
+			if self._shouldStopAction(actionName, params, kw):
+				break
 		return False
 	
 	def runActionUntilValue(self, actionName, *params, **kw):
@@ -897,6 +903,8 @@ class IRCd(Service):
 			value = action[0](*params)
 			if value is not None:
 				return value
+			if self._shouldStopAction(actionName, params, kw):
+				break
 		return None
 	
 	def runActionFlagTrue(self, actionName, *params, **kw):
@@ -911,6 +919,8 @@ class IRCd(Service):
 		for action in actionList:
 			if action[0](*params):
 				oneIsTrue = True
+			if self._shouldStopAction(actionName, params, kw):
+				break
 		return oneIsTrue
 	
 	def runActionFlagFalse(self, actionName, *params, **kw):
@@ -925,6 +935,8 @@ class IRCd(Service):
 		for action in actionList:
 			if action[0](*params):
 				oneIsFalse = True
+			if self._shouldStopAction(actionName, params, kw):
+				break
 		return oneIsFalse
 	
 	def runActionProcessing(self, actionName, data, *params, **kw):
@@ -938,7 +950,9 @@ class IRCd(Service):
 		for action in actionList:
 			action[0](data, *params)
 			if not data:
-				return
+				break
+			if self._shouldStopAction(actionName, [data] + params, kw):
+				break
 	
 	def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
 		"""
@@ -956,7 +970,9 @@ class IRCd(Service):
 				if data:
 					break
 			else:
-				return
+				break
+			if self._shouldStopAction(actionName, paramList, kw):
+				break
 	
 	def runComboActionStandard(self, actionList, **kw):
 		"""
@@ -975,6 +991,8 @@ class IRCd(Service):
 		funcList = self._combineActionFunctionLists(actionFuncLists)
 		for actionName, actionFunc in funcList:
 			actionFunc(*actionParameters[actionName])
+			if self._shouldStopAction(actionName, actionParameters, kw):
+				break
 	
 	def runComboActionUntilTrue(self, actionList, **kw):
 		"""
@@ -996,6 +1014,8 @@ class IRCd(Service):
 		for actionName, actionFunc in funcList:
 			if actionFunc(*actionParameters[actionName]):
 				return True
+			if self._shouldStopAction(actionName, actionParameters, kw):
+				break
 		return False
 	
 	def runComboActionUntilFalse(self, actionList, **kw):
@@ -1018,6 +1038,8 @@ class IRCd(Service):
 		for actionName, actionFunc in funcList:
 			if not actionFunc(*actionParameters[actionName]):
 				return True
+			if self._shouldStopAction(actionName, actionParameters, kw):
+				break
 		return False
 	
 	def runComboActionUntilValue(self, actionList, **kw):
@@ -1041,6 +1063,8 @@ class IRCd(Service):
 			value = actionFunc(*actionParameters[actionName])
 			if value is not None:
 				return value
+			if self._shouldStopAction(actionName, actionParameters, kw):
+				break
 		return None
 	
 	def runComboActionFlagTrue(self, actionList, **kw):
@@ -1063,6 +1087,8 @@ class IRCd(Service):
 		for actionName, actionFunc in funcList:
 			if actionFunc(*actionParameters[actionName]):
 				oneIsTrue = True
+			if self._shouldStopAction(self, actionName, actionParameters, kw):
+				break
 		return oneIsTrue
 	
 	def runComboActionFlagFalse(self, actionList, **kw):
@@ -1085,6 +1111,8 @@ class IRCd(Service):
 		for actionName, actionFunc in funcList:
 			if not actionFunc(*actionParameters[actionName]):
 				oneIsFalse = True
+			if self._shouldStopAction(self, actionName, actionParameters, kw):
+				break
 		return oneIsFalse
 	
 	def runComboActionProcessing(self, data, actionList, **kw):
@@ -1106,6 +1134,8 @@ class IRCd(Service):
 		for actionName, actionFunc in funcList:
 			actionFunc(*actionParameters[actionName])
 			if not data:
+				break
+			if self._shouldStopAction(actionName, actionParameters, kw):
 				break
 	
 	def runComboActionProcessingMultiple(self, dataList, actionList, **kw):
@@ -1131,7 +1161,18 @@ class IRCd(Service):
 				if data:
 					break
 			else:
-				return
+				break
+			if self._shouldStopAction(actionName, actionParameters, kw):
+				break
+	
+	def _shouldStopAction(self, actionName, parameters, keywords):
+		if "users" in keywords:
+			# Stop an action if all users have disconnected
+			for user in keywords["users"]:
+				if user.uuid in self.ircd.users:
+					return False
+			return True
+		return False
 
 class ModuleLoadError(Exception):
 	def __init__(self, name, desc):
