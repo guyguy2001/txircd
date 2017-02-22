@@ -241,7 +241,9 @@ modules:
 # Configuring this module simply requires specifying all of the custom status
 # modes you want to have on your network. It's important that you know what
 # other modes are used on your network and not to reuse any of those mode
-# letters here, since otherwise you'll likely break things. By default, this
+# letters here, since otherwise you'll likely break things. The levels for the
+# built-in status modes are 100 (+o) and 10 (+v), so you can plan modes higher,
+# lower, or in between by considering the built-in levels. By default, this
 # module makes halfop (+h, %), admin (+a, &), and owner (+q, ~) modes like
 # this:
 #custom_prefixes:
