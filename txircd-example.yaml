@@ -156,10 +156,10 @@
 # server_registration_timeout
 # This controls how long a server connection may remain in an unregistered
 # state before it is terminated. This means that servers must finish connecting
-# and registering their connection (selecting a nickname, ident, and gecos)
-# within this time frame. You shouldn't need to change this; needing to change
-# it may indicate a problem with the network connection on your servers. If not
-# specified, the default is 10 seconds.
+# and registering their connection (authenticating and sending basic server
+# information) within this time frame. You shouldn't need to change this;
+# needing to change it may indicate a problem with the network connection on
+# your servers. If not specified, the default is 10 seconds.
 #server_registration_timeout: 10
 
 # whowas_duration
