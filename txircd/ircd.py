@@ -951,7 +951,7 @@ class IRCd(Service):
 			action[0](data, *params)
 			if not data:
 				break
-			if self._shouldStopAction(actionName, [data] + params, kw):
+			if self._shouldStopAction(actionName, [data] + list(params), kw):
 				break
 	
 	def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
@@ -962,7 +962,7 @@ class IRCd(Service):
 		'users' and 'channels' keyword arguments to determine which mode
 		handlers should be included.
 		"""
-		paramList = dataList + params
+		paramList = dataList + list(params)
 		actionList = self._getActionFunctionList(actionName, *paramList, **kw)
 		for action in actionList:
 			action[0](*paramList)
