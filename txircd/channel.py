@@ -485,7 +485,7 @@ class IRCChannel(object):
 				modeResetList.append((False, status, user.uuid))
 		self.setModes(modeResetList, fromServerID)
 		# Reset metadata
-		metadataList = self.metadataList().copy()
+		metadataList = self.metadataList()[:] # Use a copy of the metadata list to avoid changes during iteration
 		for key, value, visibility, setByUser in metadataList:
 			self.setMetadata(key, None, visibility, False)
 		
