@@ -471,7 +471,7 @@ class IRCChannel(object):
 		self.setTopic("", fromServerID)
 		
 		modeResetList = []
-		for mode, param in self.modes:
+		for mode, param in self.modes.iteritems():
 			modeType = self.ircd.channelModeTypes[mode]
 			if modeType == ModeType.List:
 				for paramValue, setBy, setTime in param:
