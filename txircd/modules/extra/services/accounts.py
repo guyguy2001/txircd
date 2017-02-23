@@ -724,6 +724,8 @@ class RemoveAccountNickCommand(Command):
 class AccountBurstInitCommand(Command):
 	implements(ICommand)
 	
+	burstQueuePriority = 1
+	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
