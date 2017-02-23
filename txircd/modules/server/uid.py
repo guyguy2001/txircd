@@ -27,9 +27,9 @@ class ServerUID(ModuleData, Command):
 			nickTime = datetime.utcfromtimestamp(float(nickTS))
 		except ValueError:
 			return None
-		currParam = 10
+		currParam = 11
 		modes = {}
-		for mode in params[9]:
+		for mode in params[10]:
 			if mode == "+":
 				continue
 			try:
