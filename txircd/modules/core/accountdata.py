@@ -8,7 +8,7 @@ from zope.interface import implements
 irc.RPL_LOGGEDIN = "900"
 irc.RPL_LOGGEDOUT = "901"
 
-class Accounts(ModuleData):
+class AccountMetadata(ModuleData):
 	implements(IPlugin, IModuleData)
 	
 	name = "AccountData"
@@ -30,4 +30,4 @@ class Accounts(ModuleData):
 			else:
 				user.sendMessage(irc.RPL_LOGGEDIN, user.hostmask(), value, "You are now logged in as {}".format(value))
 
-accounts = Accounts()
+accounts = AccountMetadata()
