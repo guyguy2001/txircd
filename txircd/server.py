@@ -34,12 +34,14 @@ class IRCServer(IRCBase):
 			if self.bursted is False and handler[0].burstQueuePriority is not None:
 				if command not in self._burstQueueCommands:
 					handlerPriority = handler[0].burstQueuePriority
+					self._burstQueueCommandPriorities[command] = handlerPriority
 					for cmdIndex, queueCommand in enumerate(self._burstQueueCommands):
 						queueCommandPriority = self._burstQueueCommandPriorities[queueCommand]
 						if queueCommandPriority < handlerPriority:
 							self._burstQueueCommands.insert(cmdIndex, command)
-							self._burstQueueCommandPriorities[command] = handlerPriority
 							break
+					else:
+						self._burstQueueCommands.append(command)
 					self._burstQueueHandlers[command] = []
 				self._burstQueueHandlers[command].append((params, prefix, tags))
 				return
