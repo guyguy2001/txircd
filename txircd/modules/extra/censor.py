@@ -13,9 +13,7 @@ class Censor(ModuleData):
 	implements(IPlugin, IModuleData)
 
 	name = "Censor"
-	exemptLevel = 100
 	badwords = None
-	burstQueuePriority = 40
 
 	def userCommands(self):
 		return [ ("CENSOR", 1, UserCensorCommand(self)) ]
@@ -155,6 +153,8 @@ class UserCensorCommand(Command):
 
 class ServerCensorCommand(Command):
 	implements(ICommand)
+	
+	burstQueuePriority = 40
 
 	def __init__(self, censor):
 		self.censor = censor
