@@ -19,6 +19,7 @@ class IRCServer(IRCBase):
 		self._pinger = LoopingCall(self._ping)
 		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("server_registration_timeout", 10), self._timeoutRegistration)
 		self._burstQueueCommands = []
+		self._burstQueueCommandPriorities = {}
 		self._burstQueueHandlers = {}
 	
 	def handleCommand(self, command, params, prefix, tags):
@@ -34,9 +35,10 @@ class IRCServer(IRCBase):
 				if command not in self._burstQueueCommands:
 					handlerPriority = handler[0].burstQueuePriority
 					for cmdIndex, queueCommand in enumerate(self._burstQueueCommands):
-						queueCommandPriority = self.ircd.commands[queueCommand][0].burstQueuePriority
+						queueCommandPriority = self._burstQueueCommandPriorities[queueCommand]
 						if queueCommandPriority < handlerPriority:
 							self._burstQueueCommands.insert(cmdIndex, command)
+							self._burstQueueCommandPriorities[command] = handlerPriority
 							break
 					self._burstQueueHandlers[command] = []
 				self._burstQueueHandlers[command].append((params, prefix, tags))
@@ -77,6 +79,7 @@ class IRCServer(IRCBase):
 					return
 			self.ircd.runActionStandard("endburstcommand", self, command)
 		self._burstQueueCommands = None
+		self._burstQueueCommandPriorities = None
 		self._burstQueueHandlers = None
 	
 	def connectionLost(self, reason):
