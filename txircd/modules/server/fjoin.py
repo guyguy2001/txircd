@@ -45,7 +45,7 @@ class FJoinCommand(ModuleData, Command):
 		# Next, start processing all the joins. We don't finish this here because we want to send only one netjoin batch,
 		# so we accumulate all the joins, then flush the batch, then complete all the joins and do modes/other post-processing.
 		for channel, channelData in self.serverBurstData.iteritems():
-			for user, ranks in channelData["users"]:
+			for user, ranks in channelData["users"].iteritems():
 				joinChannelData = user.joinChannelNoAnnounceIncomplete(channel, False, server)
 				if not joinChannelData:
 					continue
@@ -139,7 +139,9 @@ class FJoinCommand(ModuleData, Command):
 		if channel not in self.serverBurstData:
 			self.serverBurstData[channel] = { "time": time, "modes": remoteModes, "users": data["users"] }
 		else:
-			self.serverBurstData[channel] = { "time": time, "modes": remoteModes, "users": self.serverBurstData[channel] + data["users"] }
+			newUsers = self.serverBurstData[channel]["users"]
+			newUsers.update(data["users"])
+			self.serverBurstData[channel] = { "time": time, "modes": remoteModes, "users": newUsers }
 		return True
 
 fjoinCmd = FJoinCommand()
