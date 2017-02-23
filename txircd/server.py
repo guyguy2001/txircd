@@ -110,7 +110,7 @@ class IRCServer(IRCBase):
 			for user in allUsers:
 				if user.uuid[:3] == self.serverID:
 					notifyUsersForUser = user.disconnectDeferNotify(netsplitQuitMsg, self)
-					notifyUserBatches.extend(notifyUsersForUser)
+					notifyUserBatches.update(notifyUsersForUser)
 					notifyUsersQuitting[user] = notifyUsersForUser
 			for user in notifyUserBatches:
 				user.createMessageBatch("Netsplit", "netsplit", (netsplitFromServerName, netsplitToServerName))
