@@ -52,7 +52,7 @@ class FJoinCommand(ModuleData, Command):
 				joinNotifyUsers = user.joinChannelNoAnnounceNotifyUsers(joinChannelData)
 				for notifyUser in joinNotifyUsers:
 					if notifyUser not in openBatchUsers:
-						notifyUser.startBatch("netjoin", "netjoin", (closeBurstServerName, farBurstServerName))
+						notifyUser.createMessageBatch("netjoin", "netjoin", (closeBurstServerName, farBurstServerName))
 						openBatchUsers.add(notifyUser)
 				self.ircd.runActionProcessing("joinmessage", joinNotifyUsers, channel, user, "netjoin", users=joinNotifyUsers, channels=[channel])
 				joinsToComplete.append((user, joinChannelData))
