@@ -418,7 +418,7 @@ class Accounts(ModuleData):
 		lastSyncTimestamp = 0
 		if server.serverID in self.servicesData["serverupdates"]:
 			lastSyncTimestamp = self.servicesData["serverupdates"][server.serverID]
-		server.sendMessage("ACCOUNTBURSTINFO", accountFormatVersion, timestampStringFromTimestamp(lastSyncTimestamp), prefix=self.ircd.serverID)
+		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, timestampStringFromTimestamp(lastSyncTimestamp), prefix=self.ircd.serverID)
 
 class CreateAccountCommand(Command):
 	implements(ICommand)
