@@ -224,7 +224,7 @@ class Accounts(ModuleData):
 		"""
 		lowerUsername = ircLower(username)
 		if lowerUsername not in self.accountData["data"]:
-			return False
+			return False, "NOEXIST", "Account not registered."
 		self.ircd.runActionStandard("accountremoveindices", lowerUsername)
 		username = self.accountData["data"][lowerUsername]["username"]
 		for user in self.ircd.users.itervalues():
@@ -241,7 +241,7 @@ class Accounts(ModuleData):
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
 				user.setMetadata("account", None, "internal", False)
 		self._serverUpdateTime(deleteTime)
-		return True
+		return True, None, None
 	
 	def changeAccountName(self, oldAccountName, newAccountName, fromServer = None):
 		"""

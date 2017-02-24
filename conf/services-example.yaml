@@ -46,6 +46,10 @@ modules:
 # AccountExtban: Allows using the R: matching extban to match account names.
 - AccountExtban
 
+# AccountAdminDrop: Allows admins with the account-drop permission to drop any
+# account.
+- AccountAdminDrop
+
 # Accounts configuration
 # There are various options for accounts.
 

@@ -33,7 +33,16 @@ class AccountDrop(ModuleData, Command):
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
 			return True
 		if loginResult[0]:
-			self.ircd.runActionUntilTrue("deleteaccount", accountName)
+			deleteResult = self.ircd.runActionUntilValue("deleteaccount", accountName)
+			if not deleteResult:
+				user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "DROP", "NOACCOUNT")
+				user.sendMessage("NOTICE", "This server doesn't have accounts set up.") # Or it does, partially, which doesn't count.
+				return True
+			if deleteResult[0]:
+				user.sendMessage("NOTICE", "Account successfully dropped.")
+				return True
+			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "DROP", deleteResult[1])
+			user.sendMessage("NOTICE", "Couldn't drop account: {}".format(deleteResult[2]))
 			return True
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "DROP", loginResult[1])
 		user.sendMessage("NOTICE", "Couldn't confirm drop: {}".format(loginResult[2]))
