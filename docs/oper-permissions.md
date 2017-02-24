@@ -40,6 +40,7 @@ Extra Permissions
 
 Permission                | Module                    | Description
 --------------------------|---------------------------|------------------------------------
+account-drop              | AccountAdminDrop          | Allows the use of the ACCOUNTADMINDROP command to forcibly drop a user's service account.
 channel-denied            | DenyChannels              | Allows an oper to join a channel that is not allowed by the module configuration.
 command-censor            | Censor                    | Allows the use of the CENSOR command to disallow and replace a given word.
 command-globops           | Globops                   | Allows the use of the GLOBOPS command to send a notice to opers who have permission to view them.
