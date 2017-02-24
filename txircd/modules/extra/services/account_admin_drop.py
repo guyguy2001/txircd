@@ -11,7 +11,7 @@ class AccountAdminDrop(ModuleData, Command):
 	name = "AccountAdminDrop"
 	
 	def actions(self):
-		[ ("commandpermission-ACCOUNTADMINDROP", 1, self.checkOper) ]
+		return [ ("commandpermission-ACCOUNTADMINDROP", 1, self.checkOper) ]
 	
 	def userCommands(self):
 		return [ ("ACCOUNTADMINDROP", 1, self) ]
