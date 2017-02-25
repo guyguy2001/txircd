@@ -9,19 +9,13 @@ irc.RPL_ENDOFMODLIST = "703"
 
 class ModulesCommand(ModuleData, Command):
 	implements(IPlugin, IModuleData, ICommand)
-
+	
 	name = "ModulesCommand"
-
-	def userCommands(self):
-		return [ ("MODULES", 1, self) ]
-
-	def parseParams(self, user, params, prefix, tags):
-		return {}
-
-	def execute(self, user, data):
-		for module in sorted(self.ircd.loadedModules.keys()):
-			user.sendMessage(irc.RPL_MODLIST, module)
-		user.sendMessage(irc.RPL_ENDOFMODLIST, "End of MODULES list")
-		return True
+	
+	def actions(self):
+		return [ ("statsruntype-modules", 1, self.listModules) ]
+	
+	def listModules(self):
+		return sorted(self.ircd.loadedModules.keys())
 
 modulesCommand = ModulesCommand()

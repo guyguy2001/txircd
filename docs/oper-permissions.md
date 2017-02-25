@@ -54,6 +54,7 @@ command-sanick            | SanickCommand             | Allows the use of the SA
 command-sapart            | SapartCommand             | Allows the use of the SAPART command to force part a user from a channel.
 command-satopic           | SatopicCommand            | Allows the use of the SATOPIC command to force change the topic of any channel.
 command-shun              | Shun                      | Allows the use of the SHUN command to ban a user from sending most commands.
+info-modules              | ListModules               | Allows an oper to view the modules STATS type.
 info-onlineopers          | StatsOnlineOpers          | Allows an oper to view the onlineopers STATS type.
 info-ports                | StatsPorts                | Allows an oper to view the ports STATS type.
 info-shuns                | Shun                      | Allows an oper to view the shuns STATS type.
