@@ -11,6 +11,9 @@ class ModulesCommand(ModuleData):
 		return [ ("statsruntype-modules", 1, self.listModules) ]
 	
 	def listModules(self):
-		return sorted(self.ircd.loadedModules.keys())
+		modules = {}
+		for modName in sorted(self.ircd.loadedModules.keys()):
+			modules[modName] = "*"
+		return modules
 
 modulesCommand = ModulesCommand()
