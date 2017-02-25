@@ -17,7 +17,7 @@ class AccountAdminDrop(ModuleData, Command):
 		return [ ("ACCOUNTADMINDROP", 1, self) ]
 	
 	def checkOper(self, user, data):
-		if self.ircd.runActionUntilValue("userhasoperpermission", user, "account-drop", users=[user]):
+		if self.ircd.runActionUntilValue("userhasoperpermission", user, "command-accountadmindrop", users=[user]):
 			return None
 		user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 		return False
