@@ -25,6 +25,8 @@ class Accounts(ModuleData):
 			("accountchangeemail", 1, self.setEmail),
 			("accountaddnick", 1, self.addAltNick),
 			("accountremovenick", 1, self.removeAltNick),
+			("accountlistallnames", 1, self.allAccountNames),
+			("accountlistnicks", 1, self.accountNicks),
 			("usermetadataupdate", 10, self.updateLastLoginTime),
 			("burst", 5, self.startBurst) ]
 	
@@ -397,6 +399,22 @@ class Accounts(ModuleData):
 		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
+	
+	def allAccountNames(self):
+		"""
+		Returns a list of all registered account names.
+		"""
+		return self.accountData["data"].keys()
+	
+	def accountNicks(self, accountName):
+		"""
+		Returns all nicknames associated with the account.
+		If the account doesn't exist, returns None.
+		"""
+		try:
+			return self.accountData["data"][ircLower(accountName)]["nick"]
+		except KeyError:
+			return None
 	
 	def cleanOldDeleted(self):
 		"""
