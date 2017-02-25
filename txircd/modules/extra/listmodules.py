@@ -1,14 +1,9 @@
 from twisted.plugin import IPlugin
-from twisted.words.protocols import irc
-from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
-# Using the RatBox numerics (and names) here, which most IRCds seem to use
-irc.RPL_MODLIST = "702"
-irc.RPL_ENDOFMODLIST = "703"
-
-class ModulesCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
+class ModulesCommand(ModuleData):
+	implements(IPlugin, IModuleData)
 	
 	name = "ModulesCommand"
 	
