@@ -379,6 +379,8 @@ class Accounts(ModuleData):
 			return False, "BADACCOUNT", "The account does not exist."
 		
 		lowerOldNick = ircLower(oldNick)
+		if lowerOldNick == lowerAccountName:
+			return False, "NICKISACCOUNT", "That nickname is the primary nickname of the account."
 		if lowerOldNick not in self.accountData["index"]["nick"]:
 			return False, "NICKNOLINK", "That nickname is not associated with an account."
 		if self.accountData["index"]["nick"][lowerOldNick] != lowerAccountName:
