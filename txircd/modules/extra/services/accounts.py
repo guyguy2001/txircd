@@ -1,10 +1,11 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ircLower, isValidNick, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
+from txircd.utils import CaseInsensitiveDictionary, ircLower, isValidNick, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
 from zope.interface import implements
 from validate_email import validate_email as validateEmail
 from datetime import datetime, timedelta
+from weakref import WeakSet
 
 accountFormatVersion = "0"
 
@@ -27,7 +28,12 @@ class Accounts(ModuleData):
 			("accountremovenick", 1, self.removeAltNick),
 			("accountlistallnames", 1, self.allAccountNames),
 			("accountlistnicks", 1, self.accountNicks),
+			("accountgetemail", 1, self.getEmail),
+			("accountgetlastlogin", 1, self.getLastLogin),
+			("accountgetusers", 1, self.getAccountUsers),
+			("checkaccountexists", 1, self.checkAccountExistence),
 			("usermetadataupdate", 10, self.updateLastLoginTime),
+			("usermetadataupdate", 1, self.updateLoggedInUsers),
 			("burst", 5, self.startBurst) ]
 	
 	def serverCommands(self):
@@ -52,6 +58,7 @@ class Accounts(ModuleData):
 			self.ircd.storage["services"]["accounts"]["deleted"] = {}
 		self.servicesData = self.ircd.storage["services"]
 		self.accountData = self.servicesData["accounts"]
+		self.loggedInUsers = CaseInsensitiveDictionary()
 	
 	def verifyConfig(self, config):
 		if "account_password_hash" not in config or not config["account_password_hash"]:
@@ -211,7 +218,7 @@ class Accounts(ModuleData):
 		lowerAccountName = ircLower(value)
 		if lowerAccountName not in self.accountData["data"]:
 			return
-		self.accountData["data"]["lastlogin"] = timestamp(now())
+		self.accountData["data"][lowerAccountName]["lastlogin"] = timestamp(now())
 	
 	def logUserOut(self, user):
 		"""
@@ -415,6 +422,50 @@ class Accounts(ModuleData):
 			return self.accountData["data"][ircLower(accountName)]["nick"]
 		except KeyError:
 			return None
+	
+	def getEmail(self, accountName):
+		"""
+		Returns the email address associated with an account, if populated.
+		"""
+		try:
+			return self.accountData["data"][ircLower(accountName)]["email"]
+		except KeyError:
+			return None
+	
+	def getLastLogin(self, accountName):
+		"""
+		Returns the last login time for a user.
+		"""
+		try:
+			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["lastlogin"])
+		except KeyError:
+			return None
+	
+	def getAccountUsers(self, accountName):
+		"""
+		Returns a list of currently logged-in users for an account.
+		"""
+		if accountName in self.loggedInUsers:
+			return list(self.loggedInUsers[accountName])
+		return None
+	
+	def checkAccountExistence(self, accountName):
+		"""
+		Returns whether an account exists.
+		"""
+		if ircLower(accountName) in self.accountData["data"]:
+			return True
+		return False
+	
+	def updateLoggedInUsers(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
+		if key != "account":
+			return
+		if oldValue is not None and oldValue in self.loggedInUsers:
+			self.loggedInUsers[oldValue].discard(user)
+		if value is not None:
+			if value not in self.loggedInUsers:
+				self.loggedInUsers[value] = WeakSet()
+			self.loggedInUsers[value].add(user)
 	
 	def cleanOldDeleted(self):
 		"""
