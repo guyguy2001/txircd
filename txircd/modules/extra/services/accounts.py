@@ -29,6 +29,7 @@ class Accounts(ModuleData):
 			("accountlistallnames", 1, self.allAccountNames),
 			("accountlistnicks", 1, self.accountNicks),
 			("accountgetemail", 1, self.getEmail),
+			("accountgetregtime", 1, self.getRegTime),
 			("accountgetlastlogin", 1, self.getLastLogin),
 			("accountgetusers", 1, self.getAccountUsers),
 			("checkaccountexists", 1, self.checkAccountExistence),
@@ -429,6 +430,15 @@ class Accounts(ModuleData):
 		"""
 		try:
 			return self.accountData["data"][ircLower(accountName)]["email"]
+		except KeyError:
+			return None
+	
+	def getRegTime(self, accountName):
+		"""
+		Returns the registration time for a user.
+		"""
+		try:
+			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["registration"])
 		except KeyError:
 			return None
 	
