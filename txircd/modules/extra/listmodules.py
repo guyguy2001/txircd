@@ -2,10 +2,10 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
 
-class ModulesCommand(ModuleData):
+class ModulesList(ModuleData):
 	implements(IPlugin, IModuleData)
 	
-	name = "ModulesCommand"
+	name = "ModulesList"
 	
 	def actions(self):
 		return [ ("statsruntype-modules", 1, self.listModules) ]
@@ -16,4 +16,4 @@ class ModulesCommand(ModuleData):
 			modules[modName] = "*"
 		return modules
 
-modulesCommand = ModulesCommand()
+modulesList = ModulesList()
