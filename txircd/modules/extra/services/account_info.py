@@ -34,10 +34,12 @@ class AccountInfo(ModuleData, Command):
 		
 		user.sendMessage("NOTICE", "Information for {}:".format(queryAccount))
 		if registrationTime is not None:
+			registrationTime = registrationTime.replace(microsecond = 0)
 			user.sendMessage("NOTICE", "Registered: {}".format(registrationTime))
 		if onlineUsers:
 			user.sendMessage("NOTICE", "Online now")
 		elif lastLoginTime is not None:
+			lastLoginTime = lastLoginTime.replace(microsecond = 0)
 			user.sendMessage("NOTICE", "Last logged in {}".format(lastLoginTime))
 		if accountNicks:
 			user.sendMessage("NOTICE", "Nicknames:")
