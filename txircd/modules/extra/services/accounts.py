@@ -250,7 +250,7 @@ class Accounts(ModuleData):
 		deleteTime = now()
 		del self.accountData["data"][lowerUsername]
 		self.accountData["deleted"][lowerUsername] = timestamp(deleteTime)
-		self.servicesData["journal"].append(deleteTime, "DELETEACCOUNT", username)
+		self.servicesData["journal"].append((deleteTime, "DELETEACCOUNT", username))
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTimestamp(createTimestamp), prefix=self.ircd.serverID)
 		for user in self.ircd.users.itervalues():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
@@ -287,7 +287,7 @@ class Accounts(ModuleData):
 			accountInfo["oldnames"] = []
 		accountInfo["oldNames"].append((oldAccountName, timestamp(updateTime)))
 		self.accountData["data"][lowerNewAccountName] = accountInfo
-		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName)
+		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTimestamp), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		if not fromServer:
@@ -321,7 +321,7 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
 		updateTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod)
+		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), hashedPassword, hashMethod, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		return True, None, None
@@ -347,7 +347,7 @@ class Accounts(ModuleData):
 			del self.accountData["data"][lowerAccountName]["email"]
 		updateTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append(updateTime, "UPDATEACCOUNTEMAIL", accountName, email)
+		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTEMAIL", accountName, email))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), email, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -377,7 +377,7 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(now())))
 		addTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append(addTime, "ADDACCOUNTNICK", accountName, newNick)
+		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, newNick))
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTimestamp(registerTimestamp), newNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -407,7 +407,7 @@ class Accounts(ModuleData):
 				break
 		removeTime = now()
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append(removeTime, "REMOVEACCOUNTNICK", accountName, oldNick)
+		self.servicesData["journal"].append((removeTime, "REMOVEACCOUNTNICK", accountName, oldNick))
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTimestamp(registerTimestamp), oldNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
