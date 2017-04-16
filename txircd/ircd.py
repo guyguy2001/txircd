@@ -72,7 +72,7 @@ class IRCd(Service):
 		self.serverID = self.config["server_id"]
 		self.log.info("Loading storage...")
 		self.storage = shelve.open(self.config["datastore_path"], writeback=True)
-		self.storageSyncer = LoopingCall(self.storage.sync)
+		self.storageSyncer = LoopingCall(self._syncStorage)
 		self.storageSyncer.start(self.config.get("storage_sync_interval", 15), now=False)
 		self.log.info("Starting processes...")
 		self.pruneRecentlyQuit = LoopingCall(self.pruneQuit)
