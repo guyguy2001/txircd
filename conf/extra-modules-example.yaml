@@ -98,9 +98,8 @@ modules:
 # channel mode +K to disallow knocking on a channel.
 #- Knock
 
-# ModulesCommand: Provides a command that lists all modules loaded on the
-# server.
-#- ModulesCommand
+# ModulesList: Provides the "modules" stats type to list all loaded modules.
+#- ModulesList
 
 # RateLimit: Allows limiting the rate at which commands are sent to the server.
 # This can help to prevent most severe flooding from small numbers of users.

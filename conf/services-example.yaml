@@ -18,6 +18,10 @@ modules:
 # or ID command.
 - AccountIdentify
 
+# AccountSASL: Allows clients to authenticate with accounts using SASL.
+# Supports the PLAIN mechanism.
+- AccountSASL
+
 # AccountLogout: Allows logged-in users to log out of their accounts using the
 # LOGOUT command. Without this, disconnecting or authenticating to a different
 # account would be required to stop being logged into an account.
@@ -53,9 +57,9 @@ modules:
 # account.
 - AccountAdminDrop
 
-# AccountSASL: Allows clients to authenticate with accounts using SASL.
-# Supports the PLAIN mechanism.
-- AccountSASL
+# AccountAdminList: Allows admins with the info-accounts permission to view
+# the names of all registerd accounts.
+- AccountAdminList
 
 # Accounts configuration
 # There are various options for accounts.
