@@ -555,7 +555,7 @@ class CreateAccountCommand(Command):
 		
 		if lowerAccountName in self.module.accountData["data"]:
 			otherRegisterTime = self.module.accountData["data"][lowerAccountName]["registered"]
-			thisRegisterTime = datetime.utcfromtimestamp(accountInfo["registered"])
+			thisRegisterTime = accountInfo["registered"]
 			if otherRegisterTime < thisRegisterTime:
 				return True
 			if otherRegisterTime == thisRegisterTime:
