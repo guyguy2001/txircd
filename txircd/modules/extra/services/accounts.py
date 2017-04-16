@@ -370,7 +370,7 @@ class Accounts(ModuleData):
 			return False, "NICKINUSE", "That nickname is already associated with a different account."
 		
 		maxNicks = self.ircd.config.get("account_max_nicks", None)
-		if maxNicks is not None and len(self.accountData["data"][lowerAccountName]["nicks"]) >= maxNicks:
+		if maxNicks is not None and len(self.accountData["data"][lowerAccountName]["nick"]) >= maxNicks:
 			return False, "LIMITREACHED", "The maximum number of allowable nicknames is already registered to your account."
 		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
@@ -543,9 +543,9 @@ class CreateAccountCommand(Command):
 			if otherRegisterTime < thisRegisterTime:
 				return True
 			if otherRegisterTime == thisRegisterTime:
-				if len(self.module.accountData["data"][lowerAccountName]["nicks"]) > len(accountInfo["nicks"]):
+				if len(self.module.accountData["data"][lowerAccountName]["nick"]) > len(accountInfo["nick"]):
 					return True
-				if len(self.module.accountData["data"][lowerAccountName]["nicks"]) == len(accountInfo["nicks"]):
+				if len(self.module.accountData["data"][lowerAccountName]["nick"]) == len(accountInfo["nick"]):
 					# We're getting really, really desperate to resolve this conflict now
 					# Random will be different between servers, so we use server ID here
 					if server.serverID > self.ircd.serverID:
