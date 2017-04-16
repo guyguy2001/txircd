@@ -48,7 +48,7 @@ class CommandUngroup(Command):
 	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
-			user.sendSingleError("UngroupParams", irc.ERR_NEEDMOREPARAMS, "UNGROUP", "Not enough parameters")
+			user.sendSingleError("UngroupParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTUNGROUP", "Not enough parameters")
 			return None
 		return {
 			"removenick": params[0]
