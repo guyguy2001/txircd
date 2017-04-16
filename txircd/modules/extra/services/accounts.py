@@ -108,6 +108,8 @@ class Accounts(ModuleData):
 		lowerUsername = ircLower(username)
 		if lowerUsername in self.accountData["data"]:
 			return False, "DUPNAME", "An account with that name already exists."
+		if "nick" not in self.accountData["index"]:
+			self.accountData["index"]["nick"] = {}
 		if lowerUsername in self.accountData["index"]["nick"]:
 			return False, "DUPNICK", "That nickname is already in use on a different account."
 		
