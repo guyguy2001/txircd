@@ -196,7 +196,7 @@ class Accounts(ModuleData):
 			return False, "BADPARAM", "No username entered."
 		if not password:
 			return False, "BADPARAM", "No password entered."
-		lowerUsername = username
+		lowerUsername = ircLower(username)
 		if lowerUsername not in self.accountData["data"]:
 			return False, "NOTEXIST", "Account does not exist."
 		hashedAccountPassword = self.accountData["data"][lowerUsername]["password"]
