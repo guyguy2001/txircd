@@ -383,7 +383,7 @@ class Accounts(ModuleData):
 		addTime = now()
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, addTime))
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, newNick))
+		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, timestampStringFromTime(registerTime), newNick))
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTime(registerTime), newNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
