@@ -177,8 +177,8 @@ class Accounts(ModuleData):
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return
-		for accountNick in self.accountData["data"][lowerAccountName]["nick"]:
-			lowerAccountNick = ircLower(accountNick)
+		for accountNickData in self.accountData["data"][lowerAccountName]["nick"]:
+			lowerAccountNick = ircLower(accountNickData[0])
 			if lowerAccountNick in self.accountData["index"]["nick"] and self.accountData["index"]["nick"][lowerAccountNick] == lowerAccountName:
 				del self.accountData["index"]["nick"][lowerAccountNick]
 		if "email" in self.accountData["data"][lowerAccountName]:
