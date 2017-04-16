@@ -32,6 +32,7 @@ class Accounts(ModuleData):
 			("accountgetregtime", 1, self.getRegTime),
 			("accountgetlastlogin", 1, self.getLastLogin),
 			("accountgetusers", 1, self.getAccountUsers),
+			("accountfromnick", 1, self.getAccountFromNick),
 			("checkaccountexists", 1, self.checkAccountExistence),
 			("usermetadataupdate", 10, self.updateLastLoginTime),
 			("usermetadataupdate", 1, self.updateLoggedInUsers),
@@ -463,6 +464,17 @@ class Accounts(ModuleData):
 		if accountName in self.loggedInUsers:
 			return list(self.loggedInUsers[accountName])
 		return None
+	
+	def getAccountFromNick(self, nick):
+		"""
+		Returns an account name from the given nickname.
+		Returns None if the nickname isn't grouped with an account.
+		"""
+		lowerNickname = ircLower(nick)
+		if lowerNickname not in self.accountData["index"]["nick"]:
+			return None
+		lowerAccountName = self.accountData["index"]["nick"][lowerNickname]
+		return self.accountData["data"][lowerAccountName]["username"]
 	
 	def checkAccountExistence(self, accountName):
 		"""
