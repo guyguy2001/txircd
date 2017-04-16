@@ -12,7 +12,7 @@ class ModulesList(ModuleData):
 	
 	def listModules(self):
 		modules = {}
-		for modName in sorted(self.ircd.loadedModules.keys()):
+		for modName in self.ircd.loadedModules.keys():
 			modules[modName] = "*"
 		return modules
 
