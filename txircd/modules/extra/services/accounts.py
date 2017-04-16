@@ -143,7 +143,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", username)
 		
 		serializedAccountInfo = serializeAccount(newAccountInfo)
-		self.servicesData["journal"].append(registrationTime, "CREATEACCOUNT", serializedAccountInfo)
+		self.servicesData["journal"].append((registrationTime, "CREATEACCOUNT", serializedAccountInfo))
 		self.ircd.broadcastToServers(fromServer, "CREATEACCOUNT", timestampStringFromTime(registrationTime), serializedAccountInfo, prefix=self.ircd.serverID)
 		if user and user.uuid[:3] == self.ircd.serverID:
 			user.setMetadata("account", username, "internal", False)
