@@ -28,7 +28,15 @@ class AccountIdentify(ModuleData):
 		}
 	
 	def execute(self, user, data):
-		resultValue = self.ircd.runActionUntilValue("accountauthenticate", user, data["accountname"] if "accountname" in data else user.nick, data["password"])
+		if "accountname" in data:
+			accountName = data["accountname"]
+		else:
+			accountName = self.ircd.runActionUntilValue("accountfromnick", user.nick)
+			if not accountName:
+				user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", "NOTEXIST")
+				user.sendMessage("NOTICE", "No account could be found associated with your nickname.")
+				return True
+		resultValue = self.ircd.runActionUntilValue("accountauthenticate", user, accountName, data["password"])
 		if not resultValue:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
