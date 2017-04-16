@@ -10,7 +10,8 @@ class AccountExtban(ModuleData):
 	name = "AccountExtban"
 	
 	def actions(self):
-		return [ ("usermatchban-R", 1, self.matchBan) ]
+		return [ ("usermatchban-R", 1, self.matchBan),
+		  ("usermetadataupdate", 10, self.updateBansOnAccount) ]
 	
 	def matchBan(self, user, matchNegated, mask):
 		if not user.metadataKeyExists("account"):
@@ -19,5 +20,10 @@ class AccountExtban(ModuleData):
 		if fnmatchcase(userAccount, mask):
 			return not matchNegated
 		return matchNegated
+	
+	def updateBansOnAccount(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
+		if key != "account":
+			return
+		self.ircd.runActionStandard("updateuserbancache", user)
 
 matchExtban = AccountExtban()
