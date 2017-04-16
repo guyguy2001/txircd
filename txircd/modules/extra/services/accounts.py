@@ -219,6 +219,8 @@ class Accounts(ModuleData):
 	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
 		if key != "account":
 			return
+		if value is None:
+			return # This doesn't apply for users logging out
 		lowerAccountName = ircLower(value)
 		if lowerAccountName not in self.accountData["data"]:
 			return
