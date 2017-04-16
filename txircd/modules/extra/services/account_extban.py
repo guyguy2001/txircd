@@ -17,7 +17,8 @@ class AccountExtban(ModuleData):
 		if not user.metadataKeyExists("account"):
 			return matchNegated
 		userAccount = ircLower(user.metadataValue("account"))
-		if fnmatchcase(userAccount, mask):
+		lowerMask = ircLower(mask)
+		if fnmatchcase(userAccount, lowerMask):
 			return not matchNegated
 		return matchNegated
 	
