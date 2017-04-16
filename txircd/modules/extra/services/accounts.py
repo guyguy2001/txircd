@@ -444,7 +444,7 @@ class Accounts(ModuleData):
 		Returns the registration time for a user.
 		"""
 		try:
-			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["registration"])
+			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["registered"])
 		except KeyError:
 			return None
 	
