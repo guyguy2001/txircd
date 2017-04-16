@@ -37,7 +37,7 @@ class AccountRegister(ModuleData, Command):
 		}
 	
 	def execute(self, user, data):
-		createResult = self.ircd.runActionUntilValue("createnewaccount", user.nick, data["password"], None, data["email"] if "email" in data else None)
+		createResult = self.ircd.runActionUntilValue("createnewaccount", user.nick, data["password"], None, data["email"] if "email" in data else None, user, None)
 		if not createResult:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "CREATE", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
