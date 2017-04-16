@@ -134,11 +134,11 @@ class Accounts(ModuleData):
 		newAccountInfo["username"] = username
 		newAccountInfo["password"] = hashedPassword
 		newAccountInfo["password-hash"] = passwordHashMethod
-		newAccountInfo["nick"] = [(username, timestamp(registrationTime))]
+		newAccountInfo["nick"] = [(username, registrationTime)]
 		if email:
 			newAccountInfo["email"] = email
 		if "registered" not in newAccountInfo:
-			newAccountInfo["registered"] = timestamp(registrationTime)
+			newAccountInfo["registered"] = registrationTime
 		newAccountInfo["settings"] = {}
 		
 		self.accountData["data"][lowerUsername] = newAccountInfo
@@ -229,7 +229,7 @@ class Accounts(ModuleData):
 		lowerAccountName = ircLower(value)
 		if lowerAccountName not in self.accountData["data"]:
 			return
-		self.accountData["data"][lowerAccountName]["lastlogin"] = timestamp(now())
+		self.accountData["data"][lowerAccountName]["lastlogin"] = now()
 	
 	def logUserOut(self, user):
 		"""
@@ -250,13 +250,13 @@ class Accounts(ModuleData):
 		for user in self.ircd.users.itervalues():
 			if user.metadataValue("account") == username:
 				self.ircd.runActionStandard("accountlogout", user)
-		createTimestamp = self.accountData["data"][lowerUsername]["registered"]
+		createTime = self.accountData["data"][lowerUsername]["registered"]
 		
 		deleteTime = now()
 		del self.accountData["data"][lowerUsername]
-		self.accountData["deleted"][lowerUsername] = timestamp(deleteTime)
+		self.accountData["deleted"][lowerUsername] = deleteTime
 		self.servicesData["journal"].append((deleteTime, "DELETEACCOUNT", username))
-		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTimestamp(createTimestamp), prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTime(createTime), prefix=self.ircd.serverID)
 		for user in self.ircd.users.itervalues():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
 				user.setMetadata("account", None, "internal", False)
@@ -278,22 +278,22 @@ class Accounts(ModuleData):
 			return False, "BADUSER", "The username is not a valid nickname"
 		
 		lowerNewAccountName = ircLower(newAccountName)
-		for nickname, registrationTime in self.accountData["data"][lowerOldAccountName]["nick"]:
-			if lowerNewAccountName == ircLower(nickname):
+		for nickData in self.accountData["data"][lowerOldAccountName]["nick"]:
+			if lowerNewAccountName == ircLower(nickData[0]):
 				break
 		else:
 			return False, "NONICKLINK", "The new account name isn't associated with the account. The new account name should be grouped with the existing account as an alternate nickname."
 		accountInfo = self.accountData["data"][lowerOldAccountName]
 		del self.accountData["data"][lowerOldAccountName]
 		accountInfo["username"] = newAccountName
-		registerTimestamp = accountInfo["registered"]
+		registerTime = accountInfo["registered"]
 		updateTime = now()
 		if "oldnames" not in accountInfo:
 			accountInfo["oldnames"] = []
-		accountInfo["oldNames"].append((oldAccountName, timestamp(updateTime)))
+		accountInfo["oldnames"].append((oldAccountName, updateTime))
 		self.accountData["data"][lowerNewAccountName] = accountInfo
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName))
-		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTimestamp), newAccountName, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		if not fromServer:
 			for user in self.ircd.users.itervalues():
@@ -325,9 +325,9 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["password"] = hashedPassword
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
 		updateTime = now()
-		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
+		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTPASS", accountName, hashedPassword, hashMethod))
-		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), hashedPassword, hashMethod, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		return True, None, None
 	
@@ -351,9 +351,9 @@ class Accounts(ModuleData):
 		elif "email" in self.accountData["data"][lowerAccountName]:
 			del self.accountData["data"][lowerAccountName]["email"]
 		updateTime = now()
-		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
+		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTEMAIL", accountName, email))
-		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTimestamp(registerTimestamp), email, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), email, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -381,10 +381,10 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		
 		addTime = now()
-		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(addTime)))
-		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
+		self.accountData["data"][lowerAccountName]["nick"].append((newNick, addTime))
+		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, newNick))
-		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTimestamp(registerTimestamp), newNick, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTime(registerTime), newNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -412,9 +412,9 @@ class Accounts(ModuleData):
 				del self.accountData["data"][lowerAccountName]["nick"][index]
 				break
 		removeTime = now()
-		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
+		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((removeTime, "REMOVEACCOUNTNICK", accountName, oldNick))
-		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTimestamp(registerTimestamp), oldNick, prefix=self.ircd.serverID)
+		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTime(registerTime), oldNick, prefix=self.ircd.serverID)
 		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -449,7 +449,7 @@ class Accounts(ModuleData):
 		Returns the registration time for a user.
 		"""
 		try:
-			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["registered"])
+			return self.accountData["data"][ircLower(accountName)]["registered"]
 		except KeyError:
 			return None
 	
@@ -458,7 +458,7 @@ class Accounts(ModuleData):
 		Returns the last login time for a user.
 		"""
 		try:
-			return datetime.utcfromtimestamp(self.accountData["data"][ircLower(accountName)]["lastlogin"])
+			return self.accountData["data"][ircLower(accountName)]["lastlogin"]
 		except KeyError:
 			return None
 	
@@ -513,15 +513,14 @@ class Accounts(ModuleData):
 			del self.accountData["deleted"][account]
 	
 	def _serverUpdateTime(self, time):
-		syncTimestamp = timestamp(time)
 		for server in self.ircd.servers.itervalues():
-			self.servicesData["serverupdates"][server.serverID] = syncTimestamp
+			self.servicesData["serverupdates"][server.serverID] = time
 	
 	def startBurst(self, server):
-		lastSyncTimestamp = 0
+		lastSyncTime = datetime.utcfromtimestamp(0)
 		if server.serverID in self.servicesData["serverupdates"]:
-			lastSyncTimestamp = self.servicesData["serverupdates"][server.serverID]
-		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, timestampStringFromTimestamp(lastSyncTimestamp), prefix=self.ircd.serverID)
+			lastSyncTime = self.servicesData["serverupdates"][server.serverID]
+		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, timestampStringFromTime(lastSyncTime), prefix=self.ircd.serverID)
 
 class CreateAccountCommand(Command):
 	implements(ICommand)
@@ -555,7 +554,7 @@ class CreateAccountCommand(Command):
 		lowerAccountName = ircLower(accountName)
 		
 		if lowerAccountName in self.module.accountData["data"]:
-			otherRegisterTime = datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"])
+			otherRegisterTime = self.module.accountData["data"][lowerAccountName]["registered"]
 			thisRegisterTime = datetime.utcfromtimestamp(accountInfo["registered"])
 			if otherRegisterTime < thisRegisterTime:
 				return True
@@ -609,7 +608,7 @@ class DeleteAccountCommand(Command):
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
 			return True
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"]) >= registerTime:
+		if self.module.accountData["data"][lowerAccountName]["registered"] >= registerTime:
 			self.module.deleteAccount(accountName, server)
 		return True
 
@@ -649,7 +648,7 @@ class UpdateAccountNameCommand(Command):
 			if lowerExistingName in self.module.accountData["deleted"]:
 				return True
 			return False
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerExistingName]["registered"]) < data["registertime"]:
+		if self.module.accountData["data"][lowerExistingName]["registered"] < data["registertime"]:
 			return True
 		if self.module.changeAccountName(existingName, data["newname"], server)[0]:
 			return True
@@ -692,7 +691,7 @@ class UpdateAccountPassCommand(Command):
 			if lowerAccountName in self.module.accountData["deleted"]:
 				return True
 			return False
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"]) < data["registertime"]:
+		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
 			return True
 		if self.module.setPassword(accountName, data["password"], data["hashmethod"], server)[0]:
 			return True
@@ -734,7 +733,7 @@ class UpdateAccountEmailCommand(Command):
 			if lowerAccountName in self.module.accountData["deleted"]:
 				return True
 			return False
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"]) < data["registertime"]:
+		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
 			return True
 		if self.module.setEmail(accountName, data["email"], server)[0]:
 			return True
@@ -776,7 +775,7 @@ class AddAccountNickCommand(Command):
 			if lowerAccountName in self.module.accountData["deleted"]:
 				return True
 			return False
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"]) < data["registertime"]:
+		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
 			return True
 		if self.module.addAltNick(accountName, data["addnick"], server)[0]:
 			return True
@@ -818,7 +817,7 @@ class RemoveAccountNickCommand(Command):
 			if lowerAccountName in self.module.accountData["deleted"]:
 				return True
 			return False
-		if datetime.utcfromtimestamp(self.module.accountData["data"][lowerAccountName]["registered"]) < data["registertime"]:
+		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
 			return True
 		if self.module.removeAltNick(accountName, data["removenick"], server)[0]:
 			return True
@@ -851,9 +850,9 @@ class AccountBurstInitCommand(Command):
 			return False
 		lastSyncTime = data["synctime"]
 		for journalData in self.module.servicesData["journal"]:
-			if datetime.utcfromtimestamp(journalData[0]) >= lastSyncTime:
+			if journalData[0] >= lastSyncTime:
 				server.sendMessage(journalData[1], journalData[0], *journalData[2])
-		self.module.servicesData["serverupdates"][server.serverID] = timestamp(now())
+		self.module.servicesData["serverupdates"][server.serverID] = now()
 		return True
 
 accountController = Accounts()
@@ -891,6 +890,8 @@ def _serializeValue(value):
 		return "[{}".format("".join(listResults)[1:])
 	except TypeError:
 		pass
+	if isinstance(value, datetime):
+		return "D{}".format(timestamp(value))
 	if isinstance(value, float):
 		return ".{}".format(value)
 	return "#{}".format(value)
@@ -976,6 +977,11 @@ def _deserializeStringValue(valueInfo):
 		return valueParts
 	if valueType == "\"":
 		return _unescapeSerializedString(serializedValue)
+	if valueType == "D":
+		try:
+			return datetime.utcfromtimestamp(float(serializedValue))
+		except ValueError:
+			raise ValueError("Serialized substring \"{}\" has a date type but is not a valid timestamp.".format(valueInfo))
 	if valueType == ".":
 		try:
 			return float(serializedValue)
