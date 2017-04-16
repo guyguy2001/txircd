@@ -186,7 +186,7 @@ class Accounts(ModuleData):
 			if self.accountData["index"]["email"][emailAddr] == lowerAccountName:
 				del self.accountData["index"]["email"][emailAddr]
 	
-	def authenticateUser(self, user, username, password):
+	def authenticateUser(self, user, username, password, completeLogin = True):
 		"""
 		Authenticates a user for an account.
 		Accepts a username (or, for other functions implementing this action, another unique piece of account information)
@@ -198,7 +198,7 @@ class Accounts(ModuleData):
 			return False, "BADPARAM", "No password entered."
 		lowerUsername = username
 		if lowerUsername not in self.accountData["data"]:
-			return False, "Account does not exist."
+			return False, "NOTEXIST", "Account does not exist."
 		hashedAccountPassword = self.accountData["data"][lowerUsername]["password"]
 		
 		passwordHashMethod = self.accountData["data"][lowerUsername]["password-hash"]
@@ -211,8 +211,9 @@ class Accounts(ModuleData):
 		if loginExtraCheckResult and loginExtraCheckResult[0] is False:
 			return loginExtraCheckResult
 		
-		username = self.accountData["data"][lowerUsername]["username"]
-		user.setMetadata("account", username, "internal", False)
+		if completeLogin:
+			username = self.accountData["data"][lowerUsername]["username"]
+			user.setMetadata("account", username, "internal", False)
 		return True, None, None
 	
 	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):

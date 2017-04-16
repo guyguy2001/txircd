@@ -27,7 +27,7 @@ class AccountDrop(ModuleData, Command):
 			user.sendMessage("NOTICE", "You're not logged into an account.")
 			return True
 		accountName = user.metadataValue("account")
-		loginResult = self.ircd.runActionUntilValue("accountauthenticate", user, accountName, data["password"])
+		loginResult = self.ircd.runActionUntilValue("accountauthenticate", user, accountName, data["password"], False)
 		if not loginResult:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "DROP", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
