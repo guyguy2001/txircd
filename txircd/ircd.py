@@ -634,6 +634,10 @@ class IRCd(Service):
 	def _logNotBound(self, err, desc):
 		self.log.error("Could not bind '{endpointDescription}': {errorMsg}", endpointDescription=desc, errorMsg=err)
 	
+	def _syncStorage(self):
+		self.storage.sync()
+		self.runActionStandard("updatestoragereferences")
+	
 	def createUUID(self):
 		"""
 		Gets the next UUID for a new client.

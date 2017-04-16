@@ -15,7 +15,8 @@ class Accounts(ModuleData):
 	name = "Accounts"
 	
 	def actions(self):
-		return [ ("createnewaccount", 1, self.createAccount),
+		return [ ("updatestoragereferences", 10, self.setStorageReferences),
+			("createnewaccount", 1, self.createAccount),
 			("accountsetupindices", 100, self.indexAccount),
 			("accountremoveindices", 100, self.unindexAccount),
 			("accountauthenticate", 1, self.authenticateUser),
@@ -58,9 +59,8 @@ class Accounts(ModuleData):
 			self.ircd.storage["services"]["accounts"]["data"] = {}
 			self.ircd.storage["services"]["accounts"]["index"] = {}
 			self.ircd.storage["services"]["accounts"]["deleted"] = {}
-		self.servicesData = self.ircd.storage["services"]
-		self.accountData = self.servicesData["accounts"]
 		self.loggedInUsers = CaseInsensitiveDictionary()
+		self.setStorageReferences()
 	
 	def verifyConfig(self, config):
 		if "account_password_hash" not in config or not config["account_password_hash"]:
@@ -76,6 +76,10 @@ class Accounts(ModuleData):
 		if "account_max_nicks" in config:
 			if not isinstance(config["account_max_nicks"], int) or config["account_max_nicks"] < 1:
 				raise ConfigValidationError("account_max_nicks", "invalid number")
+	
+	def setStorageReferences(self):
+		self.servicesData = self.ircd.storage["services"]
+		self.accountData = self.servicesData["accounts"]
 	
 	def createAccount(self, username, password, passwordHashedMethod, email, user, extraInfo, fromServer = None):
 		"""
