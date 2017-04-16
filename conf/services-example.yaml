@@ -53,6 +53,10 @@ modules:
 # account.
 - AccountAdminDrop
 
+# AccountSASL: Allows clients to authenticate with accounts using SASL.
+# Supports the PLAIN mechanism.
+- AccountSASL
+
 # Accounts configuration
 # There are various options for accounts.
 
