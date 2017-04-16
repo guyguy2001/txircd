@@ -19,6 +19,11 @@ modules:
 # (sasl).
 - SASL
 
+# SASLPlain: Provides the PLAIN SASL mechanism. Requires SASL to be loaded.
+# This allows clients to authenticate to their accounts with SASL using the
+# PLAIN mechanism.
+- SASLPlain
+
 # AccountNotify: Provides a mechanism to notify users of account changes (i.e.
 # when another user logs into or out of an account). It's an optional extension
 # in 3.1 (account-notify), but it's recommended to leave it enabled.
