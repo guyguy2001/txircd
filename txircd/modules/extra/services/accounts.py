@@ -375,8 +375,9 @@ class Accounts(ModuleData):
 			return False, "LIMITREACHED", "The maximum number of allowable nicknames is already registered to your account."
 		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
-		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(now())))
+		
 		addTime = now()
+		self.accountData["data"][lowerAccountName]["nick"].append((newNick, timestamp(addTime)))
 		registerTimestamp = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, newNick))
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTimestamp(registerTimestamp), newNick, prefix=self.ircd.serverID)
