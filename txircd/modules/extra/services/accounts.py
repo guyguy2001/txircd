@@ -851,7 +851,7 @@ class AccountBurstInitCommand(Command):
 		lastSyncTime = data["synctime"]
 		for journalData in self.module.servicesData["journal"]:
 			if journalData[0] >= lastSyncTime:
-				server.sendMessage(journalData[1], journalData[0], *journalData[2])
+				server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2])
 		self.module.servicesData["serverupdates"][server.serverID] = now()
 		return True
 
