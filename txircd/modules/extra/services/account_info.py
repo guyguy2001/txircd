@@ -18,19 +18,14 @@ class AccountInfo(ModuleData, Command):
 			user.sendSingleError("InfoParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTINFO", "Not enough parameters")
 			return None
 		return {
-			"accountname": params[0]
+			"name": params[0]
 		}
 	
 	def execute(self, user, data):
-		queryAccount = data["accountname"]
-		exists = self.ircd.runActionUntilValue("checkaccountexists", queryAccount)
-		if exists is None:
-			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "INFO", "NOACCOUNT")
-			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
-			return True
-		if not exists:
+		queryAccount = self.ircd.runActionUntilValue("accountfromnick", data["name"])
+		if not queryAccount:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "INFO", "NOTEXIST")
-			user.sendMessage("NOTICE", "There is no account with that name.")
+			user.sendMessage("NOTICE", "No account exists with that nickname.")
 			return True
 		registrationTime = self.ircd.runActionUntilValue("accountgetregtime", queryAccount)
 		lastLoginTime = self.ircd.runActionUntilValue("accountgetlastlogin", queryAccount)
