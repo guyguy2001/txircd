@@ -219,20 +219,21 @@ class BanMode(ModuleData, Mode):
 					continue
 				if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
 					continue
-				actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkSet(channel, actionParam)
-				for actionParam in actionParamList:
-					updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
-					if self.banmaskHasMatchingExtban(banmask):
-						matchingExtban = banmask.split(":", 1)[0]
-						if not matchingExtban:
-							continue
-					else:
-						if "!" not in banmask:
-							updatedBanmask = "{}!*@*".format(updatedBanmask)
-						elif "@" not in banmask:
-							updatedBanmask = "{}@*".format(updatedBanmask)
-					validParams.append(updatedBanmask)
-				continue
+				if actionModeType != ModeType.Status: # Don't check the parameters for status modes, but do the rest of the processing
+					actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkSet(channel, actionParam)
+					for actionParam in actionParamList:
+						updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
+						if self.banmaskHasMatchingExtban(banmask):
+							matchingExtban = banmask.split(":", 1)[0]
+							if not matchingExtban:
+								continue
+						else:
+							if "!" not in banmask:
+								updatedBanmask = "{}!*@*".format(updatedBanmask)
+							elif "@" not in banmask:
+								updatedBanmask = "{}@*".format(updatedBanmask)
+						validParams.append(updatedBanmask)
+					continue
 			if self.banmaskHasMatchingExtban(banmask):
 				matchingExtban = banmask.split(":", 1)[0]
 				if not matchingExtban:
