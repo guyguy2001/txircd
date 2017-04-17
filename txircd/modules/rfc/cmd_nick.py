@@ -65,17 +65,19 @@ class NickUserCommand(Command):
 		if not isValidNick(params[0]) or len(params[0]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
-		if params[0] in self.ircd.userNicks:
-			otherUser = self.ircd.userNicks[params[0]]
-			if user != otherUser:
-				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, params[0], "Nickname is already in use")
-				return None
 		return {
 			"nick": params[0]
 		}
 	
 	def execute(self, user, data):
-		user.changeNick(data["nick"])
+		nick = data["nick"]
+		if nick in self.ircd.userNicks:
+			otherUser = self.ircd.userNicks[nick]
+			if user != otherUser:
+				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, nick, "Nickname is already in use")
+				return True
+		
+		user.changeNick(nick)
 		if not user.isRegistered():
 			user.register("NICK")
 		return True
