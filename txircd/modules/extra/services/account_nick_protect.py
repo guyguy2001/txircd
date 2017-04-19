@@ -71,6 +71,7 @@ class AccountNickProtect(ModuleData):
 			return
 		if user.cache["accountNickProtectTimer"].active:
 			user.cache["accountNickProtectTimer"].cancel()
+		del user.cache["accountNickProtectTimer"]
 	
 	def userSignedIntoNickAccount(self, user):
 		accountName = self.ircd.runActionUntilValue("accountfromnick", user.nick)
