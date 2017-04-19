@@ -53,6 +53,10 @@ modules:
 # AccountExtban: Allows using the R: matching extban to match account names.
 - AccountExtban
 
+# AccountNickProtect: Allows preventing users from using nicknames from an
+# account into which they're not logged in.
+- AccountNickProtect
+
 # AccountAdminDrop: Allows admins with the account-drop permission to drop any
 # account.
 - AccountAdminDrop
@@ -83,3 +87,14 @@ account_password_hash: pbkdf2
 # This option is used to limit the number of nicknames a single account can
 # have associated with it. By default, there is no limit.
 #account_max_nicks: 20
+
+# account_nick_protect_seconds
+# This option specifies the maximum number of seconds a user can use a nick
+# before their nick is forcibly changed. The default value is 30.
+#account_nick_protect_seconds: 30
+
+# account_nick_recover_seconds
+# This option specifies the number of seconds after a user's nick is forcibly
+# changed by nick protection that a user must wait before they can change their
+# nick. The default value is 10.
+#account_nick_recover_seconds: 10
