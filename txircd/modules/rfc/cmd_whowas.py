@@ -39,7 +39,7 @@ class WhowasCommand(ModuleData, Command):
 			whowasEntries.pop(0)
 		expireDifference = timedelta(seconds=expireDuration)
 		expireTime = now() - expireDifference
-		while whowasEntries and datetime.utcfromtimestamp(whowasEntries[0]["when"]) < expireTime:
+		while whowasEntries and whowasEntries[0]["when"] < expireTime:
 			whowasEntries.pop(0)
 		return whowasEntries
 	
