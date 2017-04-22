@@ -258,7 +258,7 @@ class IRCUser(IRCBase):
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=[self] + userSendList)
-		self.ircd.runActionStandard("quit", self, reason, fromServer, users=[self])
+		self.ircd.runActionStandard("quit", self, reason, fromServer, users=[self], allowDisconnected=True)
 		self.transport.loseConnection()
 	
 	def _timeoutRegistration(self):
