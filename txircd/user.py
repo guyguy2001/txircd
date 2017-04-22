@@ -881,7 +881,7 @@ class RemoteUser(IRCUser):
 			userSendList.extend(channel.users.keys())
 			self._leaveChannel(channel)
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
-		self.ircd.runActionStandard("remotequit", self, reason, fromServer, users=[self])
+		self.ircd.runActionStandard("remotequit", self, reason, fromServer, users=[self], allowDisconnected=True)
 		return userSendList
 	
 	def changeNick(self, newNick, fromServer = None):
