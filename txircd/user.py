@@ -863,7 +863,7 @@ class RemoteUser(IRCUser):
 		"""
 		Disconnects the remote user from the remote server.
 		"""
-		userSendList = self.disconnectDeferNotify(self, reason, fromServer)
+		userSendList = self.disconnectDeferNotify(reason, fromServer)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
 	
 	def disconnectDeferNotify(self, reason, fromServer = None):
