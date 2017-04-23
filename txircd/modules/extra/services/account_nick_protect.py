@@ -53,7 +53,7 @@ class AccountNickProtect(ModuleData):
 			return
 		protectDelay = self.ircd.config.get("account_nick_protect_seconds", 30)
 		user.sendMessage("NOTICE", "The nickname you're using is owned by an account to which you are not identified. Please identify to that account or change your nick in the next \x02{}\x02 seconds.".format(protectDelay))
-		user.cache["accountNickProtectTimer"] = reactor.callLater(protectDelay, self.resolveNickProtection, user.nick)
+		user.cache["accountNickProtectTimer"] = reactor.callLater(protectDelay, self.resolveNickProtection, user, user.nick)
 	
 	def resolveNickProtection(self, user, nick):
 		if user.nick != nick:
