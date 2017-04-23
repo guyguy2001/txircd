@@ -69,7 +69,7 @@ class AccountNickProtect(ModuleData):
 	def cancelOldProtectTimer(self, user):
 		if "accountNickProtectTimer" not in user.cache:
 			return
-		if user.cache["accountNickProtectTimer"].active:
+		if user.cache["accountNickProtectTimer"].active():
 			user.cache["accountNickProtectTimer"].cancel()
 		del user.cache["accountNickProtectTimer"]
 	
