@@ -244,7 +244,7 @@ class Accounts(ModuleData):
 		"""
 		lowerUsername = ircLower(username)
 		if lowerUsername not in self.accountData["data"]:
-			return False, "NOEXIST", "Account not registered."
+			return False, "NOTEXIST", "Account not registered."
 		self.ircd.runActionStandard("accountremoveindices", lowerUsername)
 		username = self.accountData["data"][lowerUsername]["username"]
 		for user in self.ircd.users.itervalues():
