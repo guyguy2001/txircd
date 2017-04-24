@@ -42,7 +42,7 @@ class AccountNickProtect(ModuleData):
 	def checkCanChangeNick(self, user, data):
 		if user not in self.blockedNickChangeUsers:
 			return None
-		if self.blockedNickChangeUsers[user] > now():
+		if self.blockedNickChangeUsers[user] < now():
 			del self.blockedNickChangeUsers[user]
 			return None
 		user.sendMessage("NOTICE", "You can't change nicknames yet.")
