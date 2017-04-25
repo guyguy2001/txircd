@@ -108,7 +108,7 @@ class SASL(ModuleData, Command):
 				user.sendMessage(irc.RPL_SASLMECHS, ",".join(saslMechanisms), "are available SASL mechanisms")
 				user.sendMessage(irc.ERR_SASLFAIL, "SASL authentication failed")
 				return True
-			if self.runActionUntilTrue("startsasl", user, useMechanism):
+			if self.ircd.runActionUntilTrue("startsasl", user, useMechanism):
 				user.cache["sasl-mech"] = useMechanism
 				return True
 			user.sendMessage(irc.ERR_SASLFAIL, "SASL authentication failed")
