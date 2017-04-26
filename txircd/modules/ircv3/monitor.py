@@ -97,6 +97,8 @@ class Monitor(ModuleData, Command):
 					self.sendUserMetadata(targetUser, user)
 	
 	def notifyUserMetadataChange(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+		if not user.isRegistered():
+			return
 		sentToUsers = set()
 		if not setByUser and ("capabilities" in user.cache and "metadata-notify" in user.cache["capabilities"]) and user.canSeeMetadataVisibility(visibility):
 			# Technically, the spec excludes "changes made by the clients themselves" from notification. However,
