@@ -261,6 +261,7 @@ class Accounts(ModuleData):
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
 				user.setMetadata("account", None, "internal", False)
 		self._serverUpdateTime(deleteTime)
+		self.ircd.runActionStandard("handledeleteaccount", username)
 		return True, None, None
 	
 	def changeAccountName(self, oldAccountName, newAccountName, fromServer = None):
@@ -291,6 +292,8 @@ class Accounts(ModuleData):
 		if "oldnames" not in accountInfo:
 			accountInfo["oldnames"] = []
 		accountInfo["oldnames"].append((oldAccountName, updateTime))
+		oldAccountName = accountInfo["username"]
+		accountInfo["username"] = newAccountName
 		self.accountData["data"][lowerNewAccountName] = accountInfo
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, newAccountName))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
@@ -299,6 +302,7 @@ class Accounts(ModuleData):
 			for user in self.ircd.users.itervalues():
 				if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerOldAccountName:
 					user.setMetadata("account", newAccountName, "internal", False)
+		self.ircd.runActionStandard("handleaccountchangename", oldAccountName, newAccountName)
 		return True, None, None
 	
 	def setPassword(self, accountName, password, hashMethod, fromServer = None):
