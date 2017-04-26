@@ -138,10 +138,13 @@ class SASL(ModuleData, Command):
 		# - True (authenticated)
 		# - "defer" (we're still processing the result and will let you know later by calling completeSASL as to the result)
 		result = self.ircd.runActionUntilValue("authenticatesasl", user, user.cache["sasl-data"])
-		if not result:
-			user.sendMessage(irc.ERR_SASLFAIL, "SASL authentication failed")
-		elif result != "defer":
+		if result == "defer":
+			return True
+		self.cleanup(user)
+		if result:
 			user.sendMessage(irc.RPL_SASLSUCCESS, "SASL authentication successful")
+		else:
+			user.sendMessage(irc.ERR_SASLFAIL, "SASL authentication failed")
 		return True
 
 sasl = SASL()
