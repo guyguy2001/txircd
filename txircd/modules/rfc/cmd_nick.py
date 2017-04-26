@@ -74,7 +74,7 @@ class NickUserCommand(Command):
 		if nick in self.ircd.userNicks:
 			otherUser = self.ircd.userNicks[nick]
 			if user != otherUser:
-				user.sendSingleError("NickCmd", irc.ERR_NICKNAMEINUSE, nick, "Nickname is already in use")
+				user.sendMessage(irc.ERR_NICKNAMEINUSE, nick, "Nickname is already in use")
 				return True
 		
 		user.changeNick(nick)
