@@ -33,6 +33,7 @@ class SASLPlain(ModuleData):
 	
 	def acceptPlain(self, user, mechanism):
 		if mechanism == "PLAIN":
+			user.sendMessage("AUTHENTICATE", "+", prefix=None, to=None)
 			return True
 		return False
 	
