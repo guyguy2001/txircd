@@ -4,14 +4,12 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now
 from zope.interface import implements
-from weakref import WeakKeyDictionary
 from datetime import timedelta
 
 class AccountNickProtect(ModuleData):
 	implements(IPlugin, IModuleData)
 	
 	name = "AccountNickProtect"
-	blockedNickChangeUsers = WeakKeyDictionary()
 	
 	def actions(self):
 		return [ ("welcome", 1, self.checkNickOnConnect),
@@ -40,10 +38,10 @@ class AccountNickProtect(ModuleData):
 		self.cancelOldProtectTimer(user)
 	
 	def checkCanChangeNick(self, user, data):
-		if user not in self.blockedNickChangeUsers:
+		if "nick-protect" not in user.cache:
 			return None
-		if self.blockedNickChangeUsers[user] < now():
-			del self.blockedNickChangeUsers[user]
+		if user.cache["nick-protect"] < now():
+			del user.cache["nick-protect"]
 			return None
 		user.sendMessage("NOTICE", "You can't change nicknames yet.")
 		return False
@@ -64,7 +62,7 @@ class AccountNickProtect(ModuleData):
 		recoverSeconds = self.ircd.config.get("account_nick_recover_seconds", 10)
 		if recoverSeconds > 0:
 			recoveryTime = timedelta(seconds = recoverSeconds)
-			self.blockedNickChangeUsers[user] = now() + recoveryTime
+			user.cache["nick-protect"] = now() + recoveryTime
 	
 	def cancelOldProtectTimer(self, user):
 		if "accountNickProtectTimer" not in user.cache:
