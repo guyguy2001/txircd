@@ -480,6 +480,8 @@ class Accounts(ModuleData):
 		Returns None if the nickname isn't grouped with an account.
 		"""
 		lowerNickname = ircLower(nick)
+		if "nick" not in self.accountData["index"]:
+			return None
 		if lowerNickname not in self.accountData["index"]["nick"]:
 			return None
 		lowerAccountName = self.accountData["index"]["nick"][lowerNickname]
