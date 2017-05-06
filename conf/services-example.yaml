@@ -62,8 +62,11 @@ modules:
 - AccountAdminDrop
 
 # AccountAdminList: Allows admins with the info-accounts permission to view
-# the names of all registerd accounts.
+# the names of all registered accounts.
 - AccountAdminList
+
+# ChannelRegister: Allows users to register channels by setting +r accountname.
+- ChannelRegister
 
 # Accounts configuration
 # There are various options for accounts.
