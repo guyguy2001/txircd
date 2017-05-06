@@ -51,7 +51,7 @@ class ChannelRegister(ModuleData, Mode):
 				channel.topictime = channelInfo["topictime"]
 			modeList = []
 			for modeData in channelInfo["modes"]:
-				modeList.append([True] + modeData)
+				modeList.append([True] + list(modeData))
 			channel.setModes(modeList, self.ircd.serverID)
 			self.registeredChannels[channelName] = channel
 	
@@ -99,7 +99,7 @@ class ChannelRegister(ModuleData, Mode):
 				modeType = self.ircd.channelModeTypes[mode]
 				if modeType == ModeType.List:
 					for oneParamData in paramData:
-						modes.append([mode] + oneParamData)
+						modes.append([mode] + list(oneParamData))
 				else:
 					modes.append((mode, paramData))
 			channelInfo["modes"] = modes
