@@ -20,7 +20,8 @@ class ChannelRegister(ModuleData, Mode):
 			("topic", 10, self.updateChannelTopicData),
 			("handledeleteaccount", 10, self.unregisterForAccountDelete),
 			("handleaccountchangename", 10, self.updateRegistrationForAccountRename),
-			("channelstatusoverride", 50, self.allowChannelOwnerToSetStatuses) ]
+			("channelstatusoverride", 50, self.allowChannelOwnerToSetStatuses),
+			("checkchannellevel", 50, self.channelOwnerHasHighestLevel) ]
 	
 	def channelModes(self):
 		return [ ("r", ModeType.Param, self) ]
@@ -153,6 +154,14 @@ class ChannelRegister(ModuleData, Mode):
 		del self.channelData["index"]["regname"][oldAccountName]
 	
 	def allowChannelOwnerToSetStatuses(self, channel, user, mode, parameter):
+		if "r" not in channel.modes:
+			return None
+		channelAccount = channel.modes["r"]
+		if user.metadataValue("account") == channelAccount:
+			return True
+		return None
+	
+	def channelOwnerHasHighestLevel(self, levelType, channel, user):
 		if "r" not in channel.modes:
 			return None
 		channelAccount = channel.modes["r"]
