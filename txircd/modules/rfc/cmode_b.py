@@ -154,7 +154,7 @@ class BanMode(ModuleData, Mode):
 		if actionExtban not in self.ircd.channelStatuses:
 			return None
 		statusLevel = self.ircd.channelStatuses[actionExtban][1]
-		if channel.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", self, user, actionExtban, param, users=[user], channels=[channel]):
+		if channel.userRank(user) < statusLevel and not self.ircd.runActionUntilValue("channelstatusoverride", channel, user, actionExtban, param, users=[user], channels=[channel]):
 			user.sendMessage(irc.ERR_CHANOPRIVSNEEDED, channel.name, "You do not have permission to modify autostatus for mode {}".format(actionExtban))
 			return False
 		return None
