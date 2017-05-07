@@ -240,9 +240,9 @@ class BanMode(ModuleData, Mode):
 					continue
 			else:
 				if "!" not in banmask:
-					fullBanmask += "!*@*" # Append it to the param since it needs to go to output (and banmask is at the trailing end of param so it's OK)
+					fullBanmask = "{}!*@*".format(fullBanmask) # Append it to the param since it needs to go to output (and banmask is at the trailing end of param so it's OK)
 				elif "@" not in banmask:
-					fullBanmask += "@*"
+					fullBanmask = "{}@*".format(fullBanmask)
 			validParams.append(fullBanmask)
 		return validParams
 	
@@ -255,6 +255,16 @@ class BanMode(ModuleData, Mode):
 				actionExtban, banmask = banmask.split(";", 1)
 				if actionExtban in self.ircd.channelModeTypes:
 					actionModeType = self.ircd.channelModeTypes[actionExtban]
+					if actionModeType == ModeType.Status:
+						if self.banmaskHasMatchingExtban(banmask):
+							validParams.append(fullBanmask)
+							continue
+						if "!" not in banmask:
+							fullBanmask = "{}!*@*".format(fullBanmask)
+						elif "@" not in banmask:
+							fullBanmask = "{}@*".format(fullBanmask)
+						validParams.append(fullBanmask)
+						continue
 					actionParam = None
 					if ":" in actionExtban:
 						actionExtban, actionParam = actionExtban.split(":", 1)
@@ -277,9 +287,9 @@ class BanMode(ModuleData, Mode):
 				continue # Just allow this; the other checks will be managed by checking whether the parameter is actually set on the channel
 			# If there's no matching extban, make sure the ident and host are given
 			if "!" not in banmask:
-				fullBanmask += "!*@*"
+				fullBanmask = "{}!*@*".format(fullBanmask)
 			elif "@" not in banmask:
-				fullBanmask += "@*"
+				fullBanmask = "{}@*".format(fullBanmask)
 			
 			# Make ban unsetting case-insensitive
 			lowerBanmask = ircLower(fullBanmask)
