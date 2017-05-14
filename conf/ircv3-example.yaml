@@ -48,11 +48,6 @@ modules:
 # enabling this just continues the chicken/egg problem there).
 #- StartTLS
 
-# Metadata: Provides a way for users to manipulate user-editable metadata.
-# It has some optional but highly recommended setup (see below). It's a base
-# extension in 3.2 (metadata).
-- Metadata
-
 # Monitor: Provides a better way for users to track the online state of other
 # users than the old method of continuously querying with ISON. It has some
 # optional but hightly recommended setup (see below). It's a base extension in
@@ -115,13 +110,6 @@ modules:
 # txircd directory. If not specified, the default is whatever the value of
 # starttls_key is.
 #starttls_cert: server.pem
-
-# Metadata Configuration
-# This configuration simply involves specifying the maximum number of user-set
-# metadata entries that can be in a single METADATA list (user or channel). The
-# default is unlimited. We recommend setting this value to something reasonable
-# like 100 entries, but you may set it to whatever you like.
-#metadata_limit: 100
 
 # Monitor Configuration
 # This configuration simply involves specifying the maximum number of nicknames
