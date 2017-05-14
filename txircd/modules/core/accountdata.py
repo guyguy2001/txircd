@@ -16,7 +16,7 @@ class AccountMetadata(ModuleData):
 	def actions(self):
 		return [ ("usermetadataupdate", 10, self.sendLoginNumeric) ]
 	
-	def sendLoginNumeric(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+	def sendLoginNumeric(self, user, key, oldValue, value, fromServer):
 		if key == "account":
 			if value is None:
 				user.sendMessage(irc.RPL_LOGGEDOUT, user.hostmask(), "You are now logged out")

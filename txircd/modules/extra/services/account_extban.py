@@ -22,7 +22,7 @@ class AccountExtban(ModuleData):
 			return not matchNegated
 		return matchNegated
 	
-	def updateBansOnAccountChange(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
+	def updateBansOnAccountChange(self, user, key, oldValue, value, fromServer = None):
 		if key != "account":
 			return
 		self.ircd.runActionStandard("updateuserbancache", user)

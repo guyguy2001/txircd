@@ -77,8 +77,8 @@ class ServerBurst(ModuleData, Command):
 					sentListModes = True
 			if sentListModes:
 				server.sendMessage("ENDLISTMODE", user.uuid, prefix=self.ircd.serverID)
-			for key, value, visibility, setByUser in user.metadataList():
-				server.sendMessage("METADATA", user.uuid, signonTimestamp, key, visibility, "1" if setByUser else "0", value, prefix=self.ircd.serverID)
+			for key, value in user.metadataList():
+				server.sendMessage("METADATA", user.uuid, signonTimestamp, key, value, prefix=self.ircd.serverID)
 		for channel in self.ircd.channels.itervalues():
 			channelTimestamp = timestampStringFromTime(channel.existedSince)
 			users = []
@@ -113,8 +113,8 @@ class ServerBurst(ModuleData, Command):
 				server.sendMessage("ENDLISTMODE", channel.name, prefix=self.ircd.serverID)
 			if channel.topic:
 				server.sendMessage("TOPIC", channel.name, channelTimestamp, timestampStringFromTime(channel.topicTime), channel.topic, prefix=self.ircd.serverID)
-			for key, value, visibility, setByUser in channel.metadataList():
-				server.sendMessage("METADATA", channel.name, channelTimestamp, key, visibility, "1" if setByUser else "0", value, prefix=self.ircd.serverID)
+			for key, value in channel.metadataList():
+				server.sendMessage("METADATA", channel.name, channelTimestamp, key, value, prefix=self.ircd.serverID)
 	
 	def completeBurst(self, server):
 		server.sendMessage("BURST", prefix=self.ircd.serverID)

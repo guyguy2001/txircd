@@ -19,34 +19,34 @@ class ServerMetadata(ModuleData, Command):
 	def serverCommands(self):
 		return [ ("METADATA", 1, self) ]
 	
-	def propagateMetadata(self, targetID, targetTime, key, value, visibility, setByUser, fromServer):
+	def propagateMetadata(self, targetID, targetTime, key, value, fromServer):
 		serverPrefix = fromServer.serverID if fromServer else self.ircd.serverID
 		if value is None:
-			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, visibility, "1" if setByUser else "0", prefix=serverPrefix)
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, prefix=serverPrefix)
 		else:
-			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, visibility, "1" if setByUser else "0", value, prefix=serverPrefix)
+			self.ircd.broadcastToServers(fromServer, "METADATA", targetID, targetTime, key, value, prefix=serverPrefix)
 	
-	def propagateUserMetadata(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+	def propagateUserMetadata(self, user, key, oldValue, value, fromServer):
 		if user.isRegistered():
-			self.propagateMetadata(user.uuid, timestampStringFromTime(user.connectedSince), key, value, visibility, setByUser, fromServer)
+			self.propagateMetadata(user.uuid, timestampStringFromTime(user.connectedSince), key, value, fromServer)
 	
-	def propagateChannelMetadata(self, channel, key, oldValue, value, visibility, setByUser, fromServer):
-		self.propagateMetadata(channel.name, timestampStringFromTime(channel.existedSince), key, value, visibility, setByUser, fromServer)
+	def propagateChannelMetadata(self, channel, key, oldValue, value, fromServer):
+		self.propagateMetadata(channel.name, timestampStringFromTime(channel.existedSince), key, value, fromServer)
 	
 	def propagateAllUserMetadata(self, user):
 		metadataList = user.metadataList()
 		userID = user.uuid
 		metadataTime = timestampStringFromTime(user.connectedSince)
-		for key, value, visibility, setByUser in metadataList:
-			self.propagateMetadata(userID, metadataTime, key, value, visibility, setByUser, None)
+		for key, value in metadataList:
+			self.propagateMetadata(userID, metadataTime, key, value, None)
 	
 	def clearMetadata(self, target, server):
 		metadataToClear = target.metadataList()
-		for key, value, visibility, setByUser, in metadataToClear:
-			target.setMetadata(key, None, visibility, setByUser, server)
+		for key, value in metadataToClear:
+			target.setMetadata(key, None, server)
 	
 	def parseParams(self, server, params, prefix, tags):
-		if len(params) not in (5, 6):
+		if len(params) not in (3, 4):
 			return None
 		data = {}
 		if params[0] in self.ircd.users:
@@ -64,13 +64,8 @@ class ServerMetadata(ModuleData, Command):
 		except ValueError:
 			return None
 		data["key"] = params[2]
-		data["visibility"] = params[3]
-		try:
-			data["setbyuser"] = int(params[4]) > 0
-		except ValueError:
-			return None
-		if len(params) == 6:
-			data["value"] = params[5]
+		if len(params) == 4:
+			data["value"] = params[3]
 		return data
 	
 	def execute(self, server, data):
@@ -90,6 +85,6 @@ class ServerMetadata(ModuleData, Command):
 			value = data["value"]
 		else:
 			value = None
-		return target.setMetadata(data["key"], value, data["visibility"], data["setbyuser"], server)
+		return target.setMetadata(data["key"], value, server)
 
 serverMetadata = ServerMetadata()

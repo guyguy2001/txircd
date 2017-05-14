@@ -128,33 +128,15 @@ class IRCChannel(object):
 			return None
 		return self._metadata[key][1]
 	
-	def metadataVisibility(self, key):
-		"""
-		Gets the visibility value for the given key in the channel's metadata.
-		Returns None if the key is not present.
-		"""
-		if key not in self._metadata:
-			return None
-		return self._metadata[key][2]
-	
-	def metadataSetByUser(self, key):
-		"""
-		Gets whether the given metadata key/value was set by a user.
-		Returns None if the key is not present.
-		"""
-		if key not in self._metadata:
-			return None
-		return self._metadata[key][3]
-	
 	def metadataList(self):
 		"""
 		Returns the list of metadata keys/values for the channel as a list of
 		tuples in the format
-		[ (key, value, visibility, setByUser) ]
+		[ (key, value) ]
 		"""
 		return self._metadata.values()
 	
-	def setMetadata(self, key, value, visibility, setByUser, fromServer = None):
+	def setMetadata(self, key, value, fromServer = None):
 		"""
 		Sets metadata for the channel. Returns True if the set is successful or
 		False if it is not. If the metadata set is caused by a message from a
@@ -166,18 +148,13 @@ class IRCChannel(object):
 		oldData = None
 		if key in self._metadata:
 			oldData = self._metadata[key]
-		if setByUser and oldData and not oldData[3]:
-			return False
-		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, channels=[self]) is False:
-			return False
+		
 		if value is None:
 			del self._metadata[key]
-		elif not visibility:
-			return False
 		else:
-			self._metadata[key] = (key, value, visibility, setByUser)
+			self._metadata[key] = (key, value)
 		oldValue = oldData[1] if oldData else None
-		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldValue, value, visibility, setByUser, fromServer, channels=[self])
+		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldValue, value, fromServer, channels=[self])
 		return True
 	
 	def setModes(self, modes, defaultSource):
@@ -486,8 +463,8 @@ class IRCChannel(object):
 		self.setModes(modeResetList, fromServerID)
 		# Reset metadata
 		metadataList = self.metadataList()[:] # Use a copy of the metadata list to avoid changes during iteration
-		for key, value, visibility, setByUser in metadataList:
-			self.setMetadata(key, None, visibility, False)
+		for key, value, setTime in metadataList:
+			self.setMetadata(key, None)
 		
 		self.existedSince = time
 		self.ircd.runActionStandard("channelchangetime", self, fromServer)

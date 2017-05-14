@@ -151,7 +151,7 @@ class Accounts(ModuleData):
 		self.servicesData["journal"].append((registrationTime, "CREATEACCOUNT", serializedAccountInfo))
 		self.ircd.broadcastToServers(fromServer, "CREATEACCOUNT", timestampStringFromTime(registrationTime), serializedAccountInfo, prefix=self.ircd.serverID)
 		if user and user.uuid[:3] == self.ircd.serverID:
-			user.setMetadata("account", username, "internal", False)
+			user.setMetadata("account", username)
 		
 		self._serverUpdateTime(registrationTime)
 		self.ircd.runActionStandard("accountcreated", username)
@@ -218,10 +218,10 @@ class Accounts(ModuleData):
 		
 		if completeLogin:
 			username = self.accountData["data"][lowerUsername]["username"]
-			user.setMetadata("account", username, "internal", False)
+			user.setMetadata("account", username)
 		return True, None, None
 	
-	def updateLastLoginTime(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
+	def updateLastLoginTime(self, user, key, oldValue, value, fromServer = None):
 		if key != "account":
 			return
 		if value is None:
@@ -235,7 +235,7 @@ class Accounts(ModuleData):
 		"""
 		Logs a user out of the account into which they are logged.
 		"""
-		user.setMetadata("account", None, "internal", False)
+		user.setMetadata("account", None)
 		return True
 	
 	def deleteAccount(self, username, fromServer = None):
@@ -259,7 +259,7 @@ class Accounts(ModuleData):
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTime(createTime), prefix=self.ircd.serverID)
 		for user in self.ircd.users.itervalues():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
-				user.setMetadata("account", None, "internal", False)
+				user.setMetadata("account", None)
 		self._serverUpdateTime(deleteTime)
 		self.ircd.runActionStandard("handledeleteaccount", username)
 		return True, None, None
@@ -301,7 +301,7 @@ class Accounts(ModuleData):
 		if not fromServer:
 			for user in self.ircd.users.itervalues():
 				if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerOldAccountName:
-					user.setMetadata("account", newAccountName, "internal", False)
+					user.setMetadata("account", newAccountName)
 		self.ircd.runActionStandard("handleaccountchangename", oldAccountName, newAccountName)
 		return True, None, None
 	
@@ -495,7 +495,7 @@ class Accounts(ModuleData):
 			return True
 		return False
 	
-	def updateLoggedInUsers(self, user, key, oldValue, value, visibility, setByUser, fromServer = None):
+	def updateLoggedInUsers(self, user, key, oldValue, value, fromServer = None):
 		if key != "account":
 			return
 		if oldValue is not None and oldValue in self.loggedInUsers:

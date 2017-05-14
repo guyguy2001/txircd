@@ -17,7 +17,8 @@ class AwayCommand(ModuleData, Command):
 		return [ ("commandextra-PRIVMSG", 10, self.notifyAway),
 		         ("commandextra-NOTICE", 10, self.notifyAway),
 		         ("extrawhois", 10, self.addWhois),
-		         ("buildisupport", 1, self.buildISupport) ]
+		         ("buildisupport", 1, self.buildISupport),
+		         ("usermetadataupdate", 10, self.sendAwayNotice) ]
 	
 	def verifyConfig(self, config):
 		if "away_length" in config:
@@ -41,6 +42,13 @@ class AwayCommand(ModuleData, Command):
 	def buildISupport(self, data):
 		data["AWAYLEN"] = self.ircd.config.get("away_length", 200)
 	
+	def sendAwayNotice(self, user, key, oldValue, value, fromServer):
+		if key == "away":
+			if value:
+				user.sendMessage(irc.RPL_NOWAWAY, "You have been marked as being away")
+			else:
+				user.sendMessage(irc.RPL_UNAWAY, "You are no longer marked as being away")
+	
 	def parseParams(self, user, params, prefix, tags):
 		if not params:
 			return {}
@@ -52,11 +60,9 @@ class AwayCommand(ModuleData, Command):
 	
 	def execute(self, user, data):
 		if "message" in data and data["message"]:
-			user.setMetadata("away", data["message"], "internal", False)
-			user.sendMessage(irc.RPL_NOWAWAY, "You have been marked as being away")
+			user.setMetadata("away", data["message"])
 		else:
-			user.setMetadata("away", None, "internal", False)
-			user.sendMessage(irc.RPL_UNAWAY, "You are no longer marked as being away")
+			user.setMetadata("away", None)
 		return True
 
 awayCommand = AwayCommand()

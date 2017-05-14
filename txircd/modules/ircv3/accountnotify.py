@@ -29,7 +29,7 @@ class AccountNotify(ModuleData):
 	def addCapability(self, user, capList):
 		capList.append("account-notify")
 	
-	def sendAccountNotice(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+	def sendAccountNotice(self, user, key, oldValue, value, fromServer):
 		if key != "account":
 			return
 		noticeUsers = set()

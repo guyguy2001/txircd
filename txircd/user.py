@@ -494,33 +494,24 @@ class IRCUser(IRCBase):
 			return None
 		return self._metadata[key][1]
 	
-	def metadataVisibility(self, key):
+	def metadataKeySetTime(self, key):
 		"""
-		Returns the visibility value of the given key in the user's metadata or
-		None if the given key is not in the user's metadata.
+		Returns the time a key was set in the user's metadata or None if the
+		given key is not in the user's metadata.
 		"""
 		if key not in self._metadata:
 			return None
 		return self._metadata[key][2]
 	
-	def metadataSetByUser(self, key):
-		"""
-		Returns whether the given key in the user's metadata was set by a user
-		or None if the given key is not in the user's metadata.
-		"""
-		if key not in self._metadata:
-			return None
-		return self._metadata[key][3]
-	
 	def metadataList(self):
 		"""
 		Returns the list of metadata keys/values for the user as a list of
 		tuples in the format
-		[ (key, value, visibility, setByUser) ]
+		[ (key, value, setTime) ]
 		"""
 		return self._metadata.values()
 	
-	def setMetadata(self, key, value, visibility, setByUser, fromServer = None):
+	def setMetadata(self, key, value, fromServer = None):
 		"""
 		Sets metadata for the user. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
@@ -531,19 +522,14 @@ class IRCUser(IRCBase):
 		oldData = None
 		if key in self._metadata:
 			oldData = self._metadata[key]
-		if setByUser and oldData and not oldData[3]:
-			return False
-		if setByUser and self.ircd.runActionUntilValue("usercansetmetadata", key, users=[self]) is False:
-			return False
+		
 		if value is None:
 			if key in self._metadata:
 				del self._metadata[key]
-		elif not visibility:
-			return False
 		else:
-			self._metadata[key] = (key, value, visibility, setByUser)
+			self._metadata[key] = (key, value)
 		oldValue = oldData[1] if oldData else None
-		self.ircd.runActionStandard("usermetadataupdate", self, key, oldValue, value, visibility, setByUser, fromServer, users=[self])
+		self.ircd.runActionStandard("usermetadataupdate", self, key, oldValue, value, fromServer, users=[self])
 		return True
 	
 	def joinChannel(self, channel, override = False, fromServer = None):

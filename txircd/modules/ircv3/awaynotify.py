@@ -31,7 +31,7 @@ class AwayNotify(ModuleData):
 	def addCapability(self, user, capList):
 		capList.append("away-notify")
 	
-	def sendAwayNotice(self, user, key, oldValue, value, visibility, setByUser, fromServer):
+	def sendAwayNotice(self, user, key, oldValue, value, fromServer):
 		if key != "away":
 			return
 		noticeUsers = set()
