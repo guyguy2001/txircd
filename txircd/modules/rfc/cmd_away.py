@@ -2,7 +2,6 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ircLower
 from zope.interface import implements
 
 class AwayCommand(ModuleData, Command):
@@ -18,7 +17,6 @@ class AwayCommand(ModuleData, Command):
 		return [ ("commandextra-PRIVMSG", 10, self.notifyAway),
 		         ("commandextra-NOTICE", 10, self.notifyAway),
 		         ("extrawhois", 10, self.addWhois),
-		         ("usercansetmetadata", 10, self.denyMetadataSet),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
 	def verifyConfig(self, config):
@@ -39,11 +37,6 @@ class AwayCommand(ModuleData, Command):
 	def addWhois(self, user, targetUser):
 		if targetUser.metadataKeyExists("away"):
 			user.sendMessage(irc.RPL_AWAY, targetUser.nick, targetUser.metadataValue("away"))
-	
-	def denyMetadataSet(self, key):
-		if ircLower(key) == "away":
-			return False
-		return None
 	
 	def buildISupport(self, data):
 		data["AWAYLEN"] = self.ircd.config.get("away_length", 200)

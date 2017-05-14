@@ -1,7 +1,6 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IModuleData, ModuleData
-from txircd.utils import ircLower
 from zope.interface import implements
 
 # Numerics and names are taken from the IRCv3.1 SASL specification at http://ircv3.net/specs/extensions/sasl-3.1.html
@@ -15,13 +14,7 @@ class AccountMetadata(ModuleData):
 	core = True
 	
 	def actions(self):
-		return [ ("usercansetmetadata", 10, self.denyMetadataSet),
-		         ("usermetadataupdate", 10, self.sendLoginNumeric) ]
-	
-	def denyMetadataSet(self, key):
-		if ircLower(key) == "account":
-			return False
-		return None
+		return [ ("usermetadataupdate", 10, self.sendLoginNumeric) ]
 	
 	def sendLoginNumeric(self, user, key, oldValue, value, visibility, setByUser, fromServer):
 		if key == "account":
