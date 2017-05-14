@@ -27,7 +27,8 @@ modules:
 # account would be required to stop being logged into an account.
 - AccountLogout
 
-# AccountDrop: Allows users to delete their accounts using the DROP command.
+# AccountDrop: Allows users to delete their accounts using the ACCOUNTDROP
+# command.
 - AccountDrop
 
 # AccountGhost: Allows users to disconnect other users signed into the same
