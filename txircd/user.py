@@ -546,11 +546,6 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("usermetadataupdate", self, key, oldValue, value, visibility, setByUser, fromServer, users=[self])
 		return True
 	
-	def canSeeMetadataVisibility(self, visibility):
-		if visibility == "*":
-			return True
-		return self.ircd.runActionUntilValue("usercanseemetadata", self, visibility) is not False
-	
 	def joinChannel(self, channel, override = False, fromServer = None):
 		"""
 		Joins the user to a channel. Specify the override parameter only if all
