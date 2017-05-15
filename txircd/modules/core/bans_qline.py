@@ -62,7 +62,7 @@ class QLine(ModuleData, XLineBase):
 		if reason is not None:
 			user.sendMessage("NOTICE", "The nickname you chose was invalid. ({})".format(reason))
 			return False
-		return True
+		return None
 	
 	def restrictToOper(self, user, data):
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
