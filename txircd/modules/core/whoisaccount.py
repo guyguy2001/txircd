@@ -15,7 +15,7 @@ class WhoisAccount(ModuleData):
 		return [ ("extrawhois", 1, self.whoisAccountName) ]
 
 	def whoisAccountName(self, user, targetUser):
-		if targetUser.metadataKeyExists("accountname"):
-			user.sendMessage(irc.RPL_WHOISACCOUNT, targetUser.nick, targetUser.metadataValue("accountname"), "is logged in as")
+		if targetUser.metadataKeyExists("account"):
+			user.sendMessage(irc.RPL_WHOISACCOUNT, targetUser.nick, targetUser.metadataValue("account"), "is logged in as")
 
 whoisAccount = WhoisAccount()
