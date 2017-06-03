@@ -41,11 +41,23 @@ class AccountIdentify(ModuleData):
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", "NOACCOUNT")
 			user.sendMessage("NOTICE", "This server doesn't have accounts set up.")
 			return True
+		if resultValue[0] is None:
+			resultValue[1].addCallback(self.checkAuthSuccess, user)
+			return True
 		if resultValue[0]:
 			return True
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTIFY", resultValue[1])
 		user.sendMessage("NOTICE", resultValue[2])
 		return True
+	
+	def checkAuthSuccess(self, result, user):
+		if user.uuid not in self.ircd.users:
+			return
+		loginSuccess, errorCode, errorMessage = result
+		if loginSuccess:
+			return
+		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTITY", errorCode)
+		user.sendMessage("NOTICE", errorMessage)
 
 class IdentifyCommand(Command):
 	implements(ICommand)

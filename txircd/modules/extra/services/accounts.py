@@ -196,6 +196,10 @@ class Accounts(ModuleData):
 		Authenticates a user for an account.
 		Accepts a username (or, for other functions implementing this action, another unique piece of account information)
 		and password, and it checks whether the user is allowed to be signed into that account.
+		Returns False, "code", "message" if the login failed.
+		Returns True, None, None, if the login succeeded.
+		If further processing is needed to determine, returns None, Deferred, None. A callback accepting three parameters
+		(one for each return value) can be added to the Deferred to handle the result of the authentication.
 		"""
 		if not username:
 			return False, "BADPARAM", "No username entered."

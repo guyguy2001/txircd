@@ -14,6 +14,12 @@ class AccountSASL(ModuleData):
 		resultValue = self.ircd.runActionUntilValue("accountauthenticate", user, username, password)
 		if not resultValue:
 			return False
+		if resultValue[0] is None:
+			resultValue[1].addCallback(self.completeSASL, user)
+			return "defer"
 		return resultValue[0]
+	
+	def completeSASL(self, result, user):
+		self.ircd.runActionStandard("saslcomplete", user, result[0])
 
 accountSASL = AccountSASL()
