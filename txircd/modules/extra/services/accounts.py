@@ -567,22 +567,31 @@ class CreateAccountCommand(Command):
 			otherRegisterTime = self.module.accountData["data"][lowerAccountName]["registered"]
 			thisRegisterTime = accountInfo["registered"]
 			if otherRegisterTime < thisRegisterTime:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to create account {name} due to timestamp mismatch (resolved with registration time)", name=accountName, server=server)
 				return True
 			if otherRegisterTime == thisRegisterTime:
 				if len(self.module.accountData["data"][lowerAccountName]["nick"]) > len(accountInfo["nick"]):
+					self.ircd.log.debug("Ignoring request from server {server.serverID} to create account {name} due to timestamp mismatch (resolved with nickname time)", name=accountName, server=server)
 					return True
 				if len(self.module.accountData["data"][lowerAccountName]["nick"]) == len(accountInfo["nick"]):
 					# We're getting really, really desperate to resolve this conflict now
 					# Random will be different between servers, so we use server ID here
+					# Yes, this operation is defined for strings
 					if server.serverID > self.ircd.serverID:
+						self.ircd.log.debug("Ignoring request from server {server.serverID} to create account {name} due to timestamp mismatch (resolved with last resort)", name=accountName, server=server)
 						return True
 			self.module.deleteAccount(accountName, server)
 		
+		createResult = None
 		try:
-			if not self.module.createAccount(accountInfo["username"], accountInfo["password"], accountInfo["password-hash"], accountInfo["email"] if "email" in accountInfo else None, None, accountInfo, server)[0]:
-				return False
-		except KeyError:
+			createResult = self.module.createAccount(accountInfo["username"], accountInfo["password"], accountInfo["password-hash"], accountInfo["email"] if "email" in accountInfo else None, None, accountInfo, server)
+		except KeyError as err:
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to create account {name} due to missing required information ({key})", name=accountName, server=server, key=err)
 			return False
+		if not createResult[0]:
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to create account {name} due to creation failing ({code})", name=accountName, server=server, code=createResult[1])
+			return False
+		self.ircd.log.debug("Created account {name} by request from server {server.serverID}", name=accountName, server=server)
 		return True
 
 class DeleteAccountCommand(Command):
@@ -617,9 +626,11 @@ class DeleteAccountCommand(Command):
 		registerTime = data["registertime"]
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
+			self.ircd.log.debug("Ignored request from server {server.serverID} to delete account {name} due to account not existing", name=accountName, server=server)
 			return True
 		if self.module.accountData["data"][lowerAccountName]["registered"] >= registerTime:
 			self.module.deleteAccount(accountName, server)
+		self.ircd.log.debug("Deleted account {name} by request from server {server.serverID}", name=accountName, server=server)
 		return True
 
 class UpdateAccountNameCommand(Command):
@@ -656,12 +667,19 @@ class UpdateAccountNameCommand(Command):
 		if lowerExistingName not in self.module.accountData["data"][lowerExistingName]:
 			self.module.cleanOldDeleted()
 			if lowerExistingName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to change account name for account {name} due to account being deleted", name=existingName, server=server)
 				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to change account name for account {name} due to account not existing", name=existingName, server=server)
 			return False
 		if self.module.accountData["data"][lowerExistingName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to change account name for account {name} due to timestamp mismatch", name=existingName, server=server)
 			return True
-		if self.module.changeAccountName(existingName, data["newname"], server)[0]:
+		newName = data["newname"]
+		nameChangeResult = self.module.changeAccountName(existingName, newName, server)
+		if nameChangeResult[0]:
+			self.ircd.log.debug("Changed account name from {oldName} to {newName} by request from server {server.serverID}", oldName=existingName, newName=newName, server=server)
 			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to change account name for account {name} due to error ({code})", name=existingName, server=server, code=nameChangeResult[1])
 		return False
 
 class UpdateAccountPassCommand(Command):
@@ -699,12 +717,18 @@ class UpdateAccountPassCommand(Command):
 		if lowerAccountName not in self.module.accountData["data"]:
 			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to change password for account {name} due to account being deleted", name=accountName, server=server)
 				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to change password for account {name} due to account not existing", name=accountName, server=server)
 			return False
 		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to change password for account {name} due to timestamp mismatch", name=accountName, server=server)
 			return True
-		if self.module.setPassword(accountName, data["password"], data["hashmethod"], server)[0]:
+		changeResult = self.module.setPassword(accountName, data["password"], data["hashmethod"], server)
+		if changeResult[0]:
+			self.ircd.log.debug("Changed account password for {name} by request from server {server.serverID}", name=accountName, server=server)
 			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to change password for account {name} due to error ({code})", name=accountName, server=server, code=changeResult[1])
 		return False
 
 class UpdateAccountEmailCommand(Command):
@@ -741,12 +765,18 @@ class UpdateAccountEmailCommand(Command):
 		if lowerAccountName not in self.module.accountData["data"]:
 			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to change email for account {name} due to account being deleted", name=accountName, server=server)
 				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to change email for account {name} due to account not existing", name=accountName, server=server)
 			return False
 		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to change email for account {name} due to timestamp mismatch", name=accountName, server=server)
 			return True
-		if self.module.setEmail(accountName, data["email"], server)[0]:
+		changeResult = self.module.setEmail(accountName, data["email"], server)
+		if changeResult[0]:
+			self.ircd.log.debug("Changed account email for {name} by request from server {server.serverID}", name=accountName, server=server)
 			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to change email for account {name} due to error ({code})", name=accountName, server=server, code=changeResult[1])
 		return False
 
 class AddAccountNickCommand(Command):
@@ -780,15 +810,22 @@ class AddAccountNickCommand(Command):
 	def execute(self, server, data):
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
+		newNick = data["addnick"]
 		if lowerAccountName not in self.module.accountData["data"]:
 			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to add nickname {nick} to account {name} due to account being deleted", name=accountName, nick=newNick, server=server)
 				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to add nickname {nick} to account {name} due to account not existing", name=accountName, nick=newNick, server=server)
 			return False
 		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to add nickname {nick} to account {name} due to timestamp mismatch", name=accountName, nick=newNick, server=server)
 			return True
-		if self.module.addAltNick(accountName, data["addnick"], server)[0]:
+		addResult = self.module.addAltNick(accountName, newNick, server)
+		if addResult[0]:
+			self.ircd.log.debug("Added nickname {nick} to account {name} by request from server {server.serverID}", name=accountName, nick=newNick, server=server)
 			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to add nickname {nick} to account {name} due to error ({code})", name=accountName, nick=newNick, server=server, code=addResult[1])
 		return False
 
 class RemoveAccountNickCommand(Command):
@@ -822,15 +859,25 @@ class RemoveAccountNickCommand(Command):
 	def execute(self, server, data):
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
+		removingNick = data["removenick"]
 		if lowerAccountName not in self.module.accountData["data"]:
 			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to remove nickname {nick} from account {name} due to account being deleted", name=accountName, nick=removingNick, server=server)
 				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to remove nickname {nick} from account {name} due to account not existing", name=accountName, nick=removingNick, server=server)
 			return False
 		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to remove nickname {nick} from account {name} due to timestamp mismatch", name=accountName, nick=removingNick, server=server)
 			return True
-		if self.module.removeAltNick(accountName, data["removenick"], server)[0]:
+		removeResult = self.module.removeAltNick(accountName, removingNick, server)
+		if removeResult[0]:
+			self.ircd.log.debug("Removed nickname {nick} from account {name} by request from server {server.serverID}", name=accountName, nick=removingNick, server=server)
 			return True
+		if removeResult[1] == "NICKNOLINK":
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to remove nickname {nick} from account {name} due to nickname already being removed", name=accountName, nick=removingNick, server=server)
+			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to remove nickname {nick} from account {name} due to error ({code})", name=accountName, nick=removingNick, server=server, code=removeResult[1])
 		return False
 
 class AccountBurstInitCommand(Command):

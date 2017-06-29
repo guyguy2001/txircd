@@ -54,14 +54,14 @@ class IRCServer(IRCBase):
 			if data is not None:
 				break
 		if data is None:
-			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't parse!", command=command, server=self)
+			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't parse! (prefix: {prefix}; params: {params!r}; tags: {tags!r}", command=command, params=params, prefix=prefix, tags=tags, server=self)
 			self.disconnect("Failed to parse command {} from {} with prefix '{}' and parameters {!r}".format(command, self.serverID, prefix, params)) # If we receive a command we can't parse, also abort immediately
 			return
 		for handler in handlers:
 			if handler[0].execute(self, data):
 				break
 		else:
-			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't handle!", command=command, server=self)
+			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't handle! (prefix: {prefix}; params: {params!r}; tags: {tags!r}", command=command, params=params, prefix=prefix, tags=tags, server=self)
 			self.disconnect("Couldn't process command {} from {} with prefix '{}' and parameters {!r}".format(command, self.serverID, prefix, params)) # Also abort connection if we can't process a command
 			return
 	
@@ -74,6 +74,7 @@ class IRCServer(IRCBase):
 		self.bursted = True
 		for command in self._burstQueueCommands:
 			self.ircd.runActionStandard("startburstcommand", self, command)
+			self.ircd.log.debug("Processing command {command} from server {server.serverID} in burst queue", command=command, server=self)
 			for params, prefix, tags in self._burstQueueHandlers[command]:
 				self.handleCommand(command, params, prefix, tags)
 				if self.bursted is None:
