@@ -12,9 +12,11 @@ irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(IRCBase):
 	def __init__(self, ircd, ip, uuid = None, host = None):
-		registrationTimeout = self.ircd.config.get("user_registration_timeout", 10)
 		self.ircd = ircd
 		self.uuid = ircd.createUUID() if uuid is None else uuid
+		
+		registrationTimeout = self.ircd.config.get("user_registration_timeout", 10)
+		
 		self.nick = None
 		self.ident = None
 		if ip[0] == ":": # Normalize IPv6 address for IRC
