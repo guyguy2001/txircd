@@ -112,7 +112,7 @@ class FJoinCommand(ModuleData, Command):
 		users = {}
 		try:
 			for userData in usersInChannel:
-				ranks, uuid = userData.split(",", 1)
+				ranks, uuid = userData.split(",")
 				if uuid not in self.ircd.users:
 					return None
 				for rank in ranks:
