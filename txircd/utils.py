@@ -1,6 +1,5 @@
 from collections import MutableMapping
 from datetime import datetime
-from socket import gaierror, gethostbyaddr, gethostbyname, herror
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\`^{}_|]*$")
@@ -245,13 +244,24 @@ def stripFormatting(message):
 	"""
 	return format_chars.sub('', message)
 
-def resolveHost(ip, maxLength):
-	try:
-		resolvedHost = gethostbyaddr(ip)[0]
-		# First half of host resolution done, run second half to prevent rDNS spoofing.
-		# Refuse hosts that are too long as well.
-		if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= maxLength and isValidHost(resolvedHost):
-			return resolvedHost
-		return ip
-	except (gaierror, herror):
-		return ip
+
+def ipIsV4(ip):
+	"""
+	Checks whether an IP address is IPv4. Assumes that it's known the parameter is an IP address.
+	"""
+	return "." in ip
+
+def expandIPv6Address(ip):
+	if "::" in ip:
+		count = 6 - ip.replace("::", "").count(":")
+		ip = ip.replace("::", ":{}:".format(":".join(["0000" for i in range(count)])))
+		if ip[0] == ":":
+			ip = "0000{}".format(ip)
+		if ip[-1] == ":":
+			ip = "{}0000".format(ip)
+	pieces = ip.split(":")
+	for index, piece in enumerate(pieces):
+		pieceLen = len(piece)
+		if pieceLen < 4:
+			pieces[index] = "{}{}".format("".join(["0" for i in range(4 - pieceLen)]), piece)
+	return ":".join(pieces)

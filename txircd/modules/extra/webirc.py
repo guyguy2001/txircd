@@ -1,3 +1,4 @@
+from twisted.names import client as dnsClient
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
@@ -57,11 +58,29 @@ class WebIRC(ModuleData, Command):
 		ip = data["ip"]
 		maxLength = self.ircd.config.get("hostname_length", 64)
 		if not isValidHost(host) or len(host) > maxLength or resolveHost(ip, maxLength) != host:
-			self.ircd.log.warn("DNS resolution for WEBIRC command from IP \"{user.ip}\" with requested IP \"{requestip}\" and requested host \"{requesthost}\" has failed; using the requested IP address as the host instead.", user=user, requestip=ip, requesthost=host)
-			host = ip
-		self.ircd.log.info("WEBIRC detected for IP \"{user.ip}\"; changing their IP to \"{requestip}\" and their real host to \"{requesthost}\".", user=user, requestip=ip, requesthost=host)
-		user.ip = ip
-		user.realHost = host
+			self.useIPFallback(user, host, ip)
+			return True
+		user.addRegisterHold("WEBIRC")
+		resolveDeferred = dnsClient.getHostByName(host, timeout=(2,))
+		resolveDeferred.addCallbacks(callback=self.checkDNS, callbackArgs=(user, host, ip), errback=self.failedDNS, errbackArgs=(user, host, ip))
 		return True
+	
+	def checkDNS(self, result, user, host, ip):
+		if result == ip:
+			self.ircd.log.info("WEBIRC detected for IP \"{user.ip}\"; changing their IP to \"{requestip}\" and their real host to \"{requesthost}\".", user=user, requestip=ip, requesthost=host)
+			user.ip = ip
+			user.realHost = host
+			user.register("WEBIRC")
+			return
+		self.useIPFallback(user, host, ip)
+	
+	def failedDNS(self, error, user, host, ip):
+		self.useIPFallback(user, host, ip)
+		user.register("WEBIRC")
+	
+	def useIPFallback(self, user, host, ip):
+		self.ircd.log.warn("DNS resolution for WEBIRC command from IP \"{user.ip}\" with requested IP \"{requestip}\" and requested host \"{requesthost}\" has failed; using the requested IP address as the host instead.", user=user, requestip=ip, requesthost=host)
+		user.ip = ip
+		user.realHost = ip
 
 webirc = WebIRC()
