@@ -3,7 +3,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import isValidHost, resolveHost
+from txircd.utils import isValidHost
 from zope.interface import implements
 
 class WebIRC(ModuleData, Command):
@@ -57,7 +57,7 @@ class WebIRC(ModuleData, Command):
 		host = data["host"]
 		ip = data["ip"]
 		maxLength = self.ircd.config.get("hostname_length", 64)
-		if not isValidHost(host) or len(host) > maxLength or resolveHost(ip, maxLength) != host:
+		if not isValidHost(host) or len(host) > maxLength:
 			self.useIPFallback(user, host, ip)
 			return True
 		user.addRegisterHold("WEBIRC")
