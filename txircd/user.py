@@ -21,7 +21,10 @@ class IRCUser(IRCBase):
 		self.ident = None
 		if ip[0] == ":": # Normalize IPv6 address for IRC
 			ip = "0{}".format(ip)
-		self.realHost = ip
+		if host is None:
+			self.realHost = ip
+		else:
+			self.realHost = host
 		self.ip = ip
 		self._hostStack = []
 		self._hostsByType = {}
@@ -833,6 +836,9 @@ class RemoteUser(IRCUser):
 	def __init__(self, ircd, ip, uuid = None, host = None):
 		IRCUser.__init__(self, ircd, ip, uuid, host)
 		self._registrationTimeoutTimer.cancel()
+	
+	def _startDNSResolving(self, timeout):
+		pass
 	
 	def sendMessage(self, command, *params, **kw):
 		pass # Messages can't be sent directly to remote users.
