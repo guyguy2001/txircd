@@ -2,34 +2,24 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.interfaces import ISSLTransport
 from twisted.internet.task import LoopingCall
+from twisted.names import client as dnsClient
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
-from socket import gaierror, gethostbyaddr, gethostbyname, herror
+from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidMetadataKey, ModeType, now, splitMessage
 
 irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(IRCBase):
 	def __init__(self, ircd, ip, uuid = None, host = None):
+		registrationTimeout = self.ircd.config.get("user_registration_timeout", 10)
 		self.ircd = ircd
 		self.uuid = ircd.createUUID() if uuid is None else uuid
 		self.nick = None
 		self.ident = None
 		if ip[0] == ":": # Normalize IPv6 address for IRC
 			ip = "0{}".format(ip)
-		if host is None:
-			try:
-				resolvedHost = gethostbyaddr(ip)[0]
-				# First half of host resolution done, run second half to prevent rDNS spoofing.
-				# Refuse hosts that are too long as well.
-				if ip == gethostbyname(resolvedHost) and len(resolvedHost) <= self.ircd.config.get("hostname_length", 64) and isValidHost(resolvedHost):
-					host = resolvedHost
-				else:
-					host = ip
-			except (herror, gaierror):
-				host = ip
-		self.realHost = host
+		self.realHost = ip
 		self.ip = ip
 		self._hostStack = []
 		self._hostsByType = {}
@@ -41,7 +31,7 @@ class IRCUser(IRCBase):
 		self.connectedSince = now()
 		self.nickSince = now()
 		self.idleSince = now()
-		self._registerHolds = set(("connection", "NICK", "USER"))
+		self._registerHolds = set(("connection", "dns", "NICK", "USER"))
 		self.disconnectedDeferred = Deferred()
 		self._messageBatches = {}
 		self._errorBatchName = None
@@ -50,8 +40,35 @@ class IRCUser(IRCBase):
 		self.localOnly = False
 		self.secureConnection = False
 		self._pinger = LoopingCall(self._ping)
-		self._registrationTimeoutTimer = reactor.callLater(self.ircd.config.get("user_registration_timeout", 10), self._timeoutRegistration)
+		self._registrationTimeoutTimer = reactor.callLater(registrationTimeout, self._timeoutRegistration)
 		self._connectHandlerTimer = None
+		self._startDNSResolving(registrationTimeout)
+	
+	def _startDNSResolving(self, timeout):
+		ip = self.ip
+		if ipIsV4(ip):
+			addr = "{}.in-addr.arpa".format(".".join(reversed(ip.split("."))))
+		else:
+			addr = reversed(expandIPv6Address(ip).replace(":", ""))
+			addr = "{}.ip6.arpa".format(".".join(addr))
+		resolveDeferred = dnsClient.lookupPointer(addr, ((timeout/2),))
+		resolveDeferred.addCallbacks(callback=self._verifyDNSResolution, callbackArgs=(timeout,), errback=self._cancelDNSResolution)
+	
+	def _verifyDNSResolution(self, result, timeout):
+		name = result[0][0].payload.name.name
+		if len(name) > self.ircd.config.get("hostname_length", 64):
+			self._cancelDNSResolution()
+			return 
+		resolveDeferred = dnsClient.getHostByName(name, ((timeout/2),))
+		resolveDeferred.addCallbacks(callback=self._completeDNSResolution, errback=self._cancelDNSResolution, callbackArgs=(name,))
+	
+	def _completeDNSResolution(self, result, name):
+		if result == self.ip:
+			self.realHost = name
+		self.register("dns")
+	
+	def _cancelDNSResolution(self, error = None):
+		self.register("dns")
 	
 	def connectionMade(self):
 		# We need to callLater the connect action call because the connection isn't fully set up yet,
@@ -286,7 +303,7 @@ class IRCUser(IRCBase):
 	
 	def register(self, holdName):
 		"""
-		Removes the specified hold on a user's registratrion. If this is the
+		Removes the specified hold on a user's registration. If this is the
 		last hold on a user, completes registration on the user.
 		"""
 		if holdName not in self._registerHolds:

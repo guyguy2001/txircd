@@ -2,7 +2,7 @@ from twisted.internet.abstract import isIPAddress, isIPv6Address
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import isValidHost, ModeType
+from txircd.utils import expandIPv6Address, isValidHost, ModeType
 from zope.interface import implements
 from hashlib import sha256
 
@@ -78,19 +78,7 @@ class HostCloaking(ModuleData, Mode):
 		return "{}.IP".format(".".join(hashedParts))
 
 	def applyIPv6Cloak(self, ip):
-		if "::" in ip:
-			# Our cloaking method relies on a fully expanded address
-			count = 6 - ip.replace("::", "").count(":")
-			ip = ip.replace("::", ":{}:".format(":".join(["0000" for i in range(count)])))
-			if ip[0] == ":":
-				ip = "0000{}".format(ip)
-			if ip[-1] == ":":
-				ip = "{}0000".format(ip)
-		pieces = ip.split(":")
-		for index, piece in enumerate(pieces):
-			pieceLen = len(piece)
-			if pieceLen < 4:
-				pieces[index] = "{}{}".format("".join(["0" for i in range(4 - pieceLen)]), piece)
+		pieces = expandIPv6Address(ip).split(":")
 		hashedParts = []
 		pieces.reverse()
 		for i in range(len(pieces), 0, -1):
