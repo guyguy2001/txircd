@@ -853,7 +853,7 @@ class RemoteUser(IRCUser):
 		self._registrationTimeoutTimer.cancel()
 	
 	def _startDNSResolving(self, timeout):
-		pass
+		self.register("dns")
 	
 	def sendMessage(self, command, *params, **kw):
 		pass # Messages can't be sent directly to remote users.
