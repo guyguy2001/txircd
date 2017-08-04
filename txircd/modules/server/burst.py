@@ -48,10 +48,13 @@ class ServerBurst(ModuleData, Command):
 				server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, remoteServer.description, prefix=self.ircd.serverID)
 		for user in self.ircd.users.itervalues():
 			if user.localOnly:
+				self.ircd.log.debug("Skipping bursting user {user.nick} ({user.uuid}) for being a local-only user", user=user)
 				continue
 			if not user.isRegistered():
+				self.ircd.log.debug("Skipping bursting user {user.uuid} for not being registered yet", user=user)
 				continue
 			if user.uuid[:3] in serversBurstingTo: # The remote server apparently already finished its burst (or at least enough that we know this), so we need to not send it those again.
+				self.ircd.log.debug("Skipping bursting user {user.nick} ({user.uuid}) for being a user from the server to which we're bursting", user=user)
 				continue
 			signonTimestamp = timestampStringFromTime(user.connectedSince)
 			nickTimestamp = timestampStringFromTime(user.nickSince)
