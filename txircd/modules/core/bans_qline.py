@@ -128,6 +128,8 @@ class ServerAddQLine(Command):
 	def execute(self, server, data):
 		if self.module.executeServerAddCommand(server, data):
 			for user in self.module.ircd.users.itervalues():
+				if not user.isRegistered():
+					continue
 				reason = self.module.matchUser(user)
 				if reason is not None:
 					self.module.changeNick(user, reason, True)
