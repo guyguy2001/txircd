@@ -27,7 +27,7 @@ class RestartCommand(ModuleData, Command):
 		return {}
 	
 	def execute(self, user, data):
-		self.ircd.log.info("User {user.uuid} ({user.nick}) restarted the server")
+		self.ircd.log.info("Received RESTART command from user {user.uuid} ({user.nick})", user=user)
 		reactor.addSystemEventTrigger("after", "shutdown", lambda: os.execl(sys.executable, sys.executable, *sys.argv))
 		os.unlink("twistd.pid") # If we don't remove the pid file, the new twistd will refuse to start.
 		reactor.stop()
