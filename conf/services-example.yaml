@@ -105,7 +105,7 @@ account_password_hash: pbkdf2
 
 # account_nick_default_prefix
 # This option specifies a prefix to be put in front of a nickname forcibly
-# changed through AccountNickProtect. The default value is no prefix
+# changed through AccountNickProtect. The default value is no prefix.
 #account_nick_default_prefix: Guest
 
 # account_nick_protect_restrict
@@ -117,7 +117,7 @@ account_password_hash: pbkdf2
 #account_nick_protect_restrict: true
 
 # account_nick_protect_restricted_commands
-# This option allows whitelisted commands tobe specified for
+# This option allows whitelisted commands to be specified for
 # account_nick_protect_restrict, mirroring the functionality of SHUN. We strongly
 # recommend not removing PING, PONG, ID, or IDENTIFY from this list.
 #account_nick_protect_restricted_commands:

@@ -27,11 +27,11 @@ class AccountNickProtect(ModuleData):
 				raise ConfigValidationError("account_nick_recover_seconds", "invalid number")
 		if "account_nick_default_prefix" not in config:
 			config["account_nick_default_prefix"] = ""
-		if not isinstance(config["account_nick_default_prefix"], basestring):
+		elif not isinstance(config["account_nick_default_prefix"], basestring):
 			raise ConfigValidationError("account_nick_default_prefix", "value must be a string")
 		if "account_nick_protect_restrict" not in config or not config["account_nick_protect_restrict"]:
 			config["account_nick_protect_restrict"] = False
-		if not isinstance(config["account_nick_protect_restrict"], bool):
+		elif not isinstance(config["account_nick_protect_restrict"], bool):
 				raise ConfigValidationError("account_nick_protect_restrict", "must be true or false")
 		if "account_nick_protect_restricted_commands" in config:
 			if not isinstance(config["account_nick_protect_restricted_commands"], list):
@@ -88,7 +88,7 @@ class AccountNickProtect(ModuleData):
 			user.changeNick(user.uuid)
 		else:
 			user.changeNick(newNick)
-	recoverSeconds = self.ircd.config.get("account_nick_recover_seconds", 10)
+		recoverSeconds = self.ircd.config.get("account_nick_recover_seconds", 10)
 		if recoverSeconds > 0:
 			recoveryTime = timedelta(seconds = recoverSeconds)
 			user.cache["nick-protect"] = now() + recoveryTime
