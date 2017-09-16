@@ -64,7 +64,7 @@ class AccountNickProtect(ModuleData):
 	def blockUnidentified(self, user, command, data):
 		if not self.ircd.config["account_nick_protect_restrict"]:
 			return None
-		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active():
+		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active() or self.userSignedIntoNickAccount(user):
 			return None
 		if command not in self.ircd.config.get("account_nick_protect_restricted_commands", ["PING", "PONG", "IDENTIFY", "ID", "NICK", "QUIT"]):
 			user.sendMessage("NOTICE", "{} is not allowed until you identify or your nick is changed".format(command))
