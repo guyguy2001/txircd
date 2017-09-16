@@ -102,3 +102,28 @@ account_password_hash: pbkdf2
 # changed by nick protection that a user must wait before they can change their
 # nick. The default value is 10.
 #account_nick_recover_seconds: 10
+
+# account_nick_default_prefix
+# This option specifies a prefix to be put in front of a nickname forcibly
+# changed through AccountNickProtect. The default value is no prefix.
+#account_nick_default_prefix: Guest
+
+# account_nick_protect_restrict
+# This option prevents a user from executing any commands except those needed
+# to maintain their connection or identify while unidentified and using a
+# protected nick. PING, PONG, IDENTIFY, ID, NICK, and QUIT will be allowed unless
+# account_nick_protect_restricted_commands is set to different values. The default
+# value is false.
+#account_nick_protect_restrict: true
+
+# account_nick_protect_restricted_commands
+# This option allows whitelisted commands to be specified for
+# account_nick_protect_restrict, mirroring the functionality of SHUN. We strongly
+# recommend not removing PING, PONG, NICK, ID, or IDENTIFY from this list.
+#account_nick_protect_restricted_commands:
+#- PING
+#- PONG
+#- IDENTIFY
+#- ID
+#- NICK
+#- QUIT
