@@ -119,7 +119,7 @@ account_password_hash: pbkdf2
 # account_nick_protect_restricted_commands
 # This option allows whitelisted commands to be specified for
 # account_nick_protect_restrict, mirroring the functionality of SHUN. We strongly
-# recommend not removing PING, PONG, ID, or IDENTIFY from this list.
+# recommend not removing PING, PONG, NICK, ID, or IDENTIFY from this list.
 #account_nick_protect_restricted_commands:
 #- PING
 #- PONG
