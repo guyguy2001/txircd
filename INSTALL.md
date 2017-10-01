@@ -1,7 +1,7 @@
 Installation instructions
 =========================
 
-The following steps can be done either directly to the system or in a virtualenv.
+The following steps can be done either directly to the system or in a virtualenv. Ensure that you're running txircd in a Python 3 environment.
 
 1. Install dependencies:  
 `pip install -r requirements.txt`
