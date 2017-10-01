@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType, timestampStringFromTimeSeconds
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData, IMode)
 class BanMode(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "BanMode"
 	core = True
 	affectedActions = { "joinpermission": 10,

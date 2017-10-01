@@ -2,14 +2,13 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.RPL_ADMINLOC1 = "257"
 irc.RPL_ADMINLOC2 = "258"
 
+@implementer(IPlugin, IModuleData)
 class AdminCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AdminCommand"
 	core = True
 	
@@ -40,9 +39,8 @@ class AdminCommand(ModuleData):
 			adminContact = "No Admin <anarchy@example.com>"
 		return (adminLoc1, adminLoc2, adminContact)
 
+@implementer(ICommand)
 class UserAdmin(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -71,9 +69,8 @@ class UserAdmin(Command):
 			user.sendMessage(irc.RPL_ADMINEMAIL, adminContact)
 		return True
 
+@implementer(ICommand)
 class ServerAdminRequest(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -120,9 +117,8 @@ class ServerAdminRequest(Command):
 			toServer.sendMessage("ADMININFO", toUser.uuid, prefix=self.ircd.serverID, tags=tags)
 		return True
 
+@implementer(ICommand)
 class ServerAdminResponse(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class GlobalLoad(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "GlobalLoad"
 	
 	def actions(self):
@@ -42,9 +41,8 @@ class GlobalLoad(ModuleData):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserLoad(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -72,9 +70,8 @@ class UserLoad(Command):
 				user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, e.message)
 		return True
 
+@implementer(ICommand)
 class UserUnload(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -99,9 +96,8 @@ class UserUnload(Command):
 				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, e.message)
 		return True
 
+@implementer(ICommand)
 class UserReload(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -126,9 +122,8 @@ class UserReload(Command):
 				user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "{}; module is now unloaded".format(e.message))
 		return True
 
+@implementer(ICommand)
 class ServerLoad(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -152,9 +147,8 @@ class ServerLoad(Command):
 		self.ircd.broadcastToServers(server, "LOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
+@implementer(ICommand)
 class ServerUnload(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -176,9 +170,8 @@ class ServerUnload(Command):
 		self.ircd.broadcastToServers(server, "UNLOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
+@implementer(ICommand)
 class ServerReload(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -1,12 +1,11 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import timedelta
 
+@implementer(IPlugin, IModuleData, IMode)
 class ChannelFlood(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "ChannelFlood"
 	affectedActions = {
 		"commandextra-PRIVMSG": 10,

@@ -4,12 +4,11 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData, ICommand)
 class KLine(ModuleData, Command, XLineBase):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "KLine"
 	core = True
 	lineType = "K"

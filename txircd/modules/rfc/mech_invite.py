@@ -2,13 +2,12 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, IMode, ModuleData, Mode
 from txircd.utils import ModeType, now
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.RPL_INVITED = "345"
 
+@implementer(IPlugin, IModuleData, IMode)
 class Invite(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "Invite"
 	core = True
 	affectedActions = { "joinpermission": 10 }
@@ -72,10 +71,8 @@ class Invite(ModuleData, Mode):
 			return False
 		return None
 
-
+@implementer(ICommand)
 class UserInvite(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -121,10 +118,8 @@ class UserInvite(Command):
 		self.ircd.runActionStandard("invite", user, targetUser, channel)
 		return True
 
-
+@implementer(ICommand)
 class ServerInvite(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 71
 	
 	def __init__(self, ircd):

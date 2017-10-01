@@ -3,11 +3,10 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class MessageCommands(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "MessageCommands"
 	core = True
 	
@@ -144,9 +143,8 @@ class MessageCommands(ModuleData):
 			return True
 		return None
 
+@implementer(ICommand)
 class UserPrivmsg(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -169,9 +167,8 @@ class UserPrivmsg(Command):
 	def execute(self, user, data):
 		return self.module.cmdExecute("PRIVMSG", user, data)
 
+@implementer(ICommand)
 class UserNotice(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -194,9 +191,8 @@ class UserNotice(Command):
 	def execute(self, user, data):
 		return self.module.cmdExecute("NOTICE", user, data)
 
+@implementer(ICommand)
 class ServerPrivmsg(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -206,9 +202,8 @@ class ServerPrivmsg(Command):
 	def execute(self, server, data):
 		return self.module.serverExecute("PRIVMSG", server, data)
 
+@implementer(ICommand)
 class ServerNotice(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

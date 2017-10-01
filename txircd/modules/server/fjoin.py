@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from txircd.channel import IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
+@implementer(IPlugin, IModuleData, ICommand)
 class FJoinCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "FJoinCommand"
 	core = True
 	burstQueuePriority = 80

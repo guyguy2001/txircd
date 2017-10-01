@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, IMode)
 class CustomPrefix(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-
 	name = "CustomPrefix"
 	prefixes = None
 

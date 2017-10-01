@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now, isoTime
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import timedelta
 
+@implementer(IPlugin, IModuleData, IMode)
 class ChanHistory(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-
 	name = "ChannelHistory"
 	affectedActions = {
 		"commandextra-PRIVMSG": 1,

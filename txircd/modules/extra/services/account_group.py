@@ -1,22 +1,20 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
+@implementer(IPlugin, IModuleData)
 class AccountGroup(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AccountGroup"
 	
 	def userCommands(self):
 		return [ ("ACCOUNTGROUP", 1, CommandGroup(self.ircd)),
 			("ACCOUNTUNGROUP", 1, CommandUngroup(self.ircd)) ]
 
+@implementer(ICommand)
 class CommandGroup(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -40,9 +38,8 @@ class CommandGroup(Command):
 		user.sendMessage("NOTICE", "Couldn't group nick: {}".format(resultValue[2]))
 		return True
 
+@implementer(ICommand)
 class CommandUngroup(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

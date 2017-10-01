@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.RPL_SASLSUCCESS = "903"
 irc.ERR_SASLFAIL = "904"
@@ -9,9 +9,8 @@ irc.ERR_SASLTOOLONG = "905"
 irc.ERR_SASLABORTED = "906"
 irc.RPL_SASLMECHS = "908"
 
+@implementer(IPlugin, IModuleData, ICommand)
 class SASL(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "SASL"
 	forRegistered = None
 	

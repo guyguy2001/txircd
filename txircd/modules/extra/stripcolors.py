@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, stripFormatting
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, IMode)
 class StripColors(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-
 	name = "StripColors"
 	affectedActions = {
 		"commandmodify-PRIVMSG": 10,

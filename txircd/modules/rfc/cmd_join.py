@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import InvalidChannelNameError, IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class JoinCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "JoinCommand"
 	core = True
 	
@@ -36,9 +35,8 @@ class JoinCommand(ModuleData):
 	def broadcastJoin(self, channel, user, fromServer):
 		self.ircd.broadcastToServers(fromServer, "JOIN", channel.name, prefix=user.uuid)
 
+@implementer(ICommand)
 class JoinChannel(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -82,9 +80,8 @@ class JoinChannel(Command):
 			user.joinChannel(channel)
 		return True
 
+@implementer(ICommand)
 class ServerJoin(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 80
 	
 	def __init__(self, ircd):

@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.server import RemoteServer
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class ServerCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "ServerCommand"
 	core = True
 	forRegistered = None

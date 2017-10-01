@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class KickCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "KickCommand"
 	core = True
 	
@@ -99,10 +98,8 @@ class KickCommand(ModuleData):
 			msgUser.sendMessage("KICK", user.nick, reason, **kwArgs)
 		del sendUserList[:]
 
-
+@implementer(ICommand)
 class UserKick(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -144,10 +141,8 @@ class UserKick(Command):
 		targetUser.leaveChannel(channel, "KICK", { "byuser": True, "user": user, "reason": reason })
 		return True
 
-
+@implementer(ICommand)
 class ServerKick(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 79
 	
 	def __init__(self, ircd):

@@ -4,13 +4,12 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, now
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 import socket
 
+@implementer(IPlugin, IModuleData)
 class ZLine(ModuleData, XLineBase):
-	implements(IPlugin, IModuleData)
-	
 	name = "ZLine"
 	core = True
 	lineType = "Z"
@@ -64,9 +63,8 @@ class ZLine(ModuleData, XLineBase):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserZLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -111,9 +109,8 @@ class UserZLine(Command):
 		user.sendMessage("NOTICE", "*** Z:Line for {} has been removed.".format(banmask))
 		return True
 
+@implementer(ICommand)
 class ServerAddZLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -132,9 +129,8 @@ class ServerAddZLine(Command):
 			return True
 		return None
 
+@implementer(ICommand)
 class ServerDelZLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

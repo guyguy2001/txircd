@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class MessageOfTheDay(ModuleData, Command):
-	implements(IPlugin, IModuleData)
-	
 	name = "MOTD"
 	core = True
 	motd = []
@@ -69,9 +68,8 @@ class MessageOfTheDay(ModuleData, Command):
 		if server.serverID in self.remoteMOTD:
 			del self.remoteMOTD[server.serverID]
 
+@implementer(ICommand)
 class UserMOTD(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -95,9 +93,8 @@ class UserMOTD(Command):
 			toServer.sendMessage("MOTDREQ", toServer.serverID, prefix=user.uuid)
 		return True
 
+@implementer(ICommand)
 class ServerMOTDRequest(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 5
 	
 	def __init__(self, module):
@@ -165,9 +162,8 @@ class ServerMOTDRequest(Command):
 		server.sendMessage("ENDMOTD", byID, prefix=self.ircd.serverID)
 		return True
 
+@implementer(ICommand)
 class ServerStartMOTD(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 5
 	
 	def __init__(self, module):
@@ -231,9 +227,8 @@ class ServerStartMOTD(Command):
 		self.ircd.broadcastToServers(server, "STARTMOTD", "*", prefix=fromServer.serverID)
 		return True
 
+@implementer(ICommand)
 class ServerMOTD(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 4
 	
 	def __init__(self, module):
@@ -303,9 +298,8 @@ class ServerMOTD(Command):
 		self.ircd.broadcastToServers(server, "MOTD", "*", newLine, prefix=fromServer.serverID)
 		return True
 
+@implementer(ICommand)
 class ServerEndMOTD(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 3
 	
 	def __init__(self, module):
@@ -373,9 +367,8 @@ class ServerEndMOTD(Command):
 		self.ircd.broadcastToServers(server, "ENDMOTD", "*", prefix=fromServer.serverID)
 		return True
 
+@implementer(ICommand)
 class RemoveMOTD(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd

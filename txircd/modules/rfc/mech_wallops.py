@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, IMode)
 class Wallops(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "Wallops"
 	core = True
 	
@@ -28,9 +27,8 @@ class Wallops(ModuleData, Mode):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserWallops(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -54,9 +52,8 @@ class UserWallops(Command):
 		self.ircd.broadcastToServers(None, "WALLOPS", message, prefix=user.uuid)
 		return True
 
+@implementer(ICommand)
 class ServerWallops(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.user import RemoteUser
 from txircd.utils import ModeType, now, timestampStringFromTime
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
+@implementer(IPlugin, IModuleData, ICommand)
 class ServerUID(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "ServerUID"
 	core = True
 	burstQueuePriority = 90

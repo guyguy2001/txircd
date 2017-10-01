@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class VersionCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "VersionCommand"
 	core = True
 	

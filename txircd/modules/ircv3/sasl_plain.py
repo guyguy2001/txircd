@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 from base64 import b64decode
 
+@implementer(IPlugin, IModuleData)
 class SASLPlain(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "SASLPlain"
 	
 	def actions(self):

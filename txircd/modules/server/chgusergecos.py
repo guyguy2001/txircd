@@ -1,10 +1,9 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class ServerChgGecos(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "ServerChangeGecos"
 	core = True
 	burstQueuePriority = 10

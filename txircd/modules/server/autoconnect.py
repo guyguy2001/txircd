@@ -3,11 +3,10 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import durationToSeconds
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class ServerAutoconnect(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "ServerAutoconnect"
 	core = True
 	connector = None

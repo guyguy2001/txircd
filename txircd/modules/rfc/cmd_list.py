@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData, ICommand)
 class ListCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "ListCommand"
 	core = True
 	

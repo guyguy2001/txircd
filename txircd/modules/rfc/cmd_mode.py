@@ -2,14 +2,13 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType, timestampStringFromTime, timestampStringFromTimeSeconds
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
 irc.RPL_CREATIONTIME = "329"
 
+@implementer(IPlugin, IModuleData)
 class ModeCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "ModeCommand"
 	core = True
 	
@@ -141,9 +140,8 @@ class ModeCommand(ModuleData):
 	def buildISupport(self, data):
 		data["MODES"] = self.ircd.config.get("modes_per_line", 20)
 
+@implementer(ICommand)
 class UserMode(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -201,9 +199,8 @@ class UserMode(Command):
 		user.setModesByUser(user, data["modes"], data["params"])
 		return True
 
+@implementer(ICommand)
 class ServerMode(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 70
 	
 	def __init__(self, ircd):

@@ -3,14 +3,13 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import timestampStringFromTime, timestampStringFromTimeSeconds
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
 irc.RPL_TOPICWHOTIME = "333"
 
+@implementer(IPlugin, IModuleData)
 class TopicCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "TopicCommand"
 	core = True
 	
@@ -66,9 +65,8 @@ class TopicCommand(ModuleData):
 	def buildISupport(self, data):
 		data["TOPICLEN"] = self.ircd.config.get("topic_length", 326)
 
+@implementer(ICommand)
 class UserTopic(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd, module):
 		self.ircd = ircd
 		self.module = module
@@ -101,9 +99,8 @@ class UserTopic(Command):
 			self.module.sendChannelTopic(data["channel"], user)
 		return True
 
+@implementer(ICommand)
 class ServerTopic(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 79
 	
 	def __init__(self, ircd):

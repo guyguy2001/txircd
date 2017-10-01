@@ -1,7 +1,7 @@
 from twisted.application.service import IServiceMaker
 from twisted.plugin import IPlugin
 from twisted.python import usage
-from zope.interface import implements
+from zope.interface import implementer
 from signal import signal
 try:
 	from signal import SIGHUP
@@ -13,8 +13,8 @@ from txircd.ircd import IRCd
 class Options(usage.Options):
 	optParameters = [["config", "c", "txircd.yaml", "The configuration file to read"]]
 
+@implementer(IServiceMaker, IPlugin)
 class IRCdServiceMaker(object):
-	implements(IServiceMaker, IPlugin)
 	tapname = "txircd"
 	description = "Twisted IRC Server"
 	options = Options

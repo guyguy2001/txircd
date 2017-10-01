@@ -2,16 +2,15 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.ERR_NOSUCHXINFO = "772"
 irc.RPL_XINFOENTRY = "773"
 irc.RPL_XINFOEND = "774"
 irc.RPL_XINFOTYPE = "775"
 
-class StatsCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData)
-	
+@implementer(IPlugin, IModuleData)
+class StatsCommand(ModuleData):
 	name = "StatsCommand"
 	core = True
 	
@@ -31,9 +30,8 @@ class StatsCommand(ModuleData, Command):
 				if not isinstance(info, basestring):
 					raise ConfigValidationError("public_info", "every entry must be a string")
 
+@implementer(ICommand)
 class UserStats(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -86,9 +84,8 @@ class UserStats(Command):
 			return True
 		return False
 
+@implementer(ICommand)
 class ServerInfoRequest(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -131,9 +128,8 @@ class ServerInfoRequest(Command):
 		nextServer.sendMessage("INFOREQ", serverID, typeName, prefix=data["user"].uuid)
 		return True
 
+@implementer(ICommand)
 class ServerInfo(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -179,9 +175,8 @@ class ServerInfo(Command):
 		destServer.sendMessage("INFO", user.uuid, typeName, *responseList, prefix=data["source"])
 		return True
 
+@implementer(ICommand)
 class ServerInfoEnd(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

@@ -3,12 +3,11 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import timedelta
 
+@implementer(IPlugin, IModuleData)
 class AccountNickProtect(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AccountNickProtect"
 	
 	def actions(self):

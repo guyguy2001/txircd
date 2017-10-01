@@ -1,13 +1,12 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
+@implementer(IPlugin, IModuleData)
 class AccountIdentify(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AccountIdentify"
 	
 	def userCommands(self):
@@ -59,9 +58,8 @@ class AccountIdentify(ModuleData):
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTITY", errorCode)
 		user.sendMessage("NOTICE", errorMessage)
 
+@implementer(IPlugin, IModuleData)
 class IdentifyCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -71,9 +69,8 @@ class IdentifyCommand(Command):
 	def execute(self, user, data):
 		return self.module.execute(user, data)
 
+@implementer(ICommand)
 class IdCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

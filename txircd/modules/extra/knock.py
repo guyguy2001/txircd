@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import timedelta
 from weakref import WeakKeyDictionary
 
@@ -14,9 +14,8 @@ irc.ERR_TOOMANYKNOCK = "712"
 irc.ERR_CHANOPEN = "713"
 irc.ERR_KNOCKONCHAN = "714"
 
+@implementer(IPlugin, IModuleData)
 class Knock(ModuleData):
-	implements(IPlugin, IModuleData)
-
 	name = "Knock"
 	
 	def channelModes(self):
@@ -45,9 +44,8 @@ class Knock(ModuleData):
 		if "knocks" in targetUser.cache and channel in targetUser.cache["knocks"]:
 			del targetUser.cache["knocks"][channel]
 
+@implementer(ICommand)
 class UserKnock(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -101,9 +99,8 @@ class UserKnock(Command):
 		for channel in expiredKnocks:
 			del user.cache["knocks"][channel]
 
+@implementer(ICommand)
 class ServerKnock(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 72
 	
 	def __init__(self, ircd):
@@ -132,9 +129,8 @@ class ServerKnock(Command):
 		self.ircd.broadcastToServers(server, "KNOCK", channel.name, reason, prefix=fromUser.uuid)
 		return True
 
+@implementer(IMode)
 class NoKnockMode(Mode):
-	implements(IMode)
-
 	affectedActions = { "commandpermission-KNOCK": 10 }
 
 	def apply(self, actionName, channel, param, user, data):

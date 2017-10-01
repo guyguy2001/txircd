@@ -3,13 +3,12 @@ from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
+@implementer(IPlugin, IModuleData, IMode)
 class ChannelRegister(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "ChannelRegister"
 	
 	def actions(self):

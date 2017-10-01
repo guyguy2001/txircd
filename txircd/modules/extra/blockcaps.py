@@ -2,15 +2,11 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 import string
 
-# PRIVMSG #KIRBYDANCE :THIS IS A TEST OF THE EMERGENCY ALERT SYSTEM
-# :hugglefurnace.ferwy.net 404 Alchy|Test #kirbydance :Your message cannot contain more than 50% capital letters if it's longer than 5 characters
-
+@implementer(IPlugin, IModuleData, IMode)
 class BlockCaps(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "BlockCaps"
 	affectedActions = {
 		"commandmodify-PRIVMSG": 10,

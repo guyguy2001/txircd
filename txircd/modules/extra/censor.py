@@ -2,16 +2,15 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 import re
 
 irc.RPL_BADWORDADDED = "927"
 irc.RPL_BADWORDREMOVED = "928"
 irc.ERR_NOSUCHBADWORD = "929"
 
+@implementer(IPlugin, IModuleData)
 class Censor(ModuleData):
-	implements(IPlugin, IModuleData)
-
 	name = "Censor"
 	badwords = None
 
@@ -70,9 +69,8 @@ class Censor(ModuleData):
 			self.ircd.storage["badwords"] = {}
 		self.badwords = self.ircd.storage["badwords"]
 
+@implementer(IMode)
 class ChannelCensor(Mode):
-	implements(IMode)
-
 	affectedActions = {
 		"commandmodify-PRIVMSG": 10,
 		"commandmodify-NOTICE": 10
@@ -91,9 +89,8 @@ class ChannelCensor(Mode):
 				message = re.sub(mask, replacement, message, flags=re.IGNORECASE)
 			data["targetchans"][channel] = message
 
+@implementer(IMode)
 class UserCensor(Mode):
-	implements(IMode)
-
 	affectedActions = {
 		"commandmodify-PRIVMSG": 10,
 		"commandmodify-NOTICE": 10
@@ -111,9 +108,8 @@ class UserCensor(Mode):
 				message = re.sub(mask, replacement, message, flags=re.IGNORECASE)
 			data["targetusers"][targetUser] = message
 
+@implementer(ICommand)
 class UserCensorCommand(Command):
-	implements(ICommand)
-
 	def __init__(self, censor):
 		self.censor = censor
 
@@ -151,9 +147,8 @@ class UserCensorCommand(Command):
 			user.sendMessage(irc.RPL_BADWORDREMOVED, badword, "Badword removed")
 		return True
 
+@implementer(ICommand)
 class ServerCensorCommand(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 40
 
 	def __init__(self, censor):

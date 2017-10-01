@@ -1,12 +1,11 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import ircLower
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData)
 class AccountExtban(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AccountExtban"
 	
 	def actions(self):

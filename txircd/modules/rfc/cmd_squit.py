@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class ServerQuit(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "ServerQuit"
 	core = True
 	
@@ -39,9 +38,8 @@ class ServerQuit(ModuleData):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserSQuit(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -74,9 +72,8 @@ class UserSQuit(Command):
 			user.sendMessage("NOTICE", "*** Sent remote SQUIT for {}".format(targetServer.name))
 		return True
 
+@implementer(ICommand)
 class ServerSQuit(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 1
 	
 	def __init__(self, ircd):
@@ -104,9 +101,8 @@ class ServerSQuit(Command):
 			data["target"].disconnect("Received SQUIT from remote server: {}".format(data["reason"]))
 		return True
 
+@implementer(ICommand)
 class RemoteSQuit(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 1
 	
 	def __init__(self, ircd):

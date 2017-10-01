@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class ConnectionLimit(ModuleData):
-	implements(IPlugin, IModuleData)
-
 	name = "ConnectionLimit"
 	peerConnections = {}
 

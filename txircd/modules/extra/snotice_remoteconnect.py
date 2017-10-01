@@ -1,10 +1,9 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class SnoRemoteConnect(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "ServerNoticeRemoteConnect"
 	
 	def __init__(self):

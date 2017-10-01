@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class PingPong(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "PingPong"
 	core = True
 	
@@ -52,9 +51,8 @@ class PingPong(ModuleData):
 		server.sendMessage("PING", self.ircd.serverID, server.serverID, prefix=self.ircd.serverID)
 		server.cache["pingtime"] = now()
 
+@implementer(ICommand)
 class UserPing(Command):
-	implements(ICommand)
-	
 	resetsIdleTime = False
 	forRegistered = None
 	
@@ -73,9 +71,8 @@ class UserPing(Command):
 		user.sendMessage("PONG", data["data"], to=self.ircd.name)
 		return True
 
+@implementer(ICommand)
 class UserPong(Command):
-	implements(ICommand)
-	
 	resetsIdleTime = False
 	forRegistered = None
 	
@@ -91,9 +88,8 @@ class UserPong(Command):
 		user.cache["pongtime"] = now()
 		return True
 
+@implementer(ICommand)
 class ServerPing(Command):
-	implements(ICommand)
-	
 	forRegistered = None
 	
 	def __init__(self, ircd):
@@ -129,9 +125,8 @@ class ServerPing(Command):
 		self.ircd.servers[data["dest"]].sendMessage("PING", data["source"], data["dest"], prefix=data["prefix"])
 		return True
 
+@implementer(ICommand)
 class ServerPong(Command):
-	implements(ICommand)
-	
 	forRegistered = None
 	
 	def __init__(self, ircd):

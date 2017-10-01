@@ -1,12 +1,11 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
+@implementer(IPlugin, IModuleData)
 class ListModeSync(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "ListModeSync"
 	core = True
 	modeCache = {}
@@ -43,9 +42,8 @@ class ListModeSync(ModuleData):
 			except AttributeError:
 				pass
 
+@implementer(ICommand)
 class ListModeCmd(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 70
 	
 	def __init__(self, module):
@@ -109,9 +107,8 @@ class ListModeCmd(Command):
 		self.module.addListMode(target, (True, mode, param, data["setter"], data["modetime"]))
 		return True
 
+@implementer(ICommand)
 class EndListModeCmd(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 70
 	
 	def __init__(self, module):

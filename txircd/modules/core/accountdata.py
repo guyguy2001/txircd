@@ -1,15 +1,14 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 # Numerics and names are taken from the IRCv3.1 SASL specification at http://ircv3.net/specs/extensions/sasl-3.1.html
 irc.RPL_LOGGEDIN = "900"
 irc.RPL_LOGGEDOUT = "901"
 
+@implementer(IPlugin, IModuleData)
 class AccountMetadata(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "AccountData"
 	core = True
 	

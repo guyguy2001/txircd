@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, ModuleData, Command
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class SakickCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-
 	name = "SakickCommand"
 
 	def userCommands(self):

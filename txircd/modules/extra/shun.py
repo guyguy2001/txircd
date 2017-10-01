@@ -4,12 +4,11 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData)
 class Shun(ModuleData, XLineBase):
-	implements(IPlugin, IModuleData)
-	
 	name = "Shun"
 	lineType = "SHUN"
 	
@@ -84,9 +83,8 @@ class Shun(ModuleData, XLineBase):
 		for user in self.ircd.users.itervalues():
 			self.checkLines(user)
 
+@implementer(ICommand)
 class UserShun(Command):
-	implements(ICommand)
-
 	def __init__(self, module):
 		self.module = module
 	
@@ -131,9 +129,8 @@ class UserShun(Command):
 		self.module.onShunUpdate()
 		return True
 
+@implementer(ICommand)
 class ServerAddShun(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -145,9 +142,8 @@ class ServerAddShun(Command):
 		self.module.onShunUpdate()
 		return commandSuccess
 
+@implementer(ICommand)
 class ServerDelShun(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

@@ -1,12 +1,11 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import timestampStringFromTime
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
+@implementer(IPlugin, IModuleData, ICommand)
 class ServerMetadata(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "ServerMetadata"
 	core = True
 	burstQueuePriority = 70

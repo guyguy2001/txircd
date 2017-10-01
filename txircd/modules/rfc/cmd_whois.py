@@ -2,14 +2,13 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now, timestampStringFromTimeSeconds
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.RPL_WHOISHOST = "378"
 irc.RPL_WHOISSECURE = "671"
 
+@implementer(IPlugin, IModuleData, ICommand)
 class WhoisCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "WhoisCommand"
 	core = True
 	

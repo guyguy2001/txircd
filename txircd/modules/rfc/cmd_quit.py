@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
-class QuitCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData)
-	
+@implementer(IPlugin, IModuleData)
+class QuitCommand(ModuleData):
 	name = "QuitCommand"
 	core = True
 	
@@ -44,9 +43,8 @@ class QuitCommand(ModuleData, Command):
 		if user.isRegistered():
 			self.ircd.broadcastToServers(fromServer, "QUIT", reason, prefix=user.uuid)
 
+@implementer(ICommand)
 class UserQuit(Command):
-	implements(ICommand)
-	
 	forRegistered = None
 	
 	def __init__(self, ircd):
@@ -68,9 +66,8 @@ class UserQuit(Command):
 			user.disconnect("Quit: {}".format(data["reason"]))
 		return True
 
+@implementer(ICommand)
 class ServerQuit(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 81
 	
 	def __init__(self, ircd):

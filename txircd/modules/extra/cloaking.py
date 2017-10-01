@@ -3,12 +3,11 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import expandIPv6Address, isValidHost, ModeType
-from zope.interface import implements
+from zope.interface import implementer
 from hashlib import sha256
 
+@implementer(IPlugin, IModuleData, IMode)
 class HostCloaking(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-
 	name = "HostCloaking"
 	affectedActions = { "modechange-user-x": 10 }
 

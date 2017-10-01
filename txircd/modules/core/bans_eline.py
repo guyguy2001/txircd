@@ -3,12 +3,11 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData)
 class ELine(ModuleData, XLineBase):
-	implements(IPlugin, IModuleData)
-	
 	name = "ELine"
 	core = True
 	lineType = "E"
@@ -55,9 +54,8 @@ class ELine(ModuleData, XLineBase):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserELine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -101,9 +99,8 @@ class UserELine(Command):
 		user.sendMessage("NOTICE", "*** E:Line for {} has been removed.".format(banmask))
 		return True
 
+@implementer(ICommand)
 class ServerAddELine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -113,9 +110,8 @@ class ServerAddELine(Command):
 	def execute(self, server, data):
 		return self.module.executeServerAddCommand(server, data)
 
+@implementer(ICommand)
 class ServerDelELine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

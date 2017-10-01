@@ -3,12 +3,11 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, isValidHost, ModeType
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData, IMode)
 class Oper(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "Oper"
 	core = True
 	
@@ -128,9 +127,8 @@ class Oper(ModuleData, Mode):
 				permString = " ".join(user.cache["oper-permissions"])
 				server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)
 
+@implementer(ICommand)
 class UserOper(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -229,9 +227,8 @@ class UserOper(Command):
 		self.ircd.log.info("User {user.uuid} ({user.nick}) opered up", user=user)
 		self.ircd.runActionStandard("oper", user)
 
+@implementer(ICommand)
 class ServerOper(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 85
 	
 	def __init__(self, ircd):

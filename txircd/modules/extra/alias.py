@@ -1,22 +1,21 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 import re
 
 validCommand = re.compile(r"^[A-Z]+$")
 
+@implementer(IPlugin, IModuleData)
 class CommandAlias(ModuleData):
-	implements(IPlugin, IModuleData)
-
 	name = "CommandAlias"
-
+	
 	def userCommands(self):
 		commands = []
 		for command, replacement in self.ircd.config.get("command_aliases", {}).iteritems():
 			commands.append((command, 1, UserAlias(replacement)))
 		return commands
-
+	
 	def verifyConfig(self, config):
 		if "command_aliases" in config:
 			if not isinstance(config["command_aliases"], dict):
@@ -51,19 +50,18 @@ class CommandAlias(ModuleData):
 				if previousWasDollar:
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" terminates with an incomplete parameter replacement".format(replaceCommand))
 
+@implementer(ICommand)
 class UserAlias(Command):
-	implements(ICommand)
-
 	def __init__(self, replacement):
 		self.replacement = replacement
-
+	
 	def parseParams(self, user, params, prefix, tags):
 		return {
 			"params": params,
 			"prefix": prefix,
 			"tags": tags
 		}
-
+	
 	def execute(self, user, data):
 		origParams = data["params"]
 		command, replaceParams = self.replacement.split(" ", 1)

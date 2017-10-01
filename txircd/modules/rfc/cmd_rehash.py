@@ -2,12 +2,11 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData)
 class RehashCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "RehashCommand"
 	core = True
 	
@@ -27,9 +26,8 @@ class RehashCommand(ModuleData):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserRehash(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -68,9 +66,8 @@ class UserRehash(Command):
 		except ConfigError as e:
 			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehash failed: {}".format(e))
 
+@implementer(ICommand)
 class ServerRehash(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -106,9 +103,8 @@ class ServerRehash(Command):
 				self.ircd.servers[user.uuid[:3]].sendMessage("REHASHNOTICE", user.uuid, self.ircd.config.fileName, "Rehash failed: {}".format(e), prefix=self.ircd.serverID)
 		return True
 
+@implementer(ICommand)
 class ServerRehashNotice(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	

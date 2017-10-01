@@ -4,7 +4,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, splitMessage
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.RPL_MONONLINE = "730"
 irc.RPL_MONOFFLINE = "731"
@@ -14,9 +14,8 @@ irc.ERR_MONLISTFULL = "734"
 irc.RPL_KEYVALUE = "761"
 irc.RPL_METADATAEND = "762"
 
+@implementer(IPlugin, IModuleData, ICommand)
 class Monitor(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "Monitor"
 	
 	def actions(self):

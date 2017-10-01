@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class StatsOnlineOpers(ModuleData):
-	implements(IPlugin, IModuleData)
-
 	name = "StatsOnlineOpers"
 
 	def actions(self):

@@ -5,16 +5,15 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 from OpenSSL import SSL
 
 # Numerics and names are from the IRCv3.1 spec at http://ircv3.net/specs/extensions/tls-3.1.html
 irc.RPL_STARTTLS = "670"
 irc.ERR_STARTTLS = "691"
 
+@implementer(IPlugin, IModuleData, ICommand)
 class StartTLS(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "StartTLS"
 	forRegistered = False
 	

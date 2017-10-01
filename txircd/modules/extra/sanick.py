@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
 from txircd.utils import isValidNick
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class SanickCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-
 	name = "SanickCommand"
 
 	def userCommands(self):

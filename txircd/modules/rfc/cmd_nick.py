@@ -3,12 +3,11 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import isValidNick, timestampStringFromTime
-from zope.interface import implements
+from zope.interface import implementer
 from datetime import datetime
 
+@implementer(IPlugin, IModuleData)
 class NickCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "NickCommand"
 	core = True
 	
@@ -47,9 +46,8 @@ class NickCommand(ModuleData):
 	def buildISupport(self, data):
 		data["NICKLEN"] = self.ircd.config.get("nick_length", 32)
 
+@implementer(ICommand)
 class NickUserCommand(Command):
-	implements(ICommand)
-	
 	forRegistered = None
 	
 	def __init__(self, ircd):
@@ -82,9 +80,8 @@ class NickUserCommand(Command):
 			user.register("NICK")
 		return True
 
+@implementer(ICommand)
 class NickServerCommand(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 89
 	
 	def __init__(self, ircd):

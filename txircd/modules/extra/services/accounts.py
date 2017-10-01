@@ -2,16 +2,15 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, ircLower, isValidNick, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
-from zope.interface import implements
+from zope.interface import implementer
 from validate_email import validate_email as validateEmail
 from datetime import datetime, timedelta
 from weakref import WeakSet
 
 accountFormatVersion = "0"
 
+@implementer(IPlugin, IModuleData)
 class Accounts(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "Accounts"
 	
 	def actions(self):
@@ -532,9 +531,8 @@ class Accounts(ModuleData):
 			lastSyncTime = self.servicesData["serverupdates"][server.serverID]
 		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, timestampStringFromTime(lastSyncTime), prefix=self.ircd.serverID)
 
+@implementer(ICommand)
 class CreateAccountCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -594,9 +592,8 @@ class CreateAccountCommand(Command):
 		self.ircd.log.debug("Created account {name} by request from server {server.serverID}", name=accountName, server=server)
 		return True
 
+@implementer(ICommand)
 class DeleteAccountCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -633,9 +630,8 @@ class DeleteAccountCommand(Command):
 		self.ircd.log.debug("Deleted account {name} by request from server {server.serverID}", name=accountName, server=server)
 		return True
 
+@implementer(ICommand)
 class UpdateAccountNameCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -682,9 +678,8 @@ class UpdateAccountNameCommand(Command):
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to change account name for account {name} due to error ({code})", name=existingName, server=server, code=nameChangeResult[1])
 		return False
 
+@implementer(ICommand)
 class UpdateAccountPassCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -731,9 +726,8 @@ class UpdateAccountPassCommand(Command):
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to change password for account {name} due to error ({code})", name=accountName, server=server, code=changeResult[1])
 		return False
 
+@implementer(ICommand)
 class UpdateAccountEmailCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -779,9 +773,8 @@ class UpdateAccountEmailCommand(Command):
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to change email for account {name} due to error ({code})", name=accountName, server=server, code=changeResult[1])
 		return False
 
+@implementer(ICommand)
 class AddAccountNickCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -828,9 +821,8 @@ class AddAccountNickCommand(Command):
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to add nickname {nick} to account {name} due to error ({code})", name=accountName, nick=newNick, server=server, code=addResult[1])
 		return False
 
+@implementer(ICommand)
 class RemoveAccountNickCommand(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd
@@ -880,9 +872,8 @@ class RemoveAccountNickCommand(Command):
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to remove nickname {nick} from account {name} due to error ({code})", name=accountName, nick=removingNick, server=server, code=removeResult[1])
 		return False
 
+@implementer(ICommand)
 class AccountBurstInitCommand(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 1
 	
 	def __init__(self, module):

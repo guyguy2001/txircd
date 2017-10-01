@@ -2,16 +2,15 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType, timestampStringFromTimeSeconds
-from zope.interface import implements
+from zope.interface import implementer
 from weakref import WeakSet
 
 irc.RPL_LISTMODE = "786" # Made up
 irc.RPL_ENDOFLISTMODE = "787" # Made up
 irc.ERR_INVALIDSNOTYPE = "985" # Made up, is not used by any IRCd
 
+@implementer(IPlugin, IModuleData, IMode)
 class ServerNoticeMode(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-
 	name = "ServerNoticeMode"
 	core = True
 	subscribeLists = {}

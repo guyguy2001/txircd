@@ -1,13 +1,12 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
+@implementer(IPlugin, IModuleData, ICommand)
 class AccountAdminDrop(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-	
 	name = "AccountAdminDrop"
 	
 	def actions(self):

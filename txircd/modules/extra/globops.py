@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class GlobopsCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "Globops"
 	
 	def actions(self):
@@ -45,9 +44,8 @@ class GlobopsCommand(ModuleData):
 		for server in closestServers:
 			server.sendMessage("GLOBOPS", message, prefix=fromUser.uuid)
 
+@implementer(ICommand)
 class UserGlobops(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -63,9 +61,8 @@ class UserGlobops(Command):
 		self.module.sendGlobops(user, data["message"], None)
 		return True
 
+@implementer(ICommand)
 class ServerGlobops(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 		self.ircd = module.ircd

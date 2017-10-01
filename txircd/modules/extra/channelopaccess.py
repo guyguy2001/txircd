@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, IMode)
 class ChannelOpAccess(ModuleData, Mode):
-	implements(IPlugin, IModuleData, IMode)
-	
 	name = "ChannelOpAccess"
 	affectedActions = {
 		"checkchannellevel": 10,

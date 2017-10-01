@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class PartCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "PartCommand"
 	core = True
 	
@@ -55,9 +54,8 @@ class PartCommand(ModuleData):
 					destUser.sendMessage("PART", to=channel.name, prefix=msgPrefix, tags=tags)
 		del sendUserList[:]
 
+@implementer(ICommand)
 class UserPart(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -88,9 +86,8 @@ class UserPart(Command):
 		user.leaveChannel(channel, "PART", { "reason": reason })
 		return True
 
+@implementer(ICommand)
 class ServerPart(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 72
 	
 	def __init__(self, ircd):

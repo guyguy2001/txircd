@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import InvalidChannelNameError, IRCChannel
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class SajoinCommand(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-
 	name = "SajoinCommand"
 
 	def userCommands(self):

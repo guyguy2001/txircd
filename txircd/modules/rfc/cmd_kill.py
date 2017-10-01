@@ -1,11 +1,10 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class KillCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "KillCommand"
 	core = True
 	
@@ -25,9 +24,8 @@ class KillCommand(ModuleData):
 			return False
 		return None
 
+@implementer(ICommand)
 class UserKill(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -57,9 +55,8 @@ class UserKill(Command):
 		toServer.sendMessage("KILL", targetUser.uuid, data["reason"], prefix=user.uuid)
 		return True
 
+@implementer(ICommand)
 class ServerKill(Command):
-	implements(ICommand)
-	
 	burstQueuePriority = 55
 	
 	def __init__(self, ircd):

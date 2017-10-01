@@ -4,20 +4,19 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import isValidHost
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData, ICommand)
 class WebIRC(ModuleData, Command):
-	implements(IPlugin, IModuleData, ICommand)
-
 	name = "WebIRC"
 	forRegistered = False
-
+	
 	def actions(self):
 		return [ ("commandpermission-WEBIRC", 10, self.checkSourceAndPass) ]
-
+	
 	def userCommands(self):
 		return [ ("WEBIRC", 1, self) ]
-
+	
 	def verifyConfig(self, config):
 		if "webirc_allowed_sources" in config:
 			if not isinstance(config["webirc_allowed_sources"], dict):
@@ -27,7 +26,7 @@ class WebIRC(ModuleData, Command):
 					raise ConfigValidationError("webirc_allowed_sources", "ip value must be a string")
 				if not isinstance(password, basestring):
 					raise ConfigValidationError("webirc_allowed_sources", "password value must be a string")
-
+	
 	def checkSourceAndPass(self, user, data):
 		entry = None
 		if user.ip in self.ircd.config.get("webirc_allowed_sources", {}):
@@ -41,7 +40,7 @@ class WebIRC(ModuleData, Command):
 			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip}\" and host \"{user.realHost}\" with password \"{password}\", but this password does not match the WEBIRC configuration for this IP.", user=user, password=data)
 			return False
 		return None
-
+	
 	def parseParams(self, user, params, prefix, tags):
 		if len(params) < 4:
 			user.sendSingleError("WebircCmd", irc.ERR_NEEDMOREPARAMS, "WEBIRC", "Not enough parameters")
@@ -51,7 +50,7 @@ class WebIRC(ModuleData, Command):
 			"host": params[2],
 			"ip": params[3]
 		}
-
+	
 	def execute(self, user, data):
 		# We verify that the DNS resolution is correct and set the provided IP as the host if it is incorrect.
 		host = data["host"]

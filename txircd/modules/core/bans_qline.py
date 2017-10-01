@@ -4,12 +4,11 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
+@implementer(IPlugin, IModuleData)
 class QLine(ModuleData, XLineBase):
-	implements(IPlugin, IModuleData)
-	
 	name = "QLine"
 	core = True
 	lineType = "Q"
@@ -75,9 +74,8 @@ class QLine(ModuleData, XLineBase):
 			return False
 		return True
 
+@implementer(ICommand)
 class UserQLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -116,9 +114,8 @@ class UserQLine(Command):
 		user.sendMessage("NOTICE", "*** Q:Line for {} has been removed.".format(banmask))
 		return True
 
+@implementer(ICommand)
 class ServerAddQLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	
@@ -136,9 +133,8 @@ class ServerAddQLine(Command):
 			return True
 		return None
 
+@implementer(ICommand)
 class ServerDelQLine(Command):
-	implements(ICommand)
-	
 	def __init__(self, module):
 		self.module = module
 	

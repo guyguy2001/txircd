@@ -2,14 +2,13 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
-from zope.interface import implements
+from zope.interface import implementer
 from fnmatch import fnmatchcase
 
 irc.ERR_CHANNOTALLOWED = "926"
 
+@implementer(IPlugin, IModuleData)
 class DenyChannels(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "DenyChannels"
 	
 	def actions(self):

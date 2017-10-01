@@ -2,11 +2,10 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now
-from zope.interface import implements
+from zope.interface import implementer
 
+@implementer(IPlugin, IModuleData)
 class TimeCommand(ModuleData):
-	implements(IPlugin, IModuleData)
-	
 	name = "TimeCommand"
 	core = True
 	
@@ -17,9 +16,8 @@ class TimeCommand(ModuleData):
 		return [ ("USERTIMEREQ", 1, ServerTimeRequest(self.ircd)),
 		         ("USERTIME", 1, ServerTime(self.ircd)) ]
 
+@implementer(ICommand)
 class UserTime(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -43,9 +41,8 @@ class UserTime(Command):
 			user.sendMessage(irc.RPL_TIME, self.ircd.name, str(now()))
 		return True
 
+@implementer(ICommand)
 class ServerTimeRequest(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
@@ -83,9 +80,8 @@ class ServerTimeRequest(Command):
 			server.sendMessage("USERTIME", data["fromuser"].uuid, str(now()), prefix=self.ircd.serverID)
 		return True
 
+@implementer(ICommand)
 class ServerTime(Command):
-	implements(ICommand)
-	
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
