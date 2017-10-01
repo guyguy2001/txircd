@@ -99,7 +99,7 @@ class UserQLine(Command):
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
 				user.sendMessage("NOTICE", "*** Q:Line for {} is already set.".format(banmask))
 				return True
-			for checkUser in self.module.ircd.users.itervalues():
+			for checkUser in self.module.ircd.users.values():
 				reason = self.module.matchUser(checkUser)
 				if reason is not None:
 					self.module.changeNick(checkUser, reason, True)
@@ -124,7 +124,7 @@ class ServerAddQLine(Command):
 	
 	def execute(self, server, data):
 		if self.module.executeServerAddCommand(server, data):
-			for user in self.module.ircd.users.itervalues():
+			for user in self.module.ircd.users.values():
 				if not user.isRegistered():
 					continue
 				reason = self.module.matchUser(user)

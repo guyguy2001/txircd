@@ -72,7 +72,7 @@ class Monitor(ModuleData, Command):
 	
 	def cleanIndex(self):
 		removeKeys = []
-		for target, notifyList in self.ircd.dataCache["monitor-index"].iteritems():
+		for target, notifyList in self.ircd.dataCache["monitor-index"].items():
 			if not notifyList:
 				removeKeys.append(target)
 		for target in removeKeys:

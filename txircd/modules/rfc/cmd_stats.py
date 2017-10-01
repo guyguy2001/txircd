@@ -69,7 +69,7 @@ class UserStats(Command):
 			return True
 		results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName),)), users=[user])
 		if results:
-			for key, val in results.iteritems():
+			for key, val in results.items():
 				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val)
 				# The spec technically allows more than one key/value pair on a line
 				# If we do that, we'll need to make sure that if there's a space in the value,
@@ -120,7 +120,7 @@ class ServerInfoRequest(Command):
 			destServer = self.ircd.servers[user.uuid[:3]]
 			results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName),)), users=[user])
 			if results:
-				for key, val in results.iteritems():
+				for key, val in results.items():
 					destServer.sendMessage("INFO", user.uuid, typeName, key, val, prefix=self.ircd.serverID)
 			destServer.sendMessage("INFOEND", user.uuid, typeName, prefix=self.ircd.serverID)
 			return True

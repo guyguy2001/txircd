@@ -93,7 +93,7 @@ class UserKnock(Command):
 		expiredKnocks = []
 		nowTime = now()
 		timeDiff = timedelta(seconds=self.ircd.config.get("knock_delay", 300))
-		for channel, knockTime in user.cache["knocks"].iteritems():
+		for channel, knockTime in user.cache["knocks"].items():
 			if knockTime + timeDiff < nowTime:
 				expiredKnocks.append(channel)
 		for channel in expiredKnocks:

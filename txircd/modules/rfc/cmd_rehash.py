@@ -38,7 +38,7 @@ class UserRehash(Command):
 		serverMask = params[0]
 		if fnmatchcase(self.ircd.name, serverMask):
 			servers.append(None)
-		for server in self.ircd.servers.itervalues():
+		for server in self.ircd.servers.values():
 			if fnmatchcase(server.name, serverMask):
 				servers.append(server)
 		if not servers:

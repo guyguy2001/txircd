@@ -12,7 +12,7 @@ class CommandAlias(ModuleData):
 	
 	def userCommands(self):
 		commands = []
-		for command, replacement in self.ircd.config.get("command_aliases", {}).iteritems():
+		for command, replacement in self.ircd.config.get("command_aliases", {}).items():
 			commands.append((command, 1, UserAlias(replacement)))
 		return commands
 	
@@ -20,7 +20,7 @@ class CommandAlias(ModuleData):
 		if "command_aliases" in config:
 			if not isinstance(config["command_aliases"], dict):
 				raise ConfigValidationError("command_aliases", "value must be a dictionary")
-			for command, replacement in config["command_aliases"].iteritems():
+			for command, replacement in config["command_aliases"].items():
 				if not isinstance(command, str) or not validCommand.match(command):
 					raise ConfigValidationError("command_aliases", "alias \"{}\" is not a valid command".format(command))
 				if not isinstance(replacement, str):

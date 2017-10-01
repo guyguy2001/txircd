@@ -43,10 +43,10 @@ class EchoMessage(ModuleData):
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		tags = user.filterConditionalTags(conditionalTags)
 		if "targetchans" in data:
-			for channel, message in data["targetchans"].iteritems():
+			for channel, message in data["targetchans"].items():
 				user.sendMessage(command, message, to=channel.name, prefix=userPrefix, tags=tags)
 		if "targetusers" in data:
-			for targetUser, message in data["targetusers"].iteritems():
+			for targetUser, message in data["targetusers"].items():
 				user.sendMessage(command, message, to=targetUser.nick, prefix=userPrefix, tags=tags)
 
 echoMessage = EchoMessage()

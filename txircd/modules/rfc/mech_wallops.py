@@ -45,7 +45,7 @@ class UserWallops(Command):
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
-		for u in self.ircd.users.itervalues():
+		for u in self.ircd.users.values():
 			if u.uuid[:3] == self.ircd.serverID and "w" in u.modes:
 				tags = u.filterConditionalTags(conditionalTags)
 				u.sendMessage("WALLOPS", message, prefix=userPrefix, to=None, tags=tags)
@@ -79,7 +79,7 @@ class ServerWallops(Command):
 		userPrefix = fromUser.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", fromUser, conditionalTags)
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if user.uuid[:3] == self.ircd.serverID and "w" in user.modes:
 				tags = user.filterConditionalTags(conditionalTags)
 				user.sendMessage("WALLOPS", message, prefix=userPrefix, to=None, tags=tags)

@@ -55,7 +55,7 @@ class Censor(ModuleData):
 		return self.badwords
 
 	def propgateOnBurst(self, server):
-		for badword, replacement in self.badwords.iteritems():
+		for badword, replacement in self.badwords.items():
 			server.sendMessage("CENSOR", badword, replacement, prefix=self.ircd.serverID)
 
 	def propagateBadword(self, badword, replacement):
@@ -85,7 +85,7 @@ class ChannelCensor(Mode):
 			return
 		if channel in data["targetchans"] and not self.ircd.runActionUntilValue("checkexemptchanops", "censor", channel, user):
 			message = data["targetchans"][channel]
-			for mask, replacement in self.censor.badwords.iteritems():
+			for mask, replacement in self.censor.badwords.items():
 				message = re.sub(mask, replacement, message, flags=re.IGNORECASE)
 			data["targetchans"][channel] = message
 
@@ -104,7 +104,7 @@ class UserCensor(Mode):
 			return
 		if targetUser in data["targetusers"]: 
 			message = data["targetusers"][targetUser]
-			for mask, replacement in self.censor.badwords.iteritems():
+			for mask, replacement in self.censor.badwords.items():
 				message = re.sub(mask, replacement, message, flags=re.IGNORECASE)
 			data["targetusers"][targetUser] = message
 
@@ -177,13 +177,13 @@ class ServerCensorCommand(Command):
 			replacement = data["replacement"]
 			self.censor.badwords[badword] = replacement
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
-			for remoteServer in self.censor.ircd.servers.itervalues():
+			for remoteServer in self.censor.ircd.servers.values():
 				if remoteServer.nextClosest == self.censor.ircd.serverID and remoteServer != server:
 					remoteServer.sendMessage("CENSOR", badword, replacement, prefix=self.censor.ircd.serverID)
 		else:
 			del self.censor.badwords[badword]
 			self.censor.ircd.storage["badwords"] = self.censor.badwords
-			for remoteServer in self.censor.ircd.servers.itervalues():
+			for remoteServer in self.censor.ircd.servers.values():
 				if remoteServer.nextClosest == self.censor.ircd.serverID and remoteServer != server:
 					remoteServer.sendMessage("CENSOR", badword, prefix=self.censor.ircd.serverID)
 		return True

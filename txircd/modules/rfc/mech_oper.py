@@ -29,7 +29,7 @@ class Oper(ModuleData, Mode):
 		if "oper_types" in config:
 			if not isinstance(config["oper_types"], dict):
 				raise ConfigValidationError("oper_types", "value must be a dictionary")
-			for operType, permissions in config["oper_types"].iteritems():
+			for operType, permissions in config["oper_types"].items():
 				if not isinstance(operType, str):
 					raise ConfigValidationError("oper_types", "every oper type must be a string")
 				if not isinstance(permissions, list):
@@ -43,12 +43,12 @@ class Oper(ModuleData, Mode):
 		if "oper_groups" in config:
 			if not isinstance(config["oper_groups"], dict):
 				raise ConfigValidationError("oper_groups", "value must be a dictionary")
-			for groupName, values in config["oper_groups"].iteritems():
+			for groupName, values in config["oper_groups"].items():
 				if not isinstance(groupName, str):
 					raise ConfigValidationError("oper_groups", "all group names must be strings")
 				if not isinstance(values, dict):
 					raise ConfigValidationError("oper_groups", "group data must be a dict")
-				for groupDataKey, groupDataValue in values.iteritems():
+				for groupDataKey, groupDataValue in values.items():
 					if not isinstance(groupDataKey, str):
 						raise ConfigValidationError("oper_groups", "group data identifiers for oper group \"{}\" must all be strings".format(groupName))
 					if groupDataKey == "vhost" and (not isinstance(groupDataValue, str) or not isValidHost(groupDataValue)):
@@ -67,11 +67,11 @@ class Oper(ModuleData, Mode):
 		if "opers" in config:
 			if not isinstance(config["opers"], dict):
 				raise ConfigValidationError("opers", "value must be a dictionary")
-			for operName, values in config["opers"].iteritems():
+			for operName, values in config["opers"].items():
 				if not isinstance(values, dict):
 					raise ConfigValidationError("opers", "oper data must be a dict")
 				hasPassword = False
-				for operDataKey, operDataValue in values.iteritems():
+				for operDataKey, operDataValue in values.items():
 					if not isinstance(operDataKey, str):
 						raise ConfigValidationError("opers", "oper data identifiers must all be strings")
 					if operDataKey == "password":
@@ -122,7 +122,7 @@ class Oper(ModuleData, Mode):
 		return None
 	
 	def propagatePermissions(self, server):
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if "o" in user.modes and "oper-permissions" in user.cache:
 				permString = " ".join(user.cache["oper-permissions"])
 				server.sendMessage("OPER", user.uuid, permString, prefix=self.ircd.serverID)

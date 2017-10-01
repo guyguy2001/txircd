@@ -38,7 +38,7 @@ class TopicCommand(ModuleData):
 			sourceUser = self.ircd.users[setter]
 			conditionalTags = {}
 			self.ircd.runActionStandard("sendingusertags", sourceUser, conditionalTags)
-		for user in channel.users.iterkeys():
+		for user in channel.users.keys():
 			if user.uuid[:3] == self.ircd.serverID:
 				tags = {}
 				if userSource:

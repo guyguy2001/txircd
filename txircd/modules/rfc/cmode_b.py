@@ -97,7 +97,7 @@ class BanMode(ModuleData, Mode):
 		else:
 			matchingExtban = ""
 			matchNegated = None
-		for user, cache in channel.users.iteritems():
+		for user, cache in channel.users.items():
 			if "bans" not in cache:
 				cache["bans"] = {}
 			if not (actionExtban in cache["bans"]) and not adding:

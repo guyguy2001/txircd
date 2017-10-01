@@ -80,7 +80,7 @@ class Shun(ModuleData, XLineBase):
 		return None
 	
 	def onShunUpdate(self):
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			self.checkLines(user)
 
 @implementer(ICommand)

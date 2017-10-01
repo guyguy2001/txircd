@@ -29,7 +29,7 @@ class IRCChannel(object):
 			kw["to"] = self.name
 		if kw["to"] is None:
 			del kw["to"]
-		userList = [u for u in self.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+		userList = [u for u in self.users.keys() if u.uuid[:3] == self.ircd.serverID]
 		if "skip" in kw:
 			for u in kw["skip"]:
 				if u in userList:
@@ -65,7 +65,7 @@ class IRCChannel(object):
 		    we're sending
 		"""
 		servers = set()
-		for user in self.users.iterkeys():
+		for user in self.users.keys():
 			if user.uuid[:3] != self.ircd.serverID:
 				servers.add(self.ircd.servers[user.uuid[:3]])
 		if "skipall" in kw:
@@ -390,7 +390,7 @@ class IRCChannel(object):
 		if not modeChanges:
 			return
 		channelUsers = []
-		for user in self.users.iterkeys():
+		for user in self.users.keys():
 			if user.uuid[:3] == self.ircd.serverID:
 				channelUsers.append(user)
 		for change in modeChanges:
@@ -448,14 +448,14 @@ class IRCChannel(object):
 		self.setTopic("", fromServerID)
 		
 		modeResetList = []
-		for mode, param in self.modes.iteritems():
+		for mode, param in self.modes.items():
 			modeType = self.ircd.channelModeTypes[mode]
 			if modeType == ModeType.List:
 				for paramValue, setBy, setTime in param:
 					modeResetList.append((False, mode, paramValue, setBy, setTime))
 			else:
 				modeResetList.append((False, mode, param))
-		for user, data in self.users.iteritems():
+		for user, data in self.users.items():
 			if "status" not in data:
 				continue
 			for status in data["status"]:

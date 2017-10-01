@@ -61,7 +61,7 @@ class MessageCommands(ModuleData):
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		if "targetusers" in data:
-			for target, message in data["targetusers"].iteritems():
+			for target, message in data["targetusers"].items():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
 						messageParts = splitMessage(message, self.ircd.config["message_length"])
@@ -75,7 +75,7 @@ class MessageCommands(ModuleData):
 					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
 					sentNoTextError = True
 		if "targetchans" in data:
-			for target, message in data["targetchans"].iteritems():
+			for target, message in data["targetchans"].items():
 				if message:
 					messageParts = splitMessage(message, self.ircd.config["message_length"])
 					for part in messageParts:

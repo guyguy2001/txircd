@@ -33,8 +33,8 @@ class TimedModes(ModuleData, Command):
 				continue
 			user = self.ircd.users[uuid]
 			userModeChanges = []
-			for mode, timers in self.ircd.dataCache["user-mode-timers"][uuid].iteritems():
-				for param, timer in timers.iteritems():
+			for mode, timers in self.ircd.dataCache["user-mode-timers"][uuid].items():
+				for param, timer in timers.items():
 					if timer.active():
 						timer.cancel()
 					userModeChanges.append((False, mode, param))
@@ -51,8 +51,8 @@ class TimedModes(ModuleData, Command):
 				del self.ircd.dataCache["channel-mode-timers"][channelName]
 				continue
 			channelModeChanges = []
-			for mode, timers in self.ircd.dataCache["channel-mode-timers"][channelName][1].iteritems():
-				for param, timer in timers.iteritems():
+			for mode, timers in self.ircd.dataCache["channel-mode-timers"][channelName][1].items():
+				for param, timer in timers.items():
 					if timer.active():
 						timer.cancel()
 					channelModeChanges.append((False, mode, param))

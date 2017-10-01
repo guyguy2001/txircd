@@ -38,7 +38,7 @@ class AwayNotify(ModuleData):
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for channel in user.channels:
-			for noticeUser in channel.users.iterkeys():
+			for noticeUser in channel.users.keys():
 				if noticeUser.uuid[:3] == self.ircd.serverID and noticeUser != user and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
 					noticeUsers.add(noticeUser)
 		if value:
@@ -57,7 +57,7 @@ class AwayNotify(ModuleData):
 		noticePrefix=user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
-		for noticeUser in channel.users.iterkeys():
+		for noticeUser in channel.users.keys():
 			if noticeUser.uuid[:3] == self.ircd.serverID and "capabilities" in noticeUser.cache and "away-notify" in noticeUser.cache["capabilities"]:
 				tags = noticeUser.filterConditionalTags(conditionalTags)
 				noticeUser.sendMessage("AWAY", awayReason, to=None, prefix=noticePrefix, tags=tags)

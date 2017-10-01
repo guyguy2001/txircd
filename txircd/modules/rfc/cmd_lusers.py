@@ -36,7 +36,7 @@ class LUsersCommand(ModuleData, Command):
 		counts["servers"] = len(self.ircd.servers) + 1
 		counts["channels"] = len(self.ircd.channels)
 
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if "i" in user.modes:
 				counts["invisible"] += 1
 			if "o" in user.modes:
@@ -44,7 +44,7 @@ class LUsersCommand(ModuleData, Command):
 			if user.uuid[:3] == self.ircd.serverID:
 				counts["local"] += 1
 
-		for server in self.ircd.servers.itervalues():
+		for server in self.ircd.servers.values():
 			if server.nextClosest == self.ircd.serverID:
 				counts["localservers"] += 1
 

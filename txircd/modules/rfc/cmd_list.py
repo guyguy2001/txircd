@@ -24,7 +24,7 @@ class ListCommand(ModuleData, Command):
 					channels.append(self.ircd.channels[name])
 			else:
 				wildcardNames.append(ircLower(name))
-		for lowerName, channel in self.ircd.channels.iteritems():
+		for lowerName, channel in self.ircd.channels.items():
 			for wildcardName in wildcardNames:
 				if fnmatchcase(lowerName, wildcardName):
 					channels.append(channel)

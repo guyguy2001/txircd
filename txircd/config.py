@@ -22,7 +22,7 @@ class Config(object):
 		if "include" in configData:
 			for fileName in configData["include"]:
 				includeConfig = self._readConfig(fileName)
-				for key, val in includeConfig.iteritems():
+				for key, val in includeConfig.items():
 					if key not in configData:
 						configData[key] = val
 					elif not isinstance(configData[key], str): # Let's try to merge them if they're collections
@@ -38,7 +38,7 @@ class Config(object):
 								configData[key] += val # Merge with the + operator
 							except TypeError: # Except that some collections (dicts) can't
 								try:
-									for subkey, subval in val.iteritems(): # So merge them manually
+									for subkey, subval in val.items(): # So merge them manually
 										if subkey not in configData[key]:
 											configData[key][subkey] = subval
 								except (AttributeError, TypeError): # If either of these, they weren't both dicts (but were still iterable); requires user to resolve

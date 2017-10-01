@@ -25,7 +25,7 @@ class ListModeSync(ModuleData):
 			del self.modeCache[target]
 	
 	def clearUser(self, userUUID):
-		for target in self.modeCache.iterkeys():
+		for target in self.modeCache.keys():
 			try:
 				if target.uuid == userUUID:
 					del self.modeCache[target]
@@ -34,7 +34,7 @@ class ListModeSync(ModuleData):
 				pass
 	
 	def clearChannel(self, channelName):
-		for target in self.modeCache.iterkeys():
+		for target in self.modeCache.keys():
 			try:
 				if target.name == channelName:
 					del self.modeCache[target]

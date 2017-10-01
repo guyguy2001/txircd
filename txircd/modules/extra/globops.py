@@ -24,7 +24,7 @@ class GlobopsCommand(ModuleData):
 	
 	def sendGlobops(self, fromUser, message, fromServer):
 		sendToServers = set()
-		for targetUser in self.ircd.users.itervalues():
+		for targetUser in self.ircd.users.values():
 			if fromUser == targetUser:
 				continue
 			if not self.ircd.runActionUntilValue("userhasoperpermission", targetUser, "view-globops", users=[targetUser]):

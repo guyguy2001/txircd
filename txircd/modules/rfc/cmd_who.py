@@ -32,18 +32,18 @@ class WhoCommand(ModuleData, Command):
 		channel = None
 		mask = data["mask"]
 		if mask in ("0", "*"):
-			for targetUser in self.ircd.users.itervalues():
+			for targetUser in self.ircd.users.values():
 				if not targetUser.isRegistered():
 					continue
 				if not set(user.channels).intersection(targetUser.channels) and self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is not False:
 					matchingUsers.append(targetUser)
 		elif mask in self.ircd.channels:
 			channel = self.ircd.channels[data["mask"]]
-			for targetUser in channel.users.iterkeys():
+			for targetUser in channel.users.keys():
 				if self.ircd.runActionUntilValue("showchanneluser", channel, user, targetUser, users=[user, targetUser], channels=[channel]) is not False:
 					matchingUsers.append(targetUser)
 		else:
-			for targetUser in self.ircd.users.itervalues():
+			for targetUser in self.ircd.users.values():
 				if not targetUser.isRegistered():
 					continue # We should exclude all unregistered users from this search
 				if self.ircd.runActionUntilValue("showuser", user, targetUser, users=[user, targetUser]) is False:

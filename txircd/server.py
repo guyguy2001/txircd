@@ -115,7 +115,7 @@ class IRCServer(IRCBase):
 					notifyUsersQuitting[user] = notifyUsersForUser
 			for user in notifyUserBatches:
 				user.createMessageBatch("Netsplit", "netsplit", (netsplitFromServerName, netsplitToServerName))
-			for user, notifyUsers in notifyUsersQuitting.iteritems():
+			for user, notifyUsers in notifyUsersQuitting.items():
 				self.ircd.runActionProcessing("quitmessage", notifyUsers, user, netsplitQuitMsg, "Netsplit", users=notifyUsers)
 			for user in notifyUserBatches:
 				user.sendBatch("Netsplit")

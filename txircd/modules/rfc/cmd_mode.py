@@ -278,7 +278,7 @@ class ServerMode(Command):
 			return True
 		if targetTime < user.connectedSince:
 			modeUnsetList = []
-			for mode, param in user.modes.iteritems():
+			for mode, param in user.modes.items():
 				if self.ircd.userModeTypes[mode] == ModeType.List:
 					for paramData in param:
 						modeUnsetList.append((False, mode, paramData[0]))

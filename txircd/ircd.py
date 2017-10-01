@@ -246,10 +246,10 @@ class IRCd(Service):
 		self.runActionStandard("moduleload", module.name)
 		
 		for modeType, typeSet in enumerate(newChannelModes):
-			for mode, implementation in typeSet.iteritems():
+			for mode, implementation in typeSet.items():
 				self.channelModeTypes[mode] = modeType
 				self.channelModes[modeType][mode] = implementation
-		for mode, data in newChannelStatuses.iteritems():
+		for mode, data in newChannelStatuses.items():
 			self.channelModeTypes[mode] = ModeType.Status
 			self.channelStatuses[mode] = data
 			self.channelStatusSymbols[data[0]] = mode
@@ -260,10 +260,10 @@ class IRCd(Service):
 			else:
 				self.channelStatusOrder.append(mode)
 		for modeType, typeSet in enumerate(newUserModes):
-			for mode, implementation in typeSet.iteritems():
+			for mode, implementation in typeSet.items():
 				self.userModeTypes[mode] = modeType
 				self.userModes[modeType][mode] = implementation
-		for action, actionList in newActions.iteritems():
+		for action, actionList in newActions.items():
 			if action not in self.actions:
 				self.actions[action] = []
 			for actionData in actionList:
@@ -273,7 +273,7 @@ class IRCd(Service):
 						break
 				else:
 					self.actions[action].append(actionData)
-		for command, dataList in newUserCommands.iteritems():
+		for command, dataList in newUserCommands.items():
 			if command not in self.userCommands:
 				self.userCommands[command] = []
 			for data in dataList:
@@ -283,7 +283,7 @@ class IRCd(Service):
 						break
 				else:
 					self.userCommands[command].append(data)
-		for command, dataList in newServerCommands.iteritems():
+		for command, dataList in newServerCommands.items():
 			if command not in self.serverCommands:
 				self.serverCommands[command] = []
 			for data in dataList:
@@ -324,21 +324,21 @@ class IRCd(Service):
 		for modeData in moduleData["channelmodes"]:
 			if fullUnload: # Unset modes on full unload
 				if modeData[1] == ModeType.Status:
-					for channel in self.channels.itervalues():
+					for channel in self.channels.values():
 						removeFromChannel = []
-						for user, userData in channel.user.iteritems():
+						for user, userData in channel.user.items():
 							if modeData[0] in userData["status"]:
 								removeFromChannel.append((False, modeData[0], user.uuid))
 						channel.setModes(removeFromChannel, self.serverID)
 				elif modeData[1] == ModeType.List:
-					for channel in self.channels.itervalues():
+					for channel in self.channels.values():
 						if modeData[0] in channel.modes:
 							removeFromChannel = []
 							for paramData in channel.modes[modeData[0]]:
 								removeFromChannel.append((False, modeData[0], paramData[0]))
 							channel.setModes(removeFromChannel, self.serverID)
 				else:
-					for channel in self.channels.itervalues():
+					for channel in self.channels.values():
 						if modeData[0] in channel.modes:
 							channel.setModes([(False, modeData[0], channel.modes[modeData[0]])], self.serverID)
 			
@@ -352,14 +352,14 @@ class IRCd(Service):
 		for modeData in moduleData["usermodes"]:
 			if fullUnload: # Unset modes on full unload
 				if modeData[1] == ModeType.List:
-					for user in self.users.itervalues():
+					for user in self.users.values():
 						if modeData[0] in user.modes:
 							removeFromUser = []
 							for paramData in user.modes[modeData[0]]:
 								removeFromUser.append((False, modeData[0], paramData[0]))
 							user.setModes(removeFromUser, self.serverID)
 				else:
-					for user in self.users.itervalues():
+					for user in self.users.values():
 						if modeData[0] in user.modes:
 							user.setModes([(False, modeData[0], user.modes[modeData[0]])], self.serverID)
 			
@@ -482,7 +482,7 @@ class IRCd(Service):
 		if "links" in config:
 			if not isinstance(config["links"], dict):
 				raise ConfigValidationError("links", "value must be a dictionary")
-			for desc, server in config["links"].iteritems():
+			for desc, server in config["links"].items():
 				if not isinstance(desc, str):
 					raise ConfigValidationError("links", "\"{}\" is an invalid server description".format(desc))
 				if not isinstance(server, dict):
@@ -573,7 +573,7 @@ class IRCd(Service):
 		if "server_ping_frequency" in config and (not isinstance(config["server_ping_frequency"], int) or config["server_ping_frequency"] < 0):
 			raise ConfigValidationError("server_ping_frequency", "invalid number")
 
-		for module in self.loadedModules.itervalues():
+		for module in self.loadedModules.values():
 			module.verifyConfig(config)
 
 	def logConfigValidationWarning(self, key, message, default):
@@ -596,7 +596,7 @@ class IRCd(Service):
 		except (KeyError, InvalidLogLevelError):
 			pass # If we can't set a new log level, we'll keep the old one
 		
-		for module in self.loadedModules.itervalues():
+		for module in self.loadedModules.values():
 			module.rehash()
 	
 	def _bindPorts(self):
@@ -621,7 +621,7 @@ class IRCd(Service):
 	
 	def _unbindPorts(self):
 		deferreds = []
-		for port in self.boundPorts.itervalues():
+		for port in self.boundPorts.values():
 			d = port.stopListening()
 			if d:
 				deferreds.append(d)
@@ -666,14 +666,14 @@ class IRCd(Service):
 	def pruneQuit(self):
 		compareTime = now() - timedelta(seconds=10)
 		remove = []
-		for uuid, timeQuit in self.recentlyQuitUsers.iteritems():
+		for uuid, timeQuit in self.recentlyQuitUsers.items():
 			if timeQuit < compareTime:
 				remove.append(uuid)
 		for uuid in remove:
 			del self.recentlyQuitUsers[uuid]
 		
 		remove = []
-		for serverID, timeQuit in self.recentlyQuitServers.iteritems():
+		for serverID, timeQuit in self.recentlyQuitServers.items():
 			if timeQuit < compareTime:
 				remove.append(serverID)
 		for serverID in remove:
@@ -681,7 +681,7 @@ class IRCd(Service):
 	
 	def pruneChannels(self):
 		removeChannels = []
-		for channel, remove in self.recentlyDestroyedChannels.iteritems():
+		for channel, remove in self.recentlyDestroyedChannels.items():
 			if remove:
 				removeChannels.append(channel)
 			elif channel not in self.channels:
@@ -701,7 +701,7 @@ class IRCd(Service):
 		isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
 		self.runActionStandard("buildisupport", isupport)
 		isupportList = []
-		for key, val in isupport.iteritems():
+		for key, val in isupport.items():
 			if val is None:
 				isupportList.append(key)
 			else:
@@ -735,7 +735,7 @@ class IRCd(Service):
 		should be the server from which the message came; if this server is the
 		originating server, specify None for fromServer.
 		"""
-		for server in self.servers.itervalues():
+		for server in self.servers.values():
 			if server.nextClosest == self.serverID and server != fromServer:
 				server.sendMessage(command, *params, **kw)
 	
@@ -753,7 +753,7 @@ class IRCd(Service):
 			genericUserActionName = "modeactioncheck-user-{}".format(actionName)
 			genericUserActionNameWithChannel = "modeactioncheck-user-withchannel-{}".format(actionName)
 			for modeType in self.userModes:
-				for mode, modeObj in modeType.iteritems():
+				for mode, modeObj in modeType.items():
 					if actionName not in modeObj.affectedActions:
 						continue
 					priority = modeObj.affectedActions[actionName]
@@ -792,7 +792,7 @@ class IRCd(Service):
 			genericChannelActionName = "modeactioncheck-channel-{}".format(actionName)
 			genericChannelActionNameWithUser = "modeactioncheck-channel-withuser-{}".format(actionName)
 			for modeType in self.channelModes:
-				for mode, modeObj in modeType.iteritems():
+				for mode, modeObj in modeType.items():
 					if actionName not in modeObj.affectedActions:
 						continue
 					priority = modeObj.affectedActions[actionName]
@@ -838,7 +838,7 @@ class IRCd(Service):
 		Returns a list in priority order (highest to lowest) of (actionName, function) tuples.
 		"""
 		fullActionList = []
-		for actionName, actionList in actionLists.iteritems():
+		for actionName, actionList in actionLists.items():
 			insertPos = 0
 			for action in actionList:
 				try:

@@ -36,15 +36,15 @@ class FJoinCommand(ModuleData, Command):
 		farBurstServerName = server.name
 		
 		# First, handle channel timestamps
-		for channel, channelData in self.serverBurstData.iteritems():
+		for channel, channelData in self.serverBurstData.items():
 			channelTime = channelData["time"]
 			if channelTime < channel.existedSince:
 				channel.setCreationTime(channelTime, server)
 		
 		# Next, start processing all the joins. We don't finish this here because we want to send only one netjoin batch,
 		# so we accumulate all the joins, then flush the batch, then complete all the joins and do modes/other post-processing.
-		for channel, channelData in self.serverBurstData.iteritems():
-			for user, ranks in channelData["users"].iteritems():
+		for channel, channelData in self.serverBurstData.items():
+			for user, ranks in channelData["users"].items():
 				joinChannelData = user.joinChannelNoAnnounceIncomplete(channel, False, server)
 				if not joinChannelData:
 					continue
@@ -66,11 +66,11 @@ class FJoinCommand(ModuleData, Command):
 		for user, joinChannelData in joinsToComplete:
 			user.joinChannelNoAnnounceFinish(joinChannelData)
 		# Manage modes
-		for channel, channelData in self.serverBurstData.iteritems():
+		for channel, channelData in self.serverBurstData.items():
 			channelSetModes = []
 			time = channelData["time"]
 			if time == channel.existedSince:
-				for mode, param in channelData["modes"].iteritems():
+				for mode, param in channelData["modes"].items():
 					channelSetModes.append((True, mode, param))
 				if channel in channelStatusesToSet:
 					channelSetModes.extend(channelStatusesToSet[channel])

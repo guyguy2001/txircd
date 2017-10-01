@@ -12,7 +12,7 @@ class StatsPorts(ModuleData):
 
 	def listPorts(self):
 		info = {}
-		for portDesc, portData in self.ircd.boundPorts.iteritems():
+		for portDesc, portData in self.ircd.boundPorts.items():
 			if isinstance(portData.factory, UserFactory):
 				info[str(portData.port)] = "{} (clients)".format(portDesc)
 			else:

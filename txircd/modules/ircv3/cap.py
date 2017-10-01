@@ -22,7 +22,7 @@ class Cap(ModuleData, Command):
 		self.ircd.functionCache["cap-add"] = self.newCapability
 		self.ircd.functionCache["cap-del"] = self.removeCapability
 		self.newCapability("cap-notify")
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if "capversion" in user.cache and user.cache["capversion"] >= 302:
 				if "capabilities" not in user.cache:
 					user.cache["capabilities"] = {}
@@ -42,7 +42,7 @@ class Cap(ModuleData, Command):
 		return None
 	
 	def newCapability(self, capName, sendInBatch = None):
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if "capabilities" in user.cache and "cap-notify" in user.cache["capabilities"]:
 				if sendInBatch:
 					user.sendMessageInBatch(sendInBatch, "CAP", "NEW", capName)
@@ -55,7 +55,7 @@ class Cap(ModuleData, Command):
 		else:
 			capName = capability
 			value = None
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if "capabilities" in user.cache:
 				if "cap-notify" in user.cache["capabilities"]:
 					if sendInBatch:

@@ -40,7 +40,7 @@ class ChannelRegister(ModuleData, Mode):
 		if "regname" not in self.channelData["index"]:
 			self.channelData["index"]["regname"] = {}
 		
-		for channelName, channelInfo in self.channelData["data"].iteritems():
+		for channelName, channelInfo in self.channelData["data"].items():
 			if channelName in self.ircd.channels:
 				channel = self.ircd.channels[channelName]
 			else:
@@ -95,7 +95,7 @@ class ChannelRegister(ModuleData, Mode):
 			channelInfo["topicsetter"] = channel.topicSetter
 			channelInfo["topictime"] = channel.topicTime
 			modes = []
-			for mode, paramData in channel.modes.iteritems():
+			for mode, paramData in channel.modes.items():
 				modeType = self.ircd.channelModeTypes[mode]
 				if modeType == ModeType.List:
 					for oneParamData in paramData:

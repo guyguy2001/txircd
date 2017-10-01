@@ -107,7 +107,7 @@ class UserGLine(Command):
 				user.sendMessage("NOTICE", "*** G:Line for {} is already set.".format(banmask))
 				return True
 			badUsers = []
-			for checkUser in self.module.ircd.users.itervalues():
+			for checkUser in self.module.ircd.users.values():
 				reason = self.module.matchUser(checkUser)
 				if reason is not None:
 					badUsers.append((checkUser, reason))
@@ -135,7 +135,7 @@ class ServerAddGLine(Command):
 	def execute(self, server, data):
 		if self.module.executeServerAddCommand(server, data):
 			badUsers = []
-			for user in self.module.ircd.users.itervalues():
+			for user in self.module.ircd.users.values():
 				reason = self.module.matchUser(user)
 				if reason is not None:
 					badUsers.append((user, reason))

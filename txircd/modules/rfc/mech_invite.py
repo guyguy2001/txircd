@@ -111,7 +111,7 @@ class UserInvite(Command):
 			tags = user.filterConditionalTags(conditionalTags)
 			targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
 		notifyList = []
-		for chanUser in channel.users.iterkeys(): # Notify all users who can invite other users on the channel
+		for chanUser in channel.users.keys(): # Notify all users who can invite other users on the channel
 			if chanUser != user and chanUser != targetUser and chanUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, chanUser, users=[chanUser], channels=[channel]):
 				notifyList.append(chanUser)
 		self.ircd.runActionProcessing("notifyinvite", notifyList, channel, user, targetUser)
@@ -168,7 +168,7 @@ class ServerInvite(Command):
 			tags = user.filterConditionalTags(conditionalTags)
 			targetUser.sendMessage("INVITE", channel.name, prefix=user.hostmask(), tags=tags)
 		notifyList = []
-		for chanUser in channel.users.iterkeys():
+		for chanUser in channel.users.keys():
 			if chanUser != user and chanUser != targetUser and chanUser.uuid[:3] == self.ircd.serverID and self.ircd.runActionUntilValue("checkchannellevel", "invite", channel, chanUser, users=[chanUser], channels=[channel]):
 				notifyList.append(chanUser)
 		self.ircd.runActionProcessing("notifyinvite", notifyList, channel, user, targetUser)

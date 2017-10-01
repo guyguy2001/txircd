@@ -12,7 +12,7 @@ class StatsOnlineOpers(ModuleData):
 
 	def listOnlineOpers(self):
 		info = {}
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "", users=[user]):
 				info[user.nick] = "{} ({}@{}) Idle: {} secs".format(user.nick, user.ident, user.host(), int((now() - user.idleSince).total_seconds()))
 		return info

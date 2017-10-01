@@ -250,7 +250,7 @@ class Accounts(ModuleData):
 			return False, "NOTEXIST", "Account not registered."
 		self.ircd.runActionStandard("accountremoveindices", lowerUsername)
 		username = self.accountData["data"][lowerUsername]["username"]
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if user.metadataValue("account") == username:
 				self.ircd.runActionStandard("accountlogout", user)
 		createTime = self.accountData["data"][lowerUsername]["registered"]
@@ -260,7 +260,7 @@ class Accounts(ModuleData):
 		self.accountData["deleted"][lowerUsername] = deleteTime
 		self.servicesData["journal"].append((deleteTime, "DELETEACCOUNT", username, timestampStringFromTime(createTime)))
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTime(createTime), prefix=self.ircd.serverID)
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
 				user.setMetadata("account", None)
 		self._serverUpdateTime(deleteTime)
@@ -302,7 +302,7 @@ class Accounts(ModuleData):
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
 		if not fromServer:
-			for user in self.ircd.users.itervalues():
+			for user in self.ircd.users.values():
 				if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerOldAccountName:
 					user.setMetadata("account", newAccountName)
 		self.ircd.runActionStandard("handleaccountchangename", oldAccountName, newAccountName)
@@ -515,14 +515,14 @@ class Accounts(ModuleData):
 		oneHour = timedelta(hours=1)
 		expireOlderThan = now() - oneHour
 		removeAccounts = []
-		for account, deleteTime in self.accountData["deleted"].iteritems():
+		for account, deleteTime in self.accountData["deleted"].items():
 			if deleteTime < expireOlderThan:
 				removeAccounts.append(account)
 		for account in removeAccounts:
 			del self.accountData["deleted"][account]
 	
 	def _serverUpdateTime(self, time):
-		for server in self.ircd.servers.itervalues():
+		for server in self.ircd.servers.values():
 			self.servicesData["serverupdates"][server.serverID] = time
 	
 	def startBurst(self, server):
@@ -910,7 +910,7 @@ def serializeAccount(accountInfo):
 	Serializes an account dict.
 	"""
 	builtResultString = []
-	for key, value in accountInfo.iteritems():
+	for key, value in accountInfo.items():
 		builtResultString.append("{}:{};".format(_escapeSerializedString(key), _serializeValue(value)))
 	return "".join(builtResultString)[:-1]
 

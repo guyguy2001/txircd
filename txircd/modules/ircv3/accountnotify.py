@@ -36,7 +36,7 @@ class AccountNotify(ModuleData):
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for channel in user.channels:
-			for noticeUser in channel.users.iterkeys():
+			for noticeUser in channel.users.keys():
 				if noticeUser.uuid[:3] == self.ircd.serverID and noticeUser != user and "capabilities" in noticeUser.cache and "account-notify" in noticeUser.cache["capabilities"]:
 					noticeUsers.add(noticeUser)
 		if value:

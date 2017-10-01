@@ -124,7 +124,7 @@ class IRCBase(LineOnlyReceiver):
 	
 	def _buildTagString(self, tags):
 		tagList = []
-		for tag, value in tags.iteritems():
+		for tag, value in tags.items():
 			for char in tag:
 				if not char.isalnum() and char not in ("-", "/", "."):
 					raise ValueError("Illegal character {!r} found in key {!r}".format(char, tag))

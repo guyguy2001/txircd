@@ -251,7 +251,7 @@ class IRCUser(IRCBase):
 	
 	def filterConditionalTags(self, conditionalTags):
 		applyTags = {}
-		for tag, data in conditionalTags.iteritems():
+		for tag, data in conditionalTags.items():
 			value, check = data
 			if check(self):
 				applyTags[tag] = value
@@ -596,7 +596,7 @@ class IRCUser(IRCBase):
 			newChannel = True
 			self.ircd.channels[channel.name] = channel
 			self.ircd.recentlyDestroyedChannels[channel.name] = False
-		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+		messageUsers = [u for u in channel.users.keys() if u.uuid[:3] == self.ircd.serverID]
 		return {
 			"channel": channel,
 			"newChannel": newChannel,
@@ -630,7 +630,7 @@ class IRCUser(IRCBase):
 		"""
 		if channel not in self.channels:
 			return
-		messageUsers = [u for u in channel.users.iterkeys() if u.uuid[:3] == self.ircd.serverID]
+		messageUsers = [u for u in channel.users.keys() if u.uuid[:3] == self.ircd.serverID]
 		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
 		self._leaveChannel(channel)
 	

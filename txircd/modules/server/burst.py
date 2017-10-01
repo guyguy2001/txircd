@@ -20,7 +20,7 @@ class ServerBurst(ModuleData, Command):
 		server.bursted = False
 		serversByHopcount = []
 		serversBurstingTo = []
-		for remoteServer in self.ircd.servers.itervalues():
+		for remoteServer in self.ircd.servers.values():
 			if remoteServer == server:
 				continue
 			hopCount = 1
@@ -45,7 +45,7 @@ class ServerBurst(ModuleData, Command):
 			strHopCount = str(hopCount)
 			for remoteServer in serversByHopcount[hopCount - 1]:
 				server.sendMessage("SERVER", remoteServer.name, remoteServer.serverID, strHopCount, remoteServer.nextClosest, remoteServer.description, prefix=self.ircd.serverID)
-		for user in self.ircd.users.itervalues():
+		for user in self.ircd.users.values():
 			if user.localOnly:
 				self.ircd.log.debug("Skipping bursting user {user.nick} ({user.uuid}) for being a local-only user", user=user)
 				continue
@@ -60,7 +60,7 @@ class ServerBurst(ModuleData, Command):
 			modes = []
 			params = []
 			listModes = {}
-			for mode, param in user.modes.iteritems():
+			for mode, param in user.modes.items():
 				if self.ircd.userModeTypes[mode] == ModeType.List:
 					listModes[mode] = param
 				else:
@@ -73,7 +73,7 @@ class ServerBurst(ModuleData, Command):
 			uidParams.append(user.gecos)
 			server.sendMessage("UID", *uidParams, prefix=self.ircd.serverID)
 			sentListModes = False
-			for mode, paramList in listModes.iteritems():
+			for mode, paramList in listModes.items():
 				for param, setter, time in paramList:
 					server.sendMessage("LISTMODE", user.uuid, signonTimestamp, mode, param, setter, timestampStringFromTime(time), prefix=self.ircd.serverID)
 					sentListModes = True
@@ -81,10 +81,10 @@ class ServerBurst(ModuleData, Command):
 				server.sendMessage("ENDLISTMODE", user.uuid, prefix=self.ircd.serverID)
 			for key, value in user.metadataList():
 				server.sendMessage("METADATA", user.uuid, signonTimestamp, key, value, prefix=self.ircd.serverID)
-		for channel in self.ircd.channels.itervalues():
+		for channel in self.ircd.channels.values():
 			channelTimestamp = timestampStringFromTime(channel.existedSince)
 			users = []
-			for user, data in channel.users.iteritems():
+			for user, data in channel.users.items():
 				if user.localOnly:
 					continue
 				if user.uuid[:3] in serversBurstingTo: # The remote server already knows about these users
@@ -96,7 +96,7 @@ class ServerBurst(ModuleData, Command):
 			modes = []
 			params = []
 			listModes = {}
-			for mode, param in channel.modes.iteritems():
+			for mode, param in channel.modes.items():
 				if self.ircd.channelModeTypes[mode] == ModeType.List:
 					listModes[mode] = param
 				else:
@@ -107,7 +107,7 @@ class ServerBurst(ModuleData, Command):
 			fjoinParams = [channel.name, channelTimestamp] + modeStr.split(" ") + [" ".join(users)]
 			server.sendMessage("FJOIN", *fjoinParams, prefix=self.ircd.serverID)
 			sentListModes = False
-			for mode, params in listModes.iteritems():
+			for mode, params in listModes.items():
 				for param, setter, time in params:
 					server.sendMessage("LISTMODE", channel.name, channelTimestamp, mode, param, setter, timestampStringFromTime(time), prefix=self.ircd.serverID)
 					sentListModes = True
