@@ -1,4 +1,4 @@
-twisted[tls]==17.5.0
+twisted[tls]==17.9.0
 pyyaml==3.12
 pbkdf2
 validate_email
