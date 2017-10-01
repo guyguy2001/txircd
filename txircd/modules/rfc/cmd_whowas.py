@@ -26,7 +26,7 @@ class WhowasCommand(ModuleData, Command):
 			self.ircd.storage["whowas"] = {}
 
 	def verifyConfig(self, config):
-		if "whowas_duration" in config and not isinstance(config["whowas_duration"], basestring) and not isinstance(config["whowas_duration"], int):
+		if "whowas_duration" in config and not isinstance(config["whowas_duration"], str) and not isinstance(config["whowas_duration"], int):
 			raise ConfigValidationError("whowas_duration", "value must be an integer or a duration string")
 		if "whowas_max_entries" in config and (not isinstance(config["whowas_max_entries"], int) or config["whowas_max_entries"] < 0):
 			raise  ConfigValidationError("whowas_max_entries", "invalid number")

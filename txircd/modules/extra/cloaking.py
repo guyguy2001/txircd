@@ -19,7 +19,7 @@ class HostCloaking(ModuleData, Mode):
 
 	def verifyConfig(self, config):
 		if "cloaking_salt" in config:
-			if not isinstance(config["cloaking_salt"], basestring):
+			if not isinstance(config["cloaking_salt"], str):
 				raise ConfigValidationError("cloaking_salt", "value must be a string")
 			if not config["cloaking_salt"]:
 				self.ircd.log.warn("No cloaking salt was found in the config. Host cloaks will be insecure!")

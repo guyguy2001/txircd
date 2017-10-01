@@ -36,7 +36,7 @@ class Shun(ModuleData, XLineBase):
 			if not isinstance(config["shun_commands"], list):
 				raise ConfigValidationError("shun_commands", "value must be a list")
 			for command in config["shun_commands"]:
-				if not isinstance(command, basestring):
+				if not isinstance(command, str):
 					raise ConfigValidationError("shun_commands", "\"{}\" is not a valid command".format(command))
 	
 	def checkUserMatch(self, user, mask, data):

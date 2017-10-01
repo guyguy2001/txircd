@@ -29,7 +29,7 @@ class KLine(ModuleData, Command, XLineBase):
 		self.initializeLineStorage()
 
 	def verifyConfig(self, config):
-		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], basestring):
+		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], str):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
 	def checkUserMatch(self, user, mask, data):

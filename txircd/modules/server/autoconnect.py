@@ -31,7 +31,7 @@ class ServerAutoconnect(ModuleData):
 			if not isinstance(config["autoconnect"], list):
 				raise ConfigValidationError("autoconnect", "value must be a list")
 			for server in config["autoconnect"]:
-				if not isinstance(server, basestring):
+				if not isinstance(server, str):
 					raise ConfigValidationError("autoconnect", "every entry must be a string")
 
 	def runConnections(self):

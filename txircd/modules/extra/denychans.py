@@ -20,7 +20,7 @@ class DenyChannels(ModuleData):
 				if not isinstance(config[option], list):
 					raise ConfigValidationError(option, "value must be a list")
 				for chanName in config[option]:
-					if not isinstance(chanName, basestring) or not chanName:
+					if not isinstance(chanName, str) or not chanName:
 						raise ConfigValidationError(option, "\"{}\" is an invalid channel name".format(chanName))
 	
 	def blockNonDenied(self, channel, user):

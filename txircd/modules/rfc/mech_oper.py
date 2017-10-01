@@ -30,12 +30,12 @@ class Oper(ModuleData, Mode):
 			if not isinstance(config["oper_types"], dict):
 				raise ConfigValidationError("oper_types", "value must be a dictionary")
 			for operType, permissions in config["oper_types"].iteritems():
-				if not isinstance(operType, basestring):
+				if not isinstance(operType, str):
 					raise ConfigValidationError("oper_types", "every oper type must be a string")
 				if not isinstance(permissions, list):
 					raise ConfigValidationError("oper_types", "permissions for oper type \"{}\" must be a list".format(operType))
 				for permission in permissions:
-					if not isinstance(permission, basestring):
+					if not isinstance(permission, str):
 						raise ConfigValidationError("oper_types", "every permission for oper type \"{}\" must be a string".format(operType))
 		else:
 			config["oper_types"] = {}
@@ -44,20 +44,20 @@ class Oper(ModuleData, Mode):
 			if not isinstance(config["oper_groups"], dict):
 				raise ConfigValidationError("oper_groups", "value must be a dictionary")
 			for groupName, values in config["oper_groups"].iteritems():
-				if not isinstance(groupName, basestring):
+				if not isinstance(groupName, str):
 					raise ConfigValidationError("oper_groups", "all group names must be strings")
 				if not isinstance(values, dict):
 					raise ConfigValidationError("oper_groups", "group data must be a dict")
 				for groupDataKey, groupDataValue in values.iteritems():
-					if not isinstance(groupDataKey, basestring):
+					if not isinstance(groupDataKey, str):
 						raise ConfigValidationError("oper_groups", "group data identifiers for oper group \"{}\" must all be strings".format(groupName))
-					if groupDataKey == "vhost" and (not isinstance(groupDataValue, basestring) or not isValidHost(groupDataValue)):
+					if groupDataKey == "vhost" and (not isinstance(groupDataValue, str) or not isValidHost(groupDataValue)):
 						raise ConfigValidationError("oper_groups", "vhosts for oper group \"{}\" must all be valid hostnames".format(groupName))
 					if groupDataKey == "types":
 						if not isinstance(groupDataValue, list):
 							raise ConfigValidationError("oper_groups", "oper type lists for oper group \"{}\" must all be lists".format(groupName))
 						for operType in groupDataValue:
-							if not isinstance(operType, basestring):
+							if not isinstance(operType, str):
 								raise ConfigValidationError("oper_groups", "all oper type names for oper group \"{}\" must be strings".format(groupName))
 							if operType not in config["oper_types"]:
 								raise ConfigValidationError("oper_groups", "the type \"{}\" for oper group \"{}\" does not exist as an oper type".format(operType, groupName))
@@ -72,28 +72,28 @@ class Oper(ModuleData, Mode):
 					raise ConfigValidationError("opers", "oper data must be a dict")
 				hasPassword = False
 				for operDataKey, operDataValue in values.iteritems():
-					if not isinstance(operDataKey, basestring):
+					if not isinstance(operDataKey, str):
 						raise ConfigValidationError("opers", "oper data identifiers must all be strings")
 					if operDataKey == "password":
-						if not isinstance(operDataValue, basestring):
+						if not isinstance(operDataValue, str):
 							raise ConfigValidationError("opers", "no password defined for oper \"{}\"".format(operName))
 						hasPassword = True
-					if operDataKey == "hash" and not isinstance(operDataValue, basestring):
+					if operDataKey == "hash" and not isinstance(operDataValue, str):
 						raise ConfigValidationError("opers", "hash type for oper \"{}\" must be a string name".format(operName))
-					if operDataKey == "host" and not isinstance(operDataValue, basestring):
+					if operDataKey == "host" and not isinstance(operDataValue, str):
 						raise ConfigValidationError("opers", "hosts for oper \"{}\" must be a string".format(operName))
-					if operDataKey == "vhost" and (not isinstance(operDataValue, basestring) or not isValidHost(operDataValue)):
+					if operDataKey == "vhost" and (not isinstance(operDataValue, str) or not isValidHost(operDataValue)):
 						raise ConfigValidationError("opers", "vhost for oper \"{}\" must be a valid hostname".format(operName))
 					if operDataKey == "types":
 						if not isinstance(operDataValue, list):
 							raise ConfigValidationError("opers", "type list for oper \"{}\" must be a list".format(operName))
 						for operType in operDataValue:
-							if not isinstance(operType, basestring):
+							if not isinstance(operType, str):
 								raise ConfigValidationError("opers", "every type name for oper \"{}\" must be a string".format(operName))
 							if operType not in config["oper_types"]:
 								raise ConfigValidationError("opers", "the type \"{}\" for oper \"{}\" does not exist as an oper type".format(operType, operName))
 					if operDataKey == "group":
-						if not isinstance(operDataValue, basestring):
+						if not isinstance(operDataValue, str):
 							raise ConfigValidationError("opers", "the group name for oper \"{}\" must be a string".format(operName))
 						if operDataValue not in config["oper_groups"]:
 							raise ConfigValidationError("opers", "the group \"{}\" for oper \"{}\" does not exist as an oper group".format(operDataValue, operName))

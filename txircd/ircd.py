@@ -419,7 +419,7 @@ class IRCd(Service):
 		# IRCd
 		if "server_name" not in config:
 			raise ConfigValidationError("server_name", "required item not found in configuration file.")
-		if not isinstance(config["server_name"], basestring):
+		if not isinstance(config["server_name"], str):
 			raise ConfigValidationError("server_name", "value must be a string")
 		if len(config["server_name"]) > 64:
 			config["server_name"] = config["server_name"][:64]
@@ -427,7 +427,7 @@ class IRCd(Service):
 		if not re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+$", config["server_name"]):
 			raise ConfigValidationError("server_name", "server name must look like a valid hostname.")
 		if "server_id" in config:
-			if not isinstance(config["server_id"], basestring):
+			if not isinstance(config["server_id"], str):
 				raise ConfigValidationError("server_id", "value must be a string")
 			else:
 				config["server_id"] = config["server_id"].upper()
@@ -439,7 +439,7 @@ class IRCd(Service):
 			raise ConfigValidationError("server_id", "value must be a 3-character alphanumeric string starting with a number.")
 		if "server_description" not in config:
 			raise ConfigValidationError("server_description", "required item not found in configuration file.")
-		if not isinstance(config["server_description"], basestring):
+		if not isinstance(config["server_description"], str):
 			raise ConfigValidationError("server_description", "value must be a string")
 		if not config["server_description"]:
 			raise ConfigValidationError("server_description", "value must not be an empty string")
@@ -448,7 +448,7 @@ class IRCd(Service):
 			self.logConfigValidationWarning("server_description", "value is too long and has been truncated", config["server_description"])
 		if "network_name" not in config:
 			raise ConfigValidationError("network_name", "required item not found in configuration file.")
-		if not isinstance(config["network_name"], basestring):
+		if not isinstance(config["network_name"], str):
 			raise ConfigValidationError("network_name", "value must be a string")
 		if not config["network_name"]:
 			raise ConfigValidationError("network_name", "value must not be an empty string")
@@ -463,37 +463,37 @@ class IRCd(Service):
 		if not isinstance(config["bind_client"], list):
 			raise ConfigValidationError("bind_client", "value must be a list")
 		for bindDesc in config["bind_client"]:
-			if not isinstance(bindDesc, basestring):
+			if not isinstance(bindDesc, str):
 				raise ConfigValidationError("bind_client", "every entry must be a string")
 		if "bind_server" not in config:
 			config["bind_server"] = []
 		if not isinstance(config["bind_server"], list):
 			raise ConfigValidationError("bind_server", "value must be a list")
 		for bindDesc in config["bind_server"]:
-			if not isinstance(bindDesc, basestring):
+			if not isinstance(bindDesc, str):
 				raise ConfigValidationError("bind_server", "every entry must be a string")
 		if "modules" not in config:
 			config["modules"] = []
 		if not isinstance(config["modules"], list):
 			raise ConfigValidationError("modules", "value must be a list")
 		for module in config["modules"]:
-			if not isinstance(module, basestring):
+			if not isinstance(module, str):
 				raise ConfigValidationError("modules", "every entry must be a string")
 		if "links" in config:
 			if not isinstance(config["links"], dict):
 				raise ConfigValidationError("links", "value must be a dictionary")
 			for desc, server in config["links"].iteritems():
-				if not isinstance(desc, basestring):
+				if not isinstance(desc, str):
 					raise ConfigValidationError("links", "\"{}\" is an invalid server description".format(desc))
 				if not isinstance(server, dict):
 					raise ConfigValidationError("links", "values for \"{}\" must be a dictionary".format(desc))
 				if "connect_descriptor" not in server:
 					raise ConfigValidationError("links", "server \"{}\" must contain a \"connect_descriptor\" value".format(desc))
 				if "in_password" in server:
-					if not isinstance(server["in_password"], basestring):
+					if not isinstance(server["in_password"], str):
 						config["links"][desc]["in_password"] = str(server["in_password"])
 				if "out_password" in server:
-					if not isinstance(server["out_password"], basestring):
+					if not isinstance(server["out_password"], str):
 						config["links"][desc]["out_password"] = str(server["out_password"])
 		if "datastore_path" not in config:
 			config["datastore_path"] = "data.db"

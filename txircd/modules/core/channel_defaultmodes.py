@@ -13,7 +13,7 @@ class DefaultModes(ModuleData):
 		return [ ("channelcreate", 110, self.setDefaults) ]
 
 	def verifyConfig(self, config):
-		if "channel_default_modes" in config and not isinstance("channel_default_modes", basestring):
+		if "channel_default_modes" in config and not isinstance("channel_default_modes", str):
 			raise ConfigValidationError("channel_default_modes", "value must be a string of mode letters")
 	
 	def setDefaults(self, channel, user):

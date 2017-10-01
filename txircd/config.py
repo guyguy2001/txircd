@@ -25,8 +25,8 @@ class Config(object):
 				for key, val in includeConfig.iteritems():
 					if key not in configData:
 						configData[key] = val
-					elif not isinstance(configData[key], basestring): # Let's try to merge them if they're collections
-						if isinstance(val, basestring):
+					elif not isinstance(configData[key], str): # Let's try to merge them if they're collections
+						if isinstance(val, str):
 							raise ConfigReadError(fileName, "The included configuration file tried to merge a non-string with a string.")
 						try: # Make sure both things we're merging are still iterable types (not numbers or whatever)
 							iter(configData[key])

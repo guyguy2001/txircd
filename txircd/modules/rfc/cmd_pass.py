@@ -17,7 +17,7 @@ class PassCommand(ModuleData, Command):
 		return [ ("PASS", 1, self) ]
 
 	def verifyConfig(self, config):
-		if "server_password" in config and not isinstance(config["server_password"], basestring):
+		if "server_password" in config and not isinstance(config["server_password"], str):
 			raise ConfigValidationError("server_password", "value must be a string")
 	
 	def parseParams(self, user, params, prefix, tags):

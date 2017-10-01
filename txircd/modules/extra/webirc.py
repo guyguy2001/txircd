@@ -22,9 +22,9 @@ class WebIRC(ModuleData, Command):
 			if not isinstance(config["webirc_allowed_sources"], dict):
 				raise ConfigValidationError("webirc_allowed_sources", "value must be a dictionary")
 			for ip, password in config["webirc_allowed_sources"].iteritems():
-				if not isinstance(ip, basestring):
+				if not isinstance(ip, str):
 					raise ConfigValidationError("webirc_allowed_sources", "ip value must be a string")
-				if not isinstance(password, basestring):
+				if not isinstance(password, str):
 					raise ConfigValidationError("webirc_allowed_sources", "password value must be a string")
 	
 	def checkSourceAndPass(self, user, data):

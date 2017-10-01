@@ -27,7 +27,7 @@ class StatsCommand(ModuleData):
 			if not isinstance(config["public_info"], list):
 				raise ConfigValidationError("public_info", "value must be a list")
 			for info in config["public_info"]:
-				if not isinstance(info, basestring):
+				if not isinstance(info, str):
 					raise ConfigValidationError("public_info", "every entry must be a string")
 
 @implementer(ICommand)

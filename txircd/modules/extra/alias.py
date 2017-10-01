@@ -21,9 +21,9 @@ class CommandAlias(ModuleData):
 			if not isinstance(config["command_aliases"], dict):
 				raise ConfigValidationError("command_aliases", "value must be a dictionary")
 			for command, replacement in config["command_aliases"].iteritems():
-				if not isinstance(command, basestring) or not validCommand.match(command):
+				if not isinstance(command, str) or not validCommand.match(command):
 					raise ConfigValidationError("command_aliases", "alias \"{}\" is not a valid command".format(command))
-				if not isinstance(replacement, basestring):
+				if not isinstance(replacement, str):
 					raise ConfigValidationError("command_aliases", "replacement \"{}\" must be a string".format(replacement))
 				replaceCommand, replacementParams = replacement.split(" ", 1)
 				if not validCommand.match(replaceCommand):

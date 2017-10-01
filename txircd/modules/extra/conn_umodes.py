@@ -13,7 +13,7 @@ class AutoUserModes(ModuleData):
 
 	def verifyConfig(self, config):
 		if "client_umodes_on_connect" in config:
-			if not isinstance(config["client_umodes_on_connect"], basestring):
+			if not isinstance(config["client_umodes_on_connect"], str):
 				raise ConfigValidationError("client_umodes_on_connect", "value must be a valid mode string")
 
 	def autoSetUserModes(self, user):

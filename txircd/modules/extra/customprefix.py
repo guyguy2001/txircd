@@ -29,7 +29,7 @@ class CustomPrefix(ModuleData, Mode):
 					raise ConfigValidationError("custom_prefixes", "value \"char\" for prefix \"{}\" is missing".format(prefix))
 				if not isinstance(prefixValue["level"], int):
 					raise ConfigValidationError("custom_prefixes", "prefix \"{}\" does not specify a valid level")
-				if not isinstance(prefixValue["char"], basestring) or len(prefixValue["char"]) != 1:
+				if not isinstance(prefixValue["char"], str) or len(prefixValue["char"]) != 1:
 					raise ConfigValidationError("custom_prefixes", "prefix \"{}\" does not specify a valid prefix character")
 
 	def checkSet(self, channel, param):

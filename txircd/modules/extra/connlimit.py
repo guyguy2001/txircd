@@ -25,7 +25,7 @@ class ConnectionLimit(ModuleData):
 			if not isinstance(config["connlimit_whitelist"], list):
 				raise ConfigValidationError("connlimit_whitelist", "value must be a list")
 			for ip in config["connlimit_whitelist"]:
-				if not isinstance(ip, basestring):
+				if not isinstance(ip, str):
 					raise ConfigValidationError("connlimit_whitelist", "every entry must be a valid ip")
 
 	def handleLocalConnect(self, user, *params):

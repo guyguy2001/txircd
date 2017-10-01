@@ -20,11 +20,11 @@ class AdminCommand(ModuleData):
 		         ("ADMININFO", 1, ServerAdminResponse(self.ircd)) ]
 
 	def verifyConfig(self, config):
-		if "admin_line_1" in config and not isinstance("admin_server", basestring):
+		if "admin_line_1" in config and not isinstance("admin_server", str):
 			raise ConfigValidationError("admin_server", "value must be a string")
-		if "admin_line_2" in config and not isinstance("admin_admin", basestring):
+		if "admin_line_2" in config and not isinstance("admin_admin", str):
 			raise ConfigValidationError("admin_admin", "value must be a string")
-		if "admin_contact" in config and not isinstance("admin_email", basestring):
+		if "admin_contact" in config and not isinstance("admin_email", str):
 			raise ConfigValidationError("admin_email", "value must be a string")
 	
 	def adminResponses(self):

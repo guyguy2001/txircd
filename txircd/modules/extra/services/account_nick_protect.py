@@ -26,7 +26,7 @@ class AccountNickProtect(ModuleData):
 				raise ConfigValidationError("account_nick_recover_seconds", "invalid number")
 		if "account_nick_default_prefix" not in config:
 			config["account_nick_default_prefix"] = ""
-		elif not isinstance(config["account_nick_default_prefix"], basestring):
+		elif not isinstance(config["account_nick_default_prefix"], str):
 			raise ConfigValidationError("account_nick_default_prefix", "value must be a string")
 		if "account_nick_protect_restrict" not in config or not config["account_nick_protect_restrict"]:
 			config["account_nick_protect_restrict"] = False
@@ -36,7 +36,7 @@ class AccountNickProtect(ModuleData):
 			if not isinstance(config["account_nick_protect_restricted_commands"], list):
 				raise ConfigValidationError("account_nick_protect_restricted_commands", "value must be a list")
 			for command in config["account_nick_protect_restricted_commands"]:
-				if not isinstance(command, basestring):
+				if not isinstance(command, str):
 					raise ConfigValidationError("account_nick_protect_restricted_commands", "\"{}\" is not a valid command".format(command))
 	
 	def checkNickOnConnect(self, user):

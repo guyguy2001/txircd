@@ -54,12 +54,12 @@ class StartTLS(ModuleData, Command):
 	
 	def verifyConfig(self, config):
 		if "starttls_key" in config:
-			if not isinstance(config["starttls_key"], basestring):
+			if not isinstance(config["starttls_key"], str):
 				raise ConfigValidationError("starttls_key", "value must be a file name")
 		else:
 			config["starttls_key"] = "server.pem" # We'll use the Twisted default for endpoints here
 		if "starttls_cert" in config:
-			if not isinstance(config["starttls_cert"], basestring):
+			if not isinstance(config["starttls_cert"], str):
 				raise ConfigValidationError("starttls_cert", "value must be a file name")
 		else:
 			config["starttls_cert"] = config["starttls_key"]
