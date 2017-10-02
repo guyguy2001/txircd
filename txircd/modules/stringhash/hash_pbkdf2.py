@@ -46,23 +46,18 @@ class HashPBKDF2(ModuleData):
 		if salt is None:
 			salt = self.makeSalt()
 		
-		if isinstance(salt, unicode):
-			salt = salt.encode("us-ascii")
-		salt = salt.decode("us-ascii")
-		
-		if isinstance(string, unicode):
-			string = string.encode("utf-8")
+		string = string.encode("utf-8")
 		
 		saltGoodChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/="
 		for char in salt:
 			if char not in saltGoodChars:
 				raise ValueError ("Illegal character {!r} found in salt".format(char))
 		
-		hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(dataBytes))
+		hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(dataBytes)).decode("us-ascii")
 		return "{}:{}:{}:{}".format(algorithm, iterations, salt, hashedStr)
 	
 	def makeSalt(self):
-		return b64encode("".join([pack("@H", randint(0, 0xffff)) for i in range(3)]))
+		return b64encode(b"".join([pack("@H", randint(0, 0xffff)) for i in range(3)])).decode("us-ascii")
 	
 	def compare(self, string, compareWith):
 		if not self.checkValidHash(compareWith):
