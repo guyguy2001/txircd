@@ -139,4 +139,4 @@ class IRCBase(LineOnlyReceiver):
 		return ";".join(tagList)
 	
 	def sendLine(self, line):
-		return self.transport.write("{}\r\n".format(line.encode("utf-8")))
+		return self.transport.write("{}\r\n".format(line).encode("utf-8"))
