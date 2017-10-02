@@ -1,10 +1,10 @@
 from twisted.protocols.basic import LineOnlyReceiver
 
 class IRCBase(LineOnlyReceiver):
-	delimiter = "\n" # Default to splitting by \n, and then we'll also split \r in the handler
+	delimiter = b"\n" # Default to splitting by \n, and then we'll also split \r in the handler
 	
 	def lineReceived(self, data):
-		for lineRaw in data.split("\r"):
+		for lineRaw in data.split(b"\r"):
 			line = lineRaw.decode("utf-8", "replace")
 			command, params, prefix, tags = self._parseLine(line)
 			if command:
