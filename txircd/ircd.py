@@ -93,7 +93,7 @@ class IRCd(Service):
 	def stopService(self):
 		stopDeferreds = []
 		self.log.info("Disconnecting servers...")
-		serverList = self.servers.values() # Take the list of server objects
+		serverList = list(self.servers.values()) # Take the list of server objects
 		self.servers = {} # And then destroy the server dict to inhibit server objects generating lots of noise
 		for server in serverList:
 			if server.nextClosest == self.serverID:
@@ -104,7 +104,7 @@ class IRCd(Service):
 						del self.users[user]
 				server.transport.loseConnection()
 		self.log.info("Disconnecting users...")
-		userList = self.users.values() # Basically do the same thing I just did with the servers
+		userList = list(self.users.values()) # Basically do the same thing I just did with the servers
 		self.users = {}
 		for user in userList:
 			if user.transport:

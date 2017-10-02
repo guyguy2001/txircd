@@ -119,7 +119,7 @@ class IRCServer(IRCBase):
 				self.ircd.runActionProcessing("quitmessage", notifyUsers, user, netsplitQuitMsg, "Netsplit", users=notifyUsers)
 			for user in notifyUserBatches:
 				user.sendBatch("Netsplit")
-			allServers = self.ircd.servers.values()
+				allServers = list(self.ircd.servers.values())
 			for server in allServers:
 				if server.nextClosest == self.serverID:
 					server.disconnect(reason, netsplitFromServerName, netsplitToServerName)

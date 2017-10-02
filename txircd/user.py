@@ -541,7 +541,7 @@ class IRCUser(IRCBase):
 		tuples in the format
 		[ (key, value, setTime) ]
 		"""
-		return self._metadata.values()
+		return list(self._metadata.values())
 	
 	def setMetadata(self, key, value, fromServer = None):
 		"""
