@@ -842,12 +842,14 @@ class IRCd(Service):
 			insertPos = 0
 			for action in actionList:
 				try:
-					while fullActionList[insertPos][1] > action[1]:
+					while fullActionList[insertPos][2] > action[1]:
 						insertPos += 1
-					fullActionList.insert(insertPos, (actionName, action[0]))
+					fullActionList.insert(insertPos, (actionName, action[0], action[1]))
 				except IndexError:
-					fullActionList.append((actionName, action[0]))
+					fullActionList.append((actionName, action[0], action[1]))
 				insertPos += 1
+		for index, actionData in enumerate(fullActionList):
+			fullActionList[index] = (actionData[0], actionData[1]) # The priority isn't important for the return value
 		return fullActionList
 	
 	def runActionStandard(self, actionName, *params, **kw):
