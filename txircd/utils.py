@@ -1,5 +1,6 @@
 from collections import MutableMapping
 from datetime import datetime
+from enum import IntEnum
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\`^{}_|]*$")
@@ -35,10 +36,12 @@ def isValidMetadataKey(key):
 	return validMetadataKey.match(key)
 
 
-def _enum(**enums):
-	return type('Enum', (), enums)
-
-ModeType = _enum(List=0, ParamOnUnset=1, Param=2, NoParam=3, Status=4)
+class ModeType(IntEnum):
+	List = 0
+	ParamOnUnset = 1
+	Param = 2
+	NoParam = 3
+	Status = 4
 
 
 def ircLower(string):
