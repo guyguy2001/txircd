@@ -642,9 +642,9 @@ class IRCd(Service):
 		"""
 		Gets the next UUID for a new client.
 		"""
-		newUUID = self.serverID + self._uid.next()
+		newUUID = "{}{}".format(self.serverID, next(self._uid))
 		while newUUID in self.users: # It'll take over 1.5 billion connections to loop around, but we still
-			newUUID = self.serverID + self._uid.next() # want to be extra safe and avoid collisions
+			newUUID = "{}{}".format(self.serverID, next(self._uid)) # want to be extra safe and avoid collisions
 		self.log.debug("Generated new UUID {uuid}", uuid=newUUID)
 		return newUUID
 	

@@ -170,7 +170,7 @@ def unescapeEndpointDescription(desc):
 	for char in desc:
 		if char == "\\":
 			try:
-				char = desc.next()
+				char = next(desc)
 			except StopIteration:
 				raise ValueError ("Endpoint description not valid: escaped end of string")
 			if char not in "{}":
