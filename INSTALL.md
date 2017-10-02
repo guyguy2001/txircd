@@ -3,6 +3,10 @@ Installation instructions
 
 The following steps can be done either directly to the system or in a virtualenv. Ensure that you're running txircd in a Python 3 environment.
 
+If you're upgrading txircd from 0.4, make sure to run the data_upgrade_from_0.4_py2.py script from setup-utils in the Python 2.7 environment, then upgrade Python and run data_upgrade_from_0.4_py3.py.
+We recommend taking a backup of your database file (no need to back up the yaml file unless you can't get your Python 2.7 environment back) before running the Python 3 conversion.
+Run these scripts as `python setup-utils/data_upgrade_from_0.4_py#.py` from the base txircd directory.
+
 1. Install dependencies:  
 `pip install -r requirements.txt`
 
