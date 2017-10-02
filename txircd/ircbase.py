@@ -4,7 +4,8 @@ class IRCBase(LineOnlyReceiver):
 	delimiter = "\n" # Default to splitting by \n, and then we'll also split \r in the handler
 	
 	def lineReceived(self, data):
-		for line in data.split("\r"):
+		for lineRaw in data.split("\r"):
+			line = lineRaw.decode("utf-8", "replace")
 			command, params, prefix, tags = self._parseLine(line)
 			if command:
 				self.handleCommand(command, params, prefix, tags)
@@ -138,4 +139,4 @@ class IRCBase(LineOnlyReceiver):
 		return ";".join(tagList)
 	
 	def sendLine(self, line):
-		return self.transport.write("{}\r\n".format(line))
+		return self.transport.write("{}\r\n".format(line.encode("utf-8")))
