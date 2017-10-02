@@ -12,7 +12,7 @@ class DccBlock(ModuleData):
 
 	def blockDCC(self, user, data):
 		if "targetusers" in data:
-			users = data["targetusers"].keys()
+			users = list(data["targetusers"].keys())
 			dccBlocked = False
 			for targetUser in users:
 				if data["targetusers"][targetUser].upper().startswith("\x01DCC"):

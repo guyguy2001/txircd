@@ -98,7 +98,7 @@ class IRCd(Service):
 		for server in serverList:
 			if server.nextClosest == self.serverID:
 				stopDeferreds.append(server.disconnectedDeferred)
-				allUsers = self.users.keys()
+				allUsers = list(self.users.keys())
 				for user in allUsers:
 					if user[:3] == server.serverID:
 						del self.users[user]
@@ -111,7 +111,7 @@ class IRCd(Service):
 				stopDeferreds.append(user.disconnectedDeferred)
 				user.transport.loseConnection()
 		self.log.info("Unloading modules...")
-		moduleList = self.loadedModules.keys()
+		moduleList = list(self.loadedModules.keys())
 		for module in moduleList:
 			self._unloadModule(module, False) # Incomplete unload is done to save time and because side effects are destroyed anyway
 		self.log.info("Stopping processes...")

@@ -430,7 +430,7 @@ class Accounts(ModuleData):
 		"""
 		Returns a list of all registered account names.
 		"""
-		return self.accountData["data"].keys()
+		return list(self.accountData["data"].keys())
 	
 	def accountNicks(self, accountName):
 		"""

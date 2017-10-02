@@ -156,12 +156,12 @@ class UserPrivmsg(Command):
 	
 	def affectedUsers(self, user, data):
 		if "targetusers" in data:
-			return data["targetusers"].keys()
+			return list(data["targetusers"].keys())
 		return []
 	
 	def affectedChannels(self, user, data):
 		if "targetchans" in data:
-			return data["targetchans"].keys()
+			return list(data["targetchans"].keys())
 		return []
 	
 	def execute(self, user, data):
@@ -180,12 +180,12 @@ class UserNotice(Command):
 	
 	def affectedUsers(self, user, data):
 		if "targetusers" in data:
-			return data["targetusers"].keys()
+			return list(data["targetusers"].keys())
 		return []
 	
 	def affectedChannels(self, user, data):
 		if "targetchans" in data:
-			return data["targetchans"].keys()
+			return list(data["targetchans"].keys())
 		return []
 	
 	def execute(self, user, data):
