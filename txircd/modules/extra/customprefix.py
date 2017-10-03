@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ModeType
+from txircd.utils import lenBytes, ModeType
 from zope.interface import implementer
 
 @implementer(IPlugin, IModuleData, IMode)
@@ -21,7 +21,7 @@ class CustomPrefix(ModuleData, Mode):
 			if not isinstance(config["custom_prefixes"], dict):
 				raise ConfigValidationError("custom_prefixes", "value must be a dictionary")
 			for prefix, prefixValue in config["custom_prefixes"].items():
-				if len(prefix) != 1:
+				if lenBytes(prefix) != 1:
 					raise ConfigValidationError("custom_prefixes", "prefix value \"{}\" should be a mode character")
 				if "level" not in prefixValue:
 					raise ConfigValidationError("custom_prefixes", "value \"level\" for prefix \"{}\" is missing".format(prefix))
@@ -29,7 +29,7 @@ class CustomPrefix(ModuleData, Mode):
 					raise ConfigValidationError("custom_prefixes", "value \"char\" for prefix \"{}\" is missing".format(prefix))
 				if not isinstance(prefixValue["level"], int):
 					raise ConfigValidationError("custom_prefixes", "prefix \"{}\" does not specify a valid level")
-				if not isinstance(prefixValue["char"], str) or len(prefixValue["char"]) != 1:
+				if not isinstance(prefixValue["char"], str) or lenBytes(prefixValue["char"]) != 1:
 					raise ConfigValidationError("custom_prefixes", "prefix \"{}\" does not specify a valid prefix character")
 
 	def checkSet(self, channel, param):

@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import lenBytes
 from zope.interface import implementer
 
 irc.RPL_SASLSUCCESS = "903"
@@ -116,7 +117,7 @@ class SASL(ModuleData, Command):
 			self.cleanup(user)
 			user.sendMessage(irc.ERR_SASLABORTED, "SASL authentication aborted")
 			return True
-		if len(payload) == 400:
+		if lenBytes(payload) == 400:
 			if "sasl-data" not in user.cache:
 				user.cache["sasl-data"] = payload
 			else:

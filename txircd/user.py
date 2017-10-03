@@ -6,7 +6,7 @@ from twisted.names import client as dnsClient
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidMetadataKey, ModeType, now, splitMessage
+from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -61,7 +61,7 @@ class IRCUser(IRCBase):
 	
 	def _verifyDNSResolution(self, result, timeout):
 		name = result[0][0].payload.name.name
-		if len(name) > self.ircd.config.get("hostname_length", 64):
+		if lenBytes(name) > self.ircd.config.get("hostname_length", 64):
 			self._cancelDNSResolution()
 			return 
 		resolveDeferred = dnsClient.getHostByName(name, ((timeout/2),))
@@ -408,7 +408,7 @@ class IRCUser(IRCBase):
 		"""
 		if newIdent == self.ident:
 			return
-		if len(newIdent) > self.ircd.config.get("ident_length", 12):
+		if lenBytes(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent
@@ -427,7 +427,7 @@ class IRCUser(IRCBase):
 		"""
 		if hostType == "*":
 			return
-		if len(newHost) > self.ircd.config.get("hostname_length", 64):
+		if lenBytes(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		if hostType in self._hostsByType and self._hostsByType[hostType] == newHost:
 			return
@@ -450,7 +450,7 @@ class IRCUser(IRCBase):
 			return
 		if hostType == "*":
 			return
-		if len(newHost) > self.ircd.config.get("hostname_length", 64):
+		if lenBytes(newHost) > self.ircd.config.get("hostname_length", 64):
 			return
 		if hostType in self._hostsByType and self._hostsByType[hostType] == newHost:
 			return
@@ -493,7 +493,7 @@ class IRCUser(IRCBase):
 		Changes a user's real name. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
 		"""
-		if len(newGecos) > self.ircd.config.get("gecos_length", 128):
+		if lenBytes(newGecos) > self.ircd.config.get("gecos_length", 128):
 			return
 		if newGecos == self.gecos:
 			return
@@ -757,7 +757,7 @@ class IRCUser(IRCBase):
 	
 	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
 		if parameter:
-			if len(parameter) > 255:
+			if lenBytes(parameter) > 255:
 				return False
 			if " " in parameter:
 				return False
@@ -924,7 +924,7 @@ class RemoteUser(IRCUser):
 		Changes the ident of the user. If the change was initiated by a remote
 		server, that server should be specified as the fromServer parameter.
 		"""
-		if len(newIdent) > self.ircd.config.get("ident_length", 12):
+		if lenBytes(newIdent) > self.ircd.config.get("ident_length", 12):
 			return
 		oldIdent = self.ident
 		self.ident = newIdent

@@ -36,6 +36,10 @@ def isValidMetadataKey(key):
 	return validMetadataKey.match(key)
 
 
+def lenBytes(string):
+	return len(string.encode("utf-8"))
+
+
 class ModeType(IntEnum):
 	List = 0
 	ParamOnUnset = 1
@@ -206,12 +210,14 @@ def unescapeEndpointDescription(desc):
 
 def splitMessage(message, maxLength, splitOnCharacter = " "):
 	"""
-	Split a string into a series of strings each with maximum length maxLength
-	and returns them in a list.
+	Split a string into a series of strings each with maximum byte length
+	maxLength and returns them in a list.
 	"""
 	msgList = []
 	while message:
 		limitedMessage = message[:maxLength]
+		while lenBytes(limitedMessage) > maxLength:
+			limitedMessage = limitedMessage[:-1] # Trim the message until it fits in the byte limit
 		if "\n" in limitedMessage:
 			pos = limitedMessage.find("\n")
 			newMsg = limitedMessage[:pos]

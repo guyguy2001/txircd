@@ -1,5 +1,5 @@
 from twisted.words.protocols import irc
-from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, ModeType, now
+from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, lenBytes, ModeType, now
 from weakref import WeakKeyDictionary
 
 class IRCChannel(object):
@@ -313,7 +313,7 @@ class IRCChannel(object):
 	
 	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
 		if parameter:
-			if len(parameter) > 255:
+			if lenBytes(parameter) > 255:
 				return False
 			if " " in parameter:
 				return False

@@ -2,7 +2,7 @@ from twisted.internet.abstract import isIPAddress, isIPv6Address
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import expandIPv6Address, isValidHost, ModeType
+from txircd.utils import expandIPv6Address, isValidHost, lenBytes, ModeType
 from zope.interface import implementer
 from hashlib import sha256
 
@@ -53,11 +53,11 @@ class HostCloaking(ModuleData, Mode):
 
 	def applyHostCloak(self, host, ip):
 		# Find the last segments of the hostname.
-		index = len(host[::-1].split(".", 3)[-1])
+		index = len(host[::-1].split(".", 3)[-1]) # Get the length of all segments except the last
 		# Cloak the first part of the host and leave the last segments alone.
 		hostmask = "{}-{}{}".format(self.ircd.config.get("cloaking_prefix", "txircd"), sha256(self.ircd.config.get("cloaking_salt", "") + host[:index]).hexdigest()[:8], host[index:])
 		# This is very rare since we only leave up to 3 segments uncloaked, but make sure the end result isn't too long.
-		if len(hostmask) > self.ircd.config.get("hostname_length", 64):
+		if lenBytes(hostmask) > self.ircd.config.get("hostname_length", 64):
 			if isIPv6Address(ip):
 				return self.applyIPv6Cloak(ip)
 			else:

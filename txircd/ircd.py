@@ -9,7 +9,7 @@ from twisted.python.rebuild import rebuild
 from txircd.config import Config, ConfigError, ConfigValidationError
 from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactory
 from txircd.module_interface import ICommand, IMode, IModuleData
-from txircd.utils import CaseInsensitiveDictionary, ModeType, now, unescapeEndpointDescription
+from txircd.utils import CaseInsensitiveDictionary, lenBytes, ModeType, now, unescapeEndpointDescription
 from datetime import timedelta
 from weakref import WeakValueDictionary
 import importlib, random, re, shelve, string, txircd.modules
@@ -421,7 +421,7 @@ class IRCd(Service):
 			raise ConfigValidationError("server_name", "required item not found in configuration file.")
 		if not isinstance(config["server_name"], str):
 			raise ConfigValidationError("server_name", "value must be a string")
-		if len(config["server_name"]) > 64:
+		if lenBytes(config["server_name"]) > 64:
 			config["server_name"] = config["server_name"][:64]
 			self.logConfigValidationWarning("server_name", "value is too long and has been truncated", config["server_name"])
 		if not re.match(r"^[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+$", config["server_name"]):
@@ -435,7 +435,7 @@ class IRCd(Service):
 			randFromName = random.Random(config["server_name"])
 			serverID = randFromName.choice(string.digits) + randFromName.choice(string.digits + string.ascii_uppercase) + randFromName.choice(string.digits + string.ascii_uppercase)
 			config["server_id"] = serverID
-		if len(config["server_id"]) != 3 or not config["server_id"].isalnum() or not config["server_id"][0].isdigit():
+		if lenBytes(config["server_id"]) != 3 or not config["server_id"].isalnum() or not config["server_id"][0].isdigit():
 			raise ConfigValidationError("server_id", "value must be a 3-character alphanumeric string starting with a number.")
 		if "server_description" not in config:
 			raise ConfigValidationError("server_description", "required item not found in configuration file.")
@@ -443,7 +443,7 @@ class IRCd(Service):
 			raise ConfigValidationError("server_description", "value must be a string")
 		if not config["server_description"]:
 			raise ConfigValidationError("server_description", "value must not be an empty string")
-		if len(config["server_description"]) > 255:
+		if lenBytes(config["server_description"]) > 255:
 			config["server_description"] = config["server_description"][:255]
 			self.logConfigValidationWarning("server_description", "value is too long and has been truncated", config["server_description"])
 		if "network_name" not in config:
@@ -454,7 +454,7 @@ class IRCd(Service):
 			raise ConfigValidationError("network_name", "value must not be an empty string")
 		if " " in config["network_name"]:
 			raise ConfigValidationError("network_name", "value cannot have spaces")
-		if len(config["network_name"]) > 32:
+		if lenBytes(config["network_name"]) > 32:
 			config["network_name"] = config["network_name"][:32]
 			self.logConfigValidationWarning("network_name", "value is too long", config["network_name"])
 		if "bind_client" not in config:

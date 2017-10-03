@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
-from txircd.utils import isValidNick
+from txircd.utils import isValidNick, lenBytes
 from zope.interface import implementer
 
 @implementer(IPlugin, IModuleData, ICommand)
@@ -27,7 +27,7 @@ class SanickCommand(ModuleData, Command):
 		if params[0] not in self.ircd.userNicks:
 			user.sendSingleError("SanickCmd", irc.ERR_NOSUCHNICK, params[0], "No such nick")
 			return None
-		if not isValidNick(params[1]) or len(params[1]) > self.ircd.config.get("nick_length", 32):
+		if not isValidNick(params[1]) or lenBytes(params[1]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("SanickCmd", irc.ERR_ERRONEUSNICKNAME, params[1], "Erroneous nickname")
 			return None
 		if params[1] in self.ircd.userNicks:
