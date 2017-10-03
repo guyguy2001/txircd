@@ -67,7 +67,7 @@ class UserStats(Command):
 		if not self.checkPermission(user, typeName):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the operator permission to run stats {}".format(typeName))
 			return True
-		results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName),)), users=[user])
+		results = self.ircd.runComboActionUntilValue((("statsruntype", (typeName,)), ("statsruntype-{}".format(typeName), ())), users=[user])
 		if results:
 			for key, val in results.items():
 				user.sendMessage(irc.RPL_XINFOENTRY, typeName, key, val)
@@ -118,7 +118,7 @@ class ServerInfoRequest(Command):
 		if serverID == self.ircd.serverID:
 			user = data["user"]
 			destServer = self.ircd.servers[user.uuid[:3]]
-			results = self.ircd.runComboActionUntilValue((("statsruntype", typeName), ("statsruntype-{}".format(typeName),)), users=[user])
+			results = self.ircd.runComboActionUntilValue((("statsruntype", (typeName,)), ("statsruntype-{}".format(typeName), ())), users=[user])
 			if results:
 				for key, val in results.items():
 					destServer.sendMessage("INFO", user.uuid, typeName, key, val, prefix=self.ircd.serverID)

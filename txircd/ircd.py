@@ -991,7 +991,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1013,7 +1013,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1037,7 +1037,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1061,7 +1061,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1085,7 +1085,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1109,7 +1109,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = action[1:]
+			parameters = action[1]
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1133,7 +1133,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = [data] + action[1:]
+			parameters = [data] + list(action[1])
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)
@@ -1157,7 +1157,7 @@ class IRCd(Service):
 		actionFuncLists = {}
 		actionParameters = {}
 		for action in actionList:
-			parameters = dataList + action[1:]
+			parameters = dataList + list(action[1])
 			actionParameters[action[0]] = parameters
 			actionFuncLists[action[0]] = self._getActionFunctionList(action[0], *parameters, **kw)
 		funcList = self._combineActionFunctionLists(actionFuncLists)

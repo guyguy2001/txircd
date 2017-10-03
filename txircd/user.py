@@ -166,9 +166,9 @@ class IRCUser(IRCBase):
 					self._dispatchErrorBatch()
 				return
 			self._clearErrorBatch()
-			if self.ircd.runComboActionUntilValue((("commandpermission-{}".format(command), self, data), ("commandpermission", self, command, data)), users=affectedUsers, channels=affectedChannels) is False:
+			if self.ircd.runComboActionUntilValue((("commandpermission-{}".format(command), (self, data)), ("commandpermission", (self, command, data))), users=affectedUsers, channels=affectedChannels) is False:
 				return
-			self.ircd.runComboActionStandard((("commandmodify-{}".format(command), self, data), ("commandmodify", self, command, data)), users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
+			self.ircd.runComboActionStandard((("commandmodify-{}".format(command), (self, data)), ("commandmodify", (self, command, data))), users=affectedUsers, channels=affectedChannels) # This allows us to do processing without the "stop on empty" feature of runActionProcessing
 			for handler in handlers:
 				if handler[0].execute(self, data):
 					if handler[0].resetsIdleTime:
@@ -176,7 +176,7 @@ class IRCUser(IRCBase):
 					break # If the command executor returns True, it was handled
 			else:
 				return # Don't process commandextra if it wasn't handled
-			self.ircd.runComboActionStandard((("commandextra-{}".format(command), self, data), ("commandextra", self, command, data)), users=affectedUsers, channels=affectedChannels)
+			self.ircd.runComboActionStandard((("commandextra-{}".format(command), (self, data)), ("commandextra", (self, command, data))), users=affectedUsers, channels=affectedChannels)
 		else:
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
@@ -437,7 +437,7 @@ class IRCUser(IRCBase):
 			self._hostStack.remove(hostType)
 		self._hostStack.append(hostType)
 		if self.isRegistered():
-			self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer)), users=[self])
+			self.ircd.runComboActionStandard((("changehost", (self, hostType, oldHost, fromServer)), ("updatehost", (self, hostType, oldHost, newHost, fromServer))), users=[self])
 	
 	def updateHost(self, hostType, newHost, fromServer = None):
 		"""
@@ -463,7 +463,7 @@ class IRCUser(IRCBase):
 		changedHostOfType = (oldHostOfType != newHost)
 		if self.isRegistered():
 			if changedUserHost and changedHostOfType:
-				self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, newHost, fromServer)), users=[self])
+				self.ircd.runComboActionStandard((("changehost", (self, hostType, oldHost, fromServer)), ("updatehost", (self, hostType, oldHost, newHost, fromServer))), users=[self])
 			elif changedHostOfType:
 				self.ircd.runActionStandard("updatehost", self, hostType, oldHost, newHost, fromServer, users=[self])
 	
@@ -479,7 +479,7 @@ class IRCUser(IRCBase):
 		del self._hostsByType[hostType]
 		currentHost = self.host()
 		if currentHost != oldHost:
-			self.ircd.runComboActionStandard((("changehost", self, hostType, oldHost, fromServer), ("updatehost", self, hostType, oldHost, None, fromServer)), users=[self])
+			self.ircd.runComboActionStandard((("changehost", (self, hostType, oldHost, fromServer)), ("updatehost", (self, hostType, oldHost, None, fromServer))), users=[self])
 		else:
 			self.ircd.runActionStandard("updatehost", self, hostType, oldHost, None, fromServer, users=[self])
 	
