@@ -37,12 +37,15 @@ class SASLPlain(ModuleData):
 			return True
 		return False
 	
-	def startAuth(self, user: "IRCUser", saslData: bytes) -> Union[str, bool]:
+	def startAuth(self, user: "IRCUser", saslData: str) -> Union[str, bool, None]:
 		if "sasl-mech" not in user.cache or user.cache["sasl-mech"] != "PLAIN":
 			return None
+		saslData = saslData.encode("utf-8")
 		plainData = b64decode(saslData)
 		try:
-			username, _, password = plainData.split("\0")
+			username, _, password = plainData.split(b"\0")
+			username = username.decode("utf-8", "replace")
+			password = password.decode("utf-8", "replace")
 		except ValueError:
 			return False
 		result = self.ircd.runActionUntilValue("authenticatesasl-PLAIN", user, username, password)
