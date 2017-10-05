@@ -3,8 +3,9 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, ircLower, isValidNick, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
 from zope.interface import implementer
-from validate_email import validate_email as validateEmail
 from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from validate_email import validate_email as validateEmail
 from weakref import WeakSet
 
 accountFormatVersion = "0"
@@ -13,7 +14,7 @@ accountFormatVersion = "0"
 class Accounts(ModuleData):
 	name = "Accounts"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("updatestoragereferences", 10, self.setStorageReferences),
 			("createnewaccount", 1, self.createAccount),
 			("accountsetupindices", 100, self.indexAccount),
@@ -38,7 +39,7 @@ class Accounts(ModuleData):
 			("usermetadataupdate", 1, self.updateLoggedInUsers),
 			("burst", 5, self.startBurst) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("CREATEACCOUNT", 1, CreateAccountCommand(self)),
 			("DELETEACCOUNT", 1, DeleteAccountCommand(self)),
 			("UPDATEACCOUNTNAME", 1, UpdateAccountNameCommand(self)),
@@ -48,7 +49,7 @@ class Accounts(ModuleData):
 			("REMOVEACCOUNTNICK", 1, RemoveAccountNickCommand(self)),
 			("ACCOUNTBURSTINIT", 1, AccountBurstInitCommand(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		if "services" not in self.ircd.storage:
 			self.ircd.storage["services"] = {}
 			self.ircd.storage["services"]["journal"] = []
@@ -61,7 +62,7 @@ class Accounts(ModuleData):
 		self.loggedInUsers = CaseInsensitiveDictionary()
 		self.setStorageReferences()
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "account_password_hash" not in config or not config["account_password_hash"]:
 			raise ConfigValidationError("account_password_hash", "A password hash must be defined for accounts to work.")
 		if "account_password_minimum_length" not in config or not config["account_password_minimum_length"]:
@@ -76,11 +77,11 @@ class Accounts(ModuleData):
 			if not isinstance(config["account_max_nicks"], int) or config["account_max_nicks"] < 1:
 				raise ConfigValidationError("account_max_nicks", "invalid number")
 	
-	def setStorageReferences(self):
+	def setStorageReferences(self) -> None:
 		self.servicesData = self.ircd.storage["services"]
 		self.accountData = self.servicesData["accounts"]
 	
-	def createAccount(self, username, password, passwordHashedMethod, email, user, extraInfo, fromServer = None):
+	def createAccount(self, username: str, password: str, passwordHashedMethod: str, email: str, user: "IRCUser", extraInfo: Dict[Any, Any], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Creates a new services account.
 		Requires a username and password to be entered.
@@ -93,7 +94,7 @@ class Accounts(ModuleData):
 			return False, "BADPARAM", "No username entered."
 		if not password:
 			return False, "BADPARAM", "No password entered."
-		if not passwordHashedMethod is None and len(password) < self.ircd.config["account_password_minimum_length"]:
+		if passwordHashedMethod is None and len(password) < self.ircd.config["account_password_minimum_length"]:
 			return False, "BADPASS", "Password is not at least {} characters long.".format(self.ircd.config["account_password_minimum_length"])
 		
 		if email:
@@ -156,7 +157,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountcreated", username)
 		return True, None, None
 	
-	def indexAccount(self, accountName):
+	def indexAccount(self, accountName: str) -> None:
 		"""
 		Used only by other account action implementing functions to index account information.
 		Call this after changing account information.
@@ -173,7 +174,7 @@ class Accounts(ModuleData):
 		if "email" in self.accountData["data"][lowerAccountName]:
 			self.accountData["index"]["email"][self.accountData["data"][lowerAccountName]["email"]] = lowerAccountName
 	
-	def unindexAccount(self, accountName):
+	def unindexAccount(self, accountName: str) -> None:
 		"""
 		Used only by other account action implementing functions to unindex account information.
 		Call this before changing account information.
@@ -190,7 +191,7 @@ class Accounts(ModuleData):
 			if self.accountData["index"]["email"][emailAddr] == lowerAccountName:
 				del self.accountData["index"]["email"][emailAddr]
 	
-	def authenticateUser(self, user, username, password, completeLogin = True):
+	def authenticateUser(self, user: "IRCUser", username: str, password: str, completeLogin: bool = True) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Authenticates a user for an account.
 		Accepts a username (or, for other functions implementing this action, another unique piece of account information)
@@ -224,7 +225,7 @@ class Accounts(ModuleData):
 			user.setMetadata("account", username)
 		return True, None, None
 	
-	def updateLastLoginTime(self, user, key, oldValue, value, fromServer = None):
+	def updateLastLoginTime(self, user: "IRCUser", key: str, oldValue: str, value: str, fromServer: "IRCServer" = None) -> None:
 		if key != "account":
 			return
 		if value is None:
@@ -234,14 +235,14 @@ class Accounts(ModuleData):
 			return
 		self.accountData["data"][lowerAccountName]["lastlogin"] = now()
 	
-	def logUserOut(self, user):
+	def logUserOut(self, user: "IRCUser") -> bool:
 		"""
 		Logs a user out of the account into which they are logged.
 		"""
 		user.setMetadata("account", None)
 		return True
 	
-	def deleteAccount(self, username, fromServer = None):
+	def deleteAccount(self, username: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Deletes an account.
 		"""
@@ -267,7 +268,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("handledeleteaccount", username)
 		return True, None, None
 	
-	def changeAccountName(self, oldAccountName, newAccountName, fromServer = None):
+	def changeAccountName(self, oldAccountName: str, newAccountName: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Changes the account name for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -308,7 +309,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("handleaccountchangename", oldAccountName, newAccountName)
 		return True, None, None
 	
-	def setPassword(self, accountName, password, hashMethod, fromServer = None):
+	def setPassword(self, accountName: str, password: str, hashMethod: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Set the password for an account.
 		For plain passwords, the hashMethod is None.
@@ -338,7 +339,7 @@ class Accounts(ModuleData):
 		self._serverUpdateTime(updateTime)
 		return True, None, None
 	
-	def setEmail(self, accountName, email, fromServer = None):
+	def setEmail(self, accountName: str, email: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Sets the email address for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -365,7 +366,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
-	def addAltNick(self, accountName, newNick, fromServer = None):
+	def addAltNick(self, accountName: str, newNick: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Adds a nickname to an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -396,7 +397,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
-	def removeAltNick(self, accountName, oldNick, fromServer = None):
+	def removeAltNick(self, accountName: str, oldNick: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Removes a nickname from an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
@@ -426,13 +427,13 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
-	def allAccountNames(self):
+	def allAccountNames(self) -> List[str]:
 		"""
 		Returns a list of all registered account names.
 		"""
 		return list(self.accountData["data"].keys())
 	
-	def accountNicks(self, accountName):
+	def accountNicks(self, accountName: str) -> List[str]:
 		"""
 		Returns all nicknames associated with the account.
 		If the account doesn't exist, returns None.
@@ -442,7 +443,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getEmail(self, accountName):
+	def getEmail(self, accountName: str) -> str:
 		"""
 		Returns the email address associated with an account, if populated.
 		"""
@@ -451,7 +452,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getRegTime(self, accountName):
+	def getRegTime(self, accountName: str) -> datetime:
 		"""
 		Returns the registration time for a user.
 		"""
@@ -460,7 +461,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getLastLogin(self, accountName):
+	def getLastLogin(self, accountName: str) -> datetime:
 		"""
 		Returns the last login time for a user.
 		"""
@@ -469,7 +470,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getAccountUsers(self, accountName):
+	def getAccountUsers(self, accountName: str) -> List["IRCUser"]:
 		"""
 		Returns a list of currently logged-in users for an account.
 		"""
@@ -477,7 +478,7 @@ class Accounts(ModuleData):
 			return list(self.loggedInUsers[accountName])
 		return None
 	
-	def getAccountFromNick(self, nick):
+	def getAccountFromNick(self, nick: str) -> str:
 		"""
 		Returns an account name from the given nickname.
 		Returns None if the nickname isn't grouped with an account.
@@ -490,7 +491,7 @@ class Accounts(ModuleData):
 		lowerAccountName = self.accountData["index"]["nick"][lowerNickname]
 		return self.accountData["data"][lowerAccountName]["username"]
 	
-	def checkAccountExistence(self, accountName):
+	def checkAccountExistence(self, accountName: str) -> bool:
 		"""
 		Returns whether an account exists.
 		"""
@@ -498,7 +499,7 @@ class Accounts(ModuleData):
 			return True
 		return False
 	
-	def updateLoggedInUsers(self, user, key, oldValue, value, fromServer = None):
+	def updateLoggedInUsers(self, user: "IRCUser", key: str, oldValue: str, value: str, fromServer: "IRCServer" = None) -> None:
 		if key != "account":
 			return
 		if oldValue is not None and oldValue in self.loggedInUsers:
@@ -508,7 +509,7 @@ class Accounts(ModuleData):
 				self.loggedInUsers[value] = WeakSet()
 			self.loggedInUsers[value].add(user)
 	
-	def cleanOldDeleted(self):
+	def cleanOldDeleted(self) -> None:
 		"""
 		Cleans up old deleted account info.
 		"""
@@ -521,11 +522,11 @@ class Accounts(ModuleData):
 		for account in removeAccounts:
 			del self.accountData["deleted"][account]
 	
-	def _serverUpdateTime(self, time):
+	def _serverUpdateTime(self, time: datetime) -> None:
 		for server in self.ircd.servers.values():
 			self.servicesData["serverupdates"][server.serverID] = time
 	
-	def startBurst(self, server):
+	def startBurst(self, server: "IRCServer") -> None:
 		lastSyncTime = datetime.utcfromtimestamp(0)
 		if server.serverID in self.servicesData["serverupdates"]:
 			lastSyncTime = self.servicesData["serverupdates"][server.serverID]
@@ -537,7 +538,7 @@ class CreateAccountCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		serializedAccountInfo = params[1]
@@ -556,7 +557,7 @@ class CreateAccountCommand(Command):
 			"accountinfo": accountInfo
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountInfo = data["accountinfo"]
 		accountName = accountInfo["username"]
 		lowerAccountName = ircLower(accountName)
@@ -598,7 +599,7 @@ class DeleteAccountCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 3:
 			return None
 		deleteTime = None
@@ -618,7 +619,7 @@ class DeleteAccountCommand(Command):
 			"registertime": registerTime
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountName = data["accountname"]
 		registerTime = data["registertime"]
 		lowerAccountName = ircLower(accountName)
@@ -636,7 +637,7 @@ class UpdateAccountNameCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 4:
 			return None
 		updateTime = None
@@ -657,7 +658,7 @@ class UpdateAccountNameCommand(Command):
 			"newname": params[3]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		existingName = data["oldname"]
 		lowerExistingName = ircLower(existingName)
 		if lowerExistingName not in self.module.accountData["data"][lowerExistingName]:
@@ -684,7 +685,7 @@ class UpdateAccountPassCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 5:
 			return None
 		updateTime = None
@@ -706,7 +707,7 @@ class UpdateAccountPassCommand(Command):
 			"hashmethod": params[4]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
@@ -732,7 +733,7 @@ class UpdateAccountEmailCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 4:
 			return None
 		updateTime = None
@@ -753,7 +754,7 @@ class UpdateAccountEmailCommand(Command):
 			"email": params[3]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
@@ -779,7 +780,7 @@ class AddAccountNickCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 4:
 			return None
 		updateTime = None
@@ -800,7 +801,7 @@ class AddAccountNickCommand(Command):
 			"addnick": params[3]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		newNick = data["addnick"]
@@ -827,7 +828,7 @@ class RemoveAccountNickCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 4:
 			return None
 		removeTime = None
@@ -848,7 +849,7 @@ class RemoveAccountNickCommand(Command):
 			"removenick": params[3]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		removingNick = data["removenick"]
@@ -880,7 +881,7 @@ class AccountBurstInitCommand(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		lastSyncTime = None
@@ -893,7 +894,7 @@ class AccountBurstInitCommand(Command):
 			"synctime": lastSyncTime
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if data["version"] != accountFormatVersion:
 			return False
 		lastSyncTime = data["synctime"]
@@ -905,7 +906,7 @@ class AccountBurstInitCommand(Command):
 
 accountController = Accounts()
 
-def serializeAccount(accountInfo):
+def serializeAccount(accountInfo: Dict[str, Any]) -> str:
 	"""
 	Serializes an account dict.
 	"""
@@ -914,7 +915,7 @@ def serializeAccount(accountInfo):
 		builtResultString.append("{}:{};".format(_escapeSerializedString(key), _serializeValue(value)))
 	return "".join(builtResultString)[:-1]
 
-def _serializeValue(value):
+def _serializeValue(value: Any) -> str:
 	if value is None:
 		return "N"
 	if value is True:
@@ -944,7 +945,7 @@ def _serializeValue(value):
 		return ".{}".format(value)
 	return "#{}".format(value)
 
-def _escapeSerializedString(value):
+def _escapeSerializedString(value: str) -> str:
 	value = value.replace("\\", "\\\\")
 	value = value.replace(";", "\\|")
 	value = value.replace(":", "\\=")
@@ -954,7 +955,7 @@ def _escapeSerializedString(value):
 	value = value.replace(" ", "\\s")
 	return value
 
-def _unescapeSerializedString(value):
+def _unescapeSerializedString(value: str) -> str:
 	resultValueChars = []
 	escaping = False
 	for char in value:
@@ -985,7 +986,7 @@ def _unescapeSerializedString(value):
 		raise ValueError("\"{}\" is not a valid escaped serialized string.".format(value))
 	return "".join(resultValueChars)
 
-def deserializeAccount(accountInfoString):
+def deserializeAccount(accountInfoString: str) -> Dict[str, Any]:
 	"""
 	Deserializes a string back into a dict.
 	Raises an error if the string is invalid.
@@ -1000,13 +1001,13 @@ def deserializeAccount(accountInfoString):
 		deserializedData[key] = value
 	return deserializedData
 	
-def _deserializeStringPart(stringPart):
+def _deserializeStringPart(stringPart: str) -> Tuple[str, Any]:
 	if ":" not in stringPart:
 		raise ValueError("\"{}\" is not a valid serialized substring.".format(stringPart))
 	key, valueInfo = stringPart.split(":", 1)
 	return _unescapeSerializedString(key), _deserializeStringValue(valueInfo)
 
-def _deserializeStringValue(valueInfo):
+def _deserializeStringValue(valueInfo: str) -> Any:
 	valueType = valueInfo[0]
 	serializedValue = valueInfo[1:]
 	if valueType == "N":

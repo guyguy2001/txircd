@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd import protoVersion
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class CapabCommand(ModuleData, Command):
@@ -9,10 +10,10 @@ class CapabCommand(ModuleData, Command):
 	core = True
 	forRegistered = False
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("CAPAB", 1, self) ]
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return None
 		subcmd = params[0].upper()
@@ -38,7 +39,7 @@ class CapabCommand(ModuleData, Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		subcmd = data["subcmd"]
 		if subcmd == "START":
 			version = data["version"]
@@ -67,6 +68,6 @@ class CapabCommand(ModuleData, Command):
 				server.sendMessage("CAPAB", "END", prefix=self.ircd.serverID)
 			self.ircd.runActionStandard("burst", server)
 			return True
-		return None
+		return False
 
 capabCmd = CapabCommand()

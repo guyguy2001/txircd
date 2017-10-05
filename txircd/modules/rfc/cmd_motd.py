@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class MessageOfTheDay(ModuleData, Command):
@@ -11,24 +12,24 @@ class MessageOfTheDay(ModuleData, Command):
 	motd = []
 	remoteMOTD = {}
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("welcome", 5, self.showMOTD),
 		         ("serverquit", 10, self.removeFromCache) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("MOTD", 1, UserMOTD(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("MOTDREQ", 1, ServerMOTDRequest(self)),
 		         ("STARTMOTD", 1, ServerStartMOTD(self)),
 		         ("MOTD", 1, ServerMOTD(self)),
 		         ("ENDMOTD", 1, ServerEndMOTD(self)),
 		         ("INVALIDATEMOTD", 1, RemoveMOTD(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.rehash()
 	
-	def rehash(self):
+	def rehash(self) -> None:
 		self.motd = []
 		try:
 			with open(self.ircd.config["motd_file"], "r") as motdFile:
@@ -41,7 +42,7 @@ class MessageOfTheDay(ModuleData, Command):
 			self.ircd.log.error("Failed to open MOTD file") # But if a file was specified but couldn't be opened, we'll log an error
 		self.ircd.broadcastToServers(None, "INVALIDATEMOTD", prefix=self.ircd.serverID)
 	
-	def showMOTD(self, user):
+	def showMOTD(self, user: "IRCUser") -> None:
 		if not self.motd:
 			user.sendMessage(irc.ERR_NOMOTD, "Message of the day file is missing.")
 		else:
@@ -50,7 +51,7 @@ class MessageOfTheDay(ModuleData, Command):
 				user.sendMessage(irc.RPL_MOTD, line)
 			user.sendMessage(irc.RPL_ENDOFMOTD, "End of message of the day")
 	
-	def showRemoteMOTD(self, user, server):
+	def showRemoteMOTD(self, user: "IRCUser", server: "IRCServer") -> bool:
 		if server.serverID not in self.remoteMOTD:
 			return False
 		if not self.remoteMOTD[server.serverID][1]:
@@ -64,7 +65,7 @@ class MessageOfTheDay(ModuleData, Command):
 		user.sendMessage(irc.RPL_ENDOFMOTD, "End of message of the day")
 		return True
 	
-	def removeFromCache(self, server, reason):
+	def removeFromCache(self, server: "IRCServer", reason: str) -> None:
 		if server.serverID in self.remoteMOTD:
 			del self.remoteMOTD[server.serverID]
 
@@ -74,7 +75,7 @@ class UserMOTD(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if params and params[0] != self.ircd.name:
 			if params[0] not in self.ircd.serverNames:
 				user.sendSingleError("MOTDServer", irc.ERR_NOSUCHSERVER, params[0], "No such server")
@@ -84,7 +85,7 @@ class UserMOTD(Command):
 			}
 		return {}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if not data:
 			self.module.showMOTD(user)
 			return True
@@ -101,7 +102,7 @@ class ServerMOTDRequest(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if params[0] != self.ircd.serverID and params[0] not in self.ircd.servers:
@@ -134,7 +135,7 @@ class ServerMOTDRequest(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		if "byuser" in data:
@@ -145,7 +146,7 @@ class ServerMOTDRequest(Command):
 			fromServer = data["byserver"]
 			byID = fromServer.serverID
 		else:
-			return None
+			return False
 		if "destserver" in data:
 			toServer = data["destserver"]
 			if toServer.serverID in self.module.remoteMOTD and self.module.remoteMOTD[toServer.serverID][1]:
@@ -170,7 +171,7 @@ class ServerStartMOTD(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.servers:
@@ -205,7 +206,7 @@ class ServerStartMOTD(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data:
 			return True
 		fromServer = data["fromserver"]
@@ -235,7 +236,7 @@ class ServerMOTD(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.servers:
@@ -274,7 +275,7 @@ class ServerMOTD(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data:
 			return True
 		fromServer = data["fromserver"]
@@ -306,7 +307,7 @@ class ServerEndMOTD(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.servers:
@@ -341,7 +342,7 @@ class ServerEndMOTD(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data:
 			return True
 		fromServer = data["fromserver"]
@@ -373,7 +374,7 @@ class RemoveMOTD(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if prefix not in self.ircd.servers:
 			if prefix in self.ircd.recentlyQuitServers:
 				return {
@@ -384,7 +385,7 @@ class RemoveMOTD(Command):
 			"fromserver": self.ircd.servers[prefix]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data:
 			return True
 		fromServer = data["fromserver"]

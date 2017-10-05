@@ -4,6 +4,7 @@ from txircd.channel import IRCChannel
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
 from zope.interface import implementer
+from typing import Callable, List, Optional, Tuple, Union
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -11,7 +12,7 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 class ChannelRegister(ModuleData, Mode):
 	name = "ChannelRegister"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("updatestoragereferences", 10, self.setStorageReferences),
 			("modepermission-channel-r", 10, self.checkSettingUserAccount),
 			("modechange-channel-r", 10, self.updateRegistration),
@@ -22,10 +23,10 @@ class ChannelRegister(ModuleData, Mode):
 			("channelstatusoverride", 50, self.allowChannelOwnerToSetStatuses),
 			("checkchannellevel", 50, self.channelOwnerHasHighestLevel) ]
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("r", ModeType.Param, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.registeredChannels = {}
 		
 		if "services" not in self.ircd.storage:
@@ -55,11 +56,11 @@ class ChannelRegister(ModuleData, Mode):
 			channel.setModes(modeList, self.ircd.serverID)
 			self.registeredChannels[channelName] = channel
 	
-	def setStorageReferences(self):
+	def setStorageReferences(self) -> None:
 		self.servicesData = self.ircd.storage["services"]
 		self.channelData = self.servicesData["channel"]
 	
-	def checkSettingUserAccount(self, channel, user, adding, parameter):
+	def checkSettingUserAccount(self, channel: "IRCChannel", user: "IRCUser", adding: bool, parameter: str) -> Optional[bool]:
 		if adding:
 			return None
 		parameter = channel.modes["r"]
@@ -69,7 +70,7 @@ class ChannelRegister(ModuleData, Mode):
 		user.sendMessage("NOTICE", "You can't drop the channel unless you're logged into the owning account.")
 		return False
 	
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		result = self.ircd.runActionUntilValue("checkaccountexists", param, affectedChannels=[channel])
 		if result is None:
 			return None
@@ -81,7 +82,7 @@ class ChannelRegister(ModuleData, Mode):
 			return [param]
 		return None
 	
-	def updateRegistration(self, channel, sourceID, adding, parameter):
+	def updateRegistration(self, channel: "IRCChannel", sourceID: str, adding: bool, parameter: str) -> None:
 		if adding:
 			if channel.name in self.channelData["data"]:
 				channelInfo = self.channelData["data"][channel.name]
@@ -112,7 +113,7 @@ class ChannelRegister(ModuleData, Mode):
 			self.channelData["index"]["regname"][parameter].remove(channel.name)
 			del self.registeredChannels[channel.name]
 	
-	def updateChannelModeData(self, channel, sourceID, sourceName, modeChanges):
+	def updateChannelModeData(self, channel: "IRCChannel", sourceID: str, sourceName: str, modeChanges: Tuple[bool, str, str, str, "datetime"]) -> None:
 		if channel.name not in self.channelData["data"]:
 			return
 		modes = []
@@ -120,7 +121,7 @@ class ChannelRegister(ModuleData, Mode):
 			modes.append(modeChange[1:])
 		self.channelData["data"][channel.name]["modes"] = modes
 	
-	def updateChannelTopicData(self, channel, setterName, oldTopic):
+	def updateChannelTopicData(self, channel: "IRCChannel", setterName: str, oldTopic: str) -> None:
 		if channel.name not in self.channelData["data"]:
 			return
 		channelInfo = self.channelData["data"][channel.name]
@@ -128,7 +129,7 @@ class ChannelRegister(ModuleData, Mode):
 		channelInfo["topicsetter"] = setterName
 		channelInfo["topictime"] = channel.topicTime
 	
-	def unregisterForAccountDelete(self, accountName):
+	def unregisterForAccountDelete(self, accountName: str) -> None:
 		if accountName not in self.channelData["index"]["regname"]:
 			return
 		for channelName in self.channelData["index"]["regname"][accountName]:
@@ -138,7 +139,7 @@ class ChannelRegister(ModuleData, Mode):
 				del self.channelData["data"][channelName]
 		del self.channelData["index"]["regname"][accountName]
 	
-	def updateRegistrationForAccountRename(self, oldAccountName, newAccountName):
+	def updateRegistrationForAccountRename(self, oldAccountName: str, newAccountName: str) -> None:
 		if oldAccountName not in self.channelData["index"]["regname"]:
 			return
 		for channelName in self.channelData["index"]["regname"][oldAccountName]:
@@ -152,7 +153,7 @@ class ChannelRegister(ModuleData, Mode):
 		self.channelData["index"]["regname"][newAccountName] = self.channelData["index"]["regname"][oldAccountName]
 		del self.channelData["index"]["regname"][oldAccountName]
 	
-	def allowChannelOwnerToSetStatuses(self, channel, user, mode, parameter):
+	def allowChannelOwnerToSetStatuses(self, channel: "IRCChannel", user: "IRCUser", mode: str, parameter: str) -> Optional[bool]:
 		if "r" not in channel.modes:
 			return None
 		channelAccount = channel.modes["r"]
@@ -160,7 +161,7 @@ class ChannelRegister(ModuleData, Mode):
 			return True
 		return None
 	
-	def channelOwnerHasHighestLevel(self, levelType, channel, user):
+	def channelOwnerHasHighestLevel(self, levelType: str, channel: "IRCChannel", user: "IRCUser") -> Optional[bool]:
 		if "r" not in channel.modes:
 			return None
 		channelAccount = channel.modes["r"]

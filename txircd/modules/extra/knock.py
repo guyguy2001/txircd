@@ -5,6 +5,7 @@ from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode,
 from txircd.utils import ModeType, now
 from zope.interface import implementer
 from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from weakref import WeakKeyDictionary
 
 irc.ERR_CANNOTKNOCK  = "480"
@@ -18,29 +19,29 @@ irc.ERR_KNOCKONCHAN = "714"
 class Knock(ModuleData):
 	name = "Knock"
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("K", ModeType.NoParam, NoKnockMode()) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-K-commandpermission-KNOCK", 10, self.channelHasMode),
 		         ("invite", 1, self.clearKnocksOnInvite) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("KNOCK", 1, UserKnock(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("KNOCK", 1, ServerKnock(self.ircd)) ]
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "knock_delay" in config and (not isinstance(config["knock_delay"], int) or config["knock_delay"] < 0):
 			raise ConfigValidationError("knock_delay", "invalid number")
 	
-	def channelHasMode(self, channel, user, data):
+	def channelHasMode(self, channel: "IRCChannel", user: "IRCUser", data: Dict[Any, Any]) -> Union[str, bool, None]:
 		if "K" in channel.modes:
 			return ""
 		return None
 	
-	def clearKnocksOnInvite(self, user, targetUser, channel):
+	def clearKnocksOnInvite(self, user: "IRCUser", targetUser: "IRCUser", channel: "IRCChannel") -> None:
 		if "knocks" in targetUser.cache and channel in targetUser.cache["knocks"]:
 			del targetUser.cache["knocks"][channel]
 
@@ -49,7 +50,7 @@ class UserKnock(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("KnockParams", irc.ERR_NEEDMOREPARAMS, "KNOCK", "Not enough paramters")
 			return None
@@ -61,7 +62,7 @@ class UserKnock(Command):
 			"reason": " ".join(params[1:]) if len(params) > 1 else "has asked for an invite"
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		channel = data["channel"]
 		self.expireKnocks(user)
 		if user in channel.users:
@@ -84,10 +85,10 @@ class UserKnock(Command):
 		user.sendMessage(irc.RPL_KNOCKDLVR, channel.name, "Your KNOCK has been delivered")
 		return True
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return [data["channel"]]
 	
-	def expireKnocks(self, user):
+	def expireKnocks(self, user: "IRCUser") -> None:
 		if "knocks" not in user.cache:
 			return
 		expiredKnocks = []
@@ -106,7 +107,7 @@ class ServerKnock(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
@@ -119,7 +120,7 @@ class ServerKnock(Command):
 			"message": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		channel = data["channel"]
 		fromUser = data["user"]
 		reason = data["message"]
@@ -133,7 +134,7 @@ class ServerKnock(Command):
 class NoKnockMode(Mode):
 	affectedActions = { "commandpermission-KNOCK": 10 }
 
-	def apply(self, actionName, channel, param, user, data):
+	def apply(self, actionName: str, channel: "IRCChannel", param: str, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		user.sendMessage(irc.ERR_CANNOTKNOCK, channel.name, "Can't KNOCK on {}, +K is set".format(channel.name))
 		return False
 

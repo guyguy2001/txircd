@@ -5,6 +5,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import timestampStringFromTime, timestampStringFromTimeSeconds
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.RPL_TOPICWHOTIME = "333"
 
@@ -13,18 +14,18 @@ class TopicCommand(ModuleData):
 	name = "TopicCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("topic", 1, self.onTopic),
 		         ("join", 2, self.sendChannelTopic),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("TOPIC", 1, UserTopic(self.ircd, self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("TOPIC", 1, ServerTopic(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "topic_length" in config:
 			if not isinstance(config["topic_length"], int) or config["topic_length"] < 0:
 				raise ConfigValidationError("topic_length", "invalid number")
@@ -32,7 +33,7 @@ class TopicCommand(ModuleData):
 				config["topic_length"] = 326
 				self.ircd.logConfigValidationWarning("topic_length", "value is too large", 326)
 	
-	def onTopic(self, channel, setter, oldTopic):
+	def onTopic(self, channel: "IRCChannel", setter: str, oldTopic: str):
 		userSource = setter in self.ircd.users
 		if userSource:
 			sourceUser = self.ircd.users[setter]
@@ -55,14 +56,14 @@ class TopicCommand(ModuleData):
 				sourceServer = self.ircd.servers[sourceServer.nextClosest]
 		self.ircd.broadcastToServers(sourceServer, "TOPIC", channel.name, timestampStringFromTime(channel.existedSince), timestampStringFromTime(channel.topicTime), channel.topic, prefix=setter)
 	
-	def sendChannelTopic(self, channel, user, fromServer):
+	def sendChannelTopic(self, channel: "IRCChannel", user: "IRCUser", fromServer: Optional["IRCServer"]) -> None:
 		if not channel.topic:
 			user.sendMessage(irc.RPL_NOTOPIC, channel.name, "No topic is set")
 		else:
 			user.sendMessage(irc.RPL_TOPIC, channel.name, channel.topic)
 			user.sendMessage(irc.RPL_TOPICWHOTIME, channel.name, channel.topicSetter, timestampStringFromTimeSeconds(channel.topicTime))
 
-	def buildISupport(self, data):
+	def buildISupport(self, data: Dict[str, Union[str, int]]) -> None:
 		data["TOPICLEN"] = self.ircd.config.get("topic_length", 326)
 
 @implementer(ICommand)
@@ -71,7 +72,7 @@ class UserTopic(Command):
 		self.ircd = ircd
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("TopicCmd", irc.ERR_NEEDMOREPARAMS, "TOPIC", "Not enough parameters")
 			return None
@@ -89,10 +90,10 @@ class UserTopic(Command):
 			"topic": topic
 		}
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return [ data["channel"] ]
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "topic" in data:
 			data["channel"].setTopic(data["topic"], user.uuid)
 		else:
@@ -106,7 +107,7 @@ class ServerTopic(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 4:
 			return None
 		if params[0] not in self.ircd.channels:
@@ -126,7 +127,7 @@ class ServerTopic(Command):
 		except (TypeError, ValueError):
 			return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostchannel" in data:
 			return True
 		channel = data["channel"]
@@ -139,6 +140,6 @@ class ServerTopic(Command):
 			return True # Don't set the topic when our topic overrides
 		if channel.setTopic(data["topic"], data["source"]):
 			return True
-		return None
+		return False
 
 topicCommand = TopicCommand()

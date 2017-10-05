@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 irc.ERR_INVALIDCAPCMD = "410"
 
@@ -11,14 +12,14 @@ class Cap(ModuleData, Command):
 	name = "Cap"
 	forRegistered = None
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("capabilitylist", 10, self.listCapability),
 		         ("checkremovecapability", 20, self.preventNotifyRemoveOn302) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("CAP", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.ircd.functionCache["cap-add"] = self.newCapability
 		self.ircd.functionCache["cap-del"] = self.removeCapability
 		self.newCapability("cap-notify")
@@ -28,20 +29,20 @@ class Cap(ModuleData, Command):
 					user.cache["capabilities"] = {}
 				user.cache["capabilities"]["cap-notify"] = None
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		self.removeCapability("cap-notify")
 		del self.ircd.functionCache["cap-add"]
 		del self.ircd.functionCache["cap-del"]
 	
-	def listCapability(self, user, capList):
+	def listCapability(self, user: "IRCUser", capList: List[str]) -> None:
 		capList.append("cap-notify")
 	
-	def preventNotifyRemoveOn302(self, user, capability):
+	def preventNotifyRemoveOn302(self, user: "IRCUser", capability: str) -> Optional[bool]:
 		if capability == "cap-notify" and "capversion" in user.cache and user.cache["capversion"] >= 302:
 			return False
 		return None
 	
-	def newCapability(self, capName, sendInBatch = None):
+	def newCapability(self, capName: str, sendInBatch: str = None) -> None:
 		for user in self.ircd.users.values():
 			if "capabilities" in user.cache and "cap-notify" in user.cache["capabilities"]:
 				if sendInBatch:
@@ -49,7 +50,7 @@ class Cap(ModuleData, Command):
 				else:
 					user.sendMessage("CAP", "NEW", capName)
 	
-	def removeCapability(self, capability, sendInBatch = None):
+	def removeCapability(self, capability: str, sendInBatch: str = None) -> None:
 		if "=" in capability:
 			capName, value = capability.split("=", 1)
 		else:
@@ -65,7 +66,7 @@ class Cap(ModuleData, Command):
 				if capName in user.cache["capabilities"] and (value is None or user.cache["capabilities"][capName] == value):
 					del user.cache["capabilities"][capName]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("CapParams", irc.ERR_NEEDMOREPARAMS, "CAP", "Not enough parameters")
 			return None
@@ -104,7 +105,7 @@ class Cap(ModuleData, Command):
 		user.sendSingleError("CapSubcmd", irc.ERR_INVALIDCAPCMD, subcmd, "Invalid subcommand")
 		return None
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		subCmd = data["subcmd"]
 		if not user.isRegistered():
 			user.addRegisterHold("CAP")

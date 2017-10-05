@@ -1,23 +1,24 @@
 from collections import MutableMapping
 from datetime import datetime
 from enum import IntEnum
+from typing import List
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\`^{}_|]*$")
-def isValidNick(nick):
+def isValidNick(nick: str) -> bool:
 	"""
 	Determines whether the provided nickname is in a valid format.
 	"""
 	return validNick.match(nick)
 
 validHost = re.compile(r"^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$")
-def isValidHost(host):
+def isValidHost(host: str) -> bool:
 	"""
 	Determines whether the provided hostname is in a valid format.
 	"""
 	return validHost.match(host)
 
-def isValidChannelName(channelName):
+def isValidChannelName(channelName: str) -> bool:
 	"""
 	Determines whether the given channel name is in a valid format.
 	"""
@@ -29,14 +30,14 @@ def isValidChannelName(channelName):
 	return True
 
 validMetadataKey = re.compile(r"^[A-Za-z0-9_.:]+$")
-def isValidMetadataKey(key):
+def isValidMetadataKey(key: str) -> bool:
 	"""
 	Determines whether the given metadata key is in a valid format.
 	"""
 	return validMetadataKey.match(key)
 
 
-def lenBytes(string):
+def lenBytes(string: str) -> int:
 	return len(string.encode("utf-8"))
 
 
@@ -48,7 +49,7 @@ class ModeType(IntEnum):
 	Status = 4
 
 
-def ircLower(string):
+def ircLower(string: str) -> str:
 	"""
 	Lowercases a string according to RFC lowercasing standards.
 	"""
@@ -86,45 +87,45 @@ class CaseInsensitiveDictionary(MutableMapping):
 		self._data[ircLower(key)] = value
 
 
-def now():
+def now() -> datetime:
 	"""
 	Returns a datetime object representing now.
 	"""
 	return datetime.utcnow()
 
-def timestamp(time):
+def timestamp(time: datetime) -> float:
 	"""
 	Converts a datetime object to a Unix timestamp.
 	"""
 	unixEpoch = datetime.utcfromtimestamp(0)
 	return (time - unixEpoch).total_seconds()
 
-def timestampStringFromTime(time):
+def timestampStringFromTime(time: datetime) -> str:
 	"""
 	Converts a datetime object to the string representation of its Unix timestamp.
 	"""
 	return timestampStringFromTimestamp(timestamp(time))
 
-def timestampStringFromTimeSeconds(time):
+def timestampStringFromTimeSeconds(time: datetime) -> str:
 	"""
 	Converts a datetime object to the string representation of its Unix timestamp,
 	truncated to whole seconds.
 	"""
 	return timestampStringFromTimestampSeconds(timestamp(time))
 
-def timestampStringFromTimestamp(timestamp):
+def timestampStringFromTimestamp(timestamp: float) -> str:
 	"""
 	Converts a Unix timestamp to its string representation.
 	"""
 	return format(timestamp, ".6f").rstrip("0").rstrip(".")
 
-def timestampStringFromTimestampSeconds(timestamp):
+def timestampStringFromTimestampSeconds(timestamp: float) -> str:
 	"""
 	Converts a Unix timestamp to its string representation, truncated to whole seconds.
 	"""
 	return str(int(timestamp))
 
-def isoTime(time):
+def isoTime(time: datetime) -> str:
 	"""
 	Converts a datetime object to an ISO-format date.
 	"""
@@ -133,7 +134,7 @@ def isoTime(time):
 	return "{}Z".format(time.isoformat()[:-3])
 
 
-def durationToSeconds(durationStr):
+def durationToSeconds(durationStr: str) -> int:
 	"""
 	Converts a 1y2w3d4h5m6s format string duration into a number of seconds.
 	"""
@@ -165,7 +166,7 @@ def durationToSeconds(durationStr):
 	return seconds
 
 
-def unescapeEndpointDescription(desc):
+def unescapeEndpointDescription(desc: str) -> str:
 	"""
 	Takes escaped endpoint descriptions from our configuration and unescapes
 	them to pass as a Twisted endpoint description.
@@ -208,7 +209,7 @@ def unescapeEndpointDescription(desc):
 	return "".join(result)
 
 
-def splitMessage(message, maxLength, splitOnCharacter = " "):
+def splitMessage(message: str, maxLength: int, splitOnCharacter: str = " ") -> List[str]:
 	"""
 	Split a string into a series of strings each with maximum byte length
 	maxLength and returns them in a list.
@@ -247,20 +248,20 @@ def splitMessage(message, maxLength, splitOnCharacter = " "):
 # \x03FF: set foreground
 # \x03FF,BB: set fore/background
 format_chars = re.compile('[\x02\x1f\x16\x1d\x0f]|\x03([0-9]{1,2}(,[0-9]{1,2})?)?')
-def stripFormatting(message):
+def stripFormatting(message: str) -> str:
 	"""
 	Removes IRC formatting from the provided message.
 	"""
 	return format_chars.sub('', message)
 
 
-def ipIsV4(ip):
+def ipIsV4(ip: str) -> bool:
 	"""
 	Checks whether an IP address is IPv4. Assumes that it's known the parameter is an IP address.
 	"""
 	return "." in ip
 
-def expandIPv6Address(ip):
+def expandIPv6Address(ip: str) -> str:
 	if "::" in ip:
 		count = 6 - ip.replace("::", "").count(":")
 		ip = ip.replace("::", ":{}:".format(":".join(["0000" for i in range(count)])))

@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -9,10 +10,10 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 class AccountName(ModuleData, Command):
 	name = "AccountName"
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ACCOUNTNAME", 1, self) ]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params or not params[0]:
 			user.sendSingleError("AccountNameParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTNAME", "Not enough parameters")
 			return None
@@ -20,7 +21,7 @@ class AccountName(ModuleData, Command):
 			"name": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		userAccount = user.metadataValue("account")
 		if not userAccount:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "NAME", "NOTLOGIN")

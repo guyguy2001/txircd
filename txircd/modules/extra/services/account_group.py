@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -9,7 +10,7 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 class AccountGroup(ModuleData):
 	name = "AccountGroup"
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ACCOUNTGROUP", 1, CommandGroup(self.ircd)),
 			("ACCOUNTUNGROUP", 1, CommandUngroup(self.ircd)) ]
 
@@ -18,10 +19,10 @@ class CommandGroup(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return {}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if not user.metadataKeyExists("account"):
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "GROUP", "NOTLOGIN")
 			user.sendMessage("NOTICE", "You're not logged in.")
@@ -43,7 +44,7 @@ class CommandUngroup(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("UngroupParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTUNGROUP", "Not enough parameters")
 			return None
@@ -51,7 +52,7 @@ class CommandUngroup(Command):
 			"removenick": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if not user.metadataKeyExists("account"):
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "GROUP", "NOTLOGIN")
 			user.sendMessage("NOTICE", "You're not logged in.")

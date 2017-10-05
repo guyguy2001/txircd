@@ -3,24 +3,25 @@ from twisted.words.protocols import irc
 from txircd.channel import InvalidChannelNameError, IRCChannel
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class SajoinCommand(ModuleData, Command):
 	name = "SajoinCommand"
 
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("SAJOIN", 1, self) ]
 
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("commandpermission-SAJOIN", 1, self.restrictToOpers) ]
 
-	def restrictToOpers(self, user, data):
+	def restrictToOpers(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-sajoin", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("SajoinCmd", irc.ERR_NEEDMOREPARAMS, "SAJOIN", "Not enough parameters")
 			return None
@@ -43,7 +44,7 @@ class SajoinCommand(ModuleData, Command):
 			"channel": channel
 		}
 
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		targetUser = data["user"]
 		channel = data["channel"]
 		targetUser.joinChannel(channel, override=True)

@@ -3,6 +3,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData)
 class ListModeSync(ModuleData):
@@ -10,21 +11,21 @@ class ListModeSync(ModuleData):
 	core = True
 	modeCache = {}
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("LISTMODE", 1, ListModeCmd(self)),
 		         ("ENDLISTMODE", 1, EndListModeCmd(self)) ]
 	
-	def addListMode(self, target, modeData):
+	def addListMode(self, target: Union["IRCUser", "IRCChannel"], modeData: Tuple[bool, str, str, str, datetime]) -> None:
 		if target not in self.modeCache:
 			self.modeCache[target] = []
 		self.modeCache[target].append(modeData)
 	
-	def setModes(self, target, fromServer):
+	def setModes(self, target: Union["IRCUser", "IRCChannel"], fromServer: "IRCServer") -> None:
 		if target in self.modeCache:
 			target.setModes(self.modeCache[target], fromServer.serverID)
 			del self.modeCache[target]
 	
-	def clearUser(self, userUUID):
+	def clearUser(self, userUUID: str) -> None:
 		for target in self.modeCache.keys():
 			try:
 				if target.uuid == userUUID:
@@ -33,7 +34,7 @@ class ListModeSync(ModuleData):
 			except AttributeError:
 				pass
 	
-	def clearChannel(self, channelName):
+	def clearChannel(self, channelName: str) -> None:
 		for target in self.modeCache.keys():
 			try:
 				if target.name == channelName:
@@ -50,7 +51,7 @@ class ListModeCmd(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 6:
 			return None
 		if params[0] in self.ircd.channels:
@@ -91,7 +92,7 @@ class ListModeCmd(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "losttarget" in data:
 			return True
 		targetTime = data["targettime"]
@@ -115,7 +116,7 @@ class EndListModeCmd(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if params[0] in self.ircd.channels:
@@ -136,7 +137,7 @@ class EndListModeCmd(Command):
 			}
 		return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data:
 			self.module.clearUser(data["lostuser"])
 		elif "lostchannel" in data:

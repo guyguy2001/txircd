@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 import re
 
 validCommand = re.compile(r"^[A-Z]+$")
@@ -10,13 +11,13 @@ validCommand = re.compile(r"^[A-Z]+$")
 class CommandAlias(ModuleData):
 	name = "CommandAlias"
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		commands = []
 		for command, replacement in self.ircd.config.get("command_aliases", {}).items():
 			commands.append((command, 1, UserAlias(replacement)))
 		return commands
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "command_aliases" in config:
 			if not isinstance(config["command_aliases"], dict):
 				raise ConfigValidationError("command_aliases", "value must be a dictionary")
@@ -55,14 +56,14 @@ class UserAlias(Command):
 	def __init__(self, replacement):
 		self.replacement = replacement
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return {
 			"params": params,
 			"prefix": prefix,
 			"tags": tags
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		origParams = data["params"]
 		command, replaceParams = self.replacement.split(" ", 1)
 		assembledParams = []

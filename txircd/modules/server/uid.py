@@ -4,6 +4,7 @@ from txircd.user import RemoteUser
 from txircd.utils import ModeType, now, timestampStringFromTime
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class ServerUID(ModuleData, Command):
@@ -11,13 +12,13 @@ class ServerUID(ModuleData, Command):
 	core = True
 	burstQueuePriority = 90
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("welcome", 500, self.broadcastUID) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("UID", 1, self) ]
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 10:
 			return None
 		uuid, signonTS, nick, realHost, displayHost, hostType, ident, ip, nickTS, connectionFlags = params[:10]
@@ -63,7 +64,7 @@ class ServerUID(ModuleData, Command):
 			"modes": modes
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		connectTime = data["connecttime"]
 		nickTime = data["nicktime"]
 		newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
@@ -125,7 +126,7 @@ class ServerUID(ModuleData, Command):
 		self.ircd.broadcastToServers(server, "UID", *uidParams, prefix=self.ircd.serverID)
 		return True
 	
-	def broadcastUID(self, user):
+	def broadcastUID(self, user: "IRCUser") -> None:
 		uidParams = [user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, timestampStringFromTime(user.nickSince), "S" if user.secureConnection else "*"]
 		uidParams.extend(user.modeString(None).split(" "))
 		uidParams.append(user.gecos)

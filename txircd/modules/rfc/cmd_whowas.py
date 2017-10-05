@@ -5,6 +5,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import implementer
 from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 irc.RPL_WHOWASIP = "379"
 
@@ -13,25 +14,25 @@ class WhowasCommand(ModuleData, Command):
 	name = "WhowasCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("quit", 10, self.addUserToWhowas),
 		         ("remotequit", 10, self.addUserToWhowas),
 		         ("localquit", 10, self.addUserToWhowas) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("WHOWAS", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		if "whowas" not in self.ircd.storage:
 			self.ircd.storage["whowas"] = {}
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "whowas_duration" in config and not isinstance(config["whowas_duration"], str) and not isinstance(config["whowas_duration"], int):
 			raise ConfigValidationError("whowas_duration", "value must be an integer or a duration string")
 		if "whowas_max_entries" in config and (not isinstance(config["whowas_max_entries"], int) or config["whowas_max_entries"] < 0):
 			raise  ConfigValidationError("whowas_max_entries", "invalid number")
 	
-	def removeOldEntries(self, whowasEntries):
+	def removeOldEntries(self, whowasEntries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 		expireDuration = durationToSeconds(self.ircd.config.get("whowas_duration", "1d"))
 		maxCount = self.ircd.config.get("whowas_max_entries", 10)
 		while whowasEntries and len(whowasEntries) > maxCount:
@@ -42,7 +43,7 @@ class WhowasCommand(ModuleData, Command):
 			whowasEntries.pop(0)
 		return whowasEntries
 	
-	def addUserToWhowas(self, user, reason, fromServer = None):
+	def addUserToWhowas(self, user: "IRCUser", reason: str, fromServer: "IRCServer" = None) -> None:
 		if not user.isRegistered():
 			# user never registered a nick, so no whowas entry to add
 			return
@@ -71,7 +72,7 @@ class WhowasCommand(ModuleData, Command):
 		elif lowerNick in allWhowas:
 			del allWhowas[lowerNick]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("WhowasCmd", irc.ERR_NEEDMOREPARAMS, "WHOWAS", "Not enough parameters")
 			return None
@@ -84,7 +85,7 @@ class WhowasCommand(ModuleData, Command):
 			"param": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		nick = data["nick"]
 		allWhowas = self.ircd.storage["whowas"]
 		whowasEntries = allWhowas[nick]

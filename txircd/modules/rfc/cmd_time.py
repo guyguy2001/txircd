@@ -3,16 +3,17 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class TimeCommand(ModuleData):
 	name = "TimeCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("TIME", 1, UserTime(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("USERTIMEREQ", 1, ServerTimeRequest(self.ircd)),
 		         ("USERTIME", 1, ServerTime(self.ircd)) ]
 
@@ -21,7 +22,7 @@ class UserTime(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return {}
 		if params[0] == self.ircd.name:
@@ -33,7 +34,7 @@ class UserTime(Command):
 			"server": self.ircd.serverNames[params[0]]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "server" in data:
 			server = data["server"]
 			server.sendMessage("USERTIMEREQ", server.serverID, prefix=user.uuid)
@@ -46,7 +47,7 @@ class ServerTimeRequest(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
@@ -70,7 +71,7 @@ class ServerTimeRequest(Command):
 			"fromuser": self.ircd.users[prefix]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		if "server" in data:
@@ -85,7 +86,7 @@ class ServerTime(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.servers:
@@ -98,7 +99,7 @@ class ServerTime(Command):
 			"time": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		fromServer = data["fromserver"]
 		toUser = data["touser"]
 		if toUser.uuid[:3] == self.ircd.serverID:

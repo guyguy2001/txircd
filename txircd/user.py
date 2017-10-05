@@ -7,6 +7,7 @@ from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
 from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -49,7 +50,7 @@ class IRCUser(IRCBase):
 		self._connectHandlerTimer = None
 		self._startDNSResolving(registrationTimeout)
 	
-	def _startDNSResolving(self, timeout):
+	def _startDNSResolving(self, timeout: int) -> None:
 		ip = self.ip
 		if ipIsV4(ip):
 			addr = "{}.in-addr.arpa".format(".".join(reversed(ip.split("."))))
@@ -59,7 +60,7 @@ class IRCUser(IRCBase):
 		resolveDeferred = dnsClient.lookupPointer(addr, ((timeout/2),))
 		resolveDeferred.addCallbacks(callback=self._verifyDNSResolution, callbackArgs=(timeout,), errback=self._cancelDNSResolution)
 	
-	def _verifyDNSResolution(self, result, timeout):
+	def _verifyDNSResolution(self, result: Tuple[List["RRHeader"], List["RRHeader"], List["RRHeader"]], timeout: int) -> None:
 		name = result[0][0].payload.name.name
 		if lenBytes(name) > self.ircd.config.get("hostname_length", 64):
 			self._cancelDNSResolution()
@@ -67,15 +68,15 @@ class IRCUser(IRCBase):
 		resolveDeferred = dnsClient.getHostByName(name, ((timeout/2),))
 		resolveDeferred.addCallbacks(callback=self._completeDNSResolution, errback=self._cancelDNSResolution, callbackArgs=(name,))
 	
-	def _completeDNSResolution(self, result, name):
+	def _completeDNSResolution(self, result: str, name: str) -> None:
 		if result == self.ip:
 			self.realHost = name
 		self.register("dns")
 	
-	def _cancelDNSResolution(self, error = None):
+	def _cancelDNSResolution(self, error: "Failure" = None) -> None:
 		self.register("dns")
 	
-	def connectionMade(self):
+	def connectionMade(self) -> None:
 		# We need to callLater the connect action call because the connection isn't fully set up yet,
 		# nor is it fully set up even with a delay of zero, which causes the message buffer not to be sent
 		# when the connection is closed.
@@ -85,14 +86,14 @@ class IRCUser(IRCBase):
 		if ISSLTransport.providedBy(self.transport):
 			self.secureConnection = True
 	
-	def _callConnectAction(self):
+	def _callConnectAction(self) -> None:
 		self._connectHandlerTimer = None
 		if self.ircd.runActionUntilFalse("userconnect", self, users=[self]):
 			self.transport.loseConnection()
 		else:
 			self.register("connection")
 	
-	def dataReceived(self, data):
+	def dataReceived(self, data: bytes) -> None:
 		self.ircd.runActionStandard("userrecvdata", self, data, users=[self])
 		try:
 			IRCBase.dataReceived(self, data)
@@ -101,11 +102,11 @@ class IRCUser(IRCBase):
 			if self.uuid in self.ircd.users:
 				self.disconnect("Error occurred")
 	
-	def sendLine(self, line):
+	def sendLine(self, line: str) -> None:
 		self.ircd.runActionStandard("usersenddata", self, line, users=[self])
 		IRCBase.sendLine(self, line)
 	
-	def sendMessage(self, command, *args, **kw):
+	def sendMessage(self, command: str, *args: str, **kw: Any) -> None:
 		"""
 		Sends the given message to this user.
 		Accepts the following keyword arguments:
@@ -133,7 +134,7 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("outgoingmessagetags", self, command, to, tags)
 		IRCBase.sendMessage(self, command, *args, **kw)
 	
-	def handleCommand(self, command, params, prefix, tags):
+	def handleCommand(self, command: str, params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> None:
 		if self.uuid not in self.ircd.users:
 			return # we have been disconnected - ignore all further commands
 		if command in self.ircd.userCommands:
@@ -181,14 +182,14 @@ class IRCUser(IRCBase):
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
 	
-	def createMessageBatch(self, batchName, batchType, batchParameters = None):
+	def createMessageBatch(self, batchName: str, batchType: str, batchParameters: List[Any] = None) -> None:
 		"""
 		Start a new message batch with the given batch name, type, and list of parameters.
 		If a batch with the given name already exists, that batch will be overwritten.
 		"""
 		self._messageBatches[batchName] = { "type": batchType, "parameters": batchParameters, "messages": [] }
 	
-	def sendMessageInBatch(self, batchName, command, *args, **kw):
+	def sendMessageInBatch(self, batchName: str, command: str, *args: str, **kw: Any) -> None:
 		"""
 		Adds a message to the batch with the given name.
 		"""
@@ -196,7 +197,7 @@ class IRCUser(IRCBase):
 			return
 		self._messageBatches[batchName]["messages"].append((command, args, kw))
 	
-	def sendBatch(self, batchName):
+	def sendBatch(self, batchName: str) -> None:
 		"""
 		Sends the messages in the given batch to the user.
 		"""
@@ -210,7 +211,7 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("endbatchsend", self, batchName, batchType, batchParameters)
 		del self._messageBatches[batchName]
 	
-	def startErrorBatch(self, batchName):
+	def startErrorBatch(self, batchName: str) -> None:
 		"""
 		Used to start an error batch when sending multiple error messages to a
 		user from a command's parseParams or from the commandpermission action.
@@ -218,7 +219,7 @@ class IRCUser(IRCBase):
 		if not self._errorBatchName or not self._errorBatch: # Only the first batch should apply
 			self._errorBatchName = batchName
 		
-	def sendBatchedError(self, batchName, command, *args, **kw):
+	def sendBatchedError(self, batchName: str, command: str, *args: str, **kw: Any) -> None:
 		"""
 		Adds an error to the current error batch if the specified error batch
 		is the current error batch.
@@ -226,7 +227,7 @@ class IRCUser(IRCBase):
 		if batchName and self._errorBatchName == batchName:
 			self._errorBatch.append((command, args, kw))
 	
-	def sendSingleError(self, batchName, command, *args, **kw):
+	def sendSingleError(self, batchName: str, command: str, *args: str, **kw: Any) -> None:
 		"""
 		Creates a batch containing a single error and adds the specified error
 		to it.
@@ -235,21 +236,21 @@ class IRCUser(IRCBase):
 			self._errorBatchName = batchName
 			self._errorBatch.append((command, args, kw))
 	
-	def _hasBatchedErrors(self):
+	def _hasBatchedErrors(self) -> bool:
 		if self._errorBatch:
 			return True
 		return False
 	
-	def _clearErrorBatch(self):
+	def _clearErrorBatch(self) -> None:
 		self._errorBatchName = None
 		self._errorBatch = []
 	
-	def _dispatchErrorBatch(self):
+	def _dispatchErrorBatch(self) -> None:
 		for error in self._errorBatch:
 			self.sendMessage(error[0], *error[1], **error[2])
 		self._clearErrorBatch()
 	
-	def filterConditionalTags(self, conditionalTags):
+	def filterConditionalTags(self, conditionalTags: Dict[str, Tuple[str, Callable[[Optional[str]], bool]]]) -> Dict[str, Optional[str]]:
 		applyTags = {}
 		for tag, data in conditionalTags.items():
 			value, check = data
@@ -257,12 +258,12 @@ class IRCUser(IRCBase):
 				applyTags[tag] = value
 		return applyTags
 	
-	def connectionLost(self, reason):
+	def connectionLost(self, reason: str) -> None:
 		if self.uuid in self.ircd.users:
 			self.disconnect("Connection reset")
 		self.disconnectedDeferred.callback(None)
 	
-	def disconnect(self, reason, fromServer = None):
+	def disconnect(self, reason: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Disconnects the user from the server.
 		"""
@@ -293,22 +294,22 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("quit", self, reason, fromServer, users=[self], allowDisconnected=True)
 		self.transport.loseConnection()
 	
-	def _timeoutRegistration(self):
+	def _timeoutRegistration(self) -> None:
 		if self.isRegistered():
 			self._pinger.start(self.ircd.config.get("user_ping_frequency", 60), False)
 			return
 		self.disconnect("Registration timeout")
 	
-	def _ping(self):
+	def _ping(self) -> None:
 		self.ircd.runActionStandard("pinguser", self)
 	
-	def isRegistered(self):
+	def isRegistered(self) -> bool:
 		"""
 		Returns True if this user session is fully registered.
 		"""
 		return not self._registerHolds
 	
-	def register(self, holdName):
+	def register(self, holdName: str) -> None:
 		"""
 		Removes the specified hold on a user's registration. If this is the
 		last hold on a user, completes registration on the user.
@@ -340,7 +341,7 @@ class IRCUser(IRCBase):
 			self.sendISupport()
 			self.ircd.runActionStandard("welcome", self, users=[self])
 	
-	def addRegisterHold(self, holdName):
+	def addRegisterHold(self, holdName: str) -> None:
 		"""
 		Adds a register hold to this user if the user is not yet registered.
 		"""
@@ -348,7 +349,7 @@ class IRCUser(IRCBase):
 			return
 		self._registerHolds.add(holdName)
 	
-	def sendISupport(self):
+	def sendISupport(self) -> None:
 		"""
 		Sends ISUPPORT to this user."""
 		isupportList = self.ircd.generateISupportList()
@@ -358,27 +359,27 @@ class IRCUser(IRCBase):
 			lineArgs.append("are supported by this server")
 			self.sendMessage(irc.RPL_ISUPPORT, *lineArgs)
 	
-	def hostmask(self):
+	def hostmask(self) -> str:
 		"""
 		Returns the user's hostmask.
 		"""
 		return "{}!{}@{}".format(self.nick, self.ident, self.host())
 	
-	def hostmaskWithRealHost(self):
+	def hostmaskWithRealHost(self) -> str:
 		"""
 		Returns the user's hostmask using the user's real host rather than any
 		vhost that may have been applied.
 		"""
 		return "{}!{}@{}".format(self.nick, self.ident, self.realHost)
 	
-	def hostmaskWithIP(self):
+	def hostmaskWithIP(self) -> str:
 		"""
 		Returns the user's hostmask using the user's IP address instead of the
 		host.
 		"""
 		return "{}!{}@{}".format(self.nick, self.ident, self.ip)
 	
-	def changeNick(self, newNick, fromServer = None):
+	def changeNick(self, newNick: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes this user's nickname. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
@@ -401,7 +402,7 @@ class IRCUser(IRCBase):
 			self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
 			self.ircd.runActionStandard("changenick", self, oldNick, fromServer, users=[self])
 	
-	def changeIdent(self, newIdent, fromServer = None):
+	def changeIdent(self, newIdent: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes this user's ident. If initiated by a remote server, that server
 		should be specified in the fromServer parameter.
@@ -415,12 +416,12 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runActionStandard("changeident", self, oldIdent, fromServer, users=[self])
 	
-	def host(self):
+	def host(self) -> str:
 		if not self._hostStack:
 			return self.realHost
 		return self._hostsByType[self._hostStack[-1]]
 	
-	def changeHost(self, hostType, newHost, fromServer = None):
+	def changeHost(self, hostType: str, newHost: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes a user's host. If initiated by a remote server, that server
 		should be specified in the fromServer parameter.
@@ -439,7 +440,7 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runComboActionStandard((("changehost", (self, hostType, oldHost, fromServer)), ("updatehost", (self, hostType, oldHost, newHost, fromServer))), users=[self])
 	
-	def updateHost(self, hostType, newHost, fromServer = None):
+	def updateHost(self, hostType: str, newHost: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Updates the host of a given host type for the user. If initiated by
 		a remote server, that server should be specified in the fromServer
@@ -467,7 +468,7 @@ class IRCUser(IRCBase):
 			elif changedHostOfType:
 				self.ircd.runActionStandard("updatehost", self, hostType, oldHost, newHost, fromServer, users=[self])
 	
-	def resetHost(self, hostType, fromServer = None):
+	def resetHost(self, hostType: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Resets the user's host to the real host.
 		"""
@@ -483,12 +484,12 @@ class IRCUser(IRCBase):
 		else:
 			self.ircd.runActionStandard("updatehost", self, hostType, oldHost, None, fromServer, users=[self])
 	
-	def currentHostType(self):
+	def currentHostType(self) -> str:
 		if self._hostStack:
 			return self._hostStack[-1]
 		return "*"
 	
-	def changeGecos(self, newGecos, fromServer = None):
+	def changeGecos(self, newGecos: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes a user's real name. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
@@ -502,13 +503,13 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runActionStandard("changegecos", self, oldGecos, fromServer, users=[self])
 	
-	def metadataKeyExists(self, key):
+	def metadataKeyExists(self, key: str) -> bool:
 		"""
 		Checks whether the specified key exists in the user's metadata.
 		"""
 		return key in self._metadata
 	
-	def metadataKeyCase(self, key):
+	def metadataKeyCase(self, key: str) -> Optional[str]:
 		"""
 		Returns the specified key in the user's metadata in its original case.
 		Returns None if the given key is not in the user's metadata.
@@ -517,7 +518,7 @@ class IRCUser(IRCBase):
 			return None
 		return self._metadata[key][0]
 	
-	def metadataValue(self, key):
+	def metadataValue(self, key: str) -> Optional[str]:
 		"""
 		Returns the value of the given key in the user's metadata or None if
 		the given key is not in the user's metadata.
@@ -526,7 +527,7 @@ class IRCUser(IRCBase):
 			return None
 		return self._metadata[key][1]
 	
-	def metadataKeySetTime(self, key):
+	def metadataKeySetTime(self, key: str) -> Optional["datetime"]:
 		"""
 		Returns the time a key was set in the user's metadata or None if the
 		given key is not in the user's metadata.
@@ -535,7 +536,7 @@ class IRCUser(IRCBase):
 			return None
 		return self._metadata[key][2]
 	
-	def metadataList(self):
+	def metadataList(self) -> List[Tuple[str, str, "datetime"]]:
 		"""
 		Returns the list of metadata keys/values for the user as a list of
 		tuples in the format
@@ -543,7 +544,7 @@ class IRCUser(IRCBase):
 		"""
 		return list(self._metadata.values())
 	
-	def setMetadata(self, key, value, fromServer = None):
+	def setMetadata(self, key: str, value: Optional[str], fromServer: "IRCServer" = None) -> bool:
 		"""
 		Sets metadata for the user. If initiated by a remote server, that
 		server should be specified in the fromServer parameter.
@@ -564,7 +565,7 @@ class IRCUser(IRCBase):
 		self.ircd.runActionStandard("usermetadataupdate", self, key, oldValue, value, fromServer, users=[self])
 		return True
 	
-	def joinChannel(self, channel, override = False, fromServer = None):
+	def joinChannel(self, channel: "IRCChannel", override: bool = False, fromServer: "IRCServer" = None) -> None:
 		"""
 		Joins the user to a channel. Specify the override parameter only if all
 		permission checks should be bypassed.
@@ -576,7 +577,7 @@ class IRCUser(IRCBase):
 		self.ircd.runActionProcessing("joinmessage", messageUsers, channel, self, None, users=messageUsers, channels=[channel])
 		self.joinChannelNoAnnounceFinish(joinChannelData)
 	
-	def joinChannelNoAnnounceIncomplete(self, channel, override = False, fromServer = None):
+	def joinChannelNoAnnounceIncomplete(self, channel: "IRCChannel", override: bool = False, fromServer: "IRCServer" = None) -> Dict[str, Any]:
 		"""
 		Joins the user to a channel, but doesn't announce or do any actions to complete
 		the join. As with joinChannel, specify the override parameter only if all
@@ -604,13 +605,13 @@ class IRCUser(IRCBase):
 			"fromServer": fromServer
 		}
 	
-	def joinChannelNoAnnounceNotifyUsers(self, joinChannelData):
+	def joinChannelNoAnnounceNotifyUsers(self, joinChannelData: Dict[str, Any]) -> List["IRCUser"]:
 		"""
 		Returns a list of users to notify from channel join data.
 		"""
 		return joinChannelData["notifyUsers"]
 	
-	def joinChannelNoAnnounceFinish(self, joinChannelData):
+	def joinChannelNoAnnounceFinish(self, joinChannelData: Dict[str, Any]) -> None:
 		"""
 		Completes joining a user.
 		Do it AFTER announcing.
@@ -621,7 +622,7 @@ class IRCUser(IRCBase):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("join", channel, self, fromServer, users=[self], channels=[channel])
 	
-	def leaveChannel(self, channel, partType = "PART", typeData = {}, fromServer = None):
+	def leaveChannel(self, channel: "IRCChannel", partType: str = "PART", typeData: Dict[Any, Any] = {}, fromServer: "IRCServer" = None) -> None:
 		"""
 		Removes the user from a channel. The partType and typeData are used for
 		the leavemessage action to send the parting message. If the channel
@@ -634,12 +635,12 @@ class IRCUser(IRCBase):
 		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
 		self._leaveChannel(channel)
 	
-	def _leaveChannel(self, channel):
+	def _leaveChannel(self, channel: "IRCChannel") -> None:
 		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
 	
-	def setModes(self, modes, defaultSource):
+	def setModes(self, modes: List[Union[Tuple[bool, str, str], Tuple[bool, str, str, str, "datetime"]]], defaultSource: str) -> List[Tuple[bool, str, str, str, "datetime"]]:
 		"""
 		Sets modes on the user. Accepts modes as a list of tuples in the
 		format:
@@ -697,7 +698,7 @@ class IRCUser(IRCBase):
 		self._notifyModeChanges(modeChanges, defaultSource, defaultSourceName)
 		return modeChanges
 	
-	def setModesByUser(self, user, modes, params, override = False):
+	def setModesByUser(self, user: "IRCUser", modes: str, params: List[str], override: bool = False) -> List[Tuple[bool, str, str, str, "datetime"]]:
 		"""
 		Parses a mode string specified by a user and sets those modes on the
 		user.
@@ -755,7 +756,7 @@ class IRCUser(IRCBase):
 		self._notifyModeChanges(changes, user.uuid, setBy)
 		return changes
 	
-	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
+	def _applyMode(self, adding: bool, modeType: ModeType, mode: str, parameter: str, setBy: str, setTime: "datetime") -> bool:
 		if parameter:
 			if lenBytes(parameter) > 255:
 				return False
@@ -798,7 +799,7 @@ class IRCUser(IRCBase):
 		del self.modes[mode]
 		return True
 	
-	def _notifyModeChanges(self, modeChanges, source, sourceName):
+	def _notifyModeChanges(self, modeChanges: List[Tuple[bool, str, str, str, "datetime"]], source: str, sourceName: str) -> None:
 		if not modeChanges:
 			return 
 		for change in modeChanges:
@@ -813,7 +814,7 @@ class IRCUser(IRCBase):
 			self.ircd.runActionProcessing("modemessage-user", users, self, source, sourceName, modeChanges, users=users)
 		self.ircd.runActionStandard("modechanges-user", self, source, sourceName, modeChanges, users=[self])
 	
-	def _sourceName(self, source):
+	def _sourceName(self, source: str) -> str:
 		if source in self.ircd.users:
 			return self.ircd.users[source].hostmask()
 		if source == self.ircd.serverID:
@@ -822,7 +823,7 @@ class IRCUser(IRCBase):
 			return self.ircd.servers[source].name
 		return None
 	
-	def modeString(self, toUser):
+	def modeString(self, toUser: "IRCUser") -> str:
 		"""
 		Get a user-reportable mode string for the modes set on the user.
 		"""
@@ -852,13 +853,13 @@ class RemoteUser(IRCUser):
 		IRCUser.__init__(self, ircd, ip, uuid, host)
 		self._registrationTimeoutTimer.cancel()
 	
-	def _startDNSResolving(self, timeout):
+	def _startDNSResolving(self, timeout: int) -> None:
 		self.register("dns", True)
 	
-	def sendMessage(self, command, *params, **kw):
+	def sendMessage(self, command: str, *params: str, **kw: Any) -> None:
 		pass # Messages can't be sent directly to remote users.
 	
-	def register(self, holdName, fromRemote = False):
+	def register(self, holdName: str, fromRemote: bool = False) -> None:
 		"""
 		Handles registration of a remote user.
 		"""
@@ -872,17 +873,17 @@ class RemoteUser(IRCUser):
 			self.ircd.runActionStandard("remoteregister", self, users=[self])
 			self.ircd.userNicks[self.nick] = self
 	
-	def addRegisterHold(self, holdName):
+	def addRegisterHold(self, holdName: str) -> None:
 		pass # We're just not going to allow this here.
 	
-	def disconnect(self, reason, fromServer = None):
+	def disconnect(self, reason: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Disconnects the remote user from the remote server.
 		"""
 		userSendList = self.disconnectDeferNotify(reason, fromServer)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
 	
-	def disconnectDeferNotify(self, reason, fromServer = None):
+	def disconnectDeferNotify(self, reason: str, fromServer: "IRCServer" = None) -> List["IRCUser"]:
 		"""
 		Disconnects the remote user from the remote server.
 		Returns the list of users to notify for manual later notification.
@@ -900,7 +901,7 @@ class RemoteUser(IRCUser):
 		self.ircd.runActionStandard("remotequit", self, reason, fromServer, users=[self], allowDisconnected=True)
 		return userSendList
 	
-	def changeNick(self, newNick, fromServer = None):
+	def changeNick(self, newNick: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes the nickname of the user. If the change was initiated by a
 		remote server, that server should be specified as the fromServer
@@ -919,7 +920,7 @@ class RemoteUser(IRCUser):
 			self.ircd.runActionProcessing("changenickmessage", userSendList, self, oldNick, users=userSendList)
 			self.ircd.runActionStandard("remotechangenick", self, oldNick, fromServer, users=[self])
 	
-	def changeIdent(self, newIdent, fromServer = None):
+	def changeIdent(self, newIdent: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes the ident of the user. If the change was initiated by a remote
 		server, that server should be specified as the fromServer parameter.
@@ -931,7 +932,7 @@ class RemoteUser(IRCUser):
 		if self.isRegistered():
 			self.ircd.runActionStandard("remotechangeident", self, oldIdent, fromServer, users=[self])
 	
-	def changeGecos(self, newGecos, fromServer = None):
+	def changeGecos(self, newGecos: str, fromServer: "IRCServer" = None) -> None:
 		"""
 		Changes the real name of the user. If the change was initiated by a
 		remote server, that server should be specified as the fromServer
@@ -942,7 +943,7 @@ class RemoteUser(IRCUser):
 		if self.isRegistered():
 			self.ircd.runActionStandard("remotechangegecos", self, oldGecos, fromServer, users=[self])
 	
-	def joinChannelNoAnnounceFinish(self, joinChannelData):
+	def joinChannelNoAnnounceFinish(self, joinChannelData: Dict[str, Any]) -> None:
 		"""
 		Completes joining a user.
 		Do it AFTER announcing.
@@ -953,7 +954,7 @@ class RemoteUser(IRCUser):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("remotejoin", channel, self, fromServer, users=[self], channels=[channel])
 	
-	def _leaveChannel(self, channel):
+	def _leaveChannel(self, channel: "IRCChannel") -> None:
 		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
@@ -977,22 +978,22 @@ class LocalUser(IRCUser):
 		self.ircd.runActionStandard("localregister", self, users=[self])
 		self.ircd.userNicks[self.nick] = self
 	
-	def register(self, holdName):
+	def register(self, holdName: str) -> None:
 		pass
 	
-	def setSendMsgFunc(self, func):
+	def setSendMsgFunc(self, func: Callable[..., None]) -> None:
 		"""
 		Sets the function to call when a message is sent to this user.
 		"""
 		self._sendMsgFunc = func
 	
-	def sendMessage(self, command, *args, **kw):
+	def sendMessage(self, command: str, *args: str, **kw: Any) -> None:
 		"""
 		Sends a message to this user.
 		"""
 		self._sendMsgFunc(self, command, *args, **kw)
 	
-	def disconnect(self, reason):
+	def disconnect(self, reason: str) -> None:
 		"""
 		Cleans up and removes the user.
 		"""
@@ -1007,7 +1008,7 @@ class LocalUser(IRCUser):
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
 		self.ircd.runActionStandard("localquit", self, reason, users=[self])
 	
-	def joinChannel(self, channel, override = False):
+	def joinChannel(self, channel: "IRCChannel", override, bool = False) -> None:
 		"""
 		Joins the user to a channel.
 		"""

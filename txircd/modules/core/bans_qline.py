@@ -6,6 +6,7 @@ from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class QLine(ModuleData, XLineBase):
@@ -13,7 +14,7 @@ class QLine(ModuleData, XLineBase):
 	core = True
 	lineType = "Q"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("register", 10, self.checkLines),
 		         ("commandpermission-NICK", 10, self.checkNick),
 		         ("commandpermission-QLINE", 10, self.restrictToOper),
@@ -21,26 +22,26 @@ class QLine(ModuleData, XLineBase):
 		         ("xlinetypeallowsexempt", 10, self.qlineNotExempt),
 		         ("burst", 10, self.burstLines) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("QLINE", 1, UserQLine(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADDLINE", 1, ServerAddQLine(self)),
 		         ("DELLINE", 1, ServerDelQLine(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.initializeLineStorage()
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], str):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
-	def checkUserMatch(self, user, mask, data):
+	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
 		if data and "newnick" in data:
 			return fnmatchcase(ircLower(data["newnick"]), ircLower(mask))
 		return fnmatchcase(ircLower(user.nick), ircLower(mask))
 	
-	def changeNick(self, user, reason, hasBeenConnected):
+	def changeNick(self, user: "IRCUser", reason: str, hasBeenConnected: bool) -> None:
 		self.ircd.log.info("Matched user {user.uuid} ({user.nick}) against a q:line: {reason}", user=user, reason=reason)
 		if hasBeenConnected:
 			user.sendMessage("NOTICE", "Your nickname has been changed, as it is now invalid. ({})".format(reason))
@@ -48,13 +49,13 @@ class QLine(ModuleData, XLineBase):
 			user.sendMessage("NOTICE", "The nickname you chose was invalid. ({})".format(reason))
 		user.changeNick(user.uuid)
 	
-	def checkLines(self, user):
+	def checkLines(self, user: "IRCUser") -> bool:
 		reason = self.matchUser(user)
 		if reason is not None:
 			self.changeNick(user, reason, False)
 		return True
 	
-	def checkNick(self, user, data):
+	def checkNick(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		self.expireLines()
 		newNick = data["nick"]
 		reason = self.matchUser(user, { "newnick": newNick })
@@ -63,13 +64,13 @@ class QLine(ModuleData, XLineBase):
 			return False
 		return None
 	
-	def restrictToOper(self, user, data):
+	def restrictToOper(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-qline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
-	def qlineNotExempt(self, lineType):
+	def qlineNotExempt(self, lineType: str) -> bool:
 		if lineType == "Q":
 			return False
 		return True
@@ -79,7 +80,7 @@ class UserQLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 1 or len(params) == 2:
 			user.sendSingleError("QLineParams", irc.ERR_NEEDMOREPARAMS, "QLINE", "Not enough parameters")
 			return None
@@ -93,7 +94,7 @@ class UserQLine(Command):
 			"reason": " ".join(params[2:])
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		banmask = data["mask"]
 		if "reason" in data:
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
@@ -119,10 +120,10 @@ class ServerAddQLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if self.module.executeServerAddCommand(server, data):
 			for user in self.module.ircd.users.values():
 				if not user.isRegistered():
@@ -131,17 +132,17 @@ class ServerAddQLine(Command):
 				if reason is not None:
 					self.module.changeNick(user, reason, True)
 			return True
-		return None
+		return False
 
 @implementer(ICommand)
 class ServerDelQLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.executeServerDelCommand(server, data)
 
 qlineModule = QLine()

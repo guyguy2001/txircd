@@ -5,6 +5,7 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, splitMessage
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.RPL_MONONLINE = "730"
 irc.RPL_MONOFFLINE = "731"
@@ -18,7 +19,7 @@ irc.RPL_METADATAEND = "762"
 class Monitor(ModuleData, Command):
 	name = "Monitor"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("welcome", 1, self.reportNewUser),
 		         ("remoteregister", 1, self.reportNewUser),
 		         ("changenick", 1, self.reportNickChangeUser),
@@ -27,10 +28,10 @@ class Monitor(ModuleData, Command):
 		         ("remotequit", 1, self.reportGoneUser),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("MONITOR", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.ircd.dataCache["monitor-index"] = CaseInsensitiveDictionary()
 		# We'll run a cleaner every minute. The reason we do this is that, since there can be multiple
 		# notified users for a target, the index is implemented as a CaseInsensitiveDictionary pointing
@@ -40,37 +41,37 @@ class Monitor(ModuleData, Command):
 		self.indexCleaner = LoopingCall(self.cleanIndex)
 		self.indexCleaner.start(60, now=False)
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		if self.indexCleaner.running:
 			self.indexCleaner.stop()
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "monitor_limit" not in config:
 			config["monitor_limit"] = None
 			return
 		if not isinstance(config["monitor_limit"], int) or config["monitor_limit"] < 0:
 			raise ConfigValidationError("monitor_limit", "invalid number")
 	
-	def reportNewUser(self, user):
+	def reportNewUser(self, user: "IRCUser") -> None:
 		self._doNotify(user.nick, irc.RPL_MONONLINE)
 	
-	def reportNickChangeUser(self, user, oldNick, fromServer):
+	def reportNickChangeUser(self, user: "IRCUser", oldNick: str, fromServer: Optional["IRCServer"]) -> None:
 		self._doNotify(oldNick, irc.RPL_MONOFFLINE)
 		self._doNotify(user.nick, irc.RPL_MONONLINE)
 	
-	def reportGoneUser(self, user, reason, fromServer):
+	def reportGoneUser(self, user: "IRCUser", reason: str, fromServer: Optional["IRCServer"]) -> None:
 		if user.isRegistered():
 			self._doNotify(user.nick, irc.RPL_MONOFFLINE)
 	
-	def _doNotify(self, nick, numeric):
+	def _doNotify(self, nick: str, numeric: str) -> None:
 		if nick in self.ircd.dataCache["monitor-index"]:
 			for notifyUser in self.ircd.dataCache["monitor-index"][nick]:
 				notifyUser.sendMessage(numeric, nick)
 	
-	def buildISupport(self, data):
+	def buildISupport(self, data: Dict[str, Union[str, int]]) -> None:
 		data["MONITOR"] = self.ircd.config["monitor_limit"]
 	
-	def cleanIndex(self):
+	def cleanIndex(self) -> None:
 		removeKeys = []
 		for target, notifyList in self.ircd.dataCache["monitor-index"].items():
 			if not notifyList:
@@ -78,7 +79,7 @@ class Monitor(ModuleData, Command):
 		for target in removeKeys:
 			del self.ircd.dataCache["monitor-index"][target]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("MonitorParams", irc.ERR_NEEDMOREPARAMS, "MONITOR", "Not enough parameters")
 			return None
@@ -99,7 +100,7 @@ class Monitor(ModuleData, Command):
 		user.sendSingleError("MonitorBadSubcmd", irc.ERR_UNKNOWNCOMMAND, "MONITOR", "Unknown subcommand: {}".format(subcmd))
 		return None
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		subcmd = data["subcmd"]
 		if subcmd == "+":
 			monitorLimit = self.ircd.config["monitor_limit"]
@@ -171,6 +172,6 @@ class Monitor(ModuleData, Command):
 			for line in offlineLines:
 				user.sendMessage(irc.RPL_MONOFFLINE, line)
 			return True
-		return None
+		return False
 
 monitor = Monitor()

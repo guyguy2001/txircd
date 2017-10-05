@@ -1,4 +1,5 @@
 from zope.interface import Attribute, Interface
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 class IModuleData(Interface):
 	name = Attribute("The module name.")
@@ -10,12 +11,12 @@ class IModuleData(Interface):
 		""")
 	core = Attribute("Always false for custom modules.")
 	
-	def hookIRCd(ircd):
+	def hookIRCd(ircd: "IRCd") -> None:
 		"""
 		Provides the IRCd instance to save and use later.
 		"""
 	
-	def channelModes():
+	def channelModes() -> List[Union[Tuple[str, "ModeType", "Mode"], Tuple[str, "ModeType", "Mode", int, str]]]:
 		"""
 		Returns the channel modes provided by the module.  The modes are returned as
 		a list of tuples:
@@ -30,7 +31,7 @@ class IModuleData(Interface):
 		The symbol is a single character, also only relevant for ModeType.Status modes.
 		"""
 	
-	def userModes():
+	def userModes() -> List[Tuple[str, "ModeType", "Mode"]]:
 		"""
 		Returns the user modes provided by the module.  The modes are returned as a list
 		of tuples:
@@ -41,7 +42,7 @@ class IModuleData(Interface):
 		The object is an instance of the class that implements the mode.
 		"""
 	
-	def actions():
+	def actions() -> List[Tuple[str, int, Callable]]:
 		"""
 		Returns the actions this module handles.  The actions are returned as a list
 		of tuples:
@@ -53,7 +54,7 @@ class IModuleData(Interface):
 		The function is a reference to the function which handles the action in your module.
 		"""
 	
-	def userCommands():
+	def userCommands() -> List[Tuple[str, int, "Command"]]:
 		"""
 		Returns commands supported by this module.  Commands are returned as a list of tuples:
 		[ (name, priority, object) ]
@@ -65,7 +66,7 @@ class IModuleData(Interface):
 		The object is an instance of the class that implements the command.
 		"""
 	
-	def serverCommands():
+	def serverCommands() -> List[Tuple[str, int, "Command"]]:
 		"""
 		Returns server commands supported by this module.  Server commands are returned as
 		a list of tuples:
@@ -78,31 +79,31 @@ class IModuleData(Interface):
 		The object is an instance of the class that implements the command.
 		"""
 	
-	def load():
+	def load() -> None:
 		"""
 		Called when the module is successfully loaded.
 		"""
 	
-	def rehash():
+	def rehash() -> None:
 		"""
 		Called when the server is rehashed.  Indicates that new configuration values are loaded
 		and that any changes should be acted upon.
 		"""
 	
-	def unload():
+	def unload() -> Optional["Deferred"]:
 		"""
 		Called when the module is being unloaded for any reason, including to be reloaded.
 		Should do basic cleanup.
 		"""
 	
-	def fullUnload():
+	def fullUnload() -> Optional["Deferred"]:
 		"""
 		Called when the module is being fully unloaded with no intention to reload.
 		Should do full cleanup of any data this module uses, including unsetting of modes
 		handled by this module.
 		"""
 
-	def verifyConfig(config):
+	def verifyConfig(config: Dict[str, Any]) -> None:
 		"""
 		Called when the module is loaded and when the server is rehashed.  Should check all
 		configuration values defined by this module and either adjust them in the configuration
@@ -113,37 +114,37 @@ class ModuleData(object):
 	requiredOnAllServers = False
 	core = False
 	
-	def hookIRCd(self, ircd):
+	def hookIRCd(self, ircd: "IRCd") -> None:
 		self.ircd = ircd
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, "ModeType", "Mode"], Tuple[str, "ModeType", "Mode", int, str]]]:
 		return []
 	
-	def userModes(self):
+	def userModes(self) -> List[Tuple[str, "ModeType", "Mode"]]:
 		return []
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return []
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, "Command"]]:
 		return []
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, "Command"]]:
 		return []
 	
-	def load(self):
+	def load(self) -> None:
 		pass
 	
-	def rehash(self):
+	def rehash(self) -> None:
 		pass
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		pass
 	
-	def fullUnload(self):
+	def fullUnload(self) -> Optional["Deferred"]:
 		pass
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		pass
 
 
@@ -164,13 +165,13 @@ class ICommand(Interface):
 		Otherwise, commands are processed in order from highest to lowest priority.
 		""")
 	
-	def parseParams(source, params, prefix, tags):
+	def parseParams(source: Union["IRCUser", "IRCServer"], params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		"""
 		Parses the parameters to the command.  Returns a dictionary of data, or None if
 		the parameters cannot be properly parsed.
 		"""
 	
-	def affectedUsers(source, data):
+	def affectedUsers(source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> List["IRCUser"]:
 		"""
 		Determines which users are affected given parsed command data to determine which
 		action functions to call.
@@ -179,14 +180,14 @@ class ICommand(Interface):
 		is not already in it.
 		"""
 	
-	def affectedChannels(source, data):
+	def affectedChannels(source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> List["IRCChannel"]:
 		"""
 		Determines which channels are affected given parsed command data to determine
 		which action functions to call.
 		Returns a list of channels (or an empty list for no channels).
 		"""
 	
-	def execute(source, data):
+	def execute(source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> Optional[bool]:
 		"""
 		Performs the command action.
 		Returns True if successfully handled; otherwise defers to the next handler in the chain
@@ -197,16 +198,16 @@ class Command(object):
 	forRegistered = True
 	burstQueuePriority = None
 	
-	def parseParams(self, source, params, prefix, tags):
+	def parseParams(self, source: Union["IRCUser", "IRCServer"], params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return None
 	
-	def affectedUsers(self, source, data):
+	def affectedUsers(self, source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> List["IRCUser"]:
 		return []
 	
-	def affectedChannels(self, source, data):
+	def affectedChannels(self, source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return []
 	
-	def execute(self, source, data):
+	def execute(self, source: Union["IRCUser", "IRCServer"], data: Dict[Any, Any]) -> Optional[bool]:
 		pass
 
 
@@ -216,21 +217,21 @@ class IMode(Interface):
 		the dict maps to a priority.
 		""")
 	
-	def checkSet(target, param):
+	def checkSet(target: Union["IRCUser", "IRCChannel"], param: str) -> Optional[List[str]]:
 		"""
 		Checks whether the mode can be set.  Returns a list of parameters, or None if the mode cannot be set.
 		For non-list modes, return a list of one item.
 		For non-parameter modes, return an empty list.
 		"""
 	
-	def checkUnset(target, param):
+	def checkUnset(target: Union["IRCUser", "IRCChannel"], param: str) -> Optional[List[str]]:
 		"""
 		Checks whether the mode can be unset.  Returns a list of parameters, or None if the mode cannot be unset.
 		For non-list modes, return a list of one item.
 		For non-parameter modes, return an empty list.
 		"""
 	
-	def apply(actionType, target, param, *params):
+	def apply(actionType: str, target: Union["IRCUser", "IRCChannel"], param: str, *params: Any) -> Any:
 		"""
 		Affect the mode should have.
 		This is similar binding the appropriate actions directly, except that the IRCd will automatically determine
@@ -239,13 +240,13 @@ class IMode(Interface):
 		A parameter is provided for the particular target to which the mode action is being applied.
 		"""
 	
-	def showParam(user, target):
+	def showParam(user: "IRCUser", target: Union["IRCUser", "IRCChannel"]) -> str:
 		"""
 		Affects parameter modes only (ModeType.ParamOnUnset or ModeType.Param).  Returns how to display the mode
 		parameter to users.
 		"""
 	
-	def showListParams(user, target):
+	def showListParams(user: "IRCUser", target: Union["IRCUser", "IRCChannel"]) -> None:
 		"""
 		Affects list modes only (ModeType.List).  Sends the parameter list to the user.  Returns None.
 		"""
@@ -253,17 +254,17 @@ class IMode(Interface):
 class Mode(object):
 	affectedActions = []
 	
-	def checkSet(self, target, param):
+	def checkSet(self, target: Union["IRCUser", "IRCChannel"], param: str) -> Optional[List[str]]:
 		return [param]
 	
-	def checkUnset(self, target, param):
+	def checkUnset(self, target: Union["IRCUser", "IRCChannel"], param: str) -> Optional[List[str]]:
 		return [param]
 	
-	def apply(self, actionType, target, param, *params, **kw):
+	def apply(self, actionType: str, target: Union["IRCUser", "IRCChannel"], param: str, *params: Any, **kw: Any) -> Any:
 		pass
 	
-	def showParam(self, user, target):
+	def showParam(self, user: "IRCUser", target: Union["IRCUser", "IRCChannel"]) -> str:
 		return None
 	
-	def showListParams(self, user, target):
+	def showListParams(self, user: "IRCUser", target: Union["IRCUser", "IRCChannel"]) -> None:
 		pass

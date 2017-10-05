@@ -1,16 +1,17 @@
 from twisted.protocols.basic import LineOnlyReceiver
+from typing import Any, Dict, Optional, Tuple, Union
 
 class IRCBase(LineOnlyReceiver):
 	delimiter = b"\n" # Default to splitting by \n, and then we'll also split \r in the handler
 	
-	def lineReceived(self, data):
+	def lineReceived(self, data: bytes) -> None:
 		for lineRaw in data.split(b"\r"):
 			line = lineRaw.decode("utf-8", "replace")
 			command, params, prefix, tags = self._parseLine(line)
 			if command:
 				self.handleCommand(command, params, prefix, tags)
 	
-	def _parseLine(self, line):
+	def _parseLine(self, line: str) -> Union[Tuple[str, str, str, Dict[str, Optional[str]]], Tuple[None, None, None, None]]:
 		line = line.replace("\0", "")
 		if not line:
 			return None, None, None, None
@@ -50,7 +51,7 @@ class IRCBase(LineOnlyReceiver):
 			params.append(lastParam)
 		return command.upper(), params, prefix, tags
 	
-	def _parseTags(self, tagLine):
+	def _parseTags(self, tagLine: str) -> Dict[str, Optional[str]]:
 		tags = {}
 		for tagval in tagLine.split(";"):
 			if not tagval:
@@ -86,10 +87,10 @@ class IRCBase(LineOnlyReceiver):
 			tags[tag] = value
 		return tags
 	
-	def handleCommand(self, command, params, prefix, tags):
+	def handleCommand(self, command: str, params: str, prefix: str, tags: Dict[str, Optional[str]]) -> None:
 		pass
 	
-	def sendMessage(self, command, *params, **kw):
+	def sendMessage(self, command: str, *params: str, **kw: Any) -> None:
 		if "tags" in kw:
 			tags = self._buildTagString(kw["tags"])
 		else:
@@ -123,7 +124,7 @@ class IRCBase(LineOnlyReceiver):
 		lineToSend += "{} {}".format(command, " ".join(params))
 		self.sendLine(lineToSend.replace("\0", ""))
 	
-	def _buildTagString(self, tags):
+	def _buildTagString(self, tags: Dict[str, Optional[str]]) -> str:
 		tagList = []
 		for tag, value in tags.items():
 			for char in tag:
@@ -138,5 +139,5 @@ class IRCBase(LineOnlyReceiver):
 				tagList.append("{}={}".format(tag, escapedValue))
 		return ";".join(tagList)
 	
-	def sendLine(self, line):
+	def sendLine(self, line: str) -> None:
 		return self.transport.write("{}\r\n".format(line).encode("utf-8"))

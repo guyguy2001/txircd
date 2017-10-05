@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import lenBytes
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 irc.RPL_SASLSUCCESS = "903"
 irc.ERR_SASLFAIL = "904"
@@ -15,15 +16,15 @@ class SASL(ModuleData, Command):
 	name = "SASL"
 	forRegistered = None
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("capabilitylist", 10, self.addCapability),
 		         ("saslcomplete", 1, self.completeSASL),
 		         ("register", 1, self.clearSASLonRegister) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("AUTHENTICATE", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.ircd.functionCache["saslmech-add"] = self.addSASLMech
 		self.ircd.functionCache["saslmech-del"] = self.removeSASLMech
 		if "unloading-sasl" in self.ircd.dataCache:
@@ -33,18 +34,18 @@ class SASL(ModuleData, Command):
 		if saslMechanisms and "cap-add" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-add"]("sasl={}".format(",".join(saslMechanisms)))
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		self.ircd.dataCache["unloading-sasl"] = True
 		del self.ircd.functionCache["saslmech-add"]
 		del self.ircd.functionCache["saslmech-del"]
 	
-	def fullUnload(self):
+	def fullUnload(self) -> Optional["Deferred"]:
 		del self.ircd.dataCache["unloading-sasl"]
 		saslMechanisms = self.saslMechList()
 		if saslMechanisms and "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("sasl")
 	
-	def addCapability(self, user, capList):
+	def addCapability(self, user: "IRCUser", capList: List[str]) -> None:
 		saslMechanisms = self.saslMechList()
 		if not saslMechanisms:
 			return
@@ -53,20 +54,20 @@ class SASL(ModuleData, Command):
 		else:
 			capList.append("sasl")
 	
-	def completeSASL(self, user, success):
+	def completeSASL(self, user: "IRCUser", success: bool) -> None:
 		if success:
 			user.sendMessage(irc.RPL_SASLSUCCESS, "SASL authentication successful")
 		else:
 			user.sendMessage(irc.ERR_SASLFAIL, "SASL authentication failed")
 		self.cleanup(user)
 	
-	def clearSASLonRegister(self, user):
+	def clearSASLonRegister(self, user: "IRCUser") -> bool:
 		if "sasl-mech" in user.cache and "sasl-processing" not in user.cache:
 			user.sendMessage(irc.ERR_SASLABORTED, "SASL authentication aborted")
 			self.cleanup(user)
 		return True
 	
-	def cleanup(self, user):
+	def cleanup(self, user: "IRCUser") -> None:
 		if "sasl-mech" in user.cache:
 			del user.cache["sasl-mech"]
 		if "sasl-data" in user.cache:
@@ -74,20 +75,20 @@ class SASL(ModuleData, Command):
 		if "sasl-processing" in user.cache:
 			del user.cache["sasl-processing"]
 	
-	def addSASLMech(self, mechanism, notifyBatchName = None):
+	def addSASLMech(self, mechanism: str, notifyBatchName: str = None) -> None:
 		if "cap-add" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-add"]("sasl={}".format(mechanism), notifyBatchName)
 	
-	def removeSASLMech(self, mechanism, notifyBatchName = None):
+	def removeSASLMech(self, mechanism: str, notifyBatchName: str = None) -> None:
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("sasl={}".format(mechanism), notifyBatchName)
 	
-	def saslMechList(self):
+	def saslMechList(self) -> List[str]:
 		saslMechanisms = []
 		self.ircd.runActionStandard("saslmechanismlist", saslMechanisms)
 		return saslMechanisms
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 1:
 			user.sendSingleError("AuthenticateParams", irc.ERR_NEEDMOREPARAMS, "AUTHENTICATE", "Not enough parameters")
 			return None
@@ -99,7 +100,7 @@ class SASL(ModuleData, Command):
 			"payload": payload
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		payload = data["payload"]
 		if "sasl-mech" not in user.cache:
 			saslMechanisms = self.saslMechList()

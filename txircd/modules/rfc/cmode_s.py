@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class SecretMode(ModuleData, Mode):
@@ -10,24 +11,24 @@ class SecretMode(ModuleData, Mode):
 	affectedActions = { "displaychannel": 20,
 	                    "showchannel-whois": 20 }
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("s", ModeType.NoParam, self) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-s-displaychannel", 1, self.chanIsSecretList),
 		         ("modeactioncheck-channel-s-showchannel-whois", 1, self.chanIsSecretWhois) ]
 	
-	def chanIsSecretList(self, channel, displayData, sameChannel, user, usedSearchMask):
+	def chanIsSecretList(self, channel: "IRCChannel", displayData: Dict[str, Any], sameChannel: "IRCChannel", user: "IRCUser", usedSearchMask: bool) -> Union[str, bool, None]:
 		if "s" in channel.modes:
 			return True
 		return None
 	
-	def chanIsSecretWhois(self, channel, sameChannel, queryUser, targetUser):
+	def chanIsSecretWhois(self, channel: "IRCChannel", sameChannel: "IRCChannel", queryUser: "IRCUser", targetUser: "IRCUser") -> Union[str, bool, None]:
 		if "s" in channel.modes:
 			return True
 		return None
 	
-	def apply(self, actionName, channel, param, *params):
+	def apply(self, actionName: str, channel: "IRCChannel", param: str, *params: Any) -> Union[None, Optional[bool]]: # Union of return types of each affected action
 		if actionName == "displaychannel":
 			displayData, sameChannel, user, usedSearchMask = params
 			if user not in channel.users:

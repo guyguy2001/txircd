@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 irc.ERR_NOSUCHXINFO = "772"
 irc.RPL_XINFOENTRY = "773"
@@ -14,15 +15,15 @@ class StatsCommand(ModuleData):
 	name = "StatsCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("STATS", 1, UserStats(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("INFOREQ", 1, ServerInfoRequest(self.ircd)),
 		         ("INFO", 1, ServerInfo(self.ircd)),
 		         ("INFOEND", 1, ServerInfoEnd(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "public_info" in config:
 			if not isinstance(config["public_info"], list):
 				raise ConfigValidationError("public_info", "value must be a list")
@@ -35,7 +36,7 @@ class UserStats(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("StatsParams", irc.ERR_NEEDMOREPARAMS, "STATS", "Not enough parameters")
 			return None
@@ -52,7 +53,7 @@ class UserStats(Command):
 			"type": typeName
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		typeName = data["type"]
 		if "server" in data:
 			server = data["server"]
@@ -77,7 +78,7 @@ class UserStats(Command):
 		user.sendMessage(irc.RPL_XINFOEND, typeName, "End of STATS request")
 		return True
 	
-	def checkPermission(self, user, typeName):
+	def checkPermission(self, user: "IRCUser", typeName: str) -> bool:
 		if typeName in self.ircd.config.get("public_info", []):
 			return True
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "info-{}".format(typeName.lower()), users=[user]):
@@ -89,7 +90,7 @@ class ServerInfoRequest(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
@@ -110,7 +111,7 @@ class ServerInfoRequest(Command):
 			"type": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostserver" in data:
 			return True
 		serverID = data["server"]
@@ -133,7 +134,7 @@ class ServerInfo(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 4 or len(params) % 2 != 0:
 			return None
 		if prefix not in self.ircd.servers:
@@ -158,7 +159,7 @@ class ServerInfo(Command):
 			"data": response
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostserver" in data:
 			return True
 		typeName = data["type"]
@@ -180,7 +181,7 @@ class ServerInfoEnd(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.servers:
@@ -193,7 +194,7 @@ class ServerInfoEnd(Command):
 			"source": self.ircd.servers[prefix]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		user = data["user"]
 		if user.uuid[:3] == self.ircd.serverID:
 			user.sendMessage(irc.RPL_XINFOEND, data["type"], "End of STATS request", prefix=data["source"].name)

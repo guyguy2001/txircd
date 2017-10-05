@@ -3,23 +3,24 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class PartCommand(ModuleData):
 	name = "PartCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("leavemessage", 101, self.broadcastPart),
 		         ("leavemessage", 1, self.sendPartMessage) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PART", 1, UserPart(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PART", 1, ServerPart(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "part_message_length" in config:
 			if not isinstance(config["part_message_length"], int) or config["part_message_length"] < 0:
 				raise ConfigValidationError("part_message_length", "invalid number")
@@ -27,7 +28,7 @@ class PartCommand(ModuleData):
 				config["part_message_length"] = 300
 				self.ircd.logConfigValidationWarning("part_message_length", "value is too large", 300)
 	
-	def broadcastPart(self, sendUserList, channel, user, type, typeData, fromServer):
+	def broadcastPart(self, sendUserList: List["IRCUser"], channel: "IRCChannel", user: "IRCUser", type: str, typeData: Dict[Any, Any], fromServer: Optional["IRCServer"]) -> None:
 		if type != "PART":
 			return
 		reason = ""
@@ -35,7 +36,7 @@ class PartCommand(ModuleData):
 			reason = typeData["reason"]
 		self.ircd.broadcastToServers(fromServer, "PART", channel.name, reason, prefix=user.uuid)
 	
-	def sendPartMessage(self, sendUserList, channel, user, type, typeData, fromServer):
+	def sendPartMessage(self, sendUserList: List["IRCUser"], channel: "IRCChannel", user: "IRCUser", type: str, typeData: Dict[Any, Any], fromServer: Optional["IRCServer"]) -> None:
 		if type != "PART":
 			return
 		msgPrefix = user.hostmask()
@@ -59,7 +60,7 @@ class UserPart(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params or not params[0]:
 			user.sendSingleError("PartCmd", irc.ERR_NEEDMOREPARAMS, "PART", "Not enough parameters")
 			return None
@@ -77,10 +78,10 @@ class UserPart(Command):
 			"reason": reason
 		}
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return [ data["channel"] ]
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		channel = data["channel"]
 		reason = data["reason"]
 		user.leaveChannel(channel, "PART", { "reason": reason })
@@ -93,7 +94,7 @@ class ServerPart(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2 or not params[0]:
 			return None
 		if prefix not in self.ircd.users:
@@ -114,7 +115,7 @@ class ServerPart(Command):
 			"reason": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostchannel" in data:
 			return True
 		user = data["user"]

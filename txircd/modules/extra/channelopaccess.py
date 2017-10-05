@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
+from typing import Callable, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class ChannelOpAccess(ModuleData, Mode):
@@ -11,14 +12,14 @@ class ChannelOpAccess(ModuleData, Mode):
 		"checkexemptchanops": 10
 	}
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-W-checkchannellevel", 1, self.checkMode),
 		         ("modeactioncheck-channel-W-checkexemptchanops", 1, self.checkMode) ]
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("W", ModeType.List, self) ]
 	
-	def checkMode(self, channel, checkType, paramChannel, user):
+	def checkMode(self, channel: "IRCChannel", checkType: str, paramChannel: "IRCChannel", user: "IRCUser") -> Union[str, bool, None]:
 		if "W" not in channel.modes:
 			return None
 		for paramData in channel.modes["W"]:
@@ -27,7 +28,7 @@ class ChannelOpAccess(ModuleData, Mode):
 				return paramData[0]
 		return None
 	
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		checkedParams = []
 		for parameter in param.split(","):
 			if ":" not in parameter:
@@ -38,7 +39,7 @@ class ChannelOpAccess(ModuleData, Mode):
 			checkedParams.append(parameter)
 		return checkedParams
 	
-	def apply(self, actionType, channel, param, checkType, paramChannel, user):
+	def apply(self, actionType: str, channel: "IRCChannel", param: str, checkType: str, paramChannel: "IRCChannel", user: "IRCUser") -> Optional[bool]:
 		status, permissionType = param.split(":", 1)
 		if permissionType != checkType:
 			return None

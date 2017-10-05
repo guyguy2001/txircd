@@ -4,21 +4,22 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class MessageCommands(ModuleData):
 	name = "MessageCommands"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PRIVMSG", 1, UserPrivmsg(self)),
 		         ("NOTICE", 1, UserNotice(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PRIVMSG", 1, ServerPrivmsg(self)),
 		         ("NOTICE", 1, ServerNotice(self)) ]
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "message_length" in config:
 			if not isinstance(config["message_length"], int) or config["message_length"] < 0:
 				raise ConfigValidationError("message_length", "invalid number")
@@ -31,7 +32,7 @@ class MessageCommands(ModuleData):
 		else:
 			config["message_length"] = 324
 	
-	def cmdParseParams(self, user, params, prefix, tags):
+	def cmdParseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		channels = []
 		users = []
 		user.startErrorBatch("MsgCmd")
@@ -54,7 +55,7 @@ class MessageCommands(ModuleData):
 			return data
 		return None
 	
-	def cmdExecute(self, command, user, data):
+	def cmdExecute(self, command: str, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		sentAMessage = False
 		sentNoTextError = False
 		userPrefix = user.hostmask()
@@ -86,10 +87,10 @@ class MessageCommands(ModuleData):
 					user.sendMessage(irc.ERR_NOTEXTTOSEND, "No text to send")
 					sentNoTextError = True
 		if not sentAMessage:
-			return None
+			return False
 		return True
 	
-	def serverParseParams(self, server, params, prefix, tags):
+	def serverParseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
@@ -116,7 +117,7 @@ class MessageCommands(ModuleData):
 			}
 		return None
 	
-	def serverExecute(self, command, server, data):
+	def serverExecute(self, command: str, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		fromUser = data["from"]
@@ -141,30 +142,30 @@ class MessageCommands(ModuleData):
 				chan.sendUserMessage(command, part, prefix=fromUser.hostmask(), conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
 			chan.sendServerMessage(command, chan.name, message, prefix=fromUser.uuid, skiplocal=[server])
 			return True
-		return None
+		return False
 
 @implementer(ICommand)
 class UserPrivmsg(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("PrivMsgCmd", irc.ERR_NEEDMOREPARAMS, "PRIVMSG", "Not enough parameters")
 			return None
 		return self.module.cmdParseParams(user, params, prefix, tags)
 	
-	def affectedUsers(self, user, data):
+	def affectedUsers(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCUser"]:
 		if "targetusers" in data:
 			return list(data["targetusers"].keys())
 		return []
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		if "targetchans" in data:
 			return list(data["targetchans"].keys())
 		return []
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		return self.module.cmdExecute("PRIVMSG", user, data)
 
 @implementer(ICommand)
@@ -172,23 +173,23 @@ class UserNotice(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("NoticeCmd", irc.ERR_NEEDMOREPARAMS, "NOTICE", "Not enough parameters")
 			return None
 		return self.module.cmdParseParams(user, params, prefix, tags)
 	
-	def affectedUsers(self, user, data):
+	def affectedUsers(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCUser"]:
 		if "targetusers" in data:
 			return list(data["targetusers"].keys())
 		return []
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		if "targetchans" in data:
 			return list(data["targetchans"].keys())
 		return []
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		return self.module.cmdExecute("NOTICE", user, data)
 
 @implementer(ICommand)
@@ -196,10 +197,10 @@ class ServerPrivmsg(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.serverParseParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.serverExecute("PRIVMSG", server, data)
 
 @implementer(ICommand)
@@ -207,10 +208,10 @@ class ServerNotice(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.serverParseParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.serverExecute("NOTICE", server, data)
 
 msgCommands = MessageCommands()

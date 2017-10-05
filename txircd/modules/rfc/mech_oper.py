@@ -5,27 +5,28 @@ from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode,
 from txircd.utils import ircLower, isValidHost, ModeType
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, IMode)
 class Oper(ModuleData, Mode):
 	name = "Oper"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("OPER", 1, UserOper(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("OPER", 1, ServerOper(self.ircd)) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("userhasoperpermission", 1, self.operPermission),
 		         ("modepermission-user-o", 1, self.nope),
 		         ("burst", 90, self.propagatePermissions) ]
 	
-	def userModes(self):
+	def userModes(self) -> List[Tuple[str, ModeType, Mode]]:
 		return [ ("o", ModeType.NoParam, self) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "oper_types" in config:
 			if not isinstance(config["oper_types"], dict):
 				raise ConfigValidationError("oper_types", "value must be a dictionary")
@@ -100,7 +101,7 @@ class Oper(ModuleData, Mode):
 				if not hasPassword:
 					raise ConfigValidationError("opers", "oper \"{}\" doesn't have a password specified".format(operName))
 	
-	def operPermission(self, user, permissionType):
+	def operPermission(self, user: "IRCUser", permissionType: str) -> Optional[bool]:
 		if "o" not in user.modes:
 			# Maybe the user de-opered or something, but if they did they're clearly not an oper now
 			return False
@@ -115,13 +116,13 @@ class Oper(ModuleData, Mode):
 				return True
 		return False
 	
-	def nope(self, user, settingUser, adding, param):
+	def nope(self, user: "IRCUser", settingUser: "IRCUser", adding: bool, param: str) -> Optional[bool]:
 		if adding:
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - User mode o may not be set")
 			return False
 		return None
 	
-	def propagatePermissions(self, server):
+	def propagatePermissions(self, server: "IRCServer") -> None:
 		for user in self.ircd.users.values():
 			if "o" in user.modes and "oper-permissions" in user.cache:
 				permString = " ".join(user.cache["oper-permissions"])
@@ -132,7 +133,7 @@ class UserOper(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("OperCmd", irc.ERR_NEEDMOREPARAMS, "OPER", "Not enough parameters")
 			return None
@@ -141,7 +142,7 @@ class UserOper(Command):
 			"password": params[1]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		configuredOpers = self.ircd.config.get("opers", {})
 		username = data["username"]
 		if username not in configuredOpers:
@@ -219,7 +220,7 @@ class UserOper(Command):
 		self.ircd.broadcastToServers(None, "OPER", user.uuid, *operPermissions, prefix=self.ircd.serverID)
 		return True
 
-	def reportOper(self, user, reason):
+	def reportOper(self, user: "IRCUser", reason: str) -> None:
 		if reason:
 			self.ircd.log.warn("Failed OPER attemped from user {user.uuid} ({user.nick}): {reason}", user=user, reason=reason)
 			self.ircd.runActionStandard("operfail", user, reason)
@@ -234,7 +235,7 @@ class ServerOper(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return None
 		if params[0] not in self.ircd.users:
@@ -248,7 +249,7 @@ class ServerOper(Command):
 			"permissions": params[1:]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data:
 			return True
 		user = data["user"]

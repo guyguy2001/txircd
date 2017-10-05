@@ -5,25 +5,26 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import isValidNick, timestampStringFromTime
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData)
 class NickCommand(ModuleData):
 	name = "NickCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("changenickmessage", 1, self.sendNickMessage),
 		         ("changenick", 1, self.broadcastNickChange),
 		         ("remotechangenick", 1, self.broadcastNickChange),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("NICK", 1, NickUserCommand(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("NICK", 1, NickServerCommand(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "nick_length" in config:
 			if not isinstance(config["nick_length"], int) or config["nick_length"] < 0:
 				raise ConfigValidationError("nick_length", "invalid number")
@@ -31,7 +32,7 @@ class NickCommand(ModuleData):
 				config["nick_length"] = 32
 				self.ircd.logConfigValidationWarning("nick_length", "value is too large", 32)
 	
-	def sendNickMessage(self, userShowList, user, oldNick):
+	def sendNickMessage(self, userShowList: List["IRCUser"], user: "IRCUser", oldNick: str) -> None:
 		hostmask = "{}!{}@{}".format(oldNick, user.ident, user.host())
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
@@ -40,10 +41,10 @@ class NickCommand(ModuleData):
 			targetUser.sendMessage("NICK", to=user.nick, prefix=hostmask, tags=tags)
 		del userShowList[:]
 	
-	def broadcastNickChange(self, user, oldNick, fromServer):
+	def broadcastNickChange(self, user: "IRCUser", oldNick: str, fromServer: Optional["IRCServer"]) -> None:
 		self.ircd.broadcastToServers(fromServer, "NICK", timestampStringFromTime(user.nickSince), user.nick, prefix=user.uuid)
 
-	def buildISupport(self, data):
+	def buildISupport(self, data: Dict[str, Union[str, int]]) -> None:
 		data["NICKLEN"] = self.ircd.config.get("nick_length", 32)
 
 @implementer(ICommand)
@@ -53,7 +54,7 @@ class NickUserCommand(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("NickCmd", irc.ERR_NEEDMOREPARAMS, "NICK", "Not enough parameters")
 			return None
@@ -67,7 +68,7 @@ class NickUserCommand(Command):
 			"nick": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		nick = data["nick"]
 		if nick in self.ircd.userNicks:
 			otherUser = self.ircd.userNicks[nick]
@@ -87,7 +88,7 @@ class NickServerCommand(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.users:
@@ -126,7 +127,7 @@ class NickServerCommand(Command):
 			"nick": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data:
 			return True
 		user = data["user"]

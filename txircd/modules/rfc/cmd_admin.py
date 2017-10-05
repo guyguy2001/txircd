@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 irc.RPL_ADMINLOC1 = "257"
 irc.RPL_ADMINLOC2 = "258"
@@ -12,14 +13,14 @@ class AdminCommand(ModuleData):
 	name = "AdminCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADMIN", 1, UserAdmin(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADMINREQ", 1, ServerAdminRequest(self)),
 		         ("ADMININFO", 1, ServerAdminResponse(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "admin_line_1" in config and not isinstance("admin_server", str):
 			raise ConfigValidationError("admin_server", "value must be a string")
 		if "admin_line_2" in config and not isinstance("admin_admin", str):
@@ -27,7 +28,7 @@ class AdminCommand(ModuleData):
 		if "admin_contact" in config and not isinstance("admin_email", str):
 			raise ConfigValidationError("admin_email", "value must be a string")
 	
-	def adminResponses(self):
+	def adminResponses(self) -> Tuple[str, str, str]:
 		adminLoc1 = self.ircd.config.get("admin_line_1", "")
 		if not adminLoc1: # If the line is blank, let's provide a default value
 			adminLoc1 = "This server has no admins. Anarchy!"
@@ -45,7 +46,7 @@ class UserAdmin(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return {}
 		if params[0] == self.ircd.name:
@@ -57,7 +58,7 @@ class UserAdmin(Command):
 			"server": self.ircd.serverNames[params[0]]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "server" in data:
 			server = data["server"]
 			server.sendMessage("ADMINREQ", server.serverID, prefix=user.uuid)
@@ -75,7 +76,7 @@ class ServerAdminRequest(Command):
 		self.module = module
 		self.ircd = module.ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
@@ -99,7 +100,7 @@ class ServerAdminRequest(Command):
 			"server": self.ircd.servers[params[0]]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostserver" in data:
 			return True
 		if "server" in data:
@@ -122,7 +123,7 @@ class ServerAdminResponse(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if prefix not in self.ircd.servers:
 			if prefix in self.ircd.recentlyQuitServers:
 				return {
@@ -147,7 +148,7 @@ class ServerAdminResponse(Command):
 			"contact": tags["contact"]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostserver" in data:
 			return True
 		user = data["user"]

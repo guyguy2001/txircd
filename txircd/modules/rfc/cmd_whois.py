@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now, timestampStringFromTimeSeconds
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 irc.RPL_WHOISHOST = "378"
 irc.RPL_WHOISSECURE = "671"
@@ -12,10 +13,10 @@ class WhoisCommand(ModuleData, Command):
 	name = "WhoisCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("WHOIS", 1, self) ]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("WhoisCmd", irc.ERR_NEEDMOREPARAMS, "WHOIS", "Not enough parameters")
 			return None
@@ -32,7 +33,7 @@ class WhoisCommand(ModuleData, Command):
 			"targetusers": targetUsers
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		for targetUser in data["targetusers"]:
 			user.sendMessage(irc.RPL_WHOISUSER, targetUser.nick, targetUser.ident, targetUser.host(), "*", targetUser.gecos)
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "whois-host", users=[user]) or user == targetUser:

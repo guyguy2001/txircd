@@ -3,20 +3,21 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Tuple
 
 @implementer(IPlugin, IModuleData)
 class DefaultModes(ModuleData):
 	name = "DefaultModes"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("channelcreate", 110, self.setDefaults) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "channel_default_modes" in config and not isinstance("channel_default_modes", str):
 			raise ConfigValidationError("channel_default_modes", "value must be a string of mode letters")
 	
-	def setDefaults(self, channel, user):
+	def setDefaults(self, channel: "IRCChannel", user: "IRCUser") -> None:
 		modes = self.ircd.config.get("channel_default_modes", "ont")
 		params = modes.split(" ")
 		modeList = list(params.pop(0))

@@ -3,20 +3,21 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import lenBytes, ModeType
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class CustomPrefix(ModuleData, Mode):
 	name = "CustomPrefix"
 	prefixes = None
 
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		modes = []
 		self.prefixes = self.ircd.config.get("custom_prefixes", { "h": { "level": 50, "char": "%" }, "a": { "level": 150, "char": "&" }, "q" : { "level": 200, "char": "~" } })
 		for prefix, prefixValue in self.prefixes.items():
 			modes.append((prefix, ModeType.Status, self, prefixValue["level"], prefixValue["char"]))
 		return modes
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "custom_prefixes" in config:
 			if not isinstance(config["custom_prefixes"], dict):
 				raise ConfigValidationError("custom_prefixes", "value must be a dictionary")
@@ -32,10 +33,10 @@ class CustomPrefix(ModuleData, Mode):
 				if not isinstance(prefixValue["char"], str) or lenBytes(prefixValue["char"]) != 1:
 					raise ConfigValidationError("custom_prefixes", "prefix \"{}\" does not specify a valid prefix character")
 
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		return param.split(",")
 	
-	def checkUnset(self, channel, param):
+	def checkUnset(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		return param.split(",")
 
 customPrefix = CustomPrefix()

@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -9,10 +10,10 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 class AccountDrop(ModuleData, Command):
 	name = "AccountDrop"
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ACCOUNTDROP", 1, self) ]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("DropParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTDROP", "Not enough parameters")
 			return None
@@ -20,7 +21,7 @@ class AccountDrop(ModuleData, Command):
 			"password": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if not user.metadataKeyExists("account"):
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "DROP", "NOTLOGIN")
 			user.sendMessage("NOTICE", "You're not logged into an account.")
@@ -37,7 +38,7 @@ class AccountDrop(ModuleData, Command):
 		self.checkAuthAndDrop(loginResult, user, accountName)
 		return True
 	
-	def checkAuthAndDrop(self, result, user, accountName):
+	def checkAuthAndDrop(self, result: Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]], user: "IRCUser", accountName: str) -> None:
 		if user.uuid not in self.ircd.users:
 			return
 		loginSuccess, errorCode, errorMessage = result

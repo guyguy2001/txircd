@@ -3,15 +3,16 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now, timestamp
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class RateLimit(ModuleData):
 	name = "RateLimit"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("commandpermission", 100, self.recvCommand) ]
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "rate_soft_limit" in config:
 			if not isinstance(config["rate_soft_limit"], int) or config["rate_soft_limit"] < 0:
 				raise ConfigValidationError("rate_soft_limit", "invalid number")
@@ -36,7 +37,7 @@ class RateLimit(ModuleData):
 		else:
 			config["rate_interval"] = 60
 	
-	def getPeriodData(self):
+	def getPeriodData(self) -> Tuple[int, float]:
 		"""Returns (period as integer, time to end of period)"""
 		nowTS = timestamp(now())
 		interval = self.ircd.config["rate_interval"]
@@ -44,7 +45,7 @@ class RateLimit(ModuleData):
 		timeToEnd = (period + 1) * interval - nowTS
 		return period, timeToEnd
 	
-	def recvCommand(self, user, command, data):
+	def recvCommand(self, user: "IRCUser", command: str, data: Dict[Any, Any]) -> Optional[bool]:
 		rateData = user.cache.setdefault("ratelimit-stats", {})
 		thisPeriod, timeToEnd = self.getPeriodData()
 		if rateData.get("period", None) != thisPeriod:

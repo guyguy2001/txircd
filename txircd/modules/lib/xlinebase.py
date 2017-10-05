@@ -1,19 +1,20 @@
 from txircd.utils import ircLower, now, timestampStringFromTime, timestampStringFromTimeSeconds
 from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
 
 class XLineBase(object):
 	lineType = None
 	propagateToServers = True
 	burstQueuePriority = 50
 	
-	def initializeLineStorage(self):
+	def initializeLineStorage(self) -> None:
 		if "xlines" not in self.ircd.storage:
 			self.ircd.storage["xlines"] = {}
 		if self.lineType not in self.ircd.storage["xlines"]:
 			self.ircd.storage["xlines"][self.lineType] = []
 		self.expireLines()
 	
-	def matchUser(self, user, data = None):
+	def matchUser(self, user: "IRCUser", data: Dict[Any, Any] = None) -> Optional[str]:
 		if not self.lineType:
 			return None
 		if user.uuid[:3] != self.ircd.serverID:
@@ -25,10 +26,10 @@ class XLineBase(object):
 				return lineData["reason"]
 		return None
 	
-	def checkUserMatch(self, user, mask, data):
+	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
 		pass
 	
-	def addLine(self, mask, createdTime, durationSeconds, setter, reason, fromServer = None):
+	def addLine(self, mask: str, createdTime: datetime, durationSeconds: int, setter: str, reason: str, fromServer: "IRCServer" = None) -> bool:
 		if not self.lineType:
 			return False
 		self.expireLines()
@@ -50,7 +51,7 @@ class XLineBase(object):
 			self.ircd.broadcastToServers(fromServer, "ADDLINE", self.lineType, mask, setter, timestampStringFromTime(createdTime), str(durationSeconds), reason, prefix=self.ircd.serverID)
 		return True
 	
-	def delLine(self, mask, setter, fromServer = None):
+	def delLine(self, mask: str, setter: str, fromServer: "IRCServer" = None) -> bool:
 		if not self.lineType:
 			return False
 		normalMask = self.normalizeMask(mask)
@@ -64,10 +65,10 @@ class XLineBase(object):
 				return True
 		return False
 	
-	def normalizeMask(self, mask):
+	def normalizeMask(self, mask: str) -> str:
 		return ircLower(mask)
 	
-	def expireLines(self):
+	def expireLines(self) -> None:
 		if not self.lineType:
 			return
 		currentTime = now()
@@ -84,7 +85,7 @@ class XLineBase(object):
 		for lineData in expiredLines:
 			lines.remove(lineData)
 	
-	def generateInfo(self):
+	def generateInfo(self) -> Dict[str, str]:
 		if not self.lineType:
 			return None
 		self.expireLines()
@@ -93,7 +94,7 @@ class XLineBase(object):
 			lineInfo[lineData["mask"]] = "{} {} {} :{}".format(timestampStringFromTimeSeconds(lineData["created"]), lineData["duration"], lineData["setter"], lineData["reason"])
 		return lineInfo
 	
-	def handleServerAddParams(self, server, params, prefix, tags):
+	def handleServerAddParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 6:
 			return None
 		try:
@@ -108,13 +109,13 @@ class XLineBase(object):
 		except ValueError:
 			return None
 	
-	def executeServerAddCommand(self, server, data):
+	def executeServerAddCommand(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if data["linetype"] != self.lineType:
-			return None
+			return False
 		self.addLine(data["mask"], data["created"], data["duration"], data["setter"], data["reason"], server)
 		return True
 	
-	def handleServerDelParams(self, server, params, prefix, tags):
+	def handleServerDelParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 3:
 			return None
 		return {
@@ -123,13 +124,13 @@ class XLineBase(object):
 			"setter": params[2]
 		}
 	
-	def executeServerDelCommand(self, server, data):
+	def executeServerDelCommand(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if data["linetype"] != self.lineType:
-			return None
+			return False
 		self.delLine(data["mask"], data["setter"], server)
 		return True
 	
-	def burstLines(self, server):
+	def burstLines(self, server: "IRCServer") -> None:
 		if not self.lineType:
 			return
 		self.expireLines()

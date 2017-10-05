@@ -4,16 +4,17 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class ListCommand(ModuleData, Command):
 	name = "ListCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("LIST", 1, self) ]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return {}
 		channels = []
@@ -33,7 +34,7 @@ class ListCommand(ModuleData, Command):
 			"channels": channels
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "channels" in data:
 			channels = data["channels"]
 			usedSearchMask = True

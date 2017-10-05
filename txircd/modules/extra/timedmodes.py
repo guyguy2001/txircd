@@ -4,25 +4,26 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import durationToSeconds
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class TimedModes(ModuleData, Command):
 	name = "TimedModes"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modechanges-user", 10, self.handleUserModeChange),
 		         ("modechanges-channel", 10, self.handleChannelModeChange) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("TIMEDMODE", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		if "user-mode-timers" not in self.ircd.dataCache:
 			self.ircd.dataCache["user-mode-timers"] = {}
 		if "channel-mode-timers" not in self.ircd.dataCache:
 			self.ircd.dataCache["channel-mode-timers"] = {}
 	
-	def fullUnload(self):
+	def fullUnload(self) -> Optional["DeferredList"]:
 		# Unset all timed modes
 		# The intent of a timed mode is that it unsets eventually
 		# But if we're doing a full unload, this is the latest we can guarantee it
@@ -60,14 +61,14 @@ class TimedModes(ModuleData, Command):
 			if channelName in self.ircd.dataCache["channel-mode-timers"]: # It broke, but we did all we could :(
 				del self.ircd.dataCache["channel-mode-timers"][channelName]
 	
-	def removeUserMode(self, uuid, mode, param):
+	def removeUserMode(self, uuid: str, mode: str, param: Optional[str]) -> None:
 		if uuid not in self.ircd.users:
 			return
 		user = self.ircd.users[uuid]
 		user.setModes([(False, mode, param)], self.ircd.serverID)
 		self.removeUserModeTimer(uuid, mode, param)
 	
-	def removeChannelMode(self, channelName, channelTime, mode, param):
+	def removeChannelMode(self, channelName: str, channelTime: "datetime", mode: str, param: str) -> None:
 		if channelName not in self.ircd.channels:
 			return
 		channel = self.ircd.channels[channelName]
@@ -76,7 +77,7 @@ class TimedModes(ModuleData, Command):
 		channel.setModes([(False, mode, param)], self.ircd.serverID)
 		self.removeChannelModeTimer(channelName, channelTime, mode, param)
 	
-	def removeUserModeTimer(self, uuid, mode, param):
+	def removeUserModeTimer(self, uuid: str, mode: str, param: str) -> None:
 		if uuid not in self.ircd.dataCache["user-mode-timers"]:
 			return
 		if mode not in self.ircd.dataCache["user-mode-timers"][uuid]:
@@ -92,7 +93,7 @@ class TimedModes(ModuleData, Command):
 			if not self.ircd.dataCache["user-mode-timers"][uuid]:
 				del self.ircd.dataCache["user-mode-timers"][uuid]
 	
-	def removeChannelModeTimer(self, channelName, channelTime, mode, param):
+	def removeChannelModeTimer(self, channelName: str, channelTime: "datetime", mode: str, param: str) -> None:
 		if channelName not in self.ircd.dataCache["channel-mode-timers"]:
 			return
 		if channelTime != self.ircd.dataCache["channel-mode-timers"][channelName][0]:
@@ -110,7 +111,7 @@ class TimedModes(ModuleData, Command):
 			if not self.ircd.dataCache["channel-mode-timers"][channelName][1]:
 				del self.ircd.dataCache["channel-mode-timers"][channelName]
 	
-	def handleUserModeChange(self, user, source, sourceName, modeChanges):
+	def handleUserModeChange(self, user: "IRCUser", source: str, sourceName: str, modeChanges: List[Tuple[bool, str, str, str, "datetime"]]) -> None:
 		uuid = user.uuid
 		if uuid not in self.ircd.dataCache["user-mode-timers"]:
 			return
@@ -120,7 +121,7 @@ class TimedModes(ModuleData, Command):
 			mode, param = modeChange[1:3]
 			self.removeUserModeTimer(uuid, mode, param)
 	
-	def handleChannelModeChange(self, channel, source, sourceName, modeChanges):
+	def handleChannelModeChange(self, channel: "IRCChannel", source: str, sourceName: str, modeChanges: List[Tuple[bool, str, str, str, "datetime"]]) -> None:
 		channelName = channel.name
 		if channelName not in self.ircd.dataCache["channel-mode-timers"]:
 			return
@@ -130,7 +131,7 @@ class TimedModes(ModuleData, Command):
 			mode, param = modeChange[1:3]
 			self.removeChannelModeTimer(channelName, channel.existedSince, mode, param)
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 3:
 			return None
 		duration = durationToSeconds(params[1])
@@ -154,7 +155,7 @@ class TimedModes(ModuleData, Command):
 			}
 		return None
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		modeList = data["modes"]
 		paramList = data["params"]
 		durationSeconds = data["duration"]
@@ -196,6 +197,6 @@ class TimedModes(ModuleData, Command):
 						oldTimer.cancel()
 				self.ircd.dataCache["user-mode-timers"][user.uuid][mode][param] = newTimer
 			return True
-		return None
+		return False
 
 timedModes = TimedModes()

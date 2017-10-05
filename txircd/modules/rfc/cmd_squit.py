@@ -3,24 +3,25 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ircLower
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class ServerQuit(ModuleData):
 	name = "ServerQuit"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("serverquit", 1, self.sendSQuit),
 		         ("commandpermission-SQUIT", 1, self.restrictSQuit) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("SQUIT", 1, UserSQuit(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("SQUIT", 1, ServerSQuit(self.ircd)),
 		         ("RSQUIT", 1, RemoteSQuit(self.ircd)) ]
 	
-	def sendSQuit(self, server, reason):
+	def sendSQuit(self, server: "IRCServer", reason: str) -> None:
 		if not server.bursted:
 			if server.serverID:
 				server.sendMessage("SQUIT", server.serverID, reason, prefix=server.nextClosest)
@@ -32,7 +33,7 @@ class ServerQuit(ModuleData):
 			closestHop = None
 		self.ircd.broadcastToServers(closestHop, "SQUIT", server.serverID, reason, prefix=server.nextClosest)
 	
-	def restrictSQuit(self, user, data):
+	def restrictSQuit(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-squit", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -43,7 +44,7 @@ class UserSQuit(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("SQuitParams", irc.ERR_NEEDMOREPARAMS, "SQUIT", "Not enough parameters")
 			return None
@@ -60,7 +61,7 @@ class UserSQuit(Command):
 			"reason": params[1]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		targetServer = data["target"]
 		reason = data["reason"]
 		
@@ -79,7 +80,7 @@ class ServerSQuit(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		targetServerID = params[0]
@@ -96,7 +97,7 @@ class ServerSQuit(Command):
 			"reason": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostserver" not in data:
 			data["target"].disconnect("Received SQUIT from remote server: {}".format(data["reason"]))
 		return True
@@ -108,7 +109,7 @@ class RemoteSQuit(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if params[0] not in self.ircd.servers:
@@ -122,7 +123,7 @@ class RemoteSQuit(Command):
 			"reason": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostserver" in data:
 			return True
 		targetServer = data["target"]

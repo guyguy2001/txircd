@@ -7,6 +7,7 @@ from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
 from OpenSSL import SSL
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Numerics and names are from the IRCv3.1 spec at http://ircv3.net/specs/extensions/tls-3.1.html
 irc.RPL_STARTTLS = "670"
@@ -17,13 +18,13 @@ class StartTLS(ModuleData, Command):
 	name = "StartTLS"
 	forRegistered = False
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("capabilitylist", 10, self.addCapability) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("STARTTLS", 1, self) ]
 	
-	def load(self):
+	def load(self) -> None:
 		if "unloading-tls" in self.ircd.dataCache:
 			del self.ircd.dataCache["unloading-tls"]
 			return
@@ -35,7 +36,7 @@ class StartTLS(ModuleData, Command):
 		except SSL.Error:
 			raise ModuleLoadError("StartTLS", "Failed to initialize SSL context")
 	
-	def rehash(self):
+	def rehash(self) -> None:
 		oldContext = self.certContext
 		try:
 			self.certContext = DefaultOpenSSLContextFactory(self.ircd.config["starttls_key"], self.ircd.config["starttls_cert"])
@@ -44,15 +45,15 @@ class StartTLS(ModuleData, Command):
 			self.ircd.log.error("Failed to initialize new SSL context for StartTLS; keeping old context")
 			self.certContext = oldContext
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		self.ircd.dataCache["unloading-tls"] = True
 	
-	def fullUnload(self):
+	def fullUnload(self) -> Optional["Deferred"]:
 		del self.ircd.dataCache["unloading-tls"]
 		if "cap-del" in self.ircd.functionCache:
 			self.ircd.functionCache["cap-del"]("tls")
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "starttls_key" in config:
 			if not isinstance(config["starttls_key"], str):
 				raise ConfigValidationError("starttls_key", "value must be a file name")
@@ -64,13 +65,13 @@ class StartTLS(ModuleData, Command):
 		else:
 			config["starttls_cert"] = config["starttls_key"]
 	
-	def addCapability(self, user, capList):
+	def addCapability(self, user: "IRCUser", capList: List[str]) -> None:
 		capList.append("tls")
 	
-	def parseParams(self, user, prefix, params, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return {}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if user.secureConnection:
 			user.sendMessage(irc.ERR_STARTTLS, "The connection is already secure")
 			return True

@@ -3,25 +3,26 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import now
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class PingPong(ModuleData):
 	name = "PingPong"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("pinguser", 10, self.pingUser),
 		         ("pingserver", 10, self.pingServer) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PING", 1, UserPing(self.ircd)),
 		         ("PONG", 1, UserPong()) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PING", 1, ServerPing(self.ircd)),
 		         ("PONG", 1, ServerPong(self.ircd)) ]
 	
-	def pingUser(self, user):
+	def pingUser(self, user: "IRCUser") -> None:
 		if "pingtime" not in user.cache or "pongtime" not in user.cache:
 			user.cache["pingtime"] = now()
 			user.cache["pongtime"] = now()
@@ -38,7 +39,7 @@ class PingPong(ModuleData):
 		user.sendMessage("PING", self.ircd.name, to=None, prefix=None)
 		user.cache["pingtime"] = now()
 	
-	def pingServer(self, server):
+	def pingServer(self, server: "IRCServer") -> None:
 		if "pingtime" not in server.cache or "pongtime" not in server.cache:
 			server.cache["pingtime"] = now()
 			server.cache["pongtime"] = now()
@@ -59,7 +60,7 @@ class UserPing(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("PingCmd", irc.ERR_NEEDMOREPARAMS, "PING", "Not enough parameters")
 			return None
@@ -67,7 +68,7 @@ class UserPing(Command):
 			"data": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		user.sendMessage("PONG", data["data"], to=self.ircd.name)
 		return True
 
@@ -76,7 +77,7 @@ class UserPong(Command):
 	resetsIdleTime = False
 	forRegistered = None
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("PongCmd", irc.ERR_NEEDMOREPARAMS, "PONG", "Not enough parameters")
 			return None
@@ -84,7 +85,7 @@ class UserPong(Command):
 			"data": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		user.cache["pongtime"] = now()
 		return True
 
@@ -95,7 +96,7 @@ class ServerPing(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if params[0] != server.serverID and params[0] not in self.ircd.servers:
@@ -116,7 +117,7 @@ class ServerPing(Command):
 			"dest": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostserver" in data:
 			return True
 		if data["dest"] == self.ircd.serverID:
@@ -132,7 +133,7 @@ class ServerPong(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if params[0] != server.serverID and params[0] not in self.ircd.servers:
@@ -153,7 +154,7 @@ class ServerPong(Command):
 			"dest": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostserver" in data:
 			return True
 		if data["dest"] == self.ircd.serverID:

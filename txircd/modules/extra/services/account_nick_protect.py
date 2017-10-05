@@ -5,19 +5,20 @@ from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import now
 from zope.interface import implementer
 from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class AccountNickProtect(ModuleData):
 	name = "AccountNickProtect"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("welcome", 1, self.checkNickOnConnect),
 			("changenick", 1, self.checkNickOnNickChange),
 			("quit", 1, self.cancelTimerOnQuit),
 			("commandpermission-NICK", 10, self.checkCanChangeNick),
 			("commandpermission", 50, self.blockUnidentified) ]
 	
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "account_nick_protect_seconds" in config:
 			if not isinstance(config["account_nick_protect_seconds"], int) or config["account_nick_protect_seconds"] < 1:
 				raise ConfigValidationError("account_nick_protect_seconds", "invalid number")
@@ -39,19 +40,19 @@ class AccountNickProtect(ModuleData):
 				if not isinstance(command, str):
 					raise ConfigValidationError("account_nick_protect_restricted_commands", "\"{}\" is not a valid command".format(command))
 	
-	def checkNickOnConnect(self, user):
+	def checkNickOnConnect(self, user: "IRCUser") -> None:
 		if not self.userSignedIntoNickAccount(user):
 			self.applyNickProtection(user)
 	
-	def checkNickOnNickChange(self, user, oldNick, fromServer):
+	def checkNickOnNickChange(self, user: "IRCUser", oldNick: str, fromServer: Optional["IRCServer"]) -> None:
 		self.cancelOldProtectTimer(user)
 		if not self.userSignedIntoNickAccount(user):
 			self.applyNickProtection(user)
 	
-	def cancelTimerOnQuit(self, user, reason, fromServer):
+	def cancelTimerOnQuit(self, user: "IRCUser", reason: str, fromServer: Optional["IRCServer"]) -> None:
 		self.cancelOldProtectTimer(user)
 	
-	def checkCanChangeNick(self, user, data):
+	def checkCanChangeNick(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if "nick-protect" not in user.cache:
 			return None
 		if user.cache["nick-protect"] < now():
@@ -60,7 +61,7 @@ class AccountNickProtect(ModuleData):
 		user.sendMessage("NOTICE", "You can't change nicknames yet.")
 		return False
 	
-	def blockUnidentified(self, user, command, data):
+	def blockUnidentified(self, user: "IRCUser", command: str, data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.config["account_nick_protect_restrict"]:
 			return None
 		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active() or self.userSignedIntoNickAccount(user):
@@ -70,14 +71,14 @@ class AccountNickProtect(ModuleData):
 			return False
 		return None
 	
-	def applyNickProtection(self, user):
+	def applyNickProtection(self, user: "IRCUser") -> None:
 		if user.uuid[:3] != self.ircd.serverID:
 			return
 		protectDelay = self.ircd.config.get("account_nick_protect_seconds", 30)
 		user.sendMessage("NOTICE", "The nickname you're using is owned by an account to which you are not identified. Please identify to that account or change your nick in the next \x02{}\x02 seconds.".format(protectDelay))
 		user.cache["accountNickProtectTimer"] = reactor.callLater(protectDelay, self.resolveNickProtection, user, user.nick)
 	
-	def resolveNickProtection(self, user, nick):
+	def resolveNickProtection(self, user: "IRCUser", nick: str) -> None:
 		if user.nick != nick:
 			return
 		if self.userSignedIntoNickAccount(user):
@@ -92,14 +93,14 @@ class AccountNickProtect(ModuleData):
 			recoveryTime = timedelta(seconds = recoverSeconds)
 			user.cache["nick-protect"] = now() + recoveryTime
 	
-	def cancelOldProtectTimer(self, user):
+	def cancelOldProtectTimer(self, user: "IRCUser") -> None:
 		if "accountNickProtectTimer" not in user.cache:
 			return
 		if user.cache["accountNickProtectTimer"].active():
 			user.cache["accountNickProtectTimer"].cancel()
 		del user.cache["accountNickProtectTimer"]
 	
-	def userSignedIntoNickAccount(self, user):
+	def userSignedIntoNickAccount(self, user: "IRCUser") -> bool:
 		accountName = self.ircd.runActionUntilValue("accountfromnick", user.nick)
 		if accountName is None:
 			return True # Nick applies to all accounts and no-account users

@@ -3,24 +3,25 @@ from twisted.words.protocols import irc
 from txircd.channel import InvalidChannelNameError, IRCChannel
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class JoinCommand(ModuleData):
 	name = "JoinCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("join", 20, self.broadcastJoin),
 		         ("remotejoin", 20, self.broadcastJoin),
 		         ("joinmessage", 1, self.sendJoinMessage) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("JOIN", 1, JoinChannel(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("JOIN", 1, ServerJoin(self.ircd)) ]
 	
-	def sendJoinMessage(self, messageUsers, channel, user, batchName):
+	def sendJoinMessage(self, messageUsers: List["IRCUser"], channel: "IRCChannel", user: "IRCUser", batchName: Optional[str]) -> None:
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
@@ -32,7 +33,7 @@ class JoinCommand(ModuleData):
 				destUser.sendMessageInBatch(batchName, "JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 		del messageUsers[:]
 	
-	def broadcastJoin(self, channel, user, fromServer):
+	def broadcastJoin(self, channel: "IRCChannel", user: "IRCUser", fromServer: Optional["IRCServer"]) -> None:
 		self.ircd.broadcastToServers(fromServer, "JOIN", channel.name, prefix=user.uuid)
 
 @implementer(ICommand)
@@ -40,7 +41,7 @@ class JoinChannel(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params or not params[0]:
 			user.sendSingleError("JoinCmd", irc.ERR_NEEDMOREPARAMS, "JOIN", "Not enough parameters")
 			return None
@@ -72,10 +73,10 @@ class JoinChannel(Command):
 			"keys": chanKeys
 		}
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return data["channels"]
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		for channel in data["channels"]:
 			user.joinChannel(channel)
 		return True
@@ -87,7 +88,7 @@ class ServerJoin(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if prefix not in self.ircd.users:
@@ -104,7 +105,7 @@ class ServerJoin(Command):
 		except ValueError:
 			return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" not in data:
 			data["user"].joinChannel(data["channel"], True, server)
 		return True

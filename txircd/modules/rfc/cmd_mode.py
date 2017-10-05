@@ -4,6 +4,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType, timestampStringFromTime, timestampStringFromTimeSeconds
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.RPL_CREATIONTIME = "329"
 
@@ -12,7 +13,7 @@ class ModeCommand(ModuleData):
 	name = "ModeCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modemessage-channel", 1, self.sendChannelModesToUsers),
 		         ("modechanges-channel", 1, self.sendChannelModesToServers),
 		         ("modemessage-user", 1, self.sendUserModesToUsers),
@@ -20,13 +21,13 @@ class ModeCommand(ModuleData):
 		         ("commandpermission-MODE", 1, self.restrictUse),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("MODE", 1, UserMode(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("MODE", 1, ServerMode(self.ircd)) ]
 	
-	def getOutputModes(self, modes, useUUIDs):
+	def getOutputModes(self, modes: List[Tuple[bool, str, str, str, datetime]], useUUIDs: bool) -> List[List[str]]:
 		addInStr = None
 		modeStrList = []
 		params = []
@@ -60,7 +61,7 @@ class ModeCommand(ModuleData):
 		modeLists.append(["".join(modeStrList)] + params)
 		return modeLists
 	
-	def sendChannelModesToUsers(self, users, channel, source, sourceName, modes):
+	def sendChannelModesToUsers(self, users: List["IRCUser"], channel: "IRCChannel", source: str, sourceName: str, modes: List[Tuple[bool, str, str, str, datetime]]) -> None:
 		modeOuts = self.getOutputModes(modes, False)
 		userSource = source in self.ircd.users
 		if userSource:
@@ -76,7 +77,7 @@ class ModeCommand(ModuleData):
 				user.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=channel.name, tags=tags)
 		del users[:]
 	
-	def sendChannelModesToServers(self, channel, source, sourceName, modes):
+	def sendChannelModesToServers(self, channel: "IRCChannel", source: str, sourceName: str, modes: List[Tuple[bool, str, str, str, datetime]]) -> None:
 		modeOuts = self.getOutputModes(modes, True)
 		
 		if source[:3] == self.ircd.serverID:
@@ -90,7 +91,7 @@ class ModeCommand(ModuleData):
 			params = modeOut[1:]
 			self.ircd.broadcastToServers(fromServer, "MODE", channel.name, timestampStringFromTime(channel.existedSince), modeStr, *params, prefix=source)
 	
-	def sendUserModesToUsers(self, users, user, source, sourceName, modes):
+	def sendUserModesToUsers(self, users: List["IRCUser"], user: "IRCUser", source: str, sourceName: str, modes: List[Tuple[bool, str, str, str, datetime]]) -> None:
 		modeOuts = self.getOutputModes(modes, False)
 		userSource = source in self.ircd.users
 		if userSource:
@@ -106,7 +107,7 @@ class ModeCommand(ModuleData):
 				u.sendMessage("MODE", modeStr, *params, prefix=sourceName, to=user.nick, tags=tags)
 		del users[:]
 	
-	def sendUserModesToServers(self, user, source, sourceName, modes):
+	def sendUserModesToServers(self, user: "IRCUser", source: str, sourceName: str, modes: List[Tuple[bool, str, str, str, datetime]]) -> None:
 		if not user.isRegistered():
 			return # If the user isn't registered yet, it's a remote user for whom we just received modes
 		modeOuts = self.getOutputModes(modes, False)
@@ -122,7 +123,7 @@ class ModeCommand(ModuleData):
 			params = modeOut[1:]
 			self.ircd.broadcastToServers(fromServer, "MODE", user.uuid, timestampStringFromTime(user.connectedSince), modeStr, *params, prefix=source)
 	
-	def restrictUse(self, user, data):
+	def restrictUse(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if "channel" not in data or "modes" not in data:
 			return None
 		if not data["params"]:
@@ -137,7 +138,7 @@ class ModeCommand(ModuleData):
 			return False
 		return None
 
-	def buildISupport(self, data):
+	def buildISupport(self, data: Dict[str, Union[str, int]]) -> None:
 		data["MODES"] = self.ircd.config.get("modes_per_line", 20)
 
 @implementer(ICommand)
@@ -145,7 +146,7 @@ class UserMode(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params or not params[0]:
 			user.sendSingleError("ModeCmd", irc.ERR_NEEDMOREPARAMS, "MODE", "Not enough parameters")
 			return None
@@ -178,12 +179,12 @@ class UserMode(Command):
 			"params": modeParams
 		}
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		if "channel" in data:
 			return [ data["channel"] ]
 		return []
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "modes" not in data:
 			if "channel" in data:
 				channel = data["channel"]
@@ -206,7 +207,7 @@ class ServerMode(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 3:
 			return None
 		if prefix not in self.ircd.users and prefix not in self.ircd.servers:
@@ -258,7 +259,7 @@ class ServerMode(Command):
 			"modes": parsedModes
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		source = data["source"]

@@ -1,20 +1,21 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class SnoOper(ModuleData, Command):
 	name = "ServerNoticeOper"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("oper", 1, self.sendOperNotice),
 		         ("operfail", 1, self.sendOperFailNotice),
 		         ("servernoticetype", 1, self.checkSnoType) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("OPERFAILNOTICE", 1, self) ]
 	
-	def sendOperNotice(self, user):
+	def sendOperNotice(self, user: "IRCUser") -> None:
 		if user.uuid[:3] == self.ircd.serverID:
 			mask = "oper"
 			message = "{} has opered.".format(user.nick)
@@ -23,18 +24,18 @@ class SnoOper(ModuleData, Command):
 			message = "{} has opered. (from {})".format(user.nick, self.ircd.servers[user.uuid[:3]].name)
 		self.ircd.runActionStandard("sendservernotice", mask, message)
 	
-	def sendOperFailNotice(self, user, reason):
+	def sendOperFailNotice(self, user: "IRCUser", reason: str) -> None:
 		self.ircd.runActionStandard("sendservernotice", "oper", "Failed OPER attempt from {} ({})".format(user.nick, reason))
 		self.ircd.broadcastToServers(None, "OPERFAILNOTICE", user.uuid, reason, prefix=self.ircd.serverID)
 	
-	def checkSnoType(self, user, typename):
+	def checkSnoType(self, user: "IRCUser", typename: str) -> bool:
 		if typename == "oper":
 			return True
 		if typename == "remoteoper":
 			return True
 		return False
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 2:
 			return None
 		if prefix not in self.ircd.servers:
@@ -48,7 +49,7 @@ class SnoOper(ModuleData, Command):
 			"reason": params[1]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		user = data["user"]
 		reason = data["reason"]
 		fromServer = data["fromserver"]

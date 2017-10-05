@@ -4,7 +4,7 @@ from txircd.user import IRCUser
 import re
 
 ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
-def unmapIPv4(ip):
+def unmapIPv4(ip: str) -> str:
 	"""
 	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
 	"""

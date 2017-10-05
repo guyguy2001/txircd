@@ -3,39 +3,40 @@ from twisted.words.protocols import irc
 from txircd.ircd import ModuleLoadError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class GlobalLoad(ModuleData):
 	name = "GlobalLoad"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("commandpermission-GLOADMODULE", 1, self.restrictGLoad),
 		         ("commandpermission-GUNLOADMODULE", 1, self.restrictGUnload),
 		         ("commandpermission-GRELOADMODULE", 1, self.restrictGReload) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("GLOADMODULE", 1, UserLoad(self.ircd)),
 		         ("GUNLOADMODULE", 1, UserUnload(self.ircd)),
 		         ("GRELOADMODULE", 1, UserReload(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("LOADMODULE", 1, ServerLoad(self.ircd)),
 		         ("UNLOADMODULE", 1, ServerUnload(self.ircd)),
 		         ("RELOADMODULE", 1, ServerReload(self.ircd)) ]
 	
-	def restrictGLoad(self, user, data):
+	def restrictGLoad(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
-	def restrictGUnload(self, user, data):
+	def restrictGUnload(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gunloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
 		return None
 	
-	def restrictGReload(self, user, data):
+	def restrictGReload(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-greloadmodule", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -46,7 +47,7 @@ class UserLoad(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GLOADMODULE", "Not enough parameters")
 			return None
@@ -54,7 +55,7 @@ class UserLoad(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		moduleName = data["module"]
 		if moduleName in self.ircd.loadedModules:
 			user.sendMessage(irc.ERR_CANTLOADMODULE, moduleName, "Module is already loaded")
@@ -75,7 +76,7 @@ class UserUnload(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GUNLOADMODULE", "Not enough parameters")
 			return None
@@ -83,7 +84,7 @@ class UserUnload(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		moduleName = data["module"]
 		if moduleName not in self.ircd.loadedModules:
 			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "No such module")
@@ -101,7 +102,7 @@ class UserReload(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendMessage(irc.ERR_NEEDMOREPARAMS, "GRELOADMODULE", "Not enough parameters")
 			return None
@@ -109,7 +110,7 @@ class UserReload(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		moduleName = data["module"]
 		if moduleName not in self.ircd.loadedModules:
 			user.sendMessage(irc.ERR_CANTUNLOADMODULE, moduleName, "No such module")
@@ -127,7 +128,7 @@ class ServerLoad(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		return {
@@ -135,13 +136,13 @@ class ServerLoad(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		fromPrefix = data["from"]
 		moduleName = data["module"]
 		try:
 			self.ircd.loadModule(moduleName)
 		except ModuleLoadError:
-			return None
+			return False
 		if moduleName not in self.ircd.loadedModules: # We want to log a message, but this shouldn't break the servers
 			self.ircd.log.warn("Tried to globally load nonexistent module {module}", module=moduleName)
 		self.ircd.broadcastToServers(server, "LOADMODULE", moduleName, prefix=fromPrefix)
@@ -152,7 +153,7 @@ class ServerUnload(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		return {
@@ -160,13 +161,13 @@ class ServerUnload(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		fromPrefix = data["from"]
 		moduleName = data["module"]
 		try:
 			self.ircd.unloadModule(moduleName)
 		except ValueError:
-			return None
+			return False
 		self.ircd.broadcastToServers(server, "UNLOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 
@@ -175,7 +176,7 @@ class ServerReload(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		return {
@@ -183,13 +184,13 @@ class ServerReload(Command):
 			"module": params[0]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		fromPrefix = data["from"]
 		moduleName = data["module"]
 		try:
 			self.ircd.reloadModule(moduleName)
 		except ModuleLoadError:
-			return None
+			return False
 		self.ircd.broadcastToServers(server, "RELOADMODULE", moduleName, prefix=fromPrefix)
 		return True
 

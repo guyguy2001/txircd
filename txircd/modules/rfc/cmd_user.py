@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class UserCommand(Command, ModuleData):
@@ -9,10 +10,10 @@ class UserCommand(Command, ModuleData):
 	core = True
 	forRegistered = False
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("USER", 1, self) ]
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 4:
 			user.sendSingleError("UserCmd", irc.ERR_NEEDMOREPARAMS, "USER", "Not enough parameters")
 			return None
@@ -31,7 +32,7 @@ class UserCommand(Command, ModuleData):
 			"gecos": params[3]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		user.changeIdent(data["ident"])
 		user.changeGecos(data["gecos"])
 		user.register("USER")

@@ -5,6 +5,7 @@ from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class ELine(ModuleData, XLineBase):
@@ -12,23 +13,23 @@ class ELine(ModuleData, XLineBase):
 	core = True
 	lineType = "E"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("verifyxlinematch", 10, self.checkException),
 		         ("commandpermission-ELINE", 10, self.restrictToOper),
 		         ("statsruntype-elines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ELINE", 1, UserELine(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADDLINE", 1, ServerAddELine(self)),
 		         ("DELLINE", 1, ServerDelELine(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.initializeLineStorage()
 	
-	def checkUserMatch(self, user, mask, data):
+	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
 		exceptMask = ircLower(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host()))
 		if fnmatchcase(userMask, exceptMask):
@@ -41,14 +42,14 @@ class ELine(ModuleData, XLineBase):
 			return True
 		return False
 	
-	def checkException(self, lineType, user, mask, data):
+	def checkException(self, lineType: str, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> Optional[bool]:
 		if lineType == "E":
 			return None
 		if self.matchUser(user) is not None and not self.ircd.runActionUntilFalse("xlinetypeallowsexempt", lineType):
 			return False
 		return None
 	
-	def restrictToOper(self, user, data):
+	def restrictToOper(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-eline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -59,7 +60,7 @@ class UserELine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 1 or len(params) == 2:
 			user.sendSingleError("ELineParams", irc.ERR_NEEDMOREPARAMS, "ELINE", "Not enough parameters")
 			return None
@@ -82,7 +83,7 @@ class UserELine(Command):
 			"reason": " ".join(params[2:])
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		banmask = data["mask"]
 		if "reason" in data:
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
@@ -104,10 +105,10 @@ class ServerAddELine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.executeServerAddCommand(server, data)
 
 @implementer(ICommand)
@@ -115,10 +116,10 @@ class ServerDelELine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.executeServerDelCommand(server, data)
 
 elineModule = ELine()

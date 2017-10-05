@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType, timestampStringFromTime
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class ServerBurst(ModuleData, Command):
@@ -9,14 +10,14 @@ class ServerBurst(ModuleData, Command):
 	core = True
 	forRegistered = False
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("burst", 100, self.startBurst),
 		         ("burst", 1, self.completeBurst) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("BURST", 1, self) ]
 	
-	def startBurst(self, server):
+	def startBurst(self, server: "IRCServer") -> None:
 		server.bursted = False
 		serversByHopcount = []
 		serversBurstingTo = []
@@ -118,13 +119,13 @@ class ServerBurst(ModuleData, Command):
 			for key, value in channel.metadataList():
 				server.sendMessage("METADATA", channel.name, channelTimestamp, key, value, prefix=self.ircd.serverID)
 	
-	def completeBurst(self, server):
+	def completeBurst(self, server: "IRCServer") -> None:
 		server.sendMessage("BURST", prefix=self.ircd.serverID)
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return {}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		server.endBurst()
 		return True
 

@@ -3,25 +3,26 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData)
 class KickCommand(ModuleData):
 	name = "KickCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("commandpermission-KICK", 10, self.checkKickLevel),
 		         ("leavemessage", 101, self.broadcastKick),
 		         ("leavemessage", 1, self.sendKickMessage),
 		         ("buildisupport", 1, self.buildISupport) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("KICK", 1, UserKick(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("KICK", 1, ServerKick(self.ircd)) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "kick_length" in config:
 			if not isinstance(config["kick_length"], int) or config["kick_length"] < 0:
 				raise ConfigValidationError("kick_length", "invalid number")
@@ -29,10 +30,10 @@ class KickCommand(ModuleData):
 				config["away_length"] = 255
 				self.ircd.logConfigValidationWarning("kick_length", "value is too large", 255)
 
-	def buildISupport(self, data):
+	def buildISupport(self, data: Dict[str, Union[str, int]]) -> None:
 		data["KICKLEN"] = self.ircd.config.get("kick_length", 255)
 	
-	def checkKickLevel(self, user, data):
+	def checkKickLevel(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		channel = data["channel"]
 		if user not in channel.users:
 			user.sendMessage(irc.ERR_NOTONCHANNEL, channel.name, "You're not on that channel")
@@ -45,7 +46,7 @@ class KickCommand(ModuleData):
 			return False
 		return None
 	
-	def broadcastKick(self, sendUserList, channel, user, type, typeData, fromServer):
+	def broadcastKick(self, sendUserList: List["IRCUser"], channel: "IRCChannel", user: "IRCUser", type: str, typeData: Dict[Any, Any], fromServer: Optional["IRCServer"]) -> None:
 		if type != "KICK":
 			return
 		byUser = True
@@ -70,7 +71,7 @@ class KickCommand(ModuleData):
 			reason = typeData["reason"]
 		self.ircd.broadcastToServers(fromServer, "KICK", channel.name, user.uuid, reason, prefix=prefix)
 	
-	def sendKickMessage(self, sendUserList, channel, user, type, typeData, fromServer):
+	def sendKickMessage(self, sendUserList: List["IRCUser"], channel: "IRCChannel", user: "IRCUser", type: str, typeData: Dict[Any, Any], fromServer: Optional["IRCServer"]) -> None:
 		if type != "KICK":
 			return
 		byUser = True
@@ -103,7 +104,7 @@ class UserKick(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 2:
 			user.sendSingleError("KickCmd", irc.ERR_NEEDMOREPARAMS, "KICK", "Not enough parameters")
 			return None
@@ -128,13 +129,13 @@ class UserKick(Command):
 			"reason": reason
 		}
 	
-	def affectedUsers(self, user, data):
+	def affectedUsers(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCUser"]:
 		return [data["user"]]
 	
-	def affectedChannels(self, user, data):
+	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:
 		return [data["channel"]]
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		channel = data["channel"]
 		targetUser = data["user"]
 		reason = data["reason"]
@@ -148,7 +149,7 @@ class ServerKick(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 3:
 			return None
 		sourceType = None
@@ -181,7 +182,7 @@ class ServerKick(Command):
 			"reason": params[2]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		channel = data["channel"]

@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -9,11 +10,11 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 class AccountIdentify(ModuleData):
 	name = "AccountIdentify"
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("IDENTIFY", 1, IdentifyCommand(self)),
 			("ID", 1, IdCommand(self)) ]
 	
-	def parseParams(self, command, user, params, prefix, tags):
+	def parseParams(self, command: str, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			user.sendSingleError("IdentifyParams", irc.ERR_NEEDMOREPARAMS, command, "Not enough parameters")
 			return None
@@ -26,7 +27,7 @@ class AccountIdentify(ModuleData):
 			"password": params[1]
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "accountname" in data:
 			accountName = data["accountname"]
 		else:
@@ -49,7 +50,7 @@ class AccountIdentify(ModuleData):
 		user.sendMessage("NOTICE", resultValue[2])
 		return True
 	
-	def checkAuthSuccess(self, result, user):
+	def checkAuthSuccess(self, result: Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]], user: "IRCUser") -> None:
 		if user.uuid not in self.ircd.users:
 			return
 		loginSuccess, errorCode, errorMessage = result
@@ -63,10 +64,10 @@ class IdentifyCommand(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.parseParams("IDENTIFY", user, params, prefix, tags)
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		return self.module.execute(user, data)
 
 @implementer(ICommand)
@@ -74,10 +75,10 @@ class IdCommand(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.parseParams("ID", user, params, prefix, tags)
 	
-	def execute(self, user, data):
-		self.module.execute(user, data)
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
+		return self.module.execute(user, data)
 
 identifyCommand = AccountIdentify()

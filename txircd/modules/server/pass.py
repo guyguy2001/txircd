@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd import protoVersion
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class PassCommand(ModuleData, Command):
@@ -9,22 +10,22 @@ class PassCommand(ModuleData, Command):
 	core = True
 	forRegistered = False
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("PASS", 1, self) ]
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		return {
 			"password": params[0]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if not server.name:
-			return None
+			return False
 		serverLinks = self.ircd.config.get("links", {})
 		if server.name not in serverLinks:
-			return None
+			return False
 		receivedPassword = data["password"]
 		checkPassword = serverLinks[server.name]["in_password"] if "in_password" in serverLinks[server.name] else ""
 		if checkPassword == receivedPassword:

@@ -9,17 +9,18 @@ except ImportError: # PyCrypto isn't actually present, so let's hashlib
 from pbkdf2 import PBKDF2
 from random import randint
 from struct import pack
+from typing import Optional
 
 @implementer(IPlugin, IModuleData)
 class HashPBKDF2(ModuleData):
 	name = "HashPBKDF2"
 	
-	def load(self):
+	def load(self) -> None:
 		self.ircd.functionCache["hash-pbkdf2"] = self.hash
 		self.ircd.functionCache["compare-pbkdf2"] = self.compare
 		self.ircd.functionCache["validate-pbkdf2"] = self.checkValidHash
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		if self.ircd.functionCache["hash-pbkdf2"] == self.hash:
 			del self.ircd.functionCache["hash-pbkdf2"]
 		if self.ircd.functionCache["compare-pbkdf2"] == self.compare:
@@ -27,7 +28,7 @@ class HashPBKDF2(ModuleData):
 		if self.ircd.functionCache["validate-pbkdf2"]:
 			del self.ircd.functionCache["validate-pbkdf2"]
 	
-	def hash(self, string, salt=None, iterations=1000, algorithm="sha256", dataBytes=24):
+	def hash(self, string: str, salt: str = None, iterations: int = 1000, algorithm: str = "sha256", dataBytes: int = 24) -> str:
 		possibleAlgorithms = {
 			"md5": md5,
 			"sha1": sha1,
@@ -56,10 +57,10 @@ class HashPBKDF2(ModuleData):
 		hashedStr = b64encode(PBKDF2(string, salt, iterations, possibleAlgorithms[algorithm]).read(dataBytes)).decode("us-ascii")
 		return "{}:{}:{}:{}".format(algorithm, iterations, salt, hashedStr)
 	
-	def makeSalt(self):
+	def makeSalt(self) -> str:
 		return b64encode(b"".join([pack("@H", randint(0, 0xffff)) for i in range(3)])).decode("us-ascii")
 	
-	def compare(self, string, compareWith):
+	def compare(self, string: str, compareWith: str) -> bool:
 		if not self.checkValidHash(compareWith):
 			return False
 		# The algorithm outputs strings with all the parameters
@@ -72,7 +73,7 @@ class HashPBKDF2(ModuleData):
 		
 		return self.hash(string, salt, iterations, algorithm, dataBytes) == compareWith
 	
-	def checkValidHash(self, string):
+	def checkValidHash(self, string: str) -> bool:
 		if len(string.split(":")) != 4:
 			return False
 		algorithm, iterations, salt, hashedString = string.split(":")

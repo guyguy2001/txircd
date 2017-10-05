@@ -2,6 +2,7 @@ from twisted.conch.manhole_tap import makeService
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implementer
+from typing import Any, Optional
 
 @implementer(IPlugin, IModuleData)
 class Manhole(ModuleData):
@@ -10,16 +11,16 @@ class Manhole(ModuleData):
 	manhole = None
 	deferredStop = None
 	
-	def load(self):
+	def load(self) -> None:
 		self.startManhole()
 	
-	def unload(self):
+	def unload(self) -> Optional["Deferred"]:
 		if self.deferredStop and not self.deferredStop.called:
 			self.deferredStop.addCallback(lambda result: self.manhole.stopService())
 			return self.deferredStop
 		return self.manhole.stopService()
 	
-	def rehash(self):
+	def rehash(self) -> None:
 		if self.deferredStop and not self.deferredStop.called:
 			return # The deferred's callbacks should handle the rest of the rehash
 		d = self.manhole.stopService()
@@ -29,7 +30,7 @@ class Manhole(ModuleData):
 		else:
 			self.startManhole()
 	
-	def startManhole(self, result = None):
+	def startManhole(self, result: Any = None) -> None:
 		self.manhole = makeService({
 			"namespace": { "ircd": self.ircd },
 			"passwd": self.ircd.config.get("manhole_passwd", "manhole.passwd"),

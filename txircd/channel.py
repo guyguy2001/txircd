@@ -1,5 +1,6 @@
 from twisted.words.protocols import irc
 from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, lenBytes, ModeType, now
+from typing import Any, List, Optional, Tuple, Union
 from weakref import WeakKeyDictionary
 
 class IRCChannel(object):
@@ -17,7 +18,7 @@ class IRCChannel(object):
 		self._metadata = CaseInsensitiveDictionary()
 		self.cache = {}
 	
-	def sendUserMessage(self, command, *params, **kw):
+	def sendUserMessage(self, command: str, *params: str, **kw: Any) -> None:
 		"""
 		Sends a message to all local users in a channel.
 		Accepts a command and some parameters for that command to send.
@@ -54,7 +55,7 @@ class IRCChannel(object):
 			kw["tags"] = tags
 			user.sendMessage(command, *params, **kw)
 	
-	def sendServerMessage(self, command, *params, **kw):
+	def sendServerMessage(self, command: str, *params: str, **kw: Any) -> None:
 		"""
 		Sends a message to all remote servers to which any user in this channel
 		is connected. Accepts a command and some parameters for that command to
@@ -83,7 +84,7 @@ class IRCChannel(object):
 		for server in localServers:
 			server.sendMessage(command, *params, **kw)
 	
-	def setTopic(self, topic, setter):
+	def setTopic(self, topic: str, setter: str) -> bool:
 		"""
 		Sets the channel topic.
 		"""
@@ -104,13 +105,13 @@ class IRCChannel(object):
 		self.ircd.runActionStandard("topic", self, setter, oldTopic, channels=[self])
 		return True
 	
-	def metadataKeyExists(self, key):
+	def metadataKeyExists(self, key: str) -> str:
 		"""
 		Checks whether a specific key exists in the channel's metadata.
 		"""
 		return key in self._metadata
 	
-	def metadataKeyCase(self, key):
+	def metadataKeyCase(self, key: str) -> str:
 		"""
 		Gets the key from the channel's metadata in its original case.
 		Returns None if the key is not present.
@@ -119,7 +120,7 @@ class IRCChannel(object):
 			return None
 		return self._metadata[key][0]
 	
-	def metadataValue(self, key):
+	def metadataValue(self, key: str) -> str:
 		"""
 		Gets the value for the given key in the channel's metadata.
 		Returns None if the key is not present.
@@ -128,7 +129,7 @@ class IRCChannel(object):
 			return None
 		return self._metadata[key][1]
 	
-	def metadataList(self):
+	def metadataList(self) -> List[Tuple[str, str]]:
 		"""
 		Returns the list of metadata keys/values for the channel as a list of
 		tuples in the format
@@ -136,7 +137,7 @@ class IRCChannel(object):
 		"""
 		return list(self._metadata.values())
 	
-	def setMetadata(self, key, value, fromServer = None):
+	def setMetadata(self, key: str, value: str, fromServer: str = None) -> bool:
 		"""
 		Sets metadata for the channel. Returns True if the set is successful or
 		False if it is not. If the metadata set is caused by a message from a
@@ -157,7 +158,7 @@ class IRCChannel(object):
 		self.ircd.runActionStandard("channelmetadataupdate", self, key, oldValue, value, fromServer, channels=[self])
 		return True
 	
-	def setModes(self, modes, defaultSource):
+	def setModes(self, modes: List[Union[Tuple[bool, str, str], Tuple[bool, str, str, str, "datetime"]]], defaultSource: str) -> List[Tuple[bool, str, str, str, "datetime"]]:
 		"""
 		Sets modes on the channel. Accepts modes as a list of tuples in the
 		format:
@@ -221,7 +222,7 @@ class IRCChannel(object):
 		self._notifyModeChanges(modeChanges, defaultSource, defaultSourceName)
 		return modeChanges
 	
-	def setModesByUser(self, user, modes, params, override = False):
+	def setModesByUser(self, user: "IRCUser", modes: str, params: List[str], override: bool = False) -> List[Tuple[bool, str, str, str, "datetime"]]:
 		"""
 		Parses a mode string specified by a user and sets those modes on the
 		channel.
@@ -311,7 +312,7 @@ class IRCChannel(object):
 		self._notifyModeChanges(changes, user.uuid, setBy)
 		return changes
 	
-	def _applyMode(self, adding, modeType, mode, parameter, setBy, setTime):
+	def _applyMode(self, adding: bool, modeType: ModeType, mode: str, parameter: str, setBy: str, setTime: "datetime") -> bool:
 		if parameter:
 			if lenBytes(parameter) > 255:
 				return False
@@ -386,7 +387,7 @@ class IRCChannel(object):
 		del self.modes[mode]
 		return True
 	
-	def _notifyModeChanges(self, modeChanges, source, sourceName):
+	def _notifyModeChanges(self, modeChanges: List[Tuple[bool, str, str, str, "datetime"]], source: str, sourceName: str) -> None:
 		if not modeChanges:
 			return
 		channelUsers = []
@@ -398,7 +399,7 @@ class IRCChannel(object):
 		self.ircd.runActionProcessing("modemessage-channel", channelUsers, self, source, sourceName, modeChanges, users=channelUsers, channels=[self])
 		self.ircd.runActionStandard("modechanges-channel", self, source, sourceName, modeChanges, channels=[self])
 	
-	def _sourceName(self, source):
+	def _sourceName(self, source: str) -> str:
 		if source in self.ircd.users:
 			return self.ircd.users[source].hostmask()
 		if source == self.ircd.serverID:
@@ -407,7 +408,7 @@ class IRCChannel(object):
 			return self.ircd.servers[source].name
 		return None
 	
-	def modeString(self, toUser):
+	def modeString(self, toUser: Optional["IRCUser"]) -> str:
 		"""
 		Get a user-reportable mode string for the modes set on the channel.
 		"""
@@ -430,7 +431,7 @@ class IRCChannel(object):
 			return "{} {}".format("".join(modeStr), " ".join(params))
 		return "".join(modeStr)
 	
-	def userRank(self, user):
+	def userRank(self, user: "IRCUser") -> int:
 		"""
 		Gets the user's numeric rank in the channel.
 		"""
@@ -441,7 +442,7 @@ class IRCChannel(object):
 			return 0
 		return self.ircd.channelStatuses[status[0]][1]
 	
-	def setCreationTime(self, time, fromServer):
+	def setCreationTime(self, time: "datetime", fromServer: Optional["IRCServer"]) -> None:
 		if time >= self.existedSince:
 			return
 		fromServerID = fromServer.serverID if fromServer else self.ircd.serverID

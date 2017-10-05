@@ -11,6 +11,7 @@ from txircd.factory import ServerConnectFactory, ServerListenFactory, UserFactor
 from txircd.module_interface import ICommand, IMode, IModuleData
 from txircd.utils import CaseInsensitiveDictionary, lenBytes, ModeType, now, unescapeEndpointDescription
 from datetime import timedelta
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 from weakref import WeakValueDictionary
 import importlib, random, re, shelve, string, txircd.modules
 
@@ -63,7 +64,7 @@ class IRCd(Service):
 		
 		self.startupTime = None
 	
-	def startService(self):
+	def startService(self) -> None:
 		self.log.info("Starting up...")
 		self.startupTime = now()
 		self.log.info("Loading configuration...")
@@ -90,7 +91,7 @@ class IRCd(Service):
 			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.warn)
 		self.runActionStandard("startup")
 	
-	def stopService(self):
+	def stopService(self) -> None:
 		stopDeferreds = []
 		self.log.info("Disconnecting servers...")
 		serverList = list(self.servers.values()) # Take the list of server objects
@@ -127,7 +128,7 @@ class IRCd(Service):
 		stopDeferreds.extend(self._unbindPorts())
 		return DeferredList(stopDeferreds)
 	
-	def _loadModules(self):
+	def _loadModules(self) -> None:
 		for module in getPlugins(IModuleData, txircd.modules):
 			if module.name in self.loadedModules:
 				continue
@@ -137,7 +138,7 @@ class IRCd(Service):
 			if moduleName not in self.loadedModules:
 				self.log.warn("The module {module} failed to load.", module=moduleName)
 	
-	def loadModule(self, moduleName):
+	def loadModule(self, moduleName: str) -> Optional[DeferredList]:
 		"""
 		Loads a module of the specified name.
 		Raises ModuleLoadError if the module cannot be loaded.
@@ -156,10 +157,10 @@ class IRCd(Service):
 				self.log.info("Loaded module {module}.", module=moduleName)
 				break
 	
-	def _tryLoadAgain(self, _, moduleName):
+	def _tryLoadAgain(self, _: Any, moduleName: str) -> None:
 		self.loadModule(moduleName)
 	
-	def _loadModuleData(self, module):
+	def _loadModuleData(self, module: "ModuleData") -> None:
 		if not IModuleData.providedBy(module):
 			raise ModuleLoadError ("???", "Module does not implement module interface")
 		if not module.name:
@@ -296,7 +297,7 @@ class IRCd(Service):
 		
 		self.log.debug("Module {module.name} is now fully loaded.", module=module)
 	
-	def unloadModule(self, moduleName):
+	def unloadModule(self, moduleName: str) -> None:
 		"""
 		Unloads the loaded module with the given name. Raises ValueError
 		if the module cannot be unloaded because it's a core module.
@@ -304,7 +305,7 @@ class IRCd(Service):
 		self._unloadModule(moduleName, True)
 		self.log.info("Unloaded module {module}.", module=moduleName)
 	
-	def _unloadModule(self, moduleName, fullUnload):
+	def _unloadModule(self, moduleName: str, fullUnload: bool) -> Optional[DeferredList]:
 		unloadDeferreds = []
 		if moduleName not in self.loadedModules:
 			return None
@@ -391,10 +392,10 @@ class IRCd(Service):
 			return deferList
 		return None
 	
-	def _removeFromUnloadingList(self, _, moduleName):
+	def _removeFromUnloadingList(self, _: Any, moduleName: str) -> None:
 		del self._unloadingModules[moduleName]
 	
-	def reloadModule(self, moduleName):
+	def reloadModule(self, moduleName: str) -> Optional[DeferredList]:
 		"""
 		Reloads the module with the given name.
 		Returns a DeferredList if the module unloads with one or more Deferreds.
@@ -412,10 +413,10 @@ class IRCd(Service):
 			deferList.addErrback(self._logReloadModuleError, moduleName)
 		return deferList
 	
-	def _logReloadModuleError(self, failure, moduleName):
+	def _logReloadModuleError(self, failure: "Failure", moduleName: str) -> None:
 		self.log.critical("Module {moduleName} couldn't be reloaded! The server may be left in an unstable state; consider restarting. Error details: {failure.getErrorMessage()}", moduleName=moduleName, failure=failure)
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		# IRCd
 		if "server_name" not in config:
 			raise ConfigValidationError("server_name", "required item not found in configuration file.")
@@ -576,10 +577,10 @@ class IRCd(Service):
 		for module in self.loadedModules.values():
 			module.verifyConfig(config)
 
-	def logConfigValidationWarning(self, key, message, default):
+	def logConfigValidationWarning(self, key: str, message: str, default: Any) -> None:
 		self.log.warn("Config value \"{configKey}\" is invalid ({message}); the value has been set to a default of \"{default}\".", configKey=key, message=message, default=default)
 
-	def rehash(self):
+	def rehash(self) -> None:
 		"""
 		Reloads the configuration file and applies changes.
 		"""
@@ -599,7 +600,7 @@ class IRCd(Service):
 		for module in self.loadedModules.values():
 			module.rehash()
 	
-	def _bindPorts(self):
+	def _bindPorts(self) -> None:
 		for bindDesc in self.config["bind_client"]:
 			try:
 				endpoint = serverFromString(reactor, unescapeEndpointDescription(bindDesc))
@@ -619,7 +620,7 @@ class IRCd(Service):
 			listenDeferred.addCallback(self._savePort, bindDesc, "server")
 			listenDeferred.addErrback(self._logNotBound, bindDesc)
 	
-	def _unbindPorts(self):
+	def _unbindPorts(self) -> List["Deferred"]:
 		deferreds = []
 		for port in self.boundPorts.values():
 			d = port.stopListening()
@@ -627,18 +628,18 @@ class IRCd(Service):
 				deferreds.append(d)
 		return deferreds
 	
-	def _savePort(self, port, desc, portType):
+	def _savePort(self, port: "IListeningPort", desc: str, portType: str) -> None:
 		self.boundPorts[desc] = port
 		self.log.debug("Bound endpoint '{endpointDescription}' for {portType} connections.", endpointDescription=desc, portType=portType)
 	
-	def _logNotBound(self, err, desc):
+	def _logNotBound(self, err: str, desc: str) -> None:
 		self.log.error("Could not bind '{endpointDescription}': {errorMsg}", endpointDescription=desc, errorMsg=err)
 	
-	def _syncStorage(self):
+	def _syncStorage(self) -> None:
 		self.storage.sync()
 		self.runActionStandard("updatestoragereferences")
 	
-	def createUUID(self):
+	def createUUID(self) -> str:
 		"""
 		Gets the next UUID for a new client.
 		"""
@@ -648,13 +649,13 @@ class IRCd(Service):
 		self.log.debug("Generated new UUID {uuid}", uuid=newUUID)
 		return newUUID
 	
-	def _genUID(self):
+	def _genUID(self) -> Iterator[str]:
 		uid = "AAAAAA"
 		while True:
 			yield uid
 			uid = self._incrementUID(uid)
 	
-	def _incrementUID(self, uid):
+	def _incrementUID(self, uid: str) -> str:
 		if uid == "Z": # The first character must be a letter
 			return "A" # So wrap that around
 		if uid[-1] == "9":
@@ -663,7 +664,7 @@ class IRCd(Service):
 			return uid[:-1] + "0"
 		return uid[:-1] + chr(ord(uid[-1]) + 1)
 	
-	def pruneQuit(self):
+	def pruneQuit(self) -> None:
 		compareTime = now() - timedelta(seconds=10)
 		remove = []
 		for uuid, timeQuit in self.recentlyQuitUsers.items():
@@ -679,7 +680,7 @@ class IRCd(Service):
 		for serverID in remove:
 			del self.recentlyQuitServers[serverID]
 	
-	def pruneChannels(self):
+	def pruneChannels(self) -> None:
 		removeChannels = []
 		for channel, remove in self.recentlyDestroyedChannels.items():
 			if remove:
@@ -689,7 +690,7 @@ class IRCd(Service):
 		for channel in removeChannels:
 			del self.recentlyDestroyedChannels[channel]
 	
-	def generateISupportList(self):
+	def generateISupportList(self) -> List[str]:
 		isupport = self.isupport_tokens.copy()
 		statusSymbolOrder = "".join([self.channelStatuses[status][0] for status in self.channelStatusOrder])
 		isupport["CHANMODES"] = ",".join(["".join(modes) for modes in self.channelModes])
@@ -708,7 +709,7 @@ class IRCd(Service):
 				isupportList.append("{}={}".format(key, val))
 		return isupportList
 	
-	def connectServer(self, name):
+	def connectServer(self, name: str) -> "Deferred":
 		"""
 		Connect a server with the given name in the configuration.
 		Returns a Deferred for the connection when we can successfully connect
@@ -725,11 +726,11 @@ class IRCd(Service):
 		d.addCallback(self._completeServerConnection, name)
 		return d
 	
-	def _completeServerConnection(self, result, name):
+	def _completeServerConnection(self, result: "IProtocol", name: str) -> None:
 		self.log.info("Connected to server {serverName}", serverName=name)
 		self.runActionStandard("initiateserverconnection", result)
 	
-	def broadcastToServers(self, fromServer, command, *params, **kw):
+	def broadcastToServers(self, fromServer: Optional["IRCServer"], command: str, *params: str, **kw: Any) -> None:
 		"""
 		Broadcasts a message to all connected servers. The fromServer parameter
 		should be the server from which the message came; if this server is the
@@ -739,7 +740,7 @@ class IRCd(Service):
 			if server.nextClosest == self.serverID and server != fromServer:
 				server.sendMessage(command, *params, **kw)
 	
-	def _getActionModes(self, actionName, *params, **kw):
+	def _getActionModes(self, actionName: str, *params: Any, **kw: Any) -> List[Callable[["Mode", str, "IRCUser", str], Callable[[str], Any]]]:
 		users = []
 		channels = []
 		if "users" in kw:
@@ -825,12 +826,12 @@ class IRCd(Service):
 						functionList.append(((lambda modeObj, actionName, channel, param: lambda *params: modeObj.apply(actionName, channel, param, *params))(modeObj, actionName, channel, param), priority))
 		return functionList
 	
-	def _getActionFunctionList(self, actionName, *params, **kw):
+	def _getActionFunctionList(self, actionName: str, *params: Any, **kw: Any) -> List[Tuple[Callable[..., Any], int]]:
 		functionList = self.actions.get(actionName, [])
 		functionList = functionList + self._getActionModes(actionName, *params, **kw)
 		return sorted(functionList, key=lambda action: action[1], reverse=True)
 	
-	def _combineActionFunctionLists(self, actionLists):
+	def _combineActionFunctionLists(self, actionLists: Dict[str, List[Tuple[Callable[..., Any], int]]]) -> List[Tuple[str, Callable[..., Any]]]:
 		"""
 		Combines multiple lists of action functions into one.
 		Assumes all lists are sorted.
@@ -852,7 +853,7 @@ class IRCd(Service):
 			fullActionList[index] = (actionData[0], actionData[1]) # The priority isn't important for the return value
 		return fullActionList
 	
-	def runActionStandard(self, actionName, *params, **kw):
+	def runActionStandard(self, actionName: str, *params: Any, **kw: Any) -> None:
 		"""
 		Calls all functions for a given action with the given parameters in
 		priority order. Accepts the 'users' and 'channels' keyword arguments to
@@ -864,7 +865,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, params, kw):
 				break
 	
-	def runActionUntilTrue(self, actionName, *params, **kw):
+	def runActionUntilTrue(self, actionName: str, *params: Any, **kw: Any) -> bool:
 		"""
 		Calls functions for a given action with the given parameters in
 		priority order until one of them returns a true value. Returns True
@@ -880,7 +881,7 @@ class IRCd(Service):
 				break
 		return False
 	
-	def runActionUntilFalse(self, actionName, *params, **kw):
+	def runActionUntilFalse(self, actionName: str, *params: Any, **kw: Any) -> bool:
 		"""
 		Calls functions for a given action with the given parameters in
 		priority order until one of them returns a false value. Returns True
@@ -896,7 +897,7 @@ class IRCd(Service):
 				break
 		return False
 	
-	def runActionUntilValue(self, actionName, *params, **kw):
+	def runActionUntilValue(self, actionName: str, *params: Any, **kw: Any) -> Any:
 		"""
 		Calls functions for a given action with the given parameters in
 		priority order until one of them returns a non-None value. Returns the
@@ -913,7 +914,7 @@ class IRCd(Service):
 				break
 		return None
 	
-	def runActionFlagTrue(self, actionName, *params, **kw):
+	def runActionFlagTrue(self, actionName: str, *params: Any, **kw: Any) -> bool:
 		"""
 		Calls all functions for a given action with the given parameters in
 		priority order. Returns True when one of the functions returns a true
@@ -929,7 +930,7 @@ class IRCd(Service):
 				break
 		return oneIsTrue
 	
-	def runActionFlagFalse(self, actionName, *params, **kw):
+	def runActionFlagFalse(self, actionName: str, *params: Any, **kw: Any) -> bool:
 		"""
 		Calls all functions for a given action with the given parameters in
 		priority order. Returns True when one of the functions returns a false
@@ -945,7 +946,7 @@ class IRCd(Service):
 				break
 		return oneIsFalse
 	
-	def runActionProcessing(self, actionName, data, *params, **kw):
+	def runActionProcessing(self, actionName: str, data: Any, *params: Any, **kw: Any) -> None:
 		"""
 		Calls functions for a given action with the given parameters in
 		priority order until the provided data is all processed (the data
@@ -960,7 +961,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, [data] + list(params), kw):
 				break
 	
-	def runActionProcessingMultiple(self, actionName, dataList, *params, **kw):
+	def runActionProcessingMultiple(self, actionName: str, dataList: List[Any], *params: Any, **kw: Any) -> None:
 		"""
 		Calls functions for a given action with the given parameters in
 		priority order until the provided data is all processed (all of the
@@ -980,7 +981,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, paramList, kw):
 				break
 	
-	def runComboActionStandard(self, actionList, **kw):
+	def runComboActionStandard(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> None:
 		"""
 		Calls all functions for the given actions with the given parameters in
 		priority order. Actions are specifed as a list of tuples:
@@ -1000,7 +1001,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, actionParameters, kw):
 				break
 	
-	def runComboActionUntilTrue(self, actionList, **kw):
+	def runComboActionUntilTrue(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> bool:
 		"""
 		Calls functions for the given actions with the given parameters in
 		priority order until one of the functions returns a true value. Actions
@@ -1024,7 +1025,7 @@ class IRCd(Service):
 				break
 		return False
 	
-	def runComboActionUntilFalse(self, actionList, **kw):
+	def runComboActionUntilFalse(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> bool:
 		"""
 		Calls functions for the given actions with the given parameters in
 		priority order until one of the functions returns a false value.
@@ -1048,7 +1049,7 @@ class IRCd(Service):
 				break
 		return False
 	
-	def runComboActionUntilValue(self, actionList, **kw):
+	def runComboActionUntilValue(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> Any:
 		"""
 		Calls functions for the given actions with the given parameters in
 		priority order until one of the functions returns a non-None value.
@@ -1073,7 +1074,7 @@ class IRCd(Service):
 				break
 		return None
 	
-	def runComboActionFlagTrue(self, actionList, **kw):
+	def runComboActionFlagTrue(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> bool:
 		"""
 		Calls all functions for the given actions with the given parameters in
 		priority order. Actions are specified as a list of tuples:
@@ -1097,7 +1098,7 @@ class IRCd(Service):
 				break
 		return oneIsTrue
 	
-	def runComboActionFlagFalse(self, actionList, **kw):
+	def runComboActionFlagFalse(self, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> bool:
 		"""
 		Calls all functions for the given actions with the given parameters in
 		priority order. Actions are specified as a list of tuples:
@@ -1121,7 +1122,7 @@ class IRCd(Service):
 				break
 		return oneIsFalse
 	
-	def runComboActionProcessing(self, data, actionList, **kw):
+	def runComboActionProcessing(self, data: Any, actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> None:
 		"""
 		Calls functions for the given actions with the given parameters in
 		priority order until the data given has been processed (the data
@@ -1144,7 +1145,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, actionParameters, kw):
 				break
 	
-	def runComboActionProcessingMultiple(self, dataList, actionList, **kw):
+	def runComboActionProcessingMultiple(self, dataList: List[Any], actionList: List[Tuple[str, Tuple[Any, ...]]], **kw: Any) -> None:
 		"""
 		Calls functions for the given actions with the given parameters in
 		priority order until the data given has been processed (all the data
@@ -1171,7 +1172,7 @@ class IRCd(Service):
 			if self._shouldStopAction(actionName, actionParameters, kw):
 				break
 	
-	def _shouldStopAction(self, actionName, parameters, keywords):
+	def _shouldStopAction(self, actionName: str, parameters: List[Any], keywords: Dict[str, Any]) -> bool:
 		if "allowDisconnected" in keywords and keywords["allowDisconnected"]:
 			return False
 		if "users" in keywords:

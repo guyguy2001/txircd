@@ -6,6 +6,7 @@ from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 import socket
 
 @implementer(IPlugin, IModuleData)
@@ -14,30 +15,30 @@ class ZLine(ModuleData, XLineBase):
 	core = True
 	lineType = "Z"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("userconnect", 10, self.checkLines),
 		         ("commandpermission-ZLINE", 10, self.restrictToOper),
 		         ("statsruntype-zlines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ZLINE", 1, UserZLine(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADDLINE", 1, ServerAddZLine(self)),
 		         ("DELLINE", 1, ServerDelZLine(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.initializeLineStorage()
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], str):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
-	def checkUserMatch(self, user, mask, data):
+	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
 		return fnmatchcase(user.ip, mask)
 	
-	def normalizeMask(self, mask):
+	def normalizeMask(self, mask: str) -> str:
 		if ":" in mask and "*" not in mask and "?" not in mask: # Normalize non-wildcard IPv6 addresses
 			try:
 				return socket.inet_ntop(socket.AF_INET6, socket.inet_pton(socket.AF_INET6, mask)).lower()
@@ -45,19 +46,19 @@ class ZLine(ModuleData, XLineBase):
 				return mask.lower()
 		return mask.lower()
 	
-	def killUser(self, user, reason):
+	def killUser(self, user: "IRCUser", reason: str) -> None:
 		self.ircd.log.info("Matched user {user.uuid} ({user.ip}) against a z:line: {reason}", user=user, reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("Z:Lined: {}".format(reason))
 	
-	def checkLines(self, user):
+	def checkLines(self, user: "IRCUser") -> bool:
 		reason = self.matchUser(user)
 		if reason is not None:
 			self.killUser(user, reason)
 			return False
 		return True
 	
-	def restrictToOper(self, user, data):
+	def restrictToOper(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-zline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -68,7 +69,7 @@ class UserZLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 1 or len(params) == 2:
 			user.sendSingleError("ZLineParams", irc.ERR_NEEDMOREPARAMS, "ZLINE", "Not enough parameters")
 			return None
@@ -85,7 +86,7 @@ class UserZLine(Command):
 			"reason": " ".join(params[2:])
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		banmask = data["mask"]
 		if "reason" in data:
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
@@ -114,10 +115,10 @@ class ServerAddZLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if self.module.executeServerAddCommand(server, data):
 			badUsers = []
 			for user in self.module.ircd.users.values():
@@ -127,17 +128,17 @@ class ServerAddZLine(Command):
 			for user in badUsers:
 				self.module.killUser(*user)
 			return True
-		return None
+		return False
 
 @implementer(ICommand)
 class ServerDelZLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.executeServerDelCommand(server, data)
 
 zlineModule = ZLine()

@@ -6,6 +6,7 @@ from txircd.modules.xlinebase import XLineBase
 from txircd.utils import durationToSeconds, ircLower, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Dict, Callable, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class GLine(ModuleData, XLineBase):
@@ -13,7 +14,7 @@ class GLine(ModuleData, XLineBase):
 	core = True
 	lineType = "G"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("register", 10, self.checkLines),
 		         ("changeident", 10, self.checkIdentChange),
 		         ("changehost", 10, self.checkHostChange),
@@ -21,21 +22,21 @@ class GLine(ModuleData, XLineBase):
 		         ("statsruntype-glines", 10, self.generateInfo),
 		         ("burst", 10, self.burstLines) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("GLINE", 1, UserGLine(self)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("ADDLINE", 1, ServerAddGLine(self)),
 		         ("DELLINE", 1, ServerDelGLine(self)) ]
 	
-	def load(self):
+	def load(self) -> None:
 		self.initializeLineStorage()
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "client_ban_msg" in config and not isinstance(config["client_ban_msg"], str):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
-	def checkUserMatch(self, user, mask, data):
+	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
 		banMask = self.normalizeMask(mask)
 		userMask = ircLower("{}@{}".format(user.ident, user.host()))
 		if fnmatchcase(userMask, banMask):
@@ -48,26 +49,26 @@ class GLine(ModuleData, XLineBase):
 			return True
 		return False
 	
-	def killUser(self, user, reason):
+	def killUser(self, user: "IRCUser", reason: str) -> None:
 		self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a g:line: {reason}", user=user, reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("G:Lined: {}".format(reason))
 	
-	def checkLines(self, user):
+	def checkLines(self, user: "IRCUser") -> bool:
 		banReason = self.matchUser(user)
 		if banReason is not None:
 			self.killUser(user, banReason)
 			return False
 		return True
 	
-	def checkIdentChange(self, user, oldIdent, fromServer):
+	def checkIdentChange(self, user: "IRCUser", oldIdent: str, fromServer: Optional["IRCServer"]) -> None:
 		self.checkLines(user)
 	
-	def checkHostChange(self, user, hostType, oldHost, fromServer):
+	def checkHostChange(self, user: "IRCUser", hostType: str, oldHost: str, fromServer: Optional["IRCServer"]) -> None:
 		if user.uuid[:3] == self.ircd.serverID:
 			self.checkLines(user)
 	
-	def restrictToOper(self, user, data):
+	def restrictToOper(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-gline", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -78,7 +79,7 @@ class UserGLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) < 1 or len(params) == 2:
 			user.sendSingleError("GLineParams", irc.ERR_NEEDMOREPARAMS, "GLINE", "Not enough parameters")
 			return None
@@ -100,7 +101,7 @@ class UserGLine(Command):
 			"reason": " ".join(params[2:])
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		banmask = data["mask"]
 		if "reason" in data:
 			if not self.module.addLine(banmask, now(), data["duration"], user.hostmask(), data["reason"]):
@@ -129,10 +130,10 @@ class ServerAddGLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Any]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if self.module.executeServerAddCommand(server, data):
 			badUsers = []
 			for user in self.module.ircd.users.values():
@@ -142,17 +143,17 @@ class ServerAddGLine(Command):
 			for user in badUsers:
 				self.module.killUser(*user)
 			return True
-		return None
+		return False
 
 @implementer(ICommand)
 class ServerDelGLine(Command):
 	def __init__(self, module):
 		self.module = module
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.executeServerDelCommand(server, data)
 
 glineModule = GLine()

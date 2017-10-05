@@ -3,6 +3,7 @@ from twisted.words.protocols import irc
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import string
 
 @implementer(IPlugin, IModuleData, IMode)
@@ -13,19 +14,19 @@ class BlockCaps(ModuleData, Mode):
 		"commandmodify-NOTICE": 10
 	}
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("B", ModeType.Param, self) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-B-commandmodify-PRIVMSG", 10, self.channelHasMode),
 		         ("modeactioncheck-channel-B-commandmodify-NOTICE", 10, self.channelHasMode) ]
 	
-	def channelHasMode(self, channel, user, data):
+	def channelHasMode(self, channel: "IRCChannel", user: "IRCUser", data: Dict[Any, Any]) -> Union[str, bool, None]:
 		if "B" in channel.modes:
 			return ""
 		return None
 	
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		if param.count(":") != 1:
 			return None
 		capsPercent, minLength = param.split(":")
@@ -38,7 +39,7 @@ class BlockCaps(ModuleData, Mode):
 			return None
 		return [param]
 	
-	def apply(self, actionName, channel, param, user, data):
+	def apply(self, actionName: str, channel: "IRCChannel", param: str, user: "IRCUser", data: Dict[Any, Any]) -> None:
 		if channel in data["targetchans"]:
 			message = data["targetchans"][channel]
 			messageLength = len(message)

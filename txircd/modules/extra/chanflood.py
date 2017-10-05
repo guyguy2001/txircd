@@ -3,6 +3,7 @@ from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now
 from zope.interface import implementer
 from datetime import timedelta
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class ChannelFlood(ModuleData, Mode):
@@ -12,19 +13,19 @@ class ChannelFlood(ModuleData, Mode):
 		"commandextra-NOTICE": 10
 	}
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("f", ModeType.Param, self) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-f-commandextra-PRIVMSG", 10, self.channelHasMode),
 		         ("modeactioncheck-channel-f-commandextra-NOTICE", 10, self.channelHasMode) ]
 	
-	def channelHasMode(self, channel, user, data):
+	def channelHasMode(self, channel: "IRCChannel", user: "IRCUser", data: Dict[Any, Any]) -> Union[str, bool, None]:
 		if "f" in channel.modes:
 			return channel.modes["f"]
 		return None
 	
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		if param.count(":") != 1:
 			return None
 		lines, seconds = param.split(":")
@@ -37,7 +38,7 @@ class ChannelFlood(ModuleData, Mode):
 			return None
 		return [param]
 	
-	def apply(self, actionName, channel, param, user, data):
+	def apply(self, actionName: str, channel: "IRCChannel", param: str, user: "IRCUser", data: Dict[Any, Any]) -> None:
 		if "targetchans" not in data or channel not in data["targetchans"]:
 			return
 		if self.ircd.runActionUntilValue("checkexemptchanops", "chanflood", channel, user):

@@ -3,22 +3,23 @@ from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import splitMessage
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class NamesCommand(ModuleData, Command):
 	name = "NamesCommand"
 	core = True
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("NAMES", 1, self) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("join", 2, self.namesOnJoin) ]
 	
-	def namesOnJoin(self, channel, user, fromServer):
+	def namesOnJoin(self, channel: "IRCChannel", user: "IRCUser", fromServer: Optional["IRCServer"]) -> None:
 		self.execute(user, { "channels": [ channel ] })
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		chanNames = params[0].split(",") if params else []
 		channels = []
 		for chanName in chanNames:
@@ -30,7 +31,7 @@ class NamesCommand(ModuleData, Command):
 			"channels": channels
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		chanList = data["channels"]
 		if not chanList:
 			user.sendMessage(irc.RPL_ENDOFNAMES, "*", "End of /NAMES list")

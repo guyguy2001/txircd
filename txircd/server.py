@@ -3,6 +3,7 @@ from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from txircd.ircbase import IRCBase
 from txircd.utils import now
+from typing import Any, Dict, List, Optional
 
 class IRCServer(IRCBase):
 	def __init__(self, ircd, ip, received):
@@ -22,7 +23,7 @@ class IRCServer(IRCBase):
 		self._burstQueueCommandPriorities = {}
 		self._burstQueueHandlers = {}
 	
-	def handleCommand(self, command, params, prefix, tags):
+	def handleCommand(self, command: str, params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> None:
 		if self.bursted and self.serverID not in self.ircd.servers:
 			return # Don't process leftover commands for disconnected servers
 		if command not in self.ircd.serverCommands:
@@ -65,7 +66,7 @@ class IRCServer(IRCBase):
 			self.disconnect("Couldn't process command {} from {} with prefix '{}' and parameters {!r}".format(command, self.serverID, prefix, params)) # Also abort connection if we can't process a command
 			return
 	
-	def endBurst(self):
+	def endBurst(self) -> None:
 		"""
 		Called at the end of bursting.
 		"""
@@ -85,12 +86,12 @@ class IRCServer(IRCBase):
 		self._burstQueueCommandPriorities = None
 		self._burstQueueHandlers = None
 	
-	def connectionLost(self, reason):
+	def connectionLost(self, reason: str) -> None:
 		if self.serverID in self.ircd.servers:
 			self.disconnect("Connection reset")
 		self.disconnectedDeferred.callback(None)
 	
-	def disconnect(self, reason, netsplitFromServerName = None, netsplitToServerName = None):
+	def disconnect(self, reason: str, netsplitFromServerName: str = None, netsplitToServerName: str = None) -> None:
 		"""
 		Disconnects the server.
 		"""
@@ -132,20 +133,20 @@ class IRCServer(IRCBase):
 			self._registrationTimeoutTimer.cancel()
 		self._endConnection()
 	
-	def _endConnection(self):
+	def _endConnection(self) -> None:
 		self.transport.loseConnection()
 	
-	def _timeoutRegistration(self):
+	def _timeoutRegistration(self) -> None:
 		if self.serverID and self.name:
 			self._pinger.start(self.ircd.config.get("server_ping_frequency", 60))
 			return
 		self.ircd.log.info("Disconnecting unregistered server")
 		self.disconnect("Registration timeout")
 	
-	def _ping(self):
+	def _ping(self) -> None:
 		self.ircd.runActionStandard("pingserver", self)
 	
-	def register(self):
+	def register(self) -> None:
 		"""
 		Marks the server as registered. Should be called once after capability
 		negotiation.
@@ -165,7 +166,7 @@ class RemoteServer(IRCServer):
 		IRCServer.__init__(self, ircd, ip, True)
 		self._registrationTimeoutTimer.cancel()
 	
-	def sendMessage(self, command, *params, **kw):
+	def sendMessage(self, command: str, *params: str, **kw: Any) -> None:
 		"""
 		Sends a message to the locally-connected server that will route to the
 		remote server.
@@ -177,5 +178,5 @@ class RemoteServer(IRCServer):
 			target = self.ircd.servers[target.nextClosest]
 		target.sendMessage(command, *params, **kw)
 	
-	def _endConnection(self):
+	def _endConnection(self) -> None:
 		pass

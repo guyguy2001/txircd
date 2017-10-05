@@ -4,20 +4,22 @@ from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ircLower, ModeType, timestampStringFromTimeSeconds
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class BanMode(ModuleData, Mode):
 	name = "BanMode"
 	core = True
-	affectedActions = { "joinpermission": 10,
-	                    "commandmodify-PRIVMSG": 10,
-	                    "commandmodify-NOTICE": 10
-	                  }
+	affectedActions = {
+		"joinpermission": 10,
+		"commandmodify-PRIVMSG": 10,
+		"commandmodify-NOTICE": 10
+	}
 	
-	def channelModes(self):
+	def channelModes(self) -> List[Union[Tuple[str, ModeType, Mode], Tuple[str, ModeType, Mode, int, str]]]:
 		return [ ("b", ModeType.List, self) ]
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("modeactioncheck-channel-withuser", 100, self.checkAction),
 		         ("modechange-channel-b", 1, self.onChange),
 		         ("modepermission-channel-b", 1, self.checkAutostatusPermission),
@@ -27,7 +29,7 @@ class BanMode(ModuleData, Mode):
 		         ("updateuserbancache", 1, self.updateUserCaches)
 		]
 	
-	def banMatchesUser(self, user, banmask):
+	def banMatchesUser(self, user: "IRCUser", banmask: str) -> bool:
 		matchingExtban = ""
 		matchNegated = False
 		if ":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")):
@@ -39,7 +41,7 @@ class BanMode(ModuleData, Mode):
 			return self.ircd.runActionUntilTrue("usermatchban-{}".format(matchingExtban), user, matchNegated, banmask)
 		return self.matchHostmask(user, banmask)
 	
-	def matchHostmask(self, user, banmask):
+	def matchHostmask(self, user: "IRCUser", banmask: str) -> bool:
 		banmask = ircLower(banmask)
 		userMask = ircLower(user.hostmask())
 		if fnmatchcase(userMask, banmask):
@@ -50,7 +52,7 @@ class BanMode(ModuleData, Mode):
 		userMask = ircLower(user.hostmaskWithIP())
 		return fnmatchcase(userMask, banmask)
 	
-	def checkAction(self, actionName, mode, channel, user, *params, **kw):
+	def checkAction(self, actionName: str, mode: str, channel: "IRCChannel", user: "IRCUser", *params: Any, **kw: Any) -> Union[str, bool, None]:
 		if "b" not in channel.modes:
 			return None
 		if mode == "b":
@@ -76,7 +78,7 @@ class BanMode(ModuleData, Mode):
 				return actionParam
 		return None
 	
-	def onChange(self, channel, source, adding, param):
+	def onChange(self, channel: "IRCChannel", source: str, adding: bool, param: str) -> None:
 		if ";" in param:
 			actionExtban, banmask = param.split(";", 1)
 			if ":" in actionExtban:
@@ -115,7 +117,7 @@ class BanMode(ModuleData, Mode):
 			else:
 				del cache["bans"][actionExtban]
 	
-	def matchBans(self, user, channel):
+	def matchBans(self, user: "IRCUser", channel: "IRCChannel") -> Dict[str, str]:
 		if user in channel.users and "bans" in channel.users[user]:
 			return channel.users[user]["bans"]
 		if "b" in channel.modes:
@@ -146,7 +148,7 @@ class BanMode(ModuleData, Mode):
 			return matchesActions
 		return {}
 
-	def checkAutostatusPermission(self, channel, user, adding, param):
+	def checkAutostatusPermission(self, channel: "IRCChannel", user: "IRCUser", adding: bool, param: str) -> Optional[bool]:
 		if ";" not in param:
 			return None
 		actionExtban = param.split(";")[0]
@@ -158,7 +160,7 @@ class BanMode(ModuleData, Mode):
 			return False
 		return None
 	
-	def populateBanCache(self, channel, user, fromServer = None):
+	def populateBanCache(self, channel, user, fromServer = None) -> None:
 		if "b" not in channel.modes:
 			return
 		if "bans" not in channel.users[user]:
@@ -176,7 +178,7 @@ class BanMode(ModuleData, Mode):
 			if self.banMatchesUser(user, param):
 				channel.users[user]["bans"][actionExtban] = actionParam
 	
-	def autoStatus(self, channel, user, fromServer = None):
+	def autoStatus(self, channel: "IRCChannel", user: "IRCUser", fromServer: "IRCServer" = None) -> None:
 		if "bans" not in channel.users[user]:
 			return
 		applyModes = []
@@ -186,15 +188,15 @@ class BanMode(ModuleData, Mode):
 		if applyModes:
 			channel.setModes(applyModes, self.ircd.serverID)
 
-	def updateUserCaches(self, user):
+	def updateUserCaches(self, user: "IRCUser") -> None:
 		for channel in user.channels:
 			self.populateBanCache(channel, user)
 			self.autoStatus(channel, user)
 	
-	def banmaskHasMatchingExtban(self, banmask):
+	def banmaskHasMatchingExtban(self, banmask: str) -> bool:
 		return (":" in banmask and ("@" not in banmask or banmask.find(":") < banmask.find("@")))
 	
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		actionExtban = ""
 		actionParam = ""
 		matchingExtban = ""
@@ -245,7 +247,7 @@ class BanMode(ModuleData, Mode):
 			validParams.append(fullBanmask)
 		return validParams
 	
-	def checkUnset(self, channel, param):
+	def checkUnset(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		actionExtban = ""
 		validParams = []
 		for fullBanmask in param.split(","):
@@ -300,7 +302,7 @@ class BanMode(ModuleData, Mode):
 				validParams.append(fullBanmask)
 		return validParams
 	
-	def apply(self, actionType, channel, param, *params):
+	def apply(self, actionType: str, channel: "IRCChannel", param: str, *params: Any) -> Union[Optional[bool], None]: # Union of return types for each affected action
 		if actionType == "joinpermission":
 			actionChannel, user = params
 			# When we get in this function, the user is trying to join, so the cache will always either not exist or be invalid
@@ -330,7 +332,7 @@ class BanMode(ModuleData, Mode):
 					del data["targetchans"][channel]
 					return
 	
-	def showListParams(self, user, channel):
+	def showListParams(self, user: "IRCUser", channel: "IRCChannel") -> None:
 		if user not in channel.users or "b" not in channel.modes:
 			user.sendMessage(irc.RPL_ENDOFBANLIST, channel.name, "End of channel ban list")
 			return

@@ -4,6 +4,7 @@ from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.utils import ModeType
 from zope.interface import implementer
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class FJoinCommand(ModuleData, Command):
@@ -14,19 +15,19 @@ class FJoinCommand(ModuleData, Command):
 	def __init__(self):
 		self.serverBurstData = None
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("startburstcommand", 10, self.prepareJoinBurst),
 		         ("endburstcommand", 10, self.completeJoinBurst) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("FJOIN", 1, self) ]
 	
-	def prepareJoinBurst(self, server, command):
+	def prepareJoinBurst(self, server: "IRCServer", command: str) -> None:
 		if command != "FJOIN":
 			return
 		self.serverBurstData = {}
 	
-	def completeJoinBurst(self, server, command):
+	def completeJoinBurst(self, server: "IRCServer", command: str) -> None:
 		if command != "FJOIN":
 			return
 		openBatchUsers = set()
@@ -77,7 +78,7 @@ class FJoinCommand(ModuleData, Command):
 			if channelSetModes:
 				channel.setModes(channelSetModes, self.ircd.serverID)
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if self.serverBurstData is None:
 			return None
 		if len(params) < 4:
@@ -131,7 +132,7 @@ class FJoinCommand(ModuleData, Command):
 			"users": users
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		channel = data["channel"]
 		time = data["time"]
 		remoteModes = data["modes"]

@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.server import RemoteServer
 from zope.interface import implementer
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
 class ServerCommand(ModuleData, Command):
@@ -10,17 +11,17 @@ class ServerCommand(ModuleData, Command):
 	forRegistered = None
 	burstQueuePriority = 100
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("initiateserverconnection", 1, self.introduceSelf),
 		         ("serverconnect", 10, self.propagateServer) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("SERVER", 1, self) ]
 	
-	def introduceSelf(self, server):
+	def introduceSelf(self, server: "IRCServer") -> None:
 		server.sendMessage("SERVER", self.ircd.name, self.ircd.serverID, "0", self.ircd.serverID, self.ircd.config["server_description"], prefix=self.ircd.serverID)
 	
-	def propagateServer(self, server):
+	def propagateServer(self, server: "IRCServer") -> None:
 		hopCount = 1
 		closestServer = server
 		while closestServer.nextClosest != self.ircd.serverID:
@@ -28,7 +29,7 @@ class ServerCommand(ModuleData, Command):
 			closestServer = self.ircd.servers[closestServer.nextClosest]
 		self.ircd.broadcastToServers(closestServer, "SERVER", server.name, server.serverID, str(hopCount), server.nextClosest, server.description, prefix=server.nextClosest)
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 5:
 			return None
 		try:
@@ -42,7 +43,7 @@ class ServerCommand(ModuleData, Command):
 		except ValueError:
 			return None
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		serverID = data["id"]
 		if serverID in self.ircd.servers or serverID == self.ircd.serverID:
 			server.disconnect("Server {} already exists".format(serverID))

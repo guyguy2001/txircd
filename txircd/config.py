@@ -1,3 +1,4 @@
+from typing import Any, Dict
 import yaml
 
 class Config(object):
@@ -5,12 +6,12 @@ class Config(object):
 		self.ircd = ircd
 		self.fileName = configFileName
 	
-	def reload(self):
+	def reload(self) -> None:
 		newConfig = self._readConfig(self.fileName)
 		self.ircd.verifyConfig(newConfig)
 		self._configData = newConfig
 	
-	def _readConfig(self, fileName):
+	def _readConfig(self, fileName: str) -> Dict[str, Any]:
 		configData = {}
 		try:
 			with open(fileName, "r") as configFile:
@@ -58,7 +59,7 @@ class Config(object):
 	def __iter__(self):
 		return iter(self._configData)
 	
-	def get(self, key, defaultValue):
+	def get(self, key: str, defaultValue: Any) -> Any:
 		"""
 		Allows you to get a key from the configuration with a default value if
 		the configuration key does not exist.

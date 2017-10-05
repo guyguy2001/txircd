@@ -4,6 +4,7 @@ from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 irc.ERR_CHANNOTALLOWED = "926"
 
@@ -11,10 +12,10 @@ irc.ERR_CHANNOTALLOWED = "926"
 class DenyChannels(ModuleData):
 	name = "DenyChannels"
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("joinpermission", 50, self.blockNonDenied) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		for option in ("deny_channels", "allow_channels"):
 			if option in config:
 				if not isinstance(config[option], list):
@@ -23,7 +24,7 @@ class DenyChannels(ModuleData):
 					if not isinstance(chanName, str) or not chanName:
 						raise ConfigValidationError(option, "\"{}\" is an invalid channel name".format(chanName))
 	
-	def blockNonDenied(self, channel, user):
+	def blockNonDenied(self, channel: "IRCChannel", user: "IRCUser") -> Optional[bool]:
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "channel-denied", users=[user]) is True:
 			return None
 		deniedChannels = self.ircd.config.get("deny_channels", [])

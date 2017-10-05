@@ -4,23 +4,24 @@ from txircd.config import ConfigError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from zope.interface import implementer
 from fnmatch import fnmatchcase
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
 class RehashCommand(ModuleData):
 	name = "RehashCommand"
 	core = True
 	
-	def actions(self):
+	def actions(self) -> List[Tuple[str, int, Callable]]:
 		return [ ("commandpermission-REHASH", 1, self.restrictRehashToOpers) ]
 	
-	def userCommands(self):
+	def userCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("REHASH", 1, UserRehash(self.ircd)) ]
 	
-	def serverCommands(self):
+	def serverCommands(self) -> List[Tuple[str, int, Command]]:
 		return [ ("REHASH", 1, ServerRehash(self.ircd)),
 		         ("REHASHNOTICE", 1, ServerRehashNotice(self.ircd)) ]
 	
-	def restrictRehashToOpers(self, user, data):
+	def restrictRehashToOpers(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if not self.ircd.runActionUntilValue("userhasoperpermission", user, "command-rehash", users=[user]):
 			user.sendMessage(irc.ERR_NOPRIVILEGES, "Permission denied - You do not have the correct operator privileges")
 			return False
@@ -31,7 +32,7 @@ class UserRehash(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, user, params, prefix, tags):
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params:
 			return {}
 		servers = []
@@ -48,7 +49,7 @@ class UserRehash(Command):
 			"servers": servers
 		}
 	
-	def execute(self, user, data):
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		if "servers" not in data:
 			self.rehashSelf(user)
 			return True
@@ -59,7 +60,7 @@ class UserRehash(Command):
 				server.sendMessage("REHASH", server.serverID, prefix=user.uuid)
 		return True
 	
-	def rehashSelf(self, user):
+	def rehashSelf(self, user: "IRCUser") -> None:
 		user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehashing")
 		try:
 			self.ircd.rehash()
@@ -71,7 +72,7 @@ class ServerRehash(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) != 1:
 			return None
 		if params[0] == self.ircd.serverID:
@@ -85,7 +86,7 @@ class ServerRehash(Command):
 			"server": self.ircd.servers[params[0]]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "server" in data:
 			server = data["server"]
 			server.sendMessage("REHASH", server.serverID, prefix=data["source"])
@@ -108,7 +109,7 @@ class ServerRehashNotice(Command):
 	def __init__(self, ircd):
 		self.ircd = ircd
 	
-	def parseParams(self, server, params, prefix, tags):
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if len(params) not in (2, 3):
 			return None
 		if params[0] not in self.ircd.users:
@@ -136,7 +137,7 @@ class ServerRehashNotice(Command):
 			"message": params[2]
 		}
 	
-	def execute(self, server, data):
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if "lostuser" in data or "lostserver" in data:
 			return True
 		fromServer = data["fromserver"]
