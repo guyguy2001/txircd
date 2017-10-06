@@ -497,7 +497,7 @@ class IRCd(Service):
 					if not isinstance(server["out_password"], str):
 						config["links"][desc]["out_password"] = str(server["out_password"])
 		if "datastore_path" not in config:
-			config["datastore_path"] = "data.db"
+			config["datastore_path"] = "data"
 		if "storage_sync_interval" in config and not isinstance(config["storage_sync_interval"], int):
 			raise ConfigValidationError(config["storage_sync_interval"], "invalid number")
 

@@ -196,8 +196,9 @@
 # datastore_path
 # Defines where the data file is saved. You likely won't need to change this.
 # By default, data is stored to data.db. Relative paths are from the base
-# txircd directory.
-#datastore_path: data.db
+# txircd directory. The .db file extension is automatically appended to this
+# name.
+#datastore_path: data
 
 # storage_sync_interval
 # You shouldn't need to change this unless you're really suffering from
