@@ -52,7 +52,9 @@ class Accounts(ModuleData):
 	def load(self) -> None:
 		if "services" not in self.ircd.storage:
 			self.ircd.storage["services"] = {}
+		if "journal" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["journal"] = []
+		if "serverupdates" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["serverupdates"] = {}
 		if "accounts" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["accounts"] = {}
