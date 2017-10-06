@@ -56,7 +56,9 @@ class HostCloaking(ModuleData, Mode):
 		# Find the last segments of the hostname.
 		index = len(host[::-1].split(".", 3)[-1]) # Get the length of all segments except the last
 		# Cloak the first part of the host and leave the last segments alone.
-		hostmask = "{}-{}{}".format(self.ircd.config.get("cloaking_prefix", "txircd"), sha256(self.ircd.config.get("cloaking_salt", "") + host[:index]).hexdigest()[:8], host[index:])
+		hostHashText = "{}{}".format(self.ircd.config.get("cloaking_salt", ""), host[:index])
+		hostHashBytes = hostHashText.encode("utf-8")
+		hostmask = "{}-{}{}".format(self.ircd.config.get("cloaking_prefix", "txircd"), sha256(hostHashBytes).hexdigest()[:8], host[index:])
 		# This is very rare since we only leave up to 3 segments uncloaked, but make sure the end result isn't too long.
 		if lenBytes(hostmask) > self.ircd.config.get("hostname_length", 64):
 			if isIPv6Address(ip):
