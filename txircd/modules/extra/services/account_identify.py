@@ -59,7 +59,7 @@ class AccountIdentify(ModuleData):
 		user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "IDENTITY", errorCode)
 		user.sendMessage("NOTICE", errorMessage)
 
-@implementer(IPlugin, IModuleData)
+@implementer(ICommand)
 class IdentifyCommand(Command):
 	def __init__(self, module):
 		self.module = module
