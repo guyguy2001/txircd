@@ -32,7 +32,7 @@ class AccountNickProtect(ModuleData):
 		if "account_nick_protect_restrict" not in config or not config["account_nick_protect_restrict"]:
 			config["account_nick_protect_restrict"] = False
 		elif not isinstance(config["account_nick_protect_restrict"], bool):
-				raise ConfigValidationError("account_nick_protect_restrict", "must be true or false")
+			raise ConfigValidationError("account_nick_protect_restrict", "must be true or false")
 		if "account_nick_protect_restricted_commands" in config:
 			if not isinstance(config["account_nick_protect_restricted_commands"], list):
 				raise ConfigValidationError("account_nick_protect_restricted_commands", "value must be a list")
