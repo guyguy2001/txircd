@@ -47,6 +47,7 @@ class ChangeHost(ModuleData):
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		channelUsers = set()
+		channelUsers.add(user) # Always send to source user
 		for channel in user.channels:
 			for chanUser in channel.users.keys():
 				channelUsers.add(chanUser)
