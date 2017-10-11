@@ -106,7 +106,7 @@ class IRCServer(IRCBase):
 				netsplitFromServerName = self.ircd.servers[self.nextClosest].name if self.nextClosest in self.ircd.servers else self.ircd.name
 				netsplitToServerName = self.name
 			netsplitQuitMsg = "{} {}".format(netsplitFromServerName, netsplitToServerName)
-			allUsers = self.ircd.users.values()
+			allUsers = list(self.ircd.users.values())
 			notifyUserBatches = set()
 			notifyUsersQuitting = {}
 			for user in allUsers:
