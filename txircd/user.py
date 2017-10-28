@@ -268,6 +268,10 @@ class IRCUser(IRCBase):
 		Disconnects the user from the server.
 		"""
 		self.ircd.log.debug("Disconnecting user {user.uuid} ({user.hostmask()}): {reason}", user=self, reason=reason)
+		# Sometimes, actions deferred from initial connection may cause registration to occur after disconnection if
+		# disconnection happens before registration completes. If the user is unregistered on disconnection, this prevents
+		# the user from completing registration.
+		self.addRegisterHold("QUIT")
 		if self._pinger:
 			if self._pinger.running:
 				self._pinger.stop()
