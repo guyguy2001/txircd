@@ -6,7 +6,7 @@ from twisted.names import client as dnsClient
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidMetadataKey, ModeType, now, splitMessage
+from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidHost, isValidMetadataKey, ModeType, now, splitMessage
 
 irc.ERR_ALREADYREGISTERED = "462"
 
@@ -63,7 +63,10 @@ class IRCUser(IRCBase):
 		name = result[0][0].payload.name.name
 		if len(name) > self.ircd.config.get("hostname_length", 64):
 			self._cancelDNSResolution()
-			return 
+			return
+		if not isValidHost(name):
+			self._cancelDNSResolution()
+			return
 		resolveDeferred = dnsClient.getHostByName(name, ((timeout/2),))
 		resolveDeferred.addCallbacks(callback=self._completeDNSResolution, errback=self._cancelDNSResolution, callbackArgs=(name,))
 	
