@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import isValidNick, timestampStringFromTime
+from txircd.utils import isValidNick, lenBytes, timestampStringFromTime
 from zope.interface import implementer
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -61,7 +61,7 @@ class NickUserCommand(Command):
 		if not params[0]:
 			user.sendSingleError("NickCmd", irc.ERR_NONICKNAMEGIVEN, "No nickname given")
 			return None
-		if not isValidNick(params[0]) or len(params[0]) > self.ircd.config.get("nick_length", 32):
+		if not isValidNick(params[0]) or lenBytes(params[0]) > self.ircd.config.get("nick_length", 32):
 			user.sendSingleError("NickCmd", irc.ERR_ERRONEUSNICKNAME, params[0], "Erroneous nickname")
 			return None
 		return {

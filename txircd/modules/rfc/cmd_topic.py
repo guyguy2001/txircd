@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import timestampStringFromTime, timestampStringFromTimeSeconds
+from txircd.utils import timestampStringFromTime, timestampStringFromTimeSeconds, trimStringToByteLength
 from zope.interface import implementer
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -84,7 +84,7 @@ class UserTopic(Command):
 			return {
 				"channel": channel
 			}
-		topic = params[1][:self.ircd.config.get("topic_length", 326)]
+		topic = trimStringToByteLength(params[1], self.ircd.config.get("topic_length", 326))
 		return {
 			"channel": channel,
 			"topic": topic

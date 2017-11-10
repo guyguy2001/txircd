@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -122,7 +123,7 @@ class UserKick(Command):
 		reason = user.nick
 		if len(params) > 2:
 			reason = params[2]
-		reason = reason[:self.ircd.config.get("kick_length", 255)]
+		reason = trimStringToByteLength(reason, self.ircd.config.get("kick_length", 255))
 		return {
 			"channel": channel,
 			"user": targetUser,

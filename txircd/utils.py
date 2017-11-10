@@ -209,6 +209,18 @@ def unescapeEndpointDescription(desc: str) -> str:
 	return "".join(result)
 
 
+def trimStringToByteLength(strToTrim: str, byteLen: int) -> str:
+	"""
+	Trims a string to a given maximum number of bytes.
+	The resulting string may encode to fewer than the given number
+	of bytes, but it won't be longer.
+	"""
+	trimmedStr = strToTrim[:byteLen]
+	while lenBytes(trimmedStr) > byteLen:
+		trimmedStr = trimmedStr[:-1] # Keep trimming the string until it fits in the byte limit
+	return trimmedStr
+
+
 def splitMessage(message: str, maxLength: int, splitOnCharacter: str = " ") -> List[str]:
 	"""
 	Split a string into a series of strings each with maximum byte length
@@ -216,9 +228,7 @@ def splitMessage(message: str, maxLength: int, splitOnCharacter: str = " ") -> L
 	"""
 	msgList = []
 	while message:
-		limitedMessage = message[:maxLength]
-		while lenBytes(limitedMessage) > maxLength:
-			limitedMessage = limitedMessage[:-1] # Trim the message until it fits in the byte limit
+		limitedMessage = trimStringToByteLength(message, maxLength)
 		if "\n" in limitedMessage:
 			pos = limitedMessage.find("\n")
 			newMsg = limitedMessage[:pos]

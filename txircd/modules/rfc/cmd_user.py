@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -21,8 +22,9 @@ class UserCommand(Command, ModuleData):
 			user.sendSingleError("UserCmd", irc.ERR_NEEDMOREPARAMS, "USER", "Not enough parameters")
 			return None
 		# Trim down to guarantee ident and gecos won't be rejected by the user class for being too long
-		params[0] = params[0][:self.ircd.config.get("ident_length", 12)]
-		params[3] = params[3][:self.ircd.config.get("gecos_length", 128)]
+		params[0] = trimStringToByteLength(params[0], self.ircd.config.get("ident_length", 12))
+		params[3] = trimStringToByteLength(params[3], self.ircd.config.get("gecos_length", 128))
+		
 		for char in params[0]: # Validate the ident
 			if not char.isalnum() and char not in "-.[\]^_`{|}":
 				user.sendSingleError("UserCmd", irc.ERR_NEEDMOREPARAMS, "USER", "Your username is not valid") # The RFC is dumb.

@@ -1,5 +1,5 @@
 from twisted.words.protocols import irc
-from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, lenBytes, ModeType, now
+from txircd.utils import CaseInsensitiveDictionary, isValidChannelName, isValidMetadataKey, lenBytes, ModeType, now, trimStringToByteLength
 from typing import Any, List, Optional, Tuple, Union
 from weakref import WeakKeyDictionary
 
@@ -8,7 +8,7 @@ class IRCChannel(object):
 		if not isValidChannelName(name):
 			raise InvalidChannelNameError
 		self.ircd = ircd
-		self.name = name[:self.ircd.config.get("channel_name_length", 64)]
+		self.name = trimStringToByteLength(name, self.ircd.config.get("channel_name_length", 64))
 		self.users = WeakKeyDictionary()
 		self.modes = {}
 		self.existedSince = now()

@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import CaseInsensitiveDictionary, ircLower, isValidNick, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
+from txircd.utils import CaseInsensitiveDictionary, ircLower, isValidNick, lenBytes, now, timestamp, timestampStringFromTime, timestampStringFromTimestamp
 from zope.interface import implementer
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -109,7 +109,7 @@ class Accounts(ModuleData):
 		elif self.ircd.config["account_require_email"]:
 			return False, "EMAILREQUIRED", "An email address is required but was not provided."
 		
-		if not isValidNick(username) or len(username) > self.ircd.config.get("nick_length", 32):
+		if not isValidNick(username) or lenBytes(username) > self.ircd.config.get("nick_length", 32):
 			return False, "INVALIDUSERNAME", "The username is not a valid nickname"
 		
 		lowerUsername = ircLower(username)
@@ -281,7 +281,7 @@ class Accounts(ModuleData):
 		if lowerOldAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
 		
-		if not isValidNick(newAccountName) or len(newAccountName) > self.ircd.config.get("nick_length", 32):
+		if not isValidNick(newAccountName) or lenBytes(newAccountName) > self.ircd.config.get("nick_length", 32):
 			return False, "BADUSER", "The username is not a valid nickname"
 		
 		lowerNewAccountName = ircLower(newAccountName)

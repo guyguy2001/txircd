@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -29,7 +30,7 @@ class SatopicCommand(ModuleData, Command):
 			return None
 		return {
 			"channel": self.ircd.channels[params[0]],
-			"topic": " ".join(params[1:])[:self.ircd.config.get("topic_length", 326)]
+			"topic": trimStringToByteLength(" ".join(params[1:]), self.ircd.config.get("topic_length", 326))
 		}
 
 	def affectedChannels(self, user: "IRCUser", data: Dict[Any, Any]) -> List["IRCChannel"]:

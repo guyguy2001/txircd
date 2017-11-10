@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -53,7 +54,7 @@ class AwayCommand(ModuleData, Command):
 		if not params:
 			return {}
 		message = " ".join(params)
-		message = message[:self.ircd.config.get("away_length", 200)]
+		message = trimStringToByteLength(message, self.ircd.config.get("away_length", 200))
 		return {
 			"message": message
 		}

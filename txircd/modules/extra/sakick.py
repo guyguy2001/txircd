@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, ModuleData, Command
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -44,7 +45,7 @@ class SakickCommand(ModuleData, Command):
 		reason = user.nick
 		if len(params) > 2:
 			reason = " ".join(params[2:])
-		reason = reason[:self.ircd.config.get("kick_length", 255)]
+		reason = trimStringToByteLength(reason, self.ircd.config.get("kick_length", 255))
 		return {
 			"target": target,
 			"channel": channel,

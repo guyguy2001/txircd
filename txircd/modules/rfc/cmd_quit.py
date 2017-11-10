@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -57,7 +58,7 @@ class UserQuit(Command):
 				"reason": None
 			}
 		return {
-			"reason": params[0][:self.ircd.config.get("quit_message_length", 370)]
+			"reason": trimStringToByteLength(params[0], self.ircd.config.get("quit_message_length", 370))
 		}
 	
 	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:

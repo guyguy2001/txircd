@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import ICommand, IModuleData, Command, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -36,7 +37,7 @@ class SapartCommand(ModuleData, Command):
 			user.sendSingleError("SapartCmd", irc.ERR_USERNOTINCHANNEL, params[1], "They are not on that channel")
 			return None
 		reason = " ".join(params[2:]) if len(params) > 2 else ""
-		reason = reason[:self.ircd.config.get("part_message_length", 300)]
+		reason = trimStringToByteLength(reason, self.ircd.config.get("part_message_length", 300))
 		return {
 			"target": target,
 			"channel": channel,

@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
+from txircd.utils import trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -72,7 +73,7 @@ class UserPart(Command):
 			user.sendSingleError("PartCmd", irc.ERR_NOTONCHANNEL, params[0], "You're not on that channel")
 			return None
 		reason = params[1] if len(params) > 1 else ""
-		reason = reason[:self.ircd.config.get("part_message_length", 300)]
+		reason = trimStringToByteLength(reason, self.ircd.config.get("part_message_length", 300))
 		return {
 			"channel": channel,
 			"reason": reason
