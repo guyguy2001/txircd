@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import splitMessage
+from txircd.utils import lenBytes, splitMessage
 from zope.interface import implementer
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -21,16 +21,18 @@ class MessageCommands(ModuleData):
 	
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "message_length" in config:
+			if config["message_length"] is None:
+				return
 			if not isinstance(config["message_length"], int) or config["message_length"] < 0:
 				raise ConfigValidationError("message_length", "invalid number")
 			elif config["message_length"] > 324:
-				config["message_length"] = 324
+				config["message_length"] = None
 				self.ircd.logConfigValidationWarning("message_length", "value is too large", 324)
 			elif config["message_length"] < 100:
 				config["message_length"] = 100
 				self.ircd.logConfigValidationWarning("message_length", "value is too small to be useful", 100)
 		else:
-			config["message_length"] = 324
+			config["message_length"] = None
 	
 	def cmdParseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		channels = []
@@ -61,11 +63,20 @@ class MessageCommands(ModuleData):
 		userPrefix = user.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
+		messageLen = self.ircd.config["message_length"]
+		dynamicLen = False
+		if messageLen is None:
+			dynamicLen = True
+			# 505 = 512 - message terminator (CRLF) - " :" to begin message - other spaces in line - : to begin prefix
+			messageLen = 505 - lenBytes(userPrefix) - lenBytes(command)
 		if "targetusers" in data:
 			for target, message in data["targetusers"].items():
 				if message:
 					if target.uuid[:3] == self.ircd.serverID:
-						messageParts = splitMessage(message, self.ircd.config["message_length"])
+						thisMessageLen = messageLen
+						if dynamicLen:
+							thisMessageLen -= target.nick
+						messageParts = splitMessage(message, thisMessageLen)
 						tags = target.filterConditionalTags(conditionalTags)
 						for part in messageParts:
 							target.sendMessage(command, part, prefix=userPrefix, tags=tags, alwaysPrefixLastParam=True)
@@ -78,7 +89,10 @@ class MessageCommands(ModuleData):
 		if "targetchans" in data:
 			for target, message in data["targetchans"].items():
 				if message:
-					messageParts = splitMessage(message, self.ircd.config["message_length"])
+					thisMessageLen = messageLen
+					if dynamicLen:
+						thisMessageLen -= target.name
+					messageParts = splitMessage(message, thisMessageLen)
 					for part in messageParts:
 						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user], conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
 					target.sendServerMessage(command, target.name, message, prefix=user.uuid)
@@ -121,25 +135,36 @@ class MessageCommands(ModuleData):
 		if "lostsource" in data or "losttarget" in data:
 			return True
 		fromUser = data["from"]
+		userPrefix = fromUser.hostmask()
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", fromUser, conditionalTags)
+		messageLen = self.ircd.config["message_length"]
+		dynamicLen = False
+		if messageLen is None:
+			dynamicLen = True
+			# 505 = 512 - message terminator (CRLF) - " :" to begin message - other spaces in line - : to begin prefix
+			messageLen = 505 - lenBytes(userPrefix) - lenBytes(command)
 		if "touser" in data:
 			user = data["touser"]
 			if user.uuid[:3] == self.ircd.serverID:
-				messageParts = splitMessage(data["message"], self.ircd.config["message_length"])
+				if dynamicLen:
+					messageLen -= len(user.nick)
+				messageParts = splitMessage(data["message"], messageLen)
 				tags = user.filterConditionalTags(conditionalTags)
 				for part in messageParts:
-					user.sendMessage(command, part, prefix=data["from"].hostmask(), tags=tags, alwaysPrefixLastParam=True)
+					user.sendMessage(command, part, prefix=userPrefix, tags=tags, alwaysPrefixLastParam=True)
 			else:
 				self.ircd.servers[user.uuid[:3]].sendMessage(command, user.uuid, data["message"], prefix=data["from"].uuid)
 			return True
-		if "tochan" in data:
+		elif "tochan" in data:
 			chan = data["tochan"]
 			fromUser = data["from"]
 			message = data["message"]
-			messageParts = splitMessage(message, self.ircd.config["message_length"])
+			if dynamicLen:
+				messageLen -= len(chan.name)
+			messageParts = splitMessage(message, messageLen)
 			for part in messageParts:
-				chan.sendUserMessage(command, part, prefix=fromUser.hostmask(), conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
+				chan.sendUserMessage(command, part, prefix=userPrefix, conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
 			chan.sendServerMessage(command, chan.name, message, prefix=fromUser.uuid, skiplocal=[server])
 			return True
 		return False

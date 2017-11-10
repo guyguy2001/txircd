@@ -400,8 +400,10 @@
 
 # message_length
 # This controls the maximum length of messages sent using commands like PRIVMSG
-# and NOTICE. The default value is 324.
-#message_length: 324
+# and NOTICE. The default value is null, which means that the maximum length
+# will be calculated per message according to the actual length of the sender's
+# hostmask, the command, and the target's name.
+#message_length: null
 
 # part_message_length
 # This controls the maximum length of channel part messages. The default value
