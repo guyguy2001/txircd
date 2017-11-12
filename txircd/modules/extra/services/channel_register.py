@@ -13,7 +13,8 @@ class ChannelRegister(ModuleData, Mode):
 	name = "ChannelRegister"
 	
 	def actions(self) -> List[Tuple[str, int, Callable]]:
-		return [ ("updatestoragereferences", 10, self.setStorageReferences),
+		return [ ("startup", 1, self.setUpRegisteredChannels),
+			("updatestoragereferences", 10, self.setStorageReferences),
 			("modepermission-channel-r", 10, self.checkSettingUserAccount),
 			("modechange-channel-r", 10, self.updateRegistration),
 			("modechanges-channel", 10, self.updateChannelModeData),
@@ -41,6 +42,10 @@ class ChannelRegister(ModuleData, Mode):
 		if "regname" not in self.channelData["index"]:
 			self.channelData["index"]["regname"] = {}
 		
+		if self.ircd.startupTime is not None:
+			self.setUpRegisteredChannels()
+	
+	def setUpRegisteredChannels(self):
 		for channelName, channelInfo in self.channelData["data"].items():
 			if channelName in self.ircd.channels:
 				channel = self.ircd.channels[channelName]
