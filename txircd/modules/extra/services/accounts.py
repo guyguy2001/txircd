@@ -219,7 +219,7 @@ class Accounts(ModuleData):
 			return False, "WRONG", "Login credentials were incorrect."
 		
 		loginExtraCheckResult = self.ircd.runActionUntilValue("accountloginextracheck", user, lowerUsername, users=[user])
-		if loginExtraCheckResult and loginExtraCheckResult[0] is False:
+		if loginExtraCheckResult and not loginExtraCheckResult[0]:
 			return loginExtraCheckResult
 		
 		if completeLogin:
