@@ -45,7 +45,7 @@ class ChannelRegister(ModuleData, Mode):
 		if self.ircd.startupTime is not None:
 			self.setUpRegisteredChannels()
 	
-	def setUpRegisteredChannels(self):
+	def setUpRegisteredChannels(self) -> None:
 		for channelName, channelInfo in self.channelData["data"].items():
 			if channelName in self.ircd.channels:
 				channel = self.ircd.channels[channelName]
