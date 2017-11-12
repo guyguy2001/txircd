@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ModeType, now
+from txircd.utils import CaseInsensitiveDictionary, ModeType, now
 from zope.interface import implementer
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -28,7 +28,7 @@ class ChannelRegister(ModuleData, Mode):
 		return [ ("r", ModeType.Param, self) ]
 	
 	def load(self) -> None:
-		self.registeredChannels = {}
+		self.registeredChannels = CaseInsensitiveDictionary()
 		
 		if "services" not in self.ircd.storage:
 			self.ircd.storage["services"] = {}
