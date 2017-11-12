@@ -65,8 +65,6 @@ class IRCd(Service):
 		self.startupTime = None
 	
 	def startService(self) -> None:
-		self.log.info("Starting up...")
-		self.startupTime = now()
 		self.log.info("Loading configuration...")
 		self.config.reload()
 		self.name = self.config["server_name"]
@@ -89,6 +87,7 @@ class IRCd(Service):
 			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.levelWithName(self.config["log_level"]))
 		except (KeyError, InvalidLogLevelError):
 			self._logFilter.setLogLevelForNamespace("txircd", LogLevel.warn)
+		self.startupTime = now()
 		self.runActionStandard("startup")
 	
 	def stopService(self) -> None:
