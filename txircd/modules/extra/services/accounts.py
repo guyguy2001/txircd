@@ -444,6 +444,10 @@ class Accounts(ModuleData):
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist"
 		
+		extraCheckResult = self.ircd.runActionUntilValue("accountsetmetadataextracheck", accountName, key, value)
+		if extraCheckResult and not extraCheckResult[0]:
+			return extraCheckResult
+		
 		self.ircd.runActionStandard("accountremoveindices", accountName)
 		if value is None:
 			del self.accountData["data"][lowerAccountName]["metadata"][key]
@@ -451,11 +455,11 @@ class Accounts(ModuleData):
 			self.accountData["data"][lowerAccountName]["metadata"][key] = value
 		setTime = now()
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((setTime, "SETMETADATA", accountName, key, value))
+		self.servicesData["journal"].append((setTime, "SETACCOUNTMETADATA", accountName, key, value))
 		if value is None:
-			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
+			self.ircd.broadcastToServers(fromServer, "SETACCOUNTMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
 		else:
-			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, value, prefix=self.ircd.serverID)
+			self.ircd.broadcastToServers(fromServer, "SETACCOUNTMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, value, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
