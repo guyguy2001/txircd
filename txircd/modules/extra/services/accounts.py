@@ -87,7 +87,7 @@ class Accounts(ModuleData):
 		self.servicesData = self.ircd.storage["services"]
 		self.accountData = self.servicesData["accounts"]
 	
-	def createAccount(self, username: str, password: str, passwordHashedMethod: str, email: str, user: "IRCUser", extraInfo: Dict[Any, Any], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
+	def createAccount(self, username: str, password: str, passwordHashedMethod: str, email: str, user: Optional["IRCUser"], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Creates a new services account.
 		Requires a username and password to be entered.
@@ -136,7 +136,7 @@ class Accounts(ModuleData):
 			hashedPassword = password
 		
 		registrationTime = now()
-		newAccountInfo = extraInfo.copy() if extraInfo else {}
+		newAccountInfo = {}
 		newAccountInfo["username"] = username
 		newAccountInfo["password"] = hashedPassword
 		newAccountInfo["password-hash"] = passwordHashMethod
@@ -641,7 +641,7 @@ class CreateAccountCommand(Command):
 		
 		createResult = None
 		try:
-			createResult = self.module.createAccount(accountInfo["username"], accountInfo["password"], accountInfo["password-hash"], accountInfo["email"] if "email" in accountInfo else None, None, accountInfo, server)
+			createResult = self.module.createAccount(accountInfo["username"], accountInfo["password"], accountInfo["password-hash"], accountInfo["email"] if "email" in accountInfo else None, None, server)
 		except KeyError as err:
 			self.ircd.log.debug("Rejecting request from server {server.serverID} to create account {name} due to missing required information ({key})", name=accountName, server=server, key=err)
 			return False
