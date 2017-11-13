@@ -27,6 +27,7 @@ class Accounts(ModuleData):
 			("accountchangeemail", 1, self.setEmail),
 			("accountaddnick", 1, self.addAltNick),
 			("accountremovenick", 1, self.removeAltNick),
+			("accountsetmetadata", 1, self.setMetadata),
 			("accountlistallnames", 1, self.allAccountNames),
 			("accountlistnicks", 1, self.accountNicks),
 			("accountgetemail", 1, self.getEmail),
@@ -34,6 +35,8 @@ class Accounts(ModuleData):
 			("accountgetlastlogin", 1, self.getLastLogin),
 			("accountgetusers", 1, self.getAccountUsers),
 			("accountfromnick", 1, self.getAccountFromNick),
+			("accountgetmetadatakeyexists", 1, self.getMetadataKeyExists),
+			("accountgetmetadatavalue", 1, self.getMetadataValue),
 			("checkaccountexists", 1, self.checkAccountExistence),
 			("usermetadataupdate", 10, self.updateLastLoginTime),
 			("usermetadataupdate", 1, self.updateLoggedInUsers),
@@ -47,6 +50,7 @@ class Accounts(ModuleData):
 			("UPDATEACCOUNTEMAIL", 1, UpdateAccountEmailCommand(self)),
 			("ADDACCOUNTNICK", 1, AddAccountNickCommand(self)),
 			("REMOVEACCOUNTNICK", 1, RemoveAccountNickCommand(self)),
+			("SETACCOUNTMETADATA", 1, SetAccountMetadataCommand(self)),
 			("ACCOUNTBURSTINIT", 1, AccountBurstInitCommand(self)) ]
 	
 	def load(self) -> None:
@@ -142,6 +146,7 @@ class Accounts(ModuleData):
 		if "registered" not in newAccountInfo:
 			newAccountInfo["registered"] = registrationTime
 		newAccountInfo["settings"] = {}
+		newAccountInfo["metadata"] = {}
 		
 		self.accountData["data"][lowerUsername] = newAccountInfo
 		if lowerUsername in self.accountData["deleted"]:
@@ -429,13 +434,38 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
+	def setMetadata(self, accountName: str, key: str, value: Optional[str], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
+		"""
+		Sets metadata for an account.
+		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
+		"""
+		self.cleanOldDeleted()
+		lowerAccountName = ircLower(accountName)
+		if lowerAccountName not in self.accountData["data"]:
+			return False, "BADACCOUNT", "The account does not exist"
+		
+		self.ircd.runActionStandard("accountremoveindices", accountName)
+		if value is None:
+			del self.accountData["data"][lowerAccountName]["metadata"][key]
+		else:
+			self.accountData["data"][lowerAccountName]["metadata"][key] = value
+		setTime = now()
+		registerTime = self.accountData["data"][lowerAccountName]["registered"]
+		self.servicesData["journal"].append((setTime, "SETMETADATA", accountName, key, value))
+		if value is None:
+			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
+		else:
+			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, value, prefix=self.ircd.serverID)
+		self.ircd.runActionStandard("accountsetupindices", accountName)
+		return True, None, None
+	
 	def allAccountNames(self) -> List[str]:
 		"""
 		Returns a list of all registered account names.
 		"""
 		return list(self.accountData["data"].keys())
 	
-	def accountNicks(self, accountName: str) -> List[str]:
+	def accountNicks(self, accountName: str) -> Optional[List[str]]:
 		"""
 		Returns all nicknames associated with the account.
 		If the account doesn't exist, returns None.
@@ -445,7 +475,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getEmail(self, accountName: str) -> str:
+	def getEmail(self, accountName: str) -> Optional[str]:
 		"""
 		Returns the email address associated with an account, if populated.
 		"""
@@ -454,7 +484,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getRegTime(self, accountName: str) -> datetime:
+	def getRegTime(self, accountName: str) -> Optional[datetime]:
 		"""
 		Returns the registration time for a user.
 		"""
@@ -463,7 +493,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getLastLogin(self, accountName: str) -> datetime:
+	def getLastLogin(self, accountName: str) -> Optional[datetime]:
 		"""
 		Returns the last login time for a user.
 		"""
@@ -472,7 +502,7 @@ class Accounts(ModuleData):
 		except KeyError:
 			return None
 	
-	def getAccountUsers(self, accountName: str) -> List["IRCUser"]:
+	def getAccountUsers(self, accountName: str) -> Optional[List["IRCUser"]]:
 		"""
 		Returns a list of currently logged-in users for an account.
 		"""
@@ -480,7 +510,7 @@ class Accounts(ModuleData):
 			return list(self.loggedInUsers[accountName])
 		return None
 	
-	def getAccountFromNick(self, nick: str) -> str:
+	def getAccountFromNick(self, nick: str) -> Optional[str]:
 		"""
 		Returns an account name from the given nickname.
 		Returns None if the nickname isn't grouped with an account.
@@ -492,6 +522,28 @@ class Accounts(ModuleData):
 			return None
 		lowerAccountName = self.accountData["index"]["nick"][lowerNickname]
 		return self.accountData["data"][lowerAccountName]["username"]
+	
+	def getMetadataKeyExists(self, accountName: str, key: str) -> Optional[bool]:
+		"""
+		Returns whether the given metadata key exists for the given account.
+		Returns None if the given account doesn't exist.
+		"""
+		try:
+			if key in self.accountData["data"][ircLower(accountName)]["metadata"]:
+				return True
+			return False
+		except KeyError:
+			return None
+	
+	def getMetadataValue(self, accountName: str, key: str) -> Optional[str]:
+		"""
+		Returns the metadata value for the given metadata key on the given account.
+		Returns None if the given account doesn't exist or the key isn't set.
+		"""
+		try:
+			return self.accountData["data"][ircLower(accountName)]["metadata"][key]
+		except KeyError:
+			return None
 	
 	def checkAccountExistence(self, accountName: str) -> bool:
 		"""
@@ -873,6 +925,66 @@ class RemoveAccountNickCommand(Command):
 			self.ircd.log.debug("Ignoring request from server {server.serverID} to remove nickname {nick} from account {name} due to nickname already being removed", name=accountName, nick=removingNick, server=server)
 			return True
 		self.ircd.log.debug("Rejecting request from server {server.serverID} to remove nickname {nick} from account {name} due to error ({code})", name=accountName, nick=removingNick, server=server, code=removeResult[1])
+		return False
+
+@implementer(ICommand)
+class SetAccountMetadataCommand(Command):
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
+		"""
+		if value is None:
+			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
+		else:
+			self.ircd.broadcastToServers(fromServer, "SETMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, value, prefix=self.ircd.serverID)
+		"""
+		if len(params) != 4 and len(params) != 5:
+			return None
+		setTime = None
+		try:
+			setTime = datetime.utcfromtimestamp(float(params[0]))
+		except (TypeError, ValueError):
+			return None
+		
+		registerTime = None
+		try:
+			registerTime = datetime.utcfromtimestamp(float(params[2]))
+		except (TypeError, ValueError):
+			return None
+		returnDict = {
+			"settime": setTime,
+			"username": params[1],
+			"registertime": registerTime,
+			"key": params[3]
+		}
+		if len(params) == 5:
+			returnDict["value"] = params[4]
+		return returnDict
+	
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
+		accountName = data["username"]
+		lowerAccountName = ircLower(accountName)
+		settingKey = data["key"]
+		settingValue = None
+		if "value" in data:
+			settingValue = data["value"]
+		if lowerAccountName not in self.module.accountData["data"]:
+			self.module.cleanOldDeleted()
+			if lowerAccountName in self.module.accountData["deleted"]:
+				self.ircd.log.debug("Ignoring request from server {server.serverID} to set metadata key {key} on account {name} due to account being deleted", name=accountName, key=settingKey, server=server)
+				return True
+			self.ircd.log.debug("Rejecting request from server {server.serverID} to set metadata key {key} on account {name} due to account not existing", name=accountName, key=settingKey, server=server)
+			return False
+		if self.module.accountData["data"][lowerAccountName]["registered"] < data["registertime"]:
+			self.ircd.log.debug("Ignoring request from server {server.serverID} to set metadata key {key} on account {name} due to timestamp mismatch", name=accountName, key=settingKey, server=server)
+			return True
+		setResult = self.module.setMetadata(accountName, settingKey, settingValue, server)
+		if setResult[0]:
+			self.ircd.log.debug("Set metadata key {key} on account {name} by request from server {server.serverID}", name=accountName, key=settingKey, server=server)
+			return True
+		self.ircd.log.debug("Rejecting request from server {server.serverID} to set metadata key {key} on account {name} due to error ({code})", name=accountName, key=settingKey, server=server, code=setResult[1])
 		return False
 
 @implementer(ICommand)
