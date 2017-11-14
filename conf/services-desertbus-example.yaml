@@ -1,0 +1,40 @@
+# txircd Configuration - Services for Desert Bus
+
+# These modules depend on a number of base account modules, including Accounts
+# and many modules that expose commands to allow users to interface with
+# accounts. See the services example configuration for more information.
+# For the Desert Bus setup in particular to work properly, we recommend
+# disabling the REGISTER and DROP commands but keeping the others enabled.
+
+modules:
+
+# DBDonorDatabase: This module serves as a single point through which other
+# donor-account-based modules can access the database. The donor_db setup
+# (below) must be set up in order for this module to function.
+- DBDonorDatabase
+
+# DBDonorAccount: This module ties Desert Bus donor accounts into the standard
+# account system. With this, users can log into Desert Bus donor accounts as
+# their accounts here. This module requires either DBDonorDatabase to be loaded
+# or donor_linked_server (below) to be specified in order to function.
+- DBDonorAccount
+
+# donor_db
+# Information for connecting to the database. The database must already have
+# the correct schema set up. The value is a dict of information for connecting;
+# required keys are "host", "port", "database", "user", and "password". The
+# default value is no information.
+#donor_db:
+#  host: localhost
+#  port: 3306
+#  database: txircd
+#  user: txircd
+#  password: txircd
+
+# donor_linked_server
+# If this server isn't connected to the database but another server is, you can
+# specify a server name for donor_linked_server. Accessing donor account
+# information in the database will go to the specified server. That server must
+# have donor_db specified with a connection to the database server. The default
+# value is not specified.
+#donor_linked_server: otherserver.example.com
