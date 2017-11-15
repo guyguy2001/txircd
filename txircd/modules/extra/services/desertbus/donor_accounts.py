@@ -75,7 +75,7 @@ class DBDonorAccount(ModuleData):
 			if resultDeferred is None:
 				return False, "NODATA", "Cannot retrieve information from database. Please try again later."
 			user.cache["donor-login-inprogress"] = resultDeferred
-			return resultDeferred
+			return None, resultDeferred, None
 		
 		serverName = self.ircd.config["donor_linked_server"]
 		if serverName not in self.ircd.serverNames:
