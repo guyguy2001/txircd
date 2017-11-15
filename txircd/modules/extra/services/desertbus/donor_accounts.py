@@ -27,9 +27,6 @@ class DBDonorAccount(ModuleData):
 		self.pendingAuthRequests = {}
 		self.setStorageReferences()
 	
-	def unload(self) -> None:
-		self.db.close()
-	
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "donor_linked_server" in config and config["donor_linked_server"] is not None:
 			if not isinstance(config["donor_linked_server"], str):
