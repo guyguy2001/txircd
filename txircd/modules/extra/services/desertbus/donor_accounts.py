@@ -26,6 +26,8 @@ class DBDonorAccount(ModuleData):
 		self.authCheckID = 0
 		self.pendingAuthRequests = {}
 		self.setStorageReferences()
+		if "donorid" not in self.accountData["index"]:
+			self.accountData["index"]["donorid"] = {}
 	
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "donor_linked_server" in config and config["donor_linked_server"] is not None:
@@ -39,8 +41,6 @@ class DBDonorAccount(ModuleData):
 		self.accountData = self.servicesData["accounts"]
 	
 	def indexDonorID(self, accountName: str) -> None:
-		if "donorid" not in self.accountData["index"]:
-			self.accountData["index"]["donorid"] = {}
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return
