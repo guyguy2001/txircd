@@ -117,6 +117,9 @@ class DBDonorAccount(ModuleData):
 			if donorID in self.accountData["index"]["donorid"]:
 				lowerAccountName = self.accountData["index"]["donorid"][donorID]
 				self.ircd.runActionUntilValue("accountchangepass", lowerAccountName, hashedPass, "pbkdf2")
+				lowerNick = ircLower(user.nick)
+				if lowerNick not in self.accountData["index"]["nick"]:
+					self.ircd.runActionUntilValue("accountaddnick", lowerAccountName, lowerNick) # Attempt to add the nickname to the account
 			else:
 				registerResult = self.ircd.runActionUntilValue("createnewaccount", user.nick, hashedPass, "pbkdf2", email, user, users=[user])
 				if not registerResult:
