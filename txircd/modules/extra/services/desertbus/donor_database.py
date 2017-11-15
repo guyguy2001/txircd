@@ -38,8 +38,10 @@ class DBDonorDatabase(ModuleData):
 			for keyName in ("host", "port", "database", "user", "password"):
 				if keyName not in config["donor_db"]:
 					raise ConfigValidationError("donor_db", "does not contain the required entry \"{}\"".format(keyName))
-				if not isinstance(config["donor_db"][keyName], str):
+				if keyName != "port" and not isinstance(config["donor_db"][keyName], str):
 					raise ConfigValidationError("donor_db", "value for key \"{}\" is not a string".format(keyName))
+				if keyName == "port" and not isinstance(config["donor_db"][keyName],int):
+					raise ConfigValidationError("donor_db", "value for key \"{}\" is not an int".format(keyName))
 		else:
 			config["donor_db"] = None
 	
