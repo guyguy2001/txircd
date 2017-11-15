@@ -72,7 +72,9 @@ class HostCloaking(ModuleData, Mode):
 		for i in range(len(pieces), 0, -1):
 			piecesGroup = pieces[:i]
 			piecesGroup.reverse()
-			hashedParts.append(sha256(self.ircd.config.get("cloaking_salt", "") + "".join(piecesGroup)).hexdigest()[:8])
+			ipHashText = "{}{}".format(self.ircd.config.get("cloaking_salt", ""), "".join(piecesGroup))
+			ipHashBytes = ipHashText.encode("utf-8")
+			hashedParts.append(sha256(ipHashBytes).hexdigest()[:8])
 		return "{}.IP".format(".".join(hashedParts))
 
 	def applyIPv6Cloak(self, ip: str) -> str:
@@ -82,7 +84,9 @@ class HostCloaking(ModuleData, Mode):
 		for i in range(len(pieces), 0, -1):
 			piecesGroup = pieces[:i]
 			piecesGroup.reverse()
-			hashedParts.append(sha256(self.ircd.config.get("cloaking_salt", "") + "".join(piecesGroup)).hexdigest()[:5])
+			ipHashText = "{}{}".format(self.ircd.config.get("cloaking_salt", ""), "".join(piecesGroup))
+			ipHashBytes = ipHashText.encode("utf-8")
+			hashedParts.append(sha256(ipHashBytes).hexdigest()[:5])
 		return "{}.IP".format(".".join(hashedParts))
 
 hostCloaking = HostCloaking()
