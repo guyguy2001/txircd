@@ -53,7 +53,9 @@ class ChannelRegister(ModuleData, Mode):
 				channel = IRCChannel(self.ircd, channelName)
 				self.ircd.channels[channelName] = channel
 			if channel.topic != channelInfo["topic"]:
-				channel.setTopic(channelInfo["topic"], channelInfo["topicsetter"])
+				topicSetter = channelInfo["topicsetter"]
+				channel.setTopic(channelInfo["topic"], self.ircd.serverID)
+				channel.topicSetter = topicSetter
 				channel.topictime = channelInfo["topictime"]
 			modeList = []
 			for modeData in channelInfo["modes"]:
