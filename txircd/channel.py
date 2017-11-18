@@ -102,7 +102,7 @@ class IRCChannel(object):
 		self.topic = topic
 		self.topicSetter = source
 		self.topicTime = now()
-		self.ircd.runActionStandard("topic", self, setter, oldTopic, channels=[self])
+		self.ircd.runActionStandard("topic", self, setter, source, oldTopic, channels=[self])
 		return True
 	
 	def metadataKeyExists(self, key: str) -> str:

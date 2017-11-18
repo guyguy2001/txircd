@@ -126,7 +126,7 @@ class ChannelRegister(ModuleData, Mode):
 			modes.append(modeChange[1:])
 		self.channelData["data"][channel.name]["modes"] = modes
 	
-	def updateChannelTopicData(self, channel: "IRCChannel", setterName: str, oldTopic: str) -> None:
+	def updateChannelTopicData(self, channel: "IRCChannel", setter: str, setterName: str, oldTopic: str) -> None:
 		if channel.name not in self.channelData["data"]:
 			return
 		channelInfo = self.channelData["data"][channel.name]

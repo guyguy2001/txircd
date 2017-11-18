@@ -33,7 +33,7 @@ class TopicCommand(ModuleData):
 				config["topic_length"] = 326
 				self.ircd.logConfigValidationWarning("topic_length", "value is too large", 326)
 	
-	def onTopic(self, channel: "IRCChannel", setter: str, oldTopic: str):
+	def onTopic(self, channel: "IRCChannel", setter: str, setterName: str, oldTopic: str):
 		userSource = setter in self.ircd.users
 		if userSource:
 			sourceUser = self.ircd.users[setter]
