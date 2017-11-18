@@ -136,6 +136,7 @@ class IRCUser(IRCBase):
 		tags = kw["tags"] if "tags" in kw else {}
 		self.ircd.runActionStandard("outgoingmessagetags", self, command, to, tags)
 		IRCBase.sendMessage(self, command, *args, **kw)
+		self.ircd.runActionStandard("sentmessage", self, command, args, kw)
 	
 	def handleCommand(self, command: str, params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> None:
 		if self.uuid not in self.ircd.users:
