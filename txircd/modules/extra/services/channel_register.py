@@ -123,9 +123,12 @@ class ChannelRegister(ModuleData, Mode):
 	def updateChannelModeData(self, channel: "IRCChannel", sourceID: str, sourceName: str, modeChanges: Tuple[bool, str, str, str, "datetime"]) -> None:
 		if channel.name not in self.channelData["data"]:
 			return
-		modes = []
+		modes = self.channelData["data"][channel.name]["modes"]
 		for modeChange in modeChanges:
-			modes.append(modeChange[1:])
+			if modeChange[0]:
+				modes.append(modeChange[1:])
+			else:
+				modes.remove(modeChange[1:])
 		self.channelData["data"][channel.name]["modes"] = modes
 	
 	def updateChannelTopicData(self, channel: "IRCChannel", setter: str, setterName: str, oldTopic: str) -> None:
