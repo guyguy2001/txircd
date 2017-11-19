@@ -127,3 +127,161 @@ account_password_hash: pbkdf2
 #- ID
 #- NICK
 #- QUIT
+
+# Server bots
+# If you loaded ServerBots, this configuration helps you to provide services
+# bots with the normal commands. For more information, see the server_bots
+# configuration block.
+server_bots:
+  NickServ:
+    ident: NickServ
+    host: services.example.com
+    gecos: Nickname Services
+    help_intro:
+    - NickServ provides access to nickname and account services. Among other things, you are able to register, log into, and manage your account.
+    - For more information on a specific command, use /msg NickServ help <command>.
+    commands:
+      HELP:
+        help: Displays the help
+        detailed_help:
+        - Displays information about the functions NickServ provides.
+        help_command: true
+      REGISTER:
+        help: Register a new account
+        detailed_help:
+        - This will register your current nickname as a new account. This gives you nickname protection and allows you to interact with services that require an account.
+        - Syntax: REGISTER <password> [email-address]
+        execute: REGISTER $1-
+      IDENTIFY:
+        help: Log into an account
+        detailed_help:
+        - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
+        - Syntax: IDENTIFY [account-name] <password>
+        execute: IDENTIFY $1-
+      ID:
+        help: Log into an account
+        detailed_help:
+        - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
+        - Syntax: ID [account-name] <password>
+        execute: IDENTIFY $1-
+      LOGIN:
+        help: Log into an account
+        detailed_help:
+        - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
+        - Syntax: LOGIN [account-name] <password>
+        execute: IDENTIFY $1-
+      LOGOUT:
+        help: Logs out of an account
+        detailed_help:
+        - Logs out of an account.
+        - Syntax: LOGOUT
+        execute: LOGOUT
+      DROP:
+        help: Unregister an account
+        detailed_help:
+        - Unregisters the currently signed-in account. To prevent accidental drops, you must confirm this by entering your password.
+        - Syntax: DROP <password>
+        execute: ACCOUNTDROP $1
+      INFO:
+        help: Get information on an account
+        detailed_help:
+        - Get information on an account.
+        - Syntax: INFO <account-name>
+        execute: ACCOUNTINFO $1
+      GHOST:
+        help: Kill a ghost connection
+        detailed_help:
+        - Kills a ghost connection associated with your account. You must be logged into the same account as the user being killed to use this.
+        - Syntax: GHOST <nick>
+        execute: GHOST $1
+      GROUP:
+        help: Group your current nick to your account
+        detailed_help:
+        - Allows you to group your nick to your account. You can only group the nickname you are currently using, which must not be linked to any other accounts. The nickname will be added as an alternative nickname owned by your account.
+        - Syntax: GROUP
+        execute: ACCOUNTGROUP
+      UNGROUP:
+        help: Ungroup a nick from your account
+        detailed_help:
+        - Allows you to remove an alternative nickname from your account. The nickname will no longer be owned by your account.
+        - Syntax: UNGROUP <nickname-to-remove>
+        execute: ACCOUNTUNGROUP $1
+      SETNAME:
+        help: Change your account name
+        detailed_help:
+        - Changes your account name. You must change your acount name to another nickname on the account. This is considered the master nickname of your account and is used to display your account.
+        - Syntax: SETNAME <new_nick>
+        execute: ACCOUNTNAME $1
+      SETEMAIL:
+        help: Change your account email address
+        detailed_help:
+        - Allows you to change the email address associated with your account.
+        - Syntax: SETEMAIL <email-address>
+        execute: ACCOUNTEMAIL $1
+  ChanServ:
+    ident: ChanServ
+    host: services.example.com
+    gecos: Channel Services
+    help_intro:
+    - ChanServ allows you to manage channels owned by your account.
+    - For more information on a specific command, use /msg ChanServ help <command>
+    commands:
+      REGISTER:
+        help: Register a channel
+        detailed_help:
+        - Register a channel to the specified account. You must be a channel operator or otherwise able to register a channel to an account.
+        - Syntax: REGISTER <channel> <account-name>
+        execute: MODE $1 +r $2
+      DROP:
+        help: Unregister a channel
+        detailed_help:
+        - Unregister a channel you own.
+        - Syntax: DROP <channel>
+        execute: MODE $1 -r
+
+
+# ServerBots Configuration
+# Configuring this module requires setting up some bots, which commands those
+# bots accept, and which commands are run when those commands are received.
+# Command replacement follows the same syntax as Alias, which allows you to
+# specify where parameters go with numbered $ variables (e.g. $3) and group up
+# all parameters including and after a certain one (e.g. $2-).
+# By default, no bots are configured, so the module won't do anything unless
+# configured.
+# Each bot has the following information, with the bot nickname as the key:
+# - ident: The bot's ident
+# - host: The bot's host
+# - gecos: The bot's gecos
+# - help_intro: A list of lines to show at the beginning of the bot's help text
+# - commands: Command information
+# Each command is defined with the following information, with the command
+# (formatted as COMMAND with only letters in all capital letters) as the key:
+# - help: The short text to show for this command in the help's command list
+# - detailed_list: A list of lines to show in the more detailed help.
+# - execute: What to run for commands. This is the command replacement for what
+#   gets sent to the bot. This line takes $1 replacements for parameters. Not
+#   required for help commands.
+# - help_command: Set this to true if the command is a help command. Defaults
+#   to false.
+# - respond_privmsg: Set this to true if the bot should respond to this command
+#   when it is sent via PRIVMSG. Defaults to true.
+# - respond_notice: Set this to true if the bot should respond to this command
+#   when it is sent via NOTICE. Defaults to false.
+#server_bots:
+#  MyBot1:
+#    ident: mybot
+#    host: mybot.example.com
+#    gecos: It's a bot!
+#    help_intro:
+#    - I'm a bot that does things! Look at the things I do!
+#    commands:
+#      HELP:
+#        help: Displays help.
+#        detailed_help:
+#        - Displays all the help.
+#        help_command: true
+#      OPERHELP:
+#        help: Gets help from an oper.
+#        detailed_help:
+#        - Sends a request to get help from an oper. Won't work if the oper is not online.
+#        execute: PRIVMSG $1 :$2-
