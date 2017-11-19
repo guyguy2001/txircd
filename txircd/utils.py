@@ -11,6 +11,15 @@ def isValidNick(nick: str) -> bool:
 	"""
 	return validNick.match(nick)
 
+def isValidIdent(ident: str) -> bool:
+	"""
+	Determines whether the provided ident is in a valid format.
+	"""
+	for character in ident:
+		if not character.isalnum() and character not in "-.[\]^_`{|}":
+			return False
+	return True
+
 validHost = re.compile(r"^[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*$")
 def isValidHost(host: str) -> bool:
 	"""

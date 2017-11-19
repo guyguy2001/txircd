@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import trimStringToByteLength
+from txircd.utils import isValidIdent, trimStringToByteLength
 from zope.interface import implementer
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -25,10 +25,9 @@ class UserCommand(Command, ModuleData):
 		params[0] = trimStringToByteLength(params[0], self.ircd.config.get("ident_length", 12))
 		params[3] = trimStringToByteLength(params[3], self.ircd.config.get("gecos_length", 128))
 		
-		for char in params[0]: # Validate the ident
-			if not char.isalnum() and char not in "-.[\]^_`{|}":
-				user.sendSingleError("UserCmd", irc.ERR_NEEDMOREPARAMS, "USER", "Your username is not valid") # The RFC is dumb.
-				return None
+		if not isValidIdent(params[0]):
+			user.sendSingleError("UserCmd", irc.ERR_NEEDMOREPARAMS, "USER", "Your username is not valid") # The RFC is dumb.
+			return None
 		return {
 			"ident": params[0],
 			"gecos": params[3]
