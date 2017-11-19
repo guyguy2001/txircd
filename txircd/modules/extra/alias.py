@@ -85,7 +85,7 @@ class UserAlias(Command):
 				if paramChar == "-":
 					assembledParams.append(" ".join(origParams[startingParamNumber:]))
 					continue
-				if startingParamNumber < len(origParams):
+				if startingParamNumber >= 0 and startingParamNumber < len(origParams):
 					assembledParams.append(origParams[startingParamNumber])
 			if paramChar == "$":
 				readingVariable = True
