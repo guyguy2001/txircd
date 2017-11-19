@@ -130,6 +130,10 @@ modules:
 # command-satopic permission to set the topics of channels.
 #- SatopicCommand
 
+# ServerBots: Allows setting up bots built into the server to run commands when
+# the bots are messaged.
+#- ServerBots
+
 # Shun: Provides the SHUN command, which allows opers with the command-shun
 # permission to restrict users to a small subset of commands. This module has
 # some optional configuration (see below).
@@ -324,6 +328,52 @@ modules:
 # If a user reaches this number of commands in rate_interval seconds, the user
 # will be disconnected. The default value is 500 seconds.
 #rate_kill_limit: 500
+
+# ServerBots Configuration
+# Configuring this module requires setting up some bots, which commands those
+# bots accept, and which commands are run when those commands are received.
+# Command replacement follows the same syntax as Alias, which allows you to
+# specify where parameters go with numbered $ variables (e.g. $3) and group up
+# all parameters including and after a certain one (e.g. $2-).
+# By default, no bots are configured, so the module won't do anything unless
+# configured.
+# Each bot has the following information, with the bot nickname as the key:
+# - ident: The bot's ident
+# - host: The bot's host
+# - gecos: The bot's gecos
+# - help_intro: A list of lines to show at the beginning of the bot's help text
+# - commands: Command information
+# Each command is defined with the following information, with the command
+# (formatted as COMMAND with only letters in all capital letters) as the key:
+# - help: The short text to show for this command in the help's command list
+# - detailed_list: A list of lines to show in the more detailed help.
+# - execute: What to run for commands. This is the command replacement for what
+#   gets sent to the bot. This line takes $1 replacements for parameters. Not
+#   required for help commands.
+# - help_command: Set this to true if the command is a help command. Defaults
+#   to false.
+# - respond_privmsg: Set this to true if the bot should respond to this command
+#   when it is sent via PRIVMSG. Defaults to true.
+# - respond_notice: Set this to true if the bot should respond to this command
+#   when it is sent via NOTICE. Defaults to false.
+#server_bots:
+#  MyBot1:
+#    ident: mybot
+#    host: mybot.example.com
+#    gecos: It's a bot!
+#    help_intro:
+#    - I'm a bot that does things! Look at the things I do!
+#    commands:
+#      HELP:
+#        help: Displays help.
+#        detailed_help:
+#        - Displays all the help.
+#        help_command: true
+#      OPERHELP:
+#        help: Gets help from an oper.
+#        detailed_help:
+#        - Sends a request to get help from an oper. Won't work if the oper is not online.
+#        execute: PRIVMSG $1 :$2-
 
 # Shun
 # For this module, you can specify the commands that are able to be sent by a

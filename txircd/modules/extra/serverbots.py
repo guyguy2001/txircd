@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from txircd.user import LocalUser
-from txircd.utils import isValidHost, isValidNick, lenBytes, splitMessage
+from txircd.utils import isValidIdent, isValidHost, isValidNick, lenBytes, splitMessage
 from zope.interface import implementer
 from typing import Any, Dict
 
@@ -19,8 +19,8 @@ class ServerBots(ModuleData):
 			if botNick in self.ircd.userNicks:
 				nickUser = self.ircd.userNicks[botNick]
 				nickUser.changeNick(nickUser.uuid)
-			botUser = LocalUser(self.ircd, botNIck, botIdent, botHost, "127.0.0.1", botGecos)
-			botUser.setSendMsgFunc(receiveBotMessageProcessor(botUser, botData))
+			botUser = LocalUser(self.ircd, botNick, botIdent, botHost, "127.0.0.1", botGecos)
+			botUser.setSendMsgFunc(self.receiveBotMessageProcessor(botUser, botData))
 			self.botList.append(botUser)
 	
 	def unload(self) -> None:
@@ -46,6 +46,8 @@ class ServerBots(ModuleData):
 			botIdent = botData["ident"]
 			if lenBytes(botIdent) > self.ircd.config.get("ident_length", 12):
 				raise ConfigValidationError("server_bots", "the ident for {} is not a valid ident".format(botName))
+			if not isValidIdent(botIdent):
+				raise ConfigValidationError("server_bots", "the ident for {} is not a vlaid ident".format(botName))
 			botHost = botData["host"]
 			if lenBytes(botHost) > self.ircd.config.get("host_length", 64) or not isValidHost(botHost):
 				raise ConfigValidationError("server_bots", "the host for {} is not a valid host".format(botHost))
@@ -181,6 +183,11 @@ class ServerBots(ModuleData):
 			else:
 				commandToRun = commandLineToRun
 				commandParamStr = ""
+			
+			if commandToRun not in self.ircd.userCommands:
+				fromUser.sendMessage("NOTICE", "No such command \x02{}".format(command), prefix=botUser.hostmask())
+				return
+			
 			assembledParams = []
 			escaped = False
 			readingVariable = False
