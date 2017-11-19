@@ -65,7 +65,11 @@ class UserAlias(Command):
 	
 	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		origParams = data["params"]
-		command, replaceParams = self.replacement.split(" ", 1)
+		if " " in self.replacement:
+			command, replaceParams = self.replacement.split(" ", 1)
+		else:
+			command = self.replacement
+			replaceParams = ""
 		assembledParams = []
 		escaped = False
 		readingVariable = False
