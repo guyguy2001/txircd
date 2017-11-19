@@ -108,7 +108,7 @@ class UserAlias(Command):
 		if " :" in paramsString:
 			paramsString, lastParam = paramsString.split(" :", 1)
 		params = paramsString.split(" ")
-		if lastParam:
+		if lastParam is not None:
 			params.append(lastParam)
 		user.handleCommand(command, params, data["prefix"], data["tags"])
 		return True
