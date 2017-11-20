@@ -134,11 +134,6 @@ modules:
 # the bots are messaged.
 #- ServerBots
 
-# Shun: Provides the SHUN command, which allows opers with the command-shun
-# permission to restrict users to a small subset of commands. This module has
-# some optional configuration (see below).
-#- Shun
-
 # ServerNoticeConnect: Provides the "connect" server notice type which notifies
 # opers of user connections.
 #- ServerNoticeConnect
@@ -166,6 +161,11 @@ modules:
 # ServerNoticeXLine: Provides the "xline" server notice type which notifies
 # opers of x:lines being set and removed.
 #- ServerNoticeXLine
+
+# Shun: Provides the SHUN command, which allows opers with the command-shun
+# permission to restrict users to a small subset of commands. This module has
+# some optional configuration (see below).
+#- Shun
 
 # StatsOnlineOpers: Provides the onlineopers STATS type, which lists all opers
 # that are currently online.
