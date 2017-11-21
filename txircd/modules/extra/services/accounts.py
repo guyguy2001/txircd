@@ -1020,6 +1020,7 @@ class AccountBurstInitCommand(Command):
 			if journalData[0] >= lastSyncTime:
 				server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2:], prefix=self.ircd.serverID)
 		self.module.servicesData["serverupdates"][server.serverID] = now()
+		self.ircd.runActionStandard("afteraccountburst", server)
 		return True
 
 accountController = Accounts()
