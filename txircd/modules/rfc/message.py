@@ -75,7 +75,7 @@ class MessageCommands(ModuleData):
 					if target.uuid[:3] == self.ircd.serverID:
 						thisMessageLen = messageLen
 						if dynamicLen:
-							thisMessageLen -= target.nick
+							thisMessageLen -= len(target.nick)
 						messageParts = splitMessage(message, thisMessageLen)
 						tags = target.filterConditionalTags(conditionalTags)
 						for part in messageParts:
