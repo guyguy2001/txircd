@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import now, timestampStringFromTime, trimStringToByteLength
+from txircd.utils import now, stripFormatting, timestampStringFromTime, trimStringToByteLength
 from zope.interface import implementer
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
@@ -429,6 +429,7 @@ class BidService(ModuleData):
 		if not donorID:
 			self.sendErrorToLocalOrRemoteUser(biddingUser, "NOTDONOR", "Your account isn't associated with a donor account.")
 			return
+		smackTalk = stripFormatting(smackTalk)
 		smackTalk = trimStringToByteLength(smackTalk, 200)
 		announceTags = {}
 		if auctionData["state"] != "bid":
