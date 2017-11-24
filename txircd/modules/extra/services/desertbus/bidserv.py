@@ -387,8 +387,7 @@ class BidService(ModuleData):
 		if not self.ircd.runActionUntilTrue("donordatabaseoperate", "UPDATE prizes SET donor_id = %s, sold_amount = %s, sold = 1 WHERE id = %s", winningBidData["bidder-id"], winningBidData["bid-amount"], self.ircd.storage["auction"]["id"]):
 			self.sendErrorToLocalOrRemoteUser(sellingUser, "NOSAVE", "Couldn't save results to database. Check the server log for results.")
 		if "bid_log_directory" in self.ircd.config:
-			directory = self.ircd.config["bid_log_directory"]
-			logFileName = path.join(directory, "{}.yaml".format(auctionData["id"]))
+			logFileName = path.join(self.ircd.config["bid_log_directory"], "{}.yaml".format(auctionData["id"]))
 			try:
 				with open(logFileName, "w") as logFile:
 					yaml.dump(auctionData, logFile, default_flow_style=False)
