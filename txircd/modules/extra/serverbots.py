@@ -148,8 +148,6 @@ class ServerBots(ModuleData):
 			if command not in botConfig["commands"]:
 				fromUser.sendMessage("NOTICE", "Unknown command \x02{}".format(command), prefix=botUser.hostmask())
 				return
-			if len(messageParts) == 1 and not messageParts[0]:
-				messageParts = []
 			commandData = botConfig["commands"][command]
 			if command == "PRIVMSG" and not commandData["respond_privmsg"]:
 				return
@@ -227,7 +225,10 @@ class ServerBots(ModuleData):
 			lastParam = None
 			if " :" in paramsString:
 				paramsString, lastParam = paramsString.split(" :", 1)
-			params = paramsString.split(" ")
+			if paramsString:
+				params = paramsString.split(" ")
+			else:
+				params = []
 			if lastParam is not None:
 				params.append(lastParam)
 			fromUser.handleCommand(commandToRun, params, "", {})
