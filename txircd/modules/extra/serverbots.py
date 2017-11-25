@@ -20,7 +20,7 @@ class ServerBots(ModuleData):
 				nickUser = self.ircd.userNicks[botNick]
 				nickUser.changeNick(nickUser.uuid)
 			botUser = LocalUser(self.ircd, botNick, botIdent, botHost, "127.0.0.1", botGecos)
-			botUser.setSendMsgFunc(self.receiveBotMessageProcessor(botUser, botData))
+			botUser.setSendMsgFunc(self.receiveBotMessageProcessor(botData))
 			self.botList.append(botUser)
 	
 	def unload(self) -> None:
@@ -121,8 +121,8 @@ class ServerBots(ModuleData):
 				if not commandData["respond_privmsg"] and not commandData["respond_notice"]:
 					raise ConfigValidationError("server_bots", "command {} will never be run!".format(command))
 	
-	def receiveBotMessageProcessor(self, botUser: LocalUser, botConfig: Dict[str, Any]) -> None:
-		def receiveBotMessage(command: str, *args: str, **kw: Any) -> None:
+	def receiveBotMessageProcessor(self, botConfig: Dict[str, Any]) -> None:
+		def receiveBotMessage(botUser: LocalUser, command: str, *args: str, **kw: Any) -> None:
 			if command not in ("PRIVMSG", "NOTICE"):
 				return
 			if "to" in kw and kw["to"] != botUser.nick:
