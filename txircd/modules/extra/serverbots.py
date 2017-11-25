@@ -205,10 +205,10 @@ class ServerBots(ModuleData):
 					variableParameterData = []
 					readingVariable = False
 					if paramChar == "-":
-						assembledParams.append(" ".join(args[startingParamNumber:]))
+						assembledParams.append(" ".join(messageParts[startingParamNumber:]))
 						continue
-					if startingParamNumber >= 0 and startingParamNumber < len(args):
-						assembledParams.append(args[startingParamNumber])
+					if startingParamNumber >= 0 and startingParamNumber < len(messageParts):
+						assembledParams.append(messageParts[startingParamNumber])
 				if paramChar == "$":
 					readingVariable = True
 					continue
@@ -218,8 +218,8 @@ class ServerBots(ModuleData):
 				assembledParams.append(paramChar)
 			if readingVariable:
 				startingParamNumber = int("".join(variableParameterData)) - 1
-				if startingParamNumber < len(args):
-					assembledParams.append(args[startingParamNumber])
+				if startingParamNumber < len(messageParts):
+					assembledParams.append(messageParts[startingParamNumber])
 			
 			paramsString = "".join(assembledParams)
 			lastParam = None
