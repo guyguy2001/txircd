@@ -148,6 +148,8 @@ class ServerBots(ModuleData):
 			if command not in botConfig["commands"]:
 				fromUser.sendMessage("NOTICE", "Unknown command \x02{}".format(command), prefix=botUser.hostmask())
 				return
+			if len(messageParts) == 1 and not messageParts[0]:
+				messageParts = []
 			commandData = botConfig["commands"][command]
 			if command == "PRIVMSG" and not commandData["respond_privmsg"]:
 				return
