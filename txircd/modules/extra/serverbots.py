@@ -228,7 +228,7 @@ class ServerBots(ModuleData):
 			params = paramsString.split(" ")
 			if lastParam is not None:
 				params.append(lastParam)
-			fromUser.handleCommand(commandToRun, params)
+			fromUser.handleCommand(commandToRun, params, "", {})
 		return receiveBotMessage
 
 serverBots = ServerBots()
