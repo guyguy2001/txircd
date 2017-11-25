@@ -150,73 +150,73 @@ server_bots:
         help: Register a new account
         detailed_help:
         - This will register your current nickname as a new account. This gives you nickname protection and allows you to interact with services that require an account.
-        - Syntax: REGISTER <password> [email-address]
+        - "Syntax: REGISTER <password> [email-address]"
         execute: REGISTER $1-
       IDENTIFY:
         help: Log into an account
         detailed_help:
         - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
-        - Syntax: IDENTIFY [account-name] <password>
+        - "Syntax: IDENTIFY [account-name] <password>"
         execute: IDENTIFY $1-
       ID:
         help: Log into an account
         detailed_help:
         - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
-        - Syntax: ID [account-name] <password>
+        - "Syntax: ID [account-name] <password>"
         execute: IDENTIFY $1-
       LOGIN:
         help: Log into an account
         detailed_help:
         - Log into an account. This allows you to identify yourself with an existing account and ensure that you are able to interact with services or use your protected nicknames.
-        - Syntax: LOGIN [account-name] <password>
+        - "Syntax: LOGIN [account-name] <password>"
         execute: IDENTIFY $1-
       LOGOUT:
         help: Logs out of an account
         detailed_help:
         - Logs out of an account.
-        - Syntax: LOGOUT
+        - "Syntax: LOGOUT"
         execute: LOGOUT
       DROP:
         help: Unregister an account
         detailed_help:
         - Unregisters the currently signed-in account. To prevent accidental drops, you must confirm this by entering your password.
-        - Syntax: DROP <password>
+        - "Syntax: DROP <password>"
         execute: ACCOUNTDROP $1
       INFO:
         help: Get information on an account
         detailed_help:
         - Get information on an account.
-        - Syntax: INFO <account-name>
+        - "Syntax: INFO <account-name>"
         execute: ACCOUNTINFO $1
       GHOST:
         help: Kill a ghost connection
         detailed_help:
         - Kills a ghost connection associated with your account. You must be logged into the same account as the user being killed to use this.
-        - Syntax: GHOST <nick>
+        - "Syntax: GHOST <nick>"
         execute: GHOST $1
       GROUP:
         help: Group your current nick to your account
         detailed_help:
         - Allows you to group your nick to your account. You can only group the nickname you are currently using, which must not be linked to any other accounts. The nickname will be added as an alternative nickname owned by your account.
-        - Syntax: GROUP
+        - "Syntax: GROUP"
         execute: ACCOUNTGROUP
       UNGROUP:
         help: Ungroup a nick from your account
         detailed_help:
         - Allows you to remove an alternative nickname from your account. The nickname will no longer be owned by your account.
-        - Syntax: UNGROUP <nickname-to-remove>
+        - "Syntax: UNGROUP <nickname-to-remove>"
         execute: ACCOUNTUNGROUP $1
       SETNAME:
         help: Change your account name
         detailed_help:
         - Changes your account name. You must change your acount name to another nickname on the account. This is considered the master nickname of your account and is used to display your account.
-        - Syntax: SETNAME <new_nick>
+        - "Syntax: SETNAME <new_nick>"
         execute: ACCOUNTNAME $1
       SETEMAIL:
         help: Change your account email address
         detailed_help:
         - Allows you to change the email address associated with your account.
-        - Syntax: SETEMAIL <email-address>
+        - "Syntax: SETEMAIL <email-address>"
         execute: ACCOUNTEMAIL $1
   ChanServ:
     ident: ChanServ
@@ -230,11 +230,11 @@ server_bots:
         help: Register a channel
         detailed_help:
         - Register a channel to the specified account. You must be a channel operator or otherwise able to register a channel to an account.
-        - Syntax: REGISTER <channel> <account-name>
+        - "Syntax: REGISTER <channel> <account-name>"
         execute: MODE $1 +r $2
       DROP:
         help: Unregister a channel
         detailed_help:
         - Unregister a channel you own.
-        - Syntax: DROP <channel>
+        - "Syntax: DROP <channel>"
         execute: MODE $1 -r
