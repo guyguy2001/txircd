@@ -238,3 +238,8 @@ server_bots:
         - Unregister a channel you own.
         - "Syntax: DROP <channel>"
         execute: MODE $1 -r
+      HELP:
+        help: Displays the help
+        detailed_help:
+        - Displays information about the functions ChanServ provides.
+        help_command: true
