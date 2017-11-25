@@ -167,7 +167,7 @@ class ServerBots(ModuleData):
 						fromUser.sendMessage("NOTICE", helpLine, prefix=botHostmask, alwaysPrefixLastParam=True)
 					fromUser.sendMessage("NOTICE", "End of help for command \x02{}".format(whichCommand), prefix=botHostmask)
 					return
-				helpIntroTextLines = commandData["help_intro"]
+				helpIntroTextLines = botConfig["help_intro"]
 				helpIntroText = "\n".join(helpIntroTextLines)
 				helpIntroTextChunks = splitMessage(helpIntroText, 100)
 				botHostmask = botUser.hostmask()
