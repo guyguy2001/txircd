@@ -91,7 +91,7 @@ class MessageCommands(ModuleData):
 				if message:
 					thisMessageLen = messageLen
 					if dynamicLen:
-						thisMessageLen -= target.name
+						thisMessageLen -= len(target.name)
 					messageParts = splitMessage(message, thisMessageLen)
 					for part in messageParts:
 						target.sendUserMessage(command, part, to=target.name, prefix=userPrefix, skip=[user], conditionalTags=conditionalTags, alwaysPrefixLastParam=True)
