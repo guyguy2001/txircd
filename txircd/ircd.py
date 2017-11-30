@@ -110,6 +110,8 @@ class IRCd(Service):
 			if user.transport:
 				stopDeferreds.append(user.disconnectedDeferred)
 				user.transport.loseConnection()
+			if user.localOnly: # Keep LocalUsers so they exist in users and can be cleaned up appropriately by modules
+				self.users[user.uuid] = user
 		self.log.info("Unloading modules...")
 		moduleList = list(self.loadedModules.keys())
 		for module in moduleList:
