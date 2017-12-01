@@ -15,10 +15,14 @@ class AccountInfo(ModuleData, Command):
 	
 	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		if not params or not params[0]:
-			user.sendSingleError("InfoParams", irc.ERR_NEEDMOREPARAMS, "ACCOUNTINFO", "Not enough parameters")
-			return None
+			if user.metadataKeyExists("account"):
+				name = user.metadataValue("account")
+			else:
+				name = user.nick
+		else:
+			name = params[0]
 		return {
-			"name": params[0]
+			"name": name
 		}
 	
 	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
