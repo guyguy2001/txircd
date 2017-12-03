@@ -61,7 +61,11 @@ class IRCUser(IRCBase):
 		resolveDeferred.addCallbacks(callback=self._verifyDNSResolution, callbackArgs=(timeout,), errback=self._cancelDNSResolution)
 	
 	def _verifyDNSResolution(self, result: Tuple[List["RRHeader"], List["RRHeader"], List["RRHeader"]], timeout: int) -> None:
-		name = result[0][0].payload.name.name.decode("utf-8", "replace")
+		resolveResults = result[0]
+		if not resolveResults:
+			self._cancelDNSResolution()
+			return
+		name = resolveResults[0].payload.name.name.decode("utf-8", "replace")
 		if lenBytes(name) > self.ircd.config.get("hostname_length", 64):
 			self._cancelDNSResolution()
 			return
