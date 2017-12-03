@@ -292,9 +292,11 @@ class Accounts(ModuleData):
 		lowerNewAccountName = ircLower(newAccountName)
 		for nickData in self.accountData["data"][lowerOldAccountName]["nick"]:
 			if lowerNewAccountName == ircLower(nickData[0]):
+				newAccountName = nickData[0]
 				break
 		else:
 			return False, "NONICKLINK", "The new account name isn't associated with the account. The new account name should be grouped with the existing account as an alternate nickname."
+		self.ircd.runActionStandard("accountremoveindices", oldAccountName)
 		accountInfo = self.accountData["data"][lowerOldAccountName]
 		del self.accountData["data"][lowerOldAccountName]
 		accountInfo["username"] = newAccountName
@@ -306,6 +308,7 @@ class Accounts(ModuleData):
 		oldAccountName = accountInfo["username"]
 		accountInfo["username"] = newAccountName
 		self.accountData["data"][lowerNewAccountName] = accountInfo
+		self.ircd.runActionStandard("accountsetupindices", newAccountName)
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, timestampStringFromTime(registerTime), newAccountName))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
 		self._serverUpdateTime(updateTime)
