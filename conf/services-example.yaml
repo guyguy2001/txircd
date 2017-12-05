@@ -128,6 +128,21 @@ account_password_hash: pbkdf2
 #- NICK
 #- QUIT
 
+# account_nick_protect_message_targets
+# If PRIVMSG and/or NOTICE are allowed commands, you can restrict valid targets
+# of those messages with a list of glob patterns here. Any nickname or channel
+# name matching one of these glob patterns is able to receive messages from
+# protected users; other targets will have messages blocked. If not specified
+# or the list is empty, all messages are allowed.
+# If PRIVMSG and/or NOTICE are not allowed commands according to
+# account_nick_protect_restricted_commands, those commands will be blocked
+# regardless.
+# If you're using ServerBots, you may want to enable this to allow users to send
+# messages only to services.
+#account_nick_protect_message_targets:
+#- NickServ
+#- ChanServ
+
 # Server bots
 # If you loaded ServerBots, this configuration helps you to provide services
 # bots with the normal commands. For more information, see the server_bots

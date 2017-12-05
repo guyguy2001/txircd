@@ -2,9 +2,10 @@ from twisted.internet import reactor
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
-from txircd.utils import now
+from txircd.utils import ircLower, now
 from zope.interface import implementer
 from datetime import timedelta
+from fnmatch import fnmatchcase
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
@@ -16,7 +17,9 @@ class AccountNickProtect(ModuleData):
 			("changenick", 1, self.checkNickOnNickChange),
 			("quit", 1, self.cancelTimerOnQuit),
 			("commandpermission-NICK", 10, self.checkCanChangeNick),
-			("commandpermission", 50, self.blockUnidentified) ]
+			("commandpermission", 50, self.blockUnidentified),
+			("commandmodify-PRIVMSG", 10, self.filterMessageTargets),
+			("commandmodify-NOTICE", 10, self.filterMessageTargets) ]
 	
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "account_nick_protect_seconds" in config:
@@ -39,6 +42,12 @@ class AccountNickProtect(ModuleData):
 			for command in config["account_nick_protect_restricted_commands"]:
 				if not isinstance(command, str):
 					raise ConfigValidationError("account_nick_protect_restricted_commands", "\"{}\" is not a valid command".format(command))
+		if "account_nick_protect_message_targets" in config:
+			if not isinstance(config["account_nick_protect_message_targets"], list):
+				raise ConfigValidationError("account_nick_protect_message_targets", "value must be a list")
+			for target in config["account_nick_protect_message_targets"]:
+				if not isinstance(target, str):
+					raise ConfigValidationError("account_nick_protect_message_targets", "list values must be strings")
 	
 	def checkNickOnConnect(self, user: "IRCUser") -> None:
 		if not self.userSignedIntoNickAccount(user):
@@ -70,6 +79,40 @@ class AccountNickProtect(ModuleData):
 			user.sendMessage("NOTICE", "{} is not allowed until you identify or your nick is changed".format(command))
 			return False
 		return None
+	
+	def filterMessageTargets(self, user: "IRCUser", data: Dict[Any, Any]) -> None:
+		messageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
+		if not messageTargets:
+			return None
+		
+		userNames = []
+		lowerUserNames = []
+		for userName in data["targetusers"].keys():
+			userNames.append(userName)
+			lowerUserNames.append(ircLower(userName))
+		channelNames = []
+		lowerChannelNames = []
+		for channelName in data["targetchans"].keys():
+			channelNames.append(channelName)
+			lowerChannelNames.append(ircLower(channelName))
+		badUserIndices = []
+		badChannelIndices = []
+		for target in messageTargets:
+			lowerTarget = ircLower(target)
+			for index, name in enumerate(lowerUserNames):
+				if not fnmatchcase(name, lowerTarget):
+					badUserIndices.append(index)
+			for index, name in enumerate(lowerChannelNames):
+				if not fnmatchcase(name, lowerTarget):
+					badChannelIndices.append(index)
+		for index in badUserIndices:
+			name = userNames[index]
+			del data["targetusers"][name]
+			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(name))
+		for index in badChannelIndices:
+			name = channelNames[index]
+			del data["targetchans"][name]
+			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(name))
 	
 	def applyNickProtection(self, user: "IRCUser") -> None:
 		if user.uuid[:3] != self.ircd.serverID:
