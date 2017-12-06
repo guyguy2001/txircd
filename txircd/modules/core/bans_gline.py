@@ -50,7 +50,7 @@ class GLine(ModuleData, XLineBase):
 		return False
 	
 	def killUser(self, user: "IRCUser", reason: str) -> None:
-		self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{user.host()}) against a g:line: {reason}", user=user, reason=reason)
+		self.ircd.log.info("Matched user {user.uuid} ({user.ident}@{userHost()}) against a g:line: {reason}", user=user, userHost=user.host, reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("G:Lined: {}".format(reason))
 	

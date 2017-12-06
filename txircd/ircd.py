@@ -415,7 +415,7 @@ class IRCd(Service):
 		return deferList
 	
 	def _logReloadModuleError(self, failure: "Failure", moduleName: str) -> None:
-		self.log.critical("Module {moduleName} couldn't be reloaded! The server may be left in an unstable state; consider restarting. Error details: {failure.getErrorMessage()}", moduleName=moduleName, failure=failure)
+		self.log.critical("Module {moduleName} couldn't be reloaded! The server may be left in an unstable state; consider restarting. Error details: {failureError()}", moduleName=moduleName, failureError=failure.getErrorMessage)
 
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		# IRCd

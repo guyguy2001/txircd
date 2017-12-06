@@ -342,7 +342,7 @@ class IRCUser(IRCBase):
 				return
 			self._registerHolds.remove("registercheck")
 			self.ircd.userNicks[self.nick] = self
-			self.ircd.log.debug("Registering user {user.uuid} ({user.hostmask()})", user=self)
+			self.ircd.log.debug("Registering user {user.uuid} ({userHostmask()})", user=self, userHostmask=self.hostmask)
 			versionWithName = "txircd-{}".format(version)
 			self.sendMessage(irc.RPL_WELCOME, "Welcome to the {} Internet Relay Chat Network {}".format(self.ircd.config["network_name"], self.hostmask()))
 			self.sendMessage(irc.RPL_YOURHOST, "Your host is {}, running version {}".format(self.ircd.name, versionWithName))
@@ -879,7 +879,7 @@ class RemoteUser(IRCUser):
 			return
 		if holdName not in self._registerHolds:
 			return
-		self.ircd.log.debug("Registered remote user {user.uuid} ({user.hostmask()})", user=self)
+		self.ircd.log.debug("Registered remote user {user.uuid} ({userHostmask()})", user=self, userHostmask=self.hostmask)
 		self._registerHolds.remove(holdName)
 		if not self._registerHolds:
 			self.ircd.runActionStandard("remoteregister", self, users=[self])
@@ -986,7 +986,7 @@ class LocalUser(IRCUser):
 		self.nick = nick
 		self.ident = ident
 		self.gecos = gecos
-		self.ircd.log.debug("Created new local user {user.uuid} ({user.hostmask()})", user=self)
+		self.ircd.log.debug("Created new local user {user.uuid} ({userHostmask()})", user=self, userHostmask=self.hostmask)
 		self.ircd.runActionStandard("localregister", self, users=[self])
 		self.ircd.userNicks[self.nick] = self
 	
@@ -1016,7 +1016,7 @@ class LocalUser(IRCUser):
 			userSendList.extend(channel.users.keys())
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
-		self.ircd.log.debug("Removing local user {user.uuid} ({user.hostmask()}): {reason}", user=self, reason=reason)
+		self.ircd.log.debug("Removing local user {user.uuid} ({userHostmask()}): {reason}", user=self, userHostmask=self.hostmask, reason=reason)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=userSendList)
 		self.ircd.runActionStandard("localquit", self, reason, users=[self])
 	
