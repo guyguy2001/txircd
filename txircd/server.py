@@ -65,6 +65,7 @@ class IRCServer(IRCBase):
 			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't handle! (prefix: {prefix}; params: {params!r}; tags: {tags!r}", command=command, params=params, prefix=prefix, tags=tags, server=self)
 			self.disconnect("Couldn't process command {} from {} with prefix '{}' and parameters {!r}".format(command, self.serverID, prefix, params)) # Also abort connection if we can't process a command
 			return
+		self.ircd.runComboActionStandard((("servercommandextra-{}".format(command), (self, data)), ("servercommandextra", (self, command, data))))
 	
 	def endBurst(self) -> None:
 		"""
