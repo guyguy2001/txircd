@@ -297,6 +297,8 @@ class BidService(ModuleData):
 		self.announce("\x02\x0312Bidding begins at ${} with a minimum increment of ${}".format(startingBid, self.ircd.config["bid_minimum_increment"]))
 		if startingUser:
 			broadcastPrefix = startingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONSTART", timestampStringFromTime(startTime), str(auctionID), str(startingBid), starterName, auctionTitle, prefix=broadcastPrefix)
@@ -313,6 +315,8 @@ class BidService(ModuleData):
 		del self.ircd.storage["auction"]
 		if cancelingUser:
 			broadcastPrefix = cancelingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONSTOP", timestampStringFromTime(startTime), prefix=broadcastPrefix)
@@ -342,6 +346,8 @@ class BidService(ModuleData):
 		self.ircd.storage["auction"]["state-name"] = changeByName
 		if changingUser:
 			broadcastPrefix = changingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONONCE", timestampStringFromTime(stateTime), changeByName, prefix=broadcastPrefix)
@@ -367,6 +373,8 @@ class BidService(ModuleData):
 		self.ircd.storage["auction"]["state-name"] = changeByName
 		if changingUser:
 			broadcastPrefix = changingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONTWICE", timestampStringFromTime(stateTime), changeByName, prefix=broadcastPrefix)
@@ -392,6 +400,8 @@ class BidService(ModuleData):
 		self.ircd.storage["auction"]["state-name"] = changeByName
 		if changingUser:
 			broadcastPrefix = changingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONNONCE", timestampStringFromTime(stateTime), changeByName, prefix=broadcastPrefix)
@@ -429,6 +439,8 @@ class BidService(ModuleData):
 				self.sendErrorToLocalOrRemoteUser(sellingUser, "AUCTIONLOG", "Could not write auction log file on server {}".format(self.ircd.name))
 		if sellingUser:
 			broadcastPrefix = sellingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONSOLD", sellerName, prefix=broadcastPrefix)
@@ -493,6 +505,8 @@ class BidService(ModuleData):
 			self.announce("\x02\x0303{} has bid ${}! \x0304{}".format(biddingUser.nick, bidAmount, smackTalk), announceTags)
 		if biddingUser:
 			broadcastPrefix = biddingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.braodcastToServers(fromServer, "BID", timestampStringFromTime(bidTime), accountName, str(bidAmount), smackTalk, prefix=broadcastPrefix)
@@ -533,6 +547,8 @@ class BidService(ModuleData):
 				self.announce("\x02\x033High bid: ${} by {}".format(highBidData["bid-amount"], highBidData["bidder-name"]))
 		if revertingUser:
 			broadcastPrefix = revertingUser.uuid
+		elif fromServer:
+			broadcastPrefix = fromServer.serverID
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONREVERT", str(bidAmount), reverterName, prefix=broadcastPrefix)
