@@ -19,6 +19,10 @@ modules:
 # or donor_linked_server (below) to be specified in order to function.
 - DBDonorAccount
 
+# BidService: This module provides the utilities required to have a bidding
+# service which handles running auctions and users bidding.
+- BidService
+
 # donor_db
 # Information for connecting to the database. The database must already have
 # the correct schema set up. The value is a dict of information for connecting;
@@ -38,3 +42,33 @@ modules:
 # have donor_db specified with a connection to the database server. The default
 # value is not specified.
 #donor_linked_server: otherserver.example.com
+
+# bid_announce_bot
+# If you've set up ServerBots and want bid messages to appear as coming from
+# that bot, you can put the nick of one of those bots here.
+# Be careful: If the server bot isn't set up and someone assumes this nickname,
+# messages will appear to come from that user!
+# By default, messages are sent as coming from the server.
+#bid_announce_bot: BidServ
+
+# bid_announce_channels
+# A list of channels to which to send the bid announcements. There are no
+# channels in this list by default, so unless you want it to be a silent
+# auction, make sure to add some!
+#bid_announce_channels:
+#- '#desertbus'
+
+# bid_minimum_increment
+# The smallest allowed increment over the lowest winning bid for a new high bid
+# to be accepted. The default value is 0.01.
+#bid_minimum_increment: '5.00'
+
+# bid_going_cooldown
+# The number of seconds it must be after the last submitted bid before the
+# auction can go once. The default value is 0.
+#bid_going_cooldown: 5
+
+# bid_log_directory
+# The directory in which to save auction logs. If not specified, auction logs
+# are not saved.
+#bid_log_directory: auction-logs/
