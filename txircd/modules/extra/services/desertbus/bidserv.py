@@ -51,7 +51,7 @@ class BidService(ModuleData):
 		return [ ("BID", 1, ServerBidCommand(self)),
 			("AUCTIONSTART", 1, ServerAuctionStartCommand(self)),
 			("AUCTIONSTARTREQ", 1, ServerAuctionStartRequestCommand(self)),
-			("AUCTIONSTARTERR", 1, ServerAuctionStartErrorCommand(self)),
+			("AUCTIONERR", 1, ServerAuctionErrorCommand(self)),
 			("AUCTIONSTOP", 1, ServerAuctionStopCommand(self)),
 			("AUCTIONONCE", 1, ServerGoOnceCommand(self)),
 			("AUCTIONTWICE", 1, ServerGoTwiceCommand(self)),
@@ -197,7 +197,7 @@ class BidService(ModuleData):
 			self.sendMessageFromBot("NOTICE", errorDescription)
 		else:
 			userServer = self.ircd.servers[user.uuid[:3]]
-			userServer.sendMessage("AUCTIONSTARTERR", user.uuid, errorCode, errorDescription)
+			userServer.sendMessage("AUCTIONERR", user.uuid, errorCode, errorDescription)
 	
 	def announce(self, messageToAnnounce: str, conditionalTags: Dict[str, Tuple[str, Callable[["IRCUser"], bool]]]) -> None:
 		botUser = self.getBotAnnounceUser()
@@ -903,7 +903,7 @@ class ServerAuctionStartRequestCommand(Command):
 		return True
 
 @implementer(ICommand)
-class ServerAuctionStartErrorCommand(Command):
+class ServerAuctionErrorCommand(Command):
 	def __init__(self, module: BidService):
 		self.module = module
 		self.ircd = module.ircd
@@ -934,7 +934,7 @@ class ServerAuctionStartErrorCommand(Command):
 			self.module.sendMessageFromBot(user, "NOTICE", errDescription)
 			return True
 		userServer = self.ircd.servers[user.uuid[:3]]
-		userServer.sendMessage("AUCTIONSTARTERR", user.uuid, errCode, errDescription, prefix=self.ircd.serverID)
+		userServer.sendMessage("AUCTIONERR", user.uuid, errCode, errDescription, prefix=self.ircd.serverID)
 		return True
 
 @implementer(ICommand)
