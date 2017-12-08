@@ -204,7 +204,7 @@ class BidService(ModuleData):
 		msgPrefix = self.ircd.name
 		if botUser:
 			msgPrefix = botUser.hostmask()
-		for channelName in self.ircd.config["bid_annnounce_channels"]:
+		for channelName in self.ircd.config["bid_announce_channels"]:
 			if channelName in self.ircd.channels:
 				self.ircd.channels[channelName].sendUserMessage("PRIVMSG", messageToAnnounce, prefix=msgPrefix, conditionalTags=conditionalTags)
 	
