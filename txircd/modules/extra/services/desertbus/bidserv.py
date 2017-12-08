@@ -16,7 +16,8 @@ irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 # - desertbus.org/auction-title
 # - desertbus.org/auction-url
 # - desertbus.org/auction-winners
-# - desertbus.org/bid = $1500.00:bidder1;$1269.69:bidder2;$1000:bidder3
+# - desertbus.org/bid = $1500.00:bidder1:;$1269.69:bidder2:talk smack erry day;$1000:bidder3:
+#   - Only winning bids are listed (the example above is for an auction with 3 winners)
 # - desertbus.org/auction-state ("bid", "once", "twice", "sold", "stop")
 
 @implementer(IPlugin, IModuleData)
@@ -29,6 +30,7 @@ class BidService(ModuleData):
 			("commandpermission-AUCTIONSTOP", 10, self.checkBidAdminStop),
 			("commandpermission-AUCTIONONCE", 10, self.checkBidAdminOnce),
 			("commandpermission-AUCTIONTWICE", 10, self.checkBidAdminTwice),
+			("commandpermission-AUCTIONNONCE", 10, self.checkBidAdminNonce),
 			("commandpermission-AUCTIONSOLD", 10, self.checkBidAdminSold),
 			("commandpermission-AUCTIONREVERT", 10, self.checkBidAdminRevert),
 			("afteraccountburst", 1, self.syncAuctionData) ]
@@ -39,6 +41,7 @@ class BidService(ModuleData):
 			("AUCTIONSTOP", 1, AuctionStopCommand(self)),
 			("AUCTIONONCE", 1, GoOnceCommand(self)),
 			("AUCTIONTWICE", 1, GoTwiceCommand(self)),
+			("AUCTIONNONCE", 1, GoNonceCommand(self)),
 			("AUCTIONSOLD", 1, SoldCommand(self)),
 			("AUCTIONREVERT", 1, RevertCommand(self)),
 			("HIGHBIDDER", 1, HighBidderCommand(self)),
@@ -52,6 +55,7 @@ class BidService(ModuleData):
 			("AUCTIONSTOP", 1, ServerAuctionStopCommand(self)),
 			("AUCTIONONCE", 1, ServerGoOnceCommand(self)),
 			("AUCTIONTWICE", 1, ServerGoTwiceCommand(self)),
+			("AUCTIONNONCE", 1, ServerGoNonceCommand(self)),
 			("AUCTIONSOLD", 1, ServerSoldCommand(self)),
 			("AUCTIONREVERT", 1, ServerRevertCommand(self)) ]
 	
@@ -137,6 +141,11 @@ class BidService(ModuleData):
 	
 	def checkBidAdminTwice(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		if self.ircd.runActionUntilValue("userhasoperpermission", user, "command-auctiontwice", users=[user]):
+			return None
+		return False
+	
+	def checkBidAdminNonce(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
+		if self.ircd.runActionUntilValue("userhasoperpermission", user, "command-auctionnonce", users=[user]):
 			return None
 		return False
 	
@@ -361,6 +370,31 @@ class BidService(ModuleData):
 		else:
 			broadcastPrefix = self.ircd.serverID
 		self.ircd.broadcastToServers(fromServer, "AUCTIONTWICE", timestampStringFromTime(stateTime), changeByName, prefix=broadcastPrefix)
+	
+	def goNonce(self, changingUser: Optional["IRCUser"], changeByName: Optional[str], stateTime: datetime, fromServer: "IRCServer" = None) -> None:
+		if "auction" not in self.ircd.storage:
+			self.sendErrorToLocalOrRemoteUser(changingUser, "NOAUCTION", "An auction is not in progress.")
+			return
+		if self.ircd.storage["auction"]["state"] == "bid":
+			self.sendErrorToLocalOrRemoteUser(changingUser, "BADSTATE", "The auction is already in the normal bidding state.")
+			return
+		announceTags = {
+			"desertbus.org/auction-state": ("bid", self.conditionalTagsFilter)
+		}
+		if not changeByName:
+			if changingUser:
+				changeByName = changingUser.nick
+			else:
+				changeByName = "?"
+		self.announce("\x02\x034Reverting going once (from {})".format(changeByName), announceTags)
+		self.ircd.storage["auction"]["state"] = "bid"
+		self.ircd.storage["auction"]["state-time"] = stateTime
+		self.ircd.storage["auction"]["state-name"] = changeByName
+		if changingUser:
+			broadcastPrefix = changingUser.uuid
+		else:
+			broadcastPrefix = self.ircd.serverID
+		self.ircd.broadcastToServers(fromServer, "AUCTIONNONCE", timestampStringFromTime(stateTime), changeByName, prefix=broadcastPrefix)
 	
 	def sold(self, sellingUser: Optional["IRCUser"], sellerName: Optional[str], fromServer: "IRCServer" = None) -> None:
 		if "auction" not in self.ircd.storage:
@@ -620,6 +654,19 @@ class GoTwiceCommand(Command):
 	
 	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		self.module.goTwice(user, None, now())
+		return True
+
+@implementer(ICommand)
+class GoNonceCommand(Command):
+	def __init__(self, module: BidService):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, user: "IRCUser", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
+		return {}
+	
+	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
+		self.module.goNonce(user, None, now())
 		return True
 
 @implementer(ICommand)
@@ -967,6 +1014,31 @@ class ServerGoTwiceCommand(Command):
 	
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		self.module.goTwice(data["user"], data["name"], data["time"], server)
+		return True
+
+@implementer(ICommand)
+class ServerGoNonceCommand(Command):
+	def __init__(self, module: BidService):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
+		if len(params) != 2:
+			return None
+		returnData = {}
+		try:
+			returnData["time"] = datetime.utcfromtimestamp(float(params[0]))
+		except (ValueError, OverflowError):
+			return None
+		returnData["name"] = params[1]
+		if prefix in self.ircd.users:
+			returnData["user"] = self.ircd.users[prefix]
+		else:
+			returnData["user"] = None
+		return returnData
+	
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
+		self.module.goNonce(data["user"], data["name"], data["time"], server)
 		return True
 
 @implementer(ICommand)
