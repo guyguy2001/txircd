@@ -645,10 +645,10 @@ class IRCUser(IRCBase):
 			return
 		messageUsers = [u for u in channel.users.keys() if u.uuid[:3] == self.ircd.serverID]
 		self.ircd.runActionProcessing("leavemessage", messageUsers, channel, self, partType, typeData, fromServer, users=[self], channels=[channel])
-		self._leaveChannel(channel)
+		self._leaveChannel(channel, partType, typeData)
 	
-	def _leaveChannel(self, channel: "IRCChannel") -> None:
-		self.ircd.runActionStandard("leave", channel, self, users=[self], channels=[channel])
+	def _leaveChannel(self, channel: "IRCChannel", partType: str, typeData: Dict[Any, Any]) -> None:
+		self.ircd.runActionStandard("leave", channel, self, partType, typeData, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
 	
@@ -966,8 +966,8 @@ class RemoteUser(IRCUser):
 			self.ircd.runActionStandard("channelcreate", channel, self, channels=[channel])
 		self.ircd.runActionStandard("remotejoin", channel, self, fromServer, users=[self], channels=[channel])
 	
-	def _leaveChannel(self, channel: "IRCChannel") -> None:
-		self.ircd.runActionStandard("remoteleave", channel, self, users=[self], channels=[channel])
+	def _leaveChannel(self, channel: "IRCChannel", partType: str, typeData: Dict[Any, Any]) -> None:
+		self.ircd.runActionStandard("remoteleave", channel, self, partType, typeData, users=[self], channels=[channel])
 		self.channels.remove(channel)
 		del channel.users[self]
 
