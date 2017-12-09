@@ -699,7 +699,6 @@ class IRCd(Service):
 		isupport["MAXLIST"] = "{}:{}".format("".join(self.channelModes[0].keys()), self.config.get("channel_listmode_limit", 128))
 		isupport["NETWORK"] = self.config["network_name"]
 		isupport["PREFIX"] = "({}){}".format("".join(self.channelStatusOrder), statusSymbolOrder)
-		isupport["STATUSMSG"] = statusSymbolOrder
 		isupport["USERMODES"] = ",".join(["".join(modes) for modes in self.userModes])
 		self.runActionStandard("buildisupport", isupport)
 		isupportList = []
