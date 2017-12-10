@@ -39,13 +39,17 @@ modules:
 # <replacement> is the text with which you want to replace it.
 #- Censor
 
+# ChannelFlood: Provides a channel mode (+f) to limit the rate at which
+# messages can be sent to a channel by a user.
+#- ChannelFlood
+
 # ChannelHistory: Provides a channel mode (+H) to provide a joining user with
 # the last messages of a channel within a given timespan.
 #- ChannelHistory
 
-# ChannelFlood: Provides a channel mode (+f) to limit the rate at which
-# messages can be sent to a channel by a user.
-#- ChannelFlood
+# ChannelLog: Allows server-side logging of channel messages. Useful if you'd
+# like to provide a public log of all channels on your server.
+#- ChannelLog
 
 # ChannelOpAccess: Provides fine control over which levels of op can do what in
 # a channel with the +W mode. The default permission for an action (usually +o
@@ -211,6 +215,18 @@ modules:
 # to be specified, to avoid taking up too many system resources. The default
 # value is 50 and the hard cap is 100.
 #chanhistory_maxlines: 50
+
+# ChannelLog Configuration
+# This module requires that you set up the directory to which the log files get
+# written. If not specified, the current directory is used.
+#channel_log_directory: logs/
+# You may also set up which channels get logged. If a channel name matches any
+# of the masks specified, the channel will be logged. Otherwise, the channel is
+# not logged. If not specified or the list is empty, all channels are logged.
+# (If you don't want to log, unload the module.)
+#channel_log_channels:
+#- '#logme'
+#- '#z*'
 
 # CommandAlias Configuration
 # This module requires a dictionary that specifies the aliases and the commands
