@@ -87,14 +87,16 @@ class AccountNickProtect(ModuleData):
 		
 		userNames = []
 		lowerUserNames = []
-		for targetUser in data["targetusers"].keys():
-			userNames.append(targetUser.nick)
-			lowerUserNames.append(ircLower(targetUser.nick))
+		if "targetusers" in data:
+			for targetUser in data["targetusers"].keys():
+				userNames.append(targetUser.nick)
+				lowerUserNames.append(ircLower(targetUser.nick))
 		channelNames = []
 		lowerChannelNames = []
-		for targetChannel in data["targetchans"].keys():
-			channelNames.append(targetChannel.name)
-			lowerChannelNames.append(ircLower(targetChannel.name))
+		if "targetchans" in data:
+			for targetChannel in data["targetchans"].keys():
+				channelNames.append(targetChannel.name)
+				lowerChannelNames.append(ircLower(targetChannel.name))
 		badUserIndices = []
 		badChannelIndices = []
 		for target in messageTargets:
