@@ -299,7 +299,7 @@ class IRCUser(IRCBase):
 		while self.channels:
 			channel = self.channels[0]
 			userSendList.extend(channel.users.keys())
-			self._leaveChannel(channel)
+			self._leaveChannel(channel, "QUIT", { "reason": reason })
 		userSendList = [u for u in set(userSendList) if u.uuid[:3] == self.ircd.serverID]
 		userSendList.remove(self)
 		self.ircd.runActionProcessing("quitmessage", userSendList, self, reason, None, users=[self] + userSendList)
