@@ -131,7 +131,10 @@ class ChannelRegister(ModuleData, Mode):
 				try:
 					modes.remove(modeChange[1:])
 				except ValueError:
-					pass # It's already not in the list
+					try: # In some cases we'll need to try forcibly cutting off the setter and time for non-list modes
+						modes.remove(modeChange[1:3])
+					except ValueError:
+						pass # It's already not in the list
 		self.channelData["data"][channel.name]["modes"] = modes
 	
 	def updateChannelTopicData(self, channel: "IRCChannel", setter: str, setterName: str, oldTopic: str) -> None:
