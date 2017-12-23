@@ -61,7 +61,7 @@ class ChannelLog(ModuleData):
 		return "[{}:{02d}:{02d}]".format(nowTime.hour, nowTime.minute, nowTime.second)
 	
 	def logLine(self, channel: "IRCChannel", line: str) -> None:
-		line = "{} {}\n".format(self.timestampPrefix, line)
+		line = "{} {}\n".format(self.timestampPrefix(), line)
 		if channel.name in self.logFiles:
 			logFile = self.logFiles[channel.name]
 		else:
