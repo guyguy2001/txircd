@@ -83,7 +83,9 @@ class AccountNickProtect(ModuleData):
 	def filterMessageTargets(self, user: "IRCUser", data: Dict[Any, Any]) -> None:
 		messageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
 		if not messageTargets:
-			return None
+			return
+		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active() or self.userSignedIntoNickAccount(user):
+			return
 		
 		userNames = []
 		lowerUserNames = []
