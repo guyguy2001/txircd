@@ -58,7 +58,7 @@ class ChannelLog(ModuleData):
 	
 	def timestampPrefix(self) -> str:
 		nowTime = now()
-		return "[{}:{02d}:{02d}]".format(nowTime.hour, nowTime.minute, nowTime.second)
+		return "[{}:{:02d}:{:02d}]".format(nowTime.hour, nowTime.minute, nowTime.second)
 	
 	def logLine(self, channel: "IRCChannel", line: str) -> None:
 		line = "{} {}\n".format(self.timestampPrefix(), line)
