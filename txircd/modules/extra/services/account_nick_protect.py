@@ -81,42 +81,33 @@ class AccountNickProtect(ModuleData):
 		return None
 	
 	def filterMessageTargets(self, user: "IRCUser", data: Dict[Any, Any]) -> None:
-		messageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
-		if not messageTargets:
+		badMessageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
+		if not badMessageTargets:
 			return
 		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active() or self.userSignedIntoNickAccount(user):
 			return
 		
-		userNames = []
-		lowerUserNames = []
+		badUsers = []
 		if "targetusers" in data:
 			for targetUser in data["targetusers"].keys():
-				userNames.append(targetUser.nick)
-				lowerUserNames.append(ircLower(targetUser.nick))
-		channelNames = []
-		lowerChannelNames = []
+				lowerNick = ircLower(targetUser.nick)
+				for badTargetMask in badMessageTargets:
+					if fnmatchcase(lowerNick, ircLower(badTargetMask)):
+						badUsers.append(targetUser)
+		badChannels = []
 		if "targetchans" in data:
-			for targetChannel in data["targetchans"].keys():
-				channelNames.append(targetChannel.name)
-				lowerChannelNames.append(ircLower(targetChannel.name))
-		badUserIndices = []
-		badChannelIndices = []
-		for target in messageTargets:
-			lowerTarget = ircLower(target)
-			for index, name in enumerate(lowerUserNames):
-				if not fnmatchcase(name, lowerTarget):
-					badUserIndices.append(index)
-			for index, name in enumerate(lowerChannelNames):
-				if not fnmatchcase(name, lowerTarget):
-					badChannelIndices.append(index)
-		for index in badUserIndices:
-			name = userNames[index]
-			del data["targetusers"][name]
-			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(name))
-		for index in badChannelIndices:
-			name = channelNames[index]
-			del data["targetchans"][name]
-			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(name))
+			for targetChan in data["targetchans"].keys():
+				lowerName = ircLower(targetChan.name)
+				for badTargetMask in badMessageTargets:
+					if fnmatchcase(lowerName, ircLower(badTargetMask)):
+						badChannels.append(targetChan)
+		
+		for badUser in badUsers:
+			del data["targetusers"][badUser]
+			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(badUser.nick))
+		for badChan in badChannels:
+			del data["targetchans"][badChan]
+			user.sendMessage("NOTICE", "Sending messages to {} is not allowed until you identify or your nick is changed".format(badChan.name))
 	
 	def applyNickProtection(self, user: "IRCUser") -> None:
 		if user.uuid[:3] != self.ircd.serverID:
