@@ -81,8 +81,8 @@ class AccountNickProtect(ModuleData):
 		return None
 	
 	def filterMessageTargets(self, user: "IRCUser", data: Dict[Any, Any]) -> None:
-		badMessageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
-		if not badMessageTargets:
+		messageTargets = self.ircd.config.get("account_nick_protect_message_targets", [])
+		if not messageTargets:
 			return
 		if "accountNickProtectTimer" not in user.cache or not user.cache["accountNickProtectTimer"].active() or self.userSignedIntoNickAccount(user):
 			return
@@ -91,16 +91,20 @@ class AccountNickProtect(ModuleData):
 		if "targetusers" in data:
 			for targetUser in data["targetusers"].keys():
 				lowerNick = ircLower(targetUser.nick)
-				for badTargetMask in badMessageTargets:
-					if fnmatchcase(lowerNick, ircLower(badTargetMask)):
-						badUsers.append(targetUser)
+				for targetMask in messageTargets:
+					if fnmatchcase(lowerNick, ircLower(targetMask)):
+						break
+				else:
+					badUsers.append(targetUser)
 		badChannels = []
 		if "targetchans" in data:
 			for targetChan in data["targetchans"].keys():
 				lowerName = ircLower(targetChan.name)
-				for badTargetMask in badMessageTargets:
-					if fnmatchcase(lowerName, ircLower(badTargetMask)):
-						badChannels.append(targetChan)
+				for targetMask in messageTargets:
+					if fnmatchcase(lowerName, ircLower(targetMask)):
+						break
+				else:
+					badChannels.append(targetChan)
 		
 		for badUser in badUsers:
 			del data["targetusers"][badUser]
