@@ -102,14 +102,14 @@ class ChannelRegister(ModuleData, Mode):
 			channelInfo["topic"] = channel.topic
 			channelInfo["topicsetter"] = channel.topicSetter
 			channelInfo["topictime"] = channel.topicTime
-			modes = []
+			modes = set()
 			for mode, paramData in channel.modes.items():
 				modeType = self.ircd.channelModeTypes[mode]
 				if modeType == ModeType.List:
 					for oneParamData in paramData:
-						modes.append([mode] + list(oneParamData))
+						modes.add([mode] + list(oneParamData))
 				else:
-					modes.append((mode, paramData))
+					modes.add((mode, paramData))
 			channelInfo["modes"] = modes
 			if parameter not in self.channelData["index"]["regname"]:
 				self.channelData["index"]["regname"][parameter] = []
@@ -131,15 +131,9 @@ class ChannelRegister(ModuleData, Mode):
 			if modeType != ModeType.List:
 				modeChange = modeChange[:3] # Only keep the setter and time information for list modes
 			if modeChange[0]:
-				modes.append(modeChange[1:])
+				modes.add(modeChange[1:])
 			else:
-				try:
-					modes.remove(modeChange[1:])
-				except ValueError:
-					try: # In some cases we'll need to try forcibly cutting off the setter and time for non-list modes
-						modes.remove(modeChange[1:3])
-					except ValueError:
-						pass # It's already not in the list
+				modes.discard(modeChange[1:])
 		self.channelData["data"][channel.name]["modes"] = modes
 	
 	def updateChannelTopicData(self, channel: "IRCChannel", setter: str, setterName: str, oldTopic: str) -> None:
