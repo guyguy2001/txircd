@@ -125,6 +125,11 @@ class ChannelRegister(ModuleData, Mode):
 			return
 		modes = self.channelData["data"][channel.name]["modes"]
 		for modeChange in modeChanges:
+			if modeChange[1] in self.ircd.channelStatuses:
+				continue
+			modeType = self.ircd.channelModeTypes[modeChange[1]]
+			if modeType != ModeType.List:
+				modeChange = modeChange[:3] # Only keep the setter and time information for list modes
 			if modeChange[0]:
 				modes.append(modeChange[1:])
 			else:
