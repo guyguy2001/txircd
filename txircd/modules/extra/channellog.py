@@ -127,7 +127,7 @@ class ChannelLog(ModuleData):
 		if partType == "QUIT":
 			self.logLine(channel, "> {} has quit: {}".format(user.nick, typeData["reason"]))
 		elif partType == "KICK":
-			self.logLine(channel, "> {} has been kicked from {} by {}: {}".format(user.nick, channel.name, typeData["byuser"].nick if "byuser" in typeData else self.ircd.serverID, typeData["reason"]))
+			self.logLine(channel, "> {} has been kicked from {} by {}: {}".format(user.nick, channel.name, typeData["user"].nick if typeData["byuser"] in typeData else typeData["server"].name, typeData["reason"]))
 		else:
 			if "reason" in typeData and typeData["reason"]:
 				self.logLine(channel, "> {} has left {}: {}".format(user.nick, channel.name, typeData["reason"]))
