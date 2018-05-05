@@ -1,5 +1,5 @@
 from twisted.protocols.basic import LineOnlyReceiver
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 class IRCBase(LineOnlyReceiver):
 	delimiter = b"\n" # Default to splitting by \n, and then we'll also split \r in the handler
@@ -11,7 +11,7 @@ class IRCBase(LineOnlyReceiver):
 			if command:
 				self.handleCommand(command, params, prefix, tags)
 	
-	def _parseLine(self, line: str) -> Union[Tuple[str, str, str, Dict[str, Optional[str]]], Tuple[None, None, None, None]]:
+	def _parseLine(self, line: str) -> Union[Tuple[str, List[str], str, Dict[str, Optional[str]]], Tuple[None, None, None, None]]:
 		line = line.replace("\0", "")
 		if not line:
 			return None, None, None, None
@@ -87,7 +87,7 @@ class IRCBase(LineOnlyReceiver):
 			tags[tag] = value
 		return tags
 	
-	def handleCommand(self, command: str, params: str, prefix: str, tags: Dict[str, Optional[str]]) -> None:
+	def handleCommand(self, command: str, params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> None:
 		pass
 	
 	def sendMessage(self, command: str, *params: str, **kw: Any) -> None:
