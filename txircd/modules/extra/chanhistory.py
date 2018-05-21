@@ -10,6 +10,7 @@ class ChanHistory(ModuleData, Mode):
 	name = "ChannelHistory"
 	affectedActions = {
 		"commandextra-PRIVMSG": 1,
+		"commandextra-NOTICE": 1,
 		"join": 1
 	}
 
@@ -51,22 +52,24 @@ class ChanHistory(ModuleData, Mode):
 		modeParam = param.split(":")
 		maxLines = int(modeParam[0])
 		seconds = int(modeParam[1])
-		if actionName == "commandextra-PRIVMSG":
+		if actionName == "commandextra-PRIVMSG" or actionName == "commandextra-NOTICE":
 			user, data = params
 			if channel not in data["targetchans"]:
 				return
 			if "history" not in channel.cache:
 				channel.cache["history"] = []
-			channel.cache["history"].append((now(), user.hostmask(), data["targetchans"][channel]))
+			channel.cache["history"].append((now(), "PRIVMSG" if actionName == "commandextra-PRIVMSG" else "NOTICE", user.hostmask(), data["targetchans"][channel]))
 			if len(channel.cache["history"]) > maxLines:
 				channel.cache["history"] = channel.cache["history"][-maxLines:]
 		elif actionName == "join" and "history" in channel.cache:
 			actionChannel, user, fromServer = params
 			user.sendMessage("NOTICE", "*** Replaying up to {} lines of history for {}{}...".format(maxLines, channel.name, " spanning up to {} seconds".format(seconds) if seconds > 0 else ""))
 			hasServerTime = "capabilities" in user.cache and "server-time" in user.cache["capabilities"]
+			user.createMessageBatch("ChannelHistory", "chathistory", channel.name)
 			for messageData in channel.cache["history"]:
 				if seconds == 0 or now() - timedelta(seconds=seconds) < messageData[0]:
-					user.sendMessage("PRIVMSG", messageData[2], prefix=messageData[1], to=channel.name, tags={ "server-time": isoTime(messageData[0]) } if hasServerTime else None)
+					user.sendMessageInBatch("ChannelHistory", messageData[1], messageData[3], prefix=messageData[2], to=channel.name, tags={ "server-time": isoTime(messageData[0]) } if hasServerTime else None)
+			user.sendBatch("ChannelHistory")
 			user.sendMessage("NOTICE", "*** End of {} channel history.".format(channel.name))
 
 chanHistory = ChanHistory()
