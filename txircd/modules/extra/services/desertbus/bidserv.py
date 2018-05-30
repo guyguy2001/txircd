@@ -89,7 +89,7 @@ class BidService(ModuleData):
 				raise ConfigValidationError("bid_announce_channels", "must be a list of channel names")
 			for channelName in config["bid_announce_channels"]:
 				if not isinstance(channelName, str):
-					raise ConfigValidationError("bid_annnounce_channels", "must be a list of channel names")
+					raise ConfigValidationError("bid_announce_channels", "must be a list of channel names")
 		else:
 			config["bid_announce_channels"] = []
 		if "bid_minimum_increment" in config:
