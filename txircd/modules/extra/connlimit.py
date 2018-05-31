@@ -2,6 +2,7 @@ from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implementer
+from ipaddress import ip_address
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData)
@@ -26,7 +27,9 @@ class ConnectionLimit(ModuleData):
 			if not isinstance(config["connlimit_whitelist"], list):
 				raise ConfigValidationError("connlimit_whitelist", "value must be a list")
 			for ip in config["connlimit_whitelist"]:
-				if not isinstance(ip, str):
+				try:
+					ip_address(ip)
+				except ValueError:
 					raise ConfigValidationError("connlimit_whitelist", "every entry must be a valid ip")
 
 	def handleLocalConnect(self, user: "IRCUser", *params: Any) -> Optional[bool]:
