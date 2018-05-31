@@ -976,7 +976,7 @@ class LocalUser(IRCUser):
 	LocalUser is a fake user created by a module, which is not
 	propagated to other servers.
 	"""
-	def __init__(self, ircd, nick, ident, host, ip, gecos):
+	def __init__(self, ircd: "IRCd", nick: str, ident: str, host: str, ip: Union["IPv4Address", "IPv6Address"], gecos: str):
 		IRCUser.__init__(self, ircd, ip, None, host)
 		self.localOnly = True
 		self._sendMsgFunc = lambda self, command, *args, **kw: None

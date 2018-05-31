@@ -4,6 +4,7 @@ from txircd.module_interface import IModuleData, ModuleData
 from txircd.user import LocalUser
 from txircd.utils import isValidIdent, isValidHost, isValidNick, lenBytes, splitMessage
 from zope.interface import implementer
+from ipaddress import ip_address
 from typing import Any, Dict
 
 @implementer(IPlugin, IModuleData)
@@ -19,7 +20,7 @@ class ServerBots(ModuleData):
 			if botNick in self.ircd.userNicks:
 				nickUser = self.ircd.userNicks[botNick]
 				nickUser.changeNick(nickUser.uuid)
-			botUser = LocalUser(self.ircd, botNick, botIdent, botHost, "127.0.0.1", botGecos)
+			botUser = LocalUser(self.ircd, botNick, botIdent, botHost, ip_address("127.0.0.1"), botGecos)
 			botUser.setSendMsgFunc(self.receiveBotMessageProcessor(botData))
 			self.botList.append(botUser)
 	
