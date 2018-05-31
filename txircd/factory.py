@@ -20,7 +20,7 @@ class UserFactory(Factory):
 		self.ircd = ircd
 	
 	def buildProtocol(self, addr):
-		return self.protocol(self.ircd, ip_address(unmapIPv4(addr.host)))
+		return self.protocol(self.ircd, unmapIPv4(addr.host))
 
 class ServerListenFactory(Factory):
 	protocol = IRCServer
@@ -29,7 +29,7 @@ class ServerListenFactory(Factory):
 		self.ircd = ircd
 	
 	def buildProtocol(self, addr):
-		return self.protocol(self.ircd, ip_address(unmapIPv4(addr.host)), True)
+		return self.protocol(self.ircd, unmapIPv4(addr.host), True)
 
 class ServerConnectFactory(ClientFactory):
 	protocol = IRCServer
@@ -38,4 +38,4 @@ class ServerConnectFactory(ClientFactory):
 		self.ircd = ircd
 	
 	def buildProtocol(self, addr):
-		return self.protocol(self.ircd, ip_address(unmapIPv4(addr.host)), False)
+		return self.protocol(self.ircd, unmapIPv4(addr.host), False)
