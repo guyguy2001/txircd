@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import isValidHost, lenBytes, ModeType
+from txircd.utils import ipAddressToShow, isValidHost, lenBytes, ModeType
 from zope.interface import implementer
 from hashlib import sha256
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -36,7 +36,7 @@ class HostCloaking(ModuleData, Mode):
 	def apply(self, actionType: str, user: "IRCUser", param: str, settingUser: "IRCUser", sourceID: str, adding: bool, paramAgain: Optional[str]) -> None:
 		if adding:
 			userHost = user.realHost
-			if userHost == user.ip.compressed:
+			if userHost == ipAddressToShow(user.ip):
 				user.changeHost("cloak", self.applyIPCloak(user.ip))
 			else:
 				if "." in userHost:

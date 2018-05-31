@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import ipAddressToShow
 from zope.interface import implementer
 from typing import Callable, List, Optional, Tuple
 
@@ -15,7 +16,7 @@ class SnoRemoteQuit(ModuleData):
 		server = self.ircd.servers[user.uuid[:3]]
 		if not server.bursted: # Server is disconnecting
 			return
-		self.ircd.runActionStandard("sendservernotice", "remotequit", "Client quit from {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), user.ip.compressed, reason))
+		self.ircd.runActionStandard("sendservernotice", "remotequit", "Client quit from {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), ipAddressToShow(user.ip), reason))
 	
 	def checkSnoType(self, user: "IRCUser", typename: str) -> bool:
 		return typename == "remotequit"

@@ -1,7 +1,7 @@
 from collections import MutableMapping
 from datetime import datetime
 from enum import IntEnum
-from typing import List
+from typing import List, Union
 import re
 
 validNick = re.compile(r"^[a-zA-Z\-\[\]\\`^{}_|][a-zA-Z0-9\-\[\]\\`^{}_|]*$")
@@ -272,3 +272,10 @@ def stripFormatting(message: str) -> str:
 	Removes IRC formatting from the provided message.
 	"""
 	return format_chars.sub('', message)
+
+
+def ipAddressToShow(ipAddr: Union["IPv4Address", "IPv6Address"]) -> str:
+	ip = ipAddr.compressed
+	if ip[0] == ":":
+		return "0{}".format(ip)
+	return ip

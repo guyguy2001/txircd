@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import ipAddressToShow
 from zope.interface import implementer
 from typing import Callable, List, Tuple
 
@@ -12,7 +13,7 @@ class SnoConnect(ModuleData):
 		         ("servernoticetype", 1, self.checkSnoType)]
 
 	def sendConnectNotice(self, user: "IRCUser") -> bool:
-		self.ircd.runActionStandard("sendservernotice", "connect", "Client connected on {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip.compressed, user.gecos))
+		self.ircd.runActionStandard("sendservernotice", "connect", "Client connected on {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), ipAddressToShow(user.ip), user.gecos))
 		return True
 
 	def checkSnoType(self, user: "IRCUser", typename: str) -> bool:

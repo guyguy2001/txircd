@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.config import ConfigValidationError
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import ipAddressToShow
 from zope.interface import implementer
 from ipaddress import ip_address
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -18,7 +19,7 @@ class ConnectionLimit(ModuleData):
 
 	def load(self) -> None:
 		for user in self.ircd.users.values():
-			self.addToConnections(user.ip.compressed)
+			self.addToConnections(ipAddressToShow(user.ip))
 
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "connlimit_globmax" in config and (not isinstance(config["connlimit_globmax"], int) or config["connlimit_globmax"] < 0):
@@ -33,7 +34,7 @@ class ConnectionLimit(ModuleData):
 					raise ConfigValidationError("connlimit_whitelist", "every entry must be a valid ip")
 
 	def handleLocalConnect(self, user: "IRCUser", *params: Any) -> Optional[bool]:
-		ip = user.ip.compressed
+		ip = ipAddressToShow(user.ip)
 		if self.addToConnections(ip) and self.peerConnections[ip] > self.ircd.config.get("connlimit_globmax", 3):
 			self.ircd.log.info("Connection limit reached from {ip}", ip=ip)
 			user.disconnect("No more connections allowed from your IP ({})".format(ip))
@@ -41,10 +42,10 @@ class ConnectionLimit(ModuleData):
 		return True
 
 	def handleRemoteConnect(self, user: "IRCUser", *params: Any) -> None:
-		self.addToConnections(user.ip.compressed)
+		self.addToConnections(ipAddressToShow(user.ip))
 
 	def handleDisconnect(self, user: "IRCUser", *params: Any) -> None:
-		ip = user.ip.compressed
+		ip = ipAddressToShow(user.ip)
 		if ip in self.peerConnections:
 			self.peerConnections[ip] -= 1
 			if self.peerConnections[ip] < 1:

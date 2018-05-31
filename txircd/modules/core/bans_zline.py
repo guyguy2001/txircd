@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
-from txircd.utils import durationToSeconds, now
+from txircd.utils import durationToSeconds, ipAddressToShow, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -36,7 +36,7 @@ class ZLine(ModuleData, XLineBase):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
 	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
-		return fnmatchcase(user.ip.compressed, mask)
+		return fnmatchcase(ipAddressToShow(user.ip), mask)
 	
 	def normalizeMask(self, mask: str) -> str:
 		if ":" in mask and "*" not in mask and "?" not in mask: # Normalize non-wildcard IPv6 addresses
@@ -47,7 +47,7 @@ class ZLine(ModuleData, XLineBase):
 		return mask.lower()
 	
 	def killUser(self, user: "IRCUser", reason: str) -> None:
-		self.ircd.log.info("Matched user {user.uuid} ({user.ip.compressed}) against a z:line: {reason}", user=user, reason=reason)
+		self.ircd.log.info("Matched user {user.uuid} ({ip}) against a z:line: {reason}", user=user, ip=ipAddressToShow(user.ip), reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("Z:Lined: {}".format(reason))
 	
@@ -75,7 +75,7 @@ class UserZLine(Command):
 			return None
 		banmask = params[0]
 		if banmask in self.module.ircd.userNicks:
-			banmask = self.module.ircd.userNicks[banmask].ip.compressed
+			banmask = ipAddressToShow(self.module.ircd.userNicks[banmask].ip)
 		if len(params) == 1:
 			return {
 				"mask": banmask

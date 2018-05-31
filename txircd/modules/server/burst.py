@@ -1,6 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import ModeType, timestampStringFromTime
+from txircd.utils import ipAddressToShow, ModeType, timestampStringFromTime
 from zope.interface import implementer
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -69,7 +69,7 @@ class ServerBurst(ModuleData, Command):
 					if param is not None:
 						params.append(param)
 			modeStr = "+{} {}".format("".join(modes), " ".join(params)) if params else "+{}".format("".join(modes))
-			uidParams = [user.uuid, signonTimestamp, user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip.compressed, nickTimestamp, "S" if user.secureConnection else "*", "+{}".format("".join(modes))]
+			uidParams = [user.uuid, signonTimestamp, user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, ipAddressToShow(user.ip), nickTimestamp, "S" if user.secureConnection else "*", "+{}".format("".join(modes))]
 			uidParams.extend(params)
 			uidParams.append(user.gecos)
 			server.sendMessage("UID", *uidParams, prefix=self.ircd.serverID)

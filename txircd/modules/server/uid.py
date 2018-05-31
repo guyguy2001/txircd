@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.user import RemoteUser
-from txircd.utils import ModeType, now, timestampStringFromTime
+from txircd.utils import ipAddressToShow, ModeType, now, timestampStringFromTime
 from zope.interface import implementer
 from datetime import datetime
 from ipaddress import ip_address
@@ -121,14 +121,14 @@ class ServerUID(ModuleData, Command):
 		newUser.register("NICK", True)
 		connectTimestamp = timestampStringFromTime(connectTime)
 		nickTimestamp = timestampStringFromTime(nickTime)
-		uidParams = [newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, newUser.ip.compressed, nickTimestamp, connectionFlags]
+		uidParams = [newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, ipAddressToShow(newUser.ip), nickTimestamp, connectionFlags]
 		uidParams.extend(newUser.modeString(None).split(" "))
 		uidParams.append(newUser.gecos)
 		self.ircd.broadcastToServers(server, "UID", *uidParams, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user: "IRCUser") -> None:
-		uidParams = [user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip.compressed, timestampStringFromTime(user.nickSince), "S" if user.secureConnection else "*"]
+		uidParams = [user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, ipAddressToShow(user.ip), timestampStringFromTime(user.nickSince), "S" if user.secureConnection else "*"]
 		uidParams.extend(user.modeString(None).split(" "))
 		uidParams.append(user.gecos)
 		self.ircd.broadcastToServers(None, "UID", *uidParams, prefix=self.ircd.serverID)

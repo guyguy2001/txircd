@@ -1,7 +1,7 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import now, timestampStringFromTimeSeconds
+from txircd.utils import ipAddressToShow, now, timestampStringFromTimeSeconds
 from zope.interface import implementer
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -37,7 +37,7 @@ class WhoisCommand(ModuleData, Command):
 		for targetUser in data["targetusers"]:
 			user.sendMessage(irc.RPL_WHOISUSER, targetUser.nick, targetUser.ident, targetUser.host(), "*", targetUser.gecos)
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "whois-host", users=[user]) or user == targetUser:
-				user.sendMessage(irc.RPL_WHOISHOST, targetUser.nick, "is connecting from {}@{} {}".format(targetUser.ident, targetUser.realHost, targetUser.ip.compressed))
+				user.sendMessage(irc.RPL_WHOISHOST, targetUser.nick, "is connecting from {}@{} {}".format(targetUser.ident, targetUser.realHost, ipAddressToShow(targetUser.ip)))
 			chanList = []
 			for channel in targetUser.channels:
 				if self.ircd.runActionUntilValue("showchannel-whois", channel, user, targetUser, users=[user, targetUser], channels=[channel]) is not False:

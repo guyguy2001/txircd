@@ -6,7 +6,7 @@ from twisted.names import client as dnsClient
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
+from txircd.utils import CaseInsensitiveDictionary, ipAddressToShow, isValidHost, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.ERR_ALREADYREGISTERED = "462"
@@ -20,8 +20,6 @@ class IRCUser(IRCBase):
 		
 		self.nick = None
 		self.ident = None
-		if ip[0] == ":": # Normalize IPv6 address for IRC
-			ip = "0{}".format(ip)
 		if host is None:
 			self.realHost = ip
 		else:
@@ -389,7 +387,7 @@ class IRCUser(IRCBase):
 		Returns the user's hostmask using the user's IP address instead of the
 		host.
 		"""
-		return "{}!{}@{}".format(self.nick, self.ident, self.ip.compressed)
+		return "{}!{}@{}".format(self.nick, self.ident, ipAddressToShow(self.ip))
 	
 	def changeNick(self, newNick: str, fromServer: "IRCServer" = None) -> None:
 		"""

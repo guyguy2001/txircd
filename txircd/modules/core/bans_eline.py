@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
-from txircd.utils import durationToSeconds, ircLower, now
+from txircd.utils import durationToSeconds, ipAddressToShow, ircLower, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -37,7 +37,7 @@ class ELine(ModuleData, XLineBase):
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
 		if fnmatchcase(userMask, exceptMask):
 			return True
-		userMask = ircLower("{}@{}".format(user.ident, user.ip.compressed))
+		userMask = ircLower("{}@{}".format(user.ident, ipAddressToShow(user.ip)))
 		if fnmatchcase(userMask, exceptMask):
 			return True
 		return False

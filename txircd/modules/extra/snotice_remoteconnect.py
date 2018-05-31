@@ -1,5 +1,6 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
+from txircd.utils import ipAddressToShow
 from zope.interface import implementer
 from typing import Callable, List, Tuple
 
@@ -20,7 +21,7 @@ class SnoRemoteConnect(ModuleData):
 		server = self.ircd.servers[user.uuid[:3]]
 		if server == self.burstingServer:
 			return
-		self.ircd.runActionStandard("sendservernotice", "remoteconnect", "Client connected on {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), user.ip.compressed, user.gecos))
+		self.ircd.runActionStandard("sendservernotice", "remoteconnect", "Client connected on {}: {} ({}) [{}]".format(server.name, user.hostmaskWithRealHost(), ipAddressToShow(user.ip), user.gecos))
 	
 	def checkSnoType(self, user: "IRCUser", typename: str) -> bool:
 		return typename == "remoteconnect"

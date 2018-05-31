@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import durationToSeconds, ircLower, now
+from txircd.utils import durationToSeconds, ipAddressToShow, ircLower, now
 from zope.interface import implementer
 from datetime import datetime, timedelta
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -61,7 +61,7 @@ class WhowasCommand(ModuleData, Command):
 			"ident": user.ident,
 			"host": user.host(),
 			"realhost": user.realHost,
-			"ip": user.ip.compressed,
+			"ip": ipAddressToShow(user.ip),
 			"gecos": user.gecos,
 			"server": serverName,
 			"when": now()

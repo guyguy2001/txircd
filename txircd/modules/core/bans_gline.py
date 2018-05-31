@@ -3,7 +3,7 @@ from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
 from txircd.modules.xlinebase import XLineBase
-from txircd.utils import durationToSeconds, ircLower, now
+from txircd.utils import durationToSeconds, ipAddressToShow, ircLower, now
 from zope.interface import implementer
 from fnmatch import fnmatchcase
 from typing import Any, Dict, Callable, List, Optional, Tuple
@@ -44,7 +44,7 @@ class GLine(ModuleData, XLineBase):
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
 		if fnmatchcase(userMask, banMask):
 			return True
-		userMask = ircLower("{}@{}".format(user.ident, user.ip.compressed))
+		userMask = ircLower("{}@{}".format(user.ident, ipAddressToShow(user.ip)))
 		if fnmatchcase(userMask, banMask):
 			return True
 		return False

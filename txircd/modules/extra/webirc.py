@@ -3,7 +3,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IModuleData, ModuleData
-from txircd.utils import isValidHost, lenBytes
+from txircd.utils import ipAddressToShow, isValidHost, lenBytes
 from zope.interface import implementer
 from ipaddress import ip_address
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -31,15 +31,15 @@ class WebIRC(ModuleData, Command):
 	
 	def checkSourceAndPass(self, user: "IRCUser", data: Dict[Any, Any]) -> Optional[bool]:
 		entry = None
-		if user.ip.compressed in self.ircd.config.get("webirc_allowed_sources", {}):
-			entry = user.ip.compressed
+		if ipAddressToShow(user.ip) in self.ircd.config.get("webirc_allowed_sources", {}):
+			entry = ipAddressToShow(user.ip)
 		if entry is None and user.realHost in self.ircd.config.get("webirc_allowed_sources", {}):
 			entry = user.realHost
 		if entry is None:
-			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip.compressed}\" and host \"{user.realHost}\", but the IP and host do not match any WEBIRC configuration.", user=user)
+			self.ircd.log.warn("WEBIRC was requested from IP \"{ip}\" and host \"{user.realHost}\", but the IP and host do not match any WEBIRC configuration.", user=user, ip=ipAddressToShow(user.ip))
 			return False
 		if self.ircd.config["webirc_allowed_sources"][entry] != data["password"]:
-			self.ircd.log.warn("WEBIRC was requested from IP \"{user.ip.compressed}\" and host \"{user.realHost}\" with password \"{password}\", but this password does not match the WEBIRC configuration for this IP.", user=user, password=data)
+			self.ircd.log.warn("WEBIRC was requested from IP \"{ip}\" and host \"{user.realHost}\" with password \"{password}\", but this password does not match the WEBIRC configuration for this IP.", user=user, ip=ipAddressToShow(user.ip), password=data)
 			return False
 		return None
 	
@@ -56,32 +56,32 @@ class WebIRC(ModuleData, Command):
 	def execute(self, user: "IRCUser", data: Dict[Any, Any]) -> bool:
 		# We verify that the DNS resolution is correct and set the provided IP as the host if it is incorrect.
 		host = data["host"]
-		ip = data["ip"]
+		requestIP = data["ip"]
 		maxLength = self.ircd.config.get("hostname_length", 64)
 		if not isValidHost(host) or lenBytes(host) > maxLength:
-			self.useIPFallback(user, host, ip)
+			self.useIPFallback(user, host, requestIP)
 			return True
 		user.addRegisterHold("WEBIRC")
 		resolveDeferred = dnsClient.getHostByName(host, timeout=(2,))
-		resolveDeferred.addCallbacks(callback=self.checkDNS, callbackArgs=(user, host, ip), errback=self.failedDNS, errbackArgs=(user, host, ip))
+		resolveDeferred.addCallbacks(callback=self.checkDNS, callbackArgs=(user, host, requestIP), errback=self.failedDNS, errbackArgs=(user, host, requestIP))
 		return True
 	
-	def checkDNS(self, result: str, user: "IRCUser", host: str, ip: str) -> None:
-		if result == ip:
-			self.ircd.log.info("WEBIRC detected for IP \"{user.ip.compressed}\"; changing {user.nick}'s IP to \"{requestip}\" and their real host to \"{requesthost}\".", user=user, requestip=ip, requesthost=host)
-			user.ip = ip_address(ip)
+	def checkDNS(self, result: str, user: "IRCUser", host: str, requestIP: str) -> None:
+		if result == requestIP:
+			self.ircd.log.info("WEBIRC detected for IP \"{userip}\"; changing {user.nick}'s IP to \"{requestip}\" and their real host to \"{requesthost}\".", user=user, userip=ipAddressToShow(user.ip), requestip=requestIP, requesthost=host)
+			user.ip = ip_address(requestIP)
 			user.realHost = host
 			user.register("WEBIRC")
 			return
-		self.useIPFallback(user, host, ip)
+		self.useIPFallback(user, host, requestIP)
 	
-	def failedDNS(self, error: "Failure", user: "IRCUser", host: str, ip: str) -> None:
-		self.useIPFallback(user, host, ip)
+	def failedDNS(self, error: "Failure", user: "IRCUser", host: str, requestIP: str) -> None:
+		self.useIPFallback(user, host, requestIP)
 		user.register("WEBIRC")
 	
-	def useIPFallback(self, user: "IRCUser", host: str, ip: str) -> None:
-		self.ircd.log.warn("DNS resolution for WEBIRC command from IP \"{user.ip.compressed}\" with requested IP \"{requestip}\" and requested host \"{requesthost}\" has failed; using the requested IP address as the host instead.", user=user, requestip=ip, requesthost=host)
-		user.ip = ip_address(ip)
-		user.realHost = ip
+	def useIPFallback(self, user: "IRCUser", host: str, requestIP: str) -> None:
+		self.ircd.log.warn("DNS resolution for WEBIRC command from IP \"{userip}\" with requested IP \"{requestip}\" and requested host \"{requesthost}\" has failed; using the requested IP address as the host instead.", user=user, userip=ipAddressToShow(user.ip), requestip=requestIP, requesthost=host)
+		user.ip = ip_address(requestIP)
+		user.realHost = requestIP
 
 webirc = WebIRC()

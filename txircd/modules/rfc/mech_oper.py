@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.config import ConfigValidationError
 from txircd.module_interface import Command, ICommand, IMode, IModuleData, Mode, ModuleData
-from txircd.utils import ircLower, isValidHost, ModeType
+from txircd.utils import ipAddressToShow, ircLower, isValidHost, ModeType
 from zope.interface import implementer
 from fnmatch import fnmatchcase
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -182,7 +182,7 @@ class UserOper(Command):
 				userHost = ircLower("{}@{}".format(user.ident, user.realHost))
 				if fnmatchcase(userHost, operHost):
 					break
-				userHost = ircLower("{}@{}".format(user.ident, user.ip.compressed))
+				userHost = ircLower("{}@{}".format(user.ident, ipAddressToShow(user.ip)))
 				if fnmatchcase(userHost, operHost):
 					break
 			else:
