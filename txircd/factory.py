@@ -2,17 +2,16 @@ from twisted.internet.protocol import ClientFactory, Factory
 from txircd.server import IRCServer
 from txircd.user import IRCUser
 from ipaddress import ip_address
-import re
+from typing import Union
 
-ipv4MappedAddr = re.compile("::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
-def unmapIPv4(ip: str) -> str:
+def unmapIPv4(ip: str) -> Union["IPv4Address", "IPv6Address"]:
 	"""
 	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
 	"""
-	mapped = ipv4MappedAddr.match(ip)
-	if mapped:
-		return mapped.group(1)
-	return ip
+	addr = ip_address(ip)
+	if addr.ipv4_mapped is None:
+		return addr
+	return addr.ipv4_mapped
 
 class UserFactory(Factory):
 	protocol = IRCUser
