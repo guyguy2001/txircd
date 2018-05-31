@@ -272,25 +272,3 @@ def stripFormatting(message: str) -> str:
 	Removes IRC formatting from the provided message.
 	"""
 	return format_chars.sub('', message)
-
-
-def ipIsV4(ip: str) -> bool:
-	"""
-	Checks whether an IP address is IPv4. Assumes that it's known the parameter is an IP address.
-	"""
-	return "." in ip
-
-def expandIPv6Address(ip: str) -> str:
-	if "::" in ip:
-		count = 6 - ip.replace("::", "").count(":")
-		ip = ip.replace("::", ":{}:".format(":".join(["0000" for i in range(count)])))
-		if ip[0] == ":":
-			ip = "0000{}".format(ip)
-		if ip[-1] == ":":
-			ip = "{}0000".format(ip)
-	pieces = ip.split(":")
-	for index, piece in enumerate(pieces):
-		pieceLen = len(piece)
-		if pieceLen < 4:
-			pieces[index] = "{}{}".format("".join(["0" for i in range(4 - pieceLen)]), piece)
-	return ":".join(pieces)

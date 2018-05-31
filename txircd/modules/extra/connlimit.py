@@ -17,7 +17,7 @@ class ConnectionLimit(ModuleData):
 
 	def load(self) -> None:
 		for user in self.ircd.users.values():
-			self.addToConnections(user.ip)
+			self.addToConnections(user.ip.compressed)
 
 	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "connlimit_globmax" in config and (not isinstance(config["connlimit_globmax"], int) or config["connlimit_globmax"] < 0):
@@ -30,7 +30,7 @@ class ConnectionLimit(ModuleData):
 					raise ConfigValidationError("connlimit_whitelist", "every entry must be a valid ip")
 
 	def handleLocalConnect(self, user: "IRCUser", *params: Any) -> Optional[bool]:
-		ip = user.ip
+		ip = user.ip.compressed
 		if self.addToConnections(ip) and self.peerConnections[ip] > self.ircd.config.get("connlimit_globmax", 3):
 			self.ircd.log.info("Connection limit reached from {ip}", ip=ip)
 			user.disconnect("No more connections allowed from your IP ({})".format(ip))
@@ -38,10 +38,10 @@ class ConnectionLimit(ModuleData):
 		return True
 
 	def handleRemoteConnect(self, user: "IRCUser", *params: Any) -> None:
-		self.addToConnections(user.ip)
+		self.addToConnections(user.ip.compressed)
 
 	def handleDisconnect(self, user: "IRCUser", *params: Any) -> None:
-		ip = user.ip
+		ip = user.ip.compressed
 		if ip in self.peerConnections:
 			self.peerConnections[ip] -= 1
 			if self.peerConnections[ip] < 1:

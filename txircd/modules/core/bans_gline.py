@@ -44,7 +44,7 @@ class GLine(ModuleData, XLineBase):
 		userMask = ircLower("{}@{}".format(user.ident, user.realHost))
 		if fnmatchcase(userMask, banMask):
 			return True
-		userMask = ircLower("{}@{}".format(user.ident, user.ip))
+		userMask = ircLower("{}@{}".format(user.ident, user.ip.compressed))
 		if fnmatchcase(userMask, banMask):
 			return True
 		return False

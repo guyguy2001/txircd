@@ -182,7 +182,7 @@ class UserOper(Command):
 				userHost = ircLower("{}@{}".format(user.ident, user.realHost))
 				if fnmatchcase(userHost, operHost):
 					break
-				userHost = ircLower("{}@{}".format(user.ident, user.ip))
+				userHost = ircLower("{}@{}".format(user.ident, user.ip.compressed))
 				if fnmatchcase(userHost, operHost):
 					break
 			else:

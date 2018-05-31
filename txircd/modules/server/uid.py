@@ -4,6 +4,7 @@ from txircd.user import RemoteUser
 from txircd.utils import ModeType, now, timestampStringFromTime
 from zope.interface import implementer
 from datetime import datetime
+from ipaddress import ip_address
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 @implementer(IPlugin, IModuleData, ICommand)
@@ -67,7 +68,7 @@ class ServerUID(ModuleData, Command):
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		connectTime = data["connecttime"]
 		nickTime = data["nicktime"]
-		newUser = RemoteUser(self.ircd, data["ip"], data["uuid"], data["host"])
+		newUser = RemoteUser(self.ircd, ip_address(data["ip"]), data["uuid"], data["host"])
 		newUser.changeHost(data["hosttype"], data["displayhost"], True)
 		newUser.changeIdent(data["ident"], server)
 		newUser.changeGecos(data["gecos"], True)
@@ -80,7 +81,7 @@ class ServerUID(ModuleData, Command):
 				changeOK = self.ircd.runActionUntilValue("localnickcollision", otherUser, newUser, server, users=[otherUser, newUser])
 				if changeOK is None:
 					return None
-			sameUser = ("{}@{}".format(otherUser.ident, otherUser.ip) == "{}@{}".format(newUser.ident, newUser.ip))
+			sameUser = ("{}@{}".format(otherUser.ident, otherUser.ip.compressed) == "{}@{}".format(newUser.ident, newUser.ip.compressed))
 			if sameUser and newUser.nickSince < otherUser.nickSince: # If the user@ip is the same, the newer nickname should win
 				newUser.changeNick(newUser.uuid, server)
 			elif sameUser and otherUser.nickSince < newUser.nickSince:
@@ -120,14 +121,14 @@ class ServerUID(ModuleData, Command):
 		newUser.register("NICK", True)
 		connectTimestamp = timestampStringFromTime(connectTime)
 		nickTimestamp = timestampStringFromTime(nickTime)
-		uidParams = [newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, newUser.ip, nickTimestamp, connectionFlags]
+		uidParams = [newUser.uuid, connectTimestamp, newUser.nick, newUser.realHost, newUser.host(), newUser.currentHostType(), newUser.ident, newUser.ip.compressed, nickTimestamp, connectionFlags]
 		uidParams.extend(newUser.modeString(None).split(" "))
 		uidParams.append(newUser.gecos)
 		self.ircd.broadcastToServers(server, "UID", *uidParams, prefix=self.ircd.serverID)
 		return True
 	
 	def broadcastUID(self, user: "IRCUser") -> None:
-		uidParams = [user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip, timestampStringFromTime(user.nickSince), "S" if user.secureConnection else "*"]
+		uidParams = [user.uuid, timestampStringFromTime(user.connectedSince), user.nick, user.realHost, user.host(), user.currentHostType(), user.ident, user.ip.compressed, timestampStringFromTime(user.nickSince), "S" if user.secureConnection else "*"]
 		uidParams.extend(user.modeString(None).split(" "))
 		uidParams.append(user.gecos)
 		self.ircd.broadcastToServers(None, "UID", *uidParams, prefix=self.ircd.serverID)

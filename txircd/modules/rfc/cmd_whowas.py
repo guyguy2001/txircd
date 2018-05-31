@@ -61,7 +61,7 @@ class WhowasCommand(ModuleData, Command):
 			"ident": user.ident,
 			"host": user.host(),
 			"realhost": user.realHost,
-			"ip": user.ip,
+			"ip": user.ip.compressed,
 			"gecos": user.gecos,
 			"server": serverName,
 			"when": now()

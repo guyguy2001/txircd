@@ -6,13 +6,13 @@ from twisted.names import client as dnsClient
 from twisted.words.protocols import irc
 from txircd import version
 from txircd.ircbase import IRCBase
-from txircd.utils import CaseInsensitiveDictionary, expandIPv6Address, ipIsV4, isValidHost, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
+from txircd.utils import CaseInsensitiveDictionary, isValidHost, isValidMetadataKey, lenBytes, ModeType, now, splitMessage
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.ERR_ALREADYREGISTERED = "462"
 
 class IRCUser(IRCBase):
-	def __init__(self, ircd, ip, uuid = None, host = None):
+	def __init__(self, ircd: "IRCd", ip: Union["IPv4Address", "IPv6Address"], uuid: str = None, host: str = None):
 		self.ircd = ircd
 		self.uuid = ircd.createUUID() if uuid is None else uuid
 		
@@ -51,13 +51,7 @@ class IRCUser(IRCBase):
 		self._startDNSResolving(registrationTimeout)
 	
 	def _startDNSResolving(self, timeout: int) -> None:
-		ip = self.ip
-		if ipIsV4(ip):
-			addr = "{}.in-addr.arpa".format(".".join(reversed(ip.split("."))))
-		else:
-			addr = reversed(expandIPv6Address(ip).replace(":", ""))
-			addr = "{}.ip6.arpa".format(".".join(addr))
-		resolveDeferred = dnsClient.lookupPointer(addr, ((timeout/2),))
+		resolveDeferred = dnsClient.lookupPointer(self.ip.reverse_pointer, ((timeout/2),))
 		resolveDeferred.addCallbacks(callback=self._verifyDNSResolution, callbackArgs=(timeout,), errback=self._cancelDNSResolution)
 	
 	def _verifyDNSResolution(self, result: Tuple[List["RRHeader"], List["RRHeader"], List["RRHeader"]], timeout: int) -> None:
@@ -76,7 +70,7 @@ class IRCUser(IRCBase):
 		resolveDeferred.addCallbacks(callback=self._completeDNSResolution, errback=self._cancelDNSResolution, callbackArgs=(name,))
 	
 	def _completeDNSResolution(self, result: str, name: str) -> None:
-		if result == self.ip:
+		if result == self.ip.compressed:
 			self.realHost = name
 		self.register("dns")
 	
@@ -389,7 +383,7 @@ class IRCUser(IRCBase):
 		Returns the user's hostmask using the user's IP address instead of the
 		host.
 		"""
-		return "{}!{}@{}".format(self.nick, self.ident, self.ip)
+		return "{}!{}@{}".format(self.nick, self.ident, self.ip.compressed)
 	
 	def changeNick(self, newNick: str, fromServer: "IRCServer" = None) -> None:
 		"""
@@ -861,7 +855,7 @@ class IRCUser(IRCBase):
 		return "".join(modeStr)
 
 class RemoteUser(IRCUser):
-	def __init__(self, ircd, ip, uuid = None, host = None):
+	def __init__(self, ircd: "IRCd", ip: Union["IPv4Address", "IPv6Address"], uuid: str = None, host: str = None):
 		IRCUser.__init__(self, ircd, ip, uuid, host)
 		self._registrationTimeoutTimer.cancel()
 	

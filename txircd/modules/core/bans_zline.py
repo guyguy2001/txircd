@@ -36,7 +36,7 @@ class ZLine(ModuleData, XLineBase):
 			raise ConfigValidationError("client_ban_msg", "value must be a string")
 	
 	def checkUserMatch(self, user: "IRCUser", mask: str, data: Optional[Dict[Any, Any]]) -> bool:
-		return fnmatchcase(user.ip, mask)
+		return fnmatchcase(user.ip.compressed, mask)
 	
 	def normalizeMask(self, mask: str) -> str:
 		if ":" in mask and "*" not in mask and "?" not in mask: # Normalize non-wildcard IPv6 addresses
@@ -47,7 +47,7 @@ class ZLine(ModuleData, XLineBase):
 		return mask.lower()
 	
 	def killUser(self, user: "IRCUser", reason: str) -> None:
-		self.ircd.log.info("Matched user {user.uuid} ({user.ip}) against a z:line: {reason}", user=user, reason=reason)
+		self.ircd.log.info("Matched user {user.uuid} ({user.ip.compressed}) against a z:line: {reason}", user=user, reason=reason)
 		user.sendMessage(irc.ERR_YOUREBANNEDCREEP, self.ircd.config.get("client_ban_msg", "You're banned! Email abuse@example.com for assistance."))
 		user.disconnect("Z:Lined: {}".format(reason))
 	
@@ -75,7 +75,7 @@ class UserZLine(Command):
 			return None
 		banmask = params[0]
 		if banmask in self.module.ircd.userNicks:
-			banmask = self.module.ircd.userNicks[banmask].ip
+			banmask = self.module.ircd.userNicks[banmask].ip.compressed
 		if len(params) == 1:
 			return {
 				"mask": banmask

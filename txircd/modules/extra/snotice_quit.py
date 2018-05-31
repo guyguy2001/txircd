@@ -14,7 +14,7 @@ class SnoQuit(ModuleData):
 	def sendQuitNotice(self, user: "IRCUser", reason: str, fromServer: Optional["IRCServer"]) -> None:
 		if not user.isRegistered():
 			return
-		self.ircd.runActionStandard("sendservernotice", "quit", "Client quit from {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip, reason))
+		self.ircd.runActionStandard("sendservernotice", "quit", "Client quit from {}: {} ({}) [{}]".format(self.ircd.name, user.hostmaskWithRealHost(), user.ip.compressed, reason))
 
 	def checkSnoType(self, user: "IRCUser", typename: str) -> bool:
 		return typename == "quit"
