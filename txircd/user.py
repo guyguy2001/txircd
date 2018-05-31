@@ -66,12 +66,18 @@ class IRCUser(IRCBase):
 		if not isValidHost(name):
 			self._cancelDNSResolution()
 			return
-		resolveDeferred = dnsClient.getHostByName(name, ((timeout/2),))
+		if self.ip.version == 4:
+			resolveDeferred = dnsClient.lookupAddress(name, ((timeout/2),))
+		else:
+			resolveDeferred = dnsClient.lookupIPV6Address(name, ((timeout/2),))
 		resolveDeferred.addCallbacks(callback=self._completeDNSResolution, errback=self._cancelDNSResolution, callbackArgs=(name,))
 	
-	def _completeDNSResolution(self, result: str, name: str) -> None:
-		if result == self.ip.compressed:
-			self.realHost = name
+	def _completeDNSResolution(self, result: Tuple[List["RRHeader"], List["RRHeader"], List["RRHeader"]], name: str) -> None:
+		addressResults = result[0]
+		for addressData in addressResults:
+			if addressData.payload.address == self.ip.packed:
+				self.realHost = name
+				break
 		self.register("dns")
 	
 	def _cancelDNSResolution(self, error: "Failure" = None) -> None:
