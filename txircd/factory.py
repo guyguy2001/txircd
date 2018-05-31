@@ -9,7 +9,10 @@ def unmapIPv4(ip: str) -> Union["IPv4Address", "IPv6Address"]:
 	Converts an IPv6-mapped IPv4 address to a bare IPv4 address.
 	"""
 	addr = ip_address(ip)
-	if addr.ipv4_mapped is None:
+	try:
+		if addr.ipv4_mapped is None:
+			return addr
+	except AttributeError:
 		return addr
 	return addr.ipv4_mapped
 
