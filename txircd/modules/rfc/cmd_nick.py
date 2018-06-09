@@ -102,25 +102,6 @@ class NickServerCommand(Command):
 			time = datetime.utcfromtimestamp(float(params[0]))
 		except ValueError:
 			return None
-		if params[1] in self.ircd.userNicks:
-			localUser = self.ircd.userNicks[params[1]]
-			if localUser != user:
-				if localUser.localOnly:
-					allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, server, users=[localUser, user])
-					if allowChange:
-						return {
-							"user": user,
-							"time": time,
-							"nick": params[1]
-						}
-					if allowChange is False:
-						return {
-							"user": user,
-							"time": time,
-							"nick": None
-						}
-					return None
-				return None
 		return {
 			"user": user,
 			"time": time,
@@ -132,12 +113,20 @@ class NickServerCommand(Command):
 			return True
 		user = data["user"]
 		newNick = data["nick"]
-		if not newNick:
-			return True # Handled collision by not changing the user's nick
-		if newNick in self.ircd.userNicks and self.ircd.userNicks[newNick] != user:
-			user.changeNick(user.uuid)
-			return True
-		user.changeNick(data["nick"], server)
+		
+		if newNick in self.ircd.userNicks:
+			allowChange = False
+			localUser = self.ircd.userNicks[newNick]
+			if localUser != user:
+				if localUser.localOnly:
+					allowChange = self.ircd.runActionUntilValue("localnickcollision", localUser, user, server, users=[localUser, user])
+					if allowChange is None:
+						return False
+					if not allowChange:
+						return True
+				newNick = user.uuid
+				localUser.changeNick(localUser.uuid, server)
+		user.changeNick(newNick, server)
 		user.nickSince = data["time"]
 		return True
 
