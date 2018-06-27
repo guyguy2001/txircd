@@ -23,6 +23,10 @@ modules:
 # service which handles running auctions and users bidding.
 - BidService
 
+# PollService: This module provides the utilities required to have a polling
+# service which handles running polls in the chat.
+- PollService
+
 # donor_db
 # Information for connecting to the database. The database must already have
 # the correct schema set up. The value is a dict of information for connecting;
@@ -72,3 +76,18 @@ modules:
 # The directory in which to save auction logs. If not specified, auction logs
 # are not saved.
 #bid_log_directory: auction-logs/
+
+# poll_announce_bot
+# If you've set up ServerBots and want poll messages to appear as coming from
+# that bot, you can put the nick of one of those bots here.
+# Be careful: If the server bot isn't set up and someone assumes this nickname,
+# messages will appear to come from that user!
+# By default, messages are sent as coming from the server.
+#poll_announce_bot: PollServ
+
+# poll_announce_channels
+# A list of channels to which to send the poll announcements. There are no
+# channels in this list by default, so unless you want all your polls to be
+# secret, be sure to add some!
+#poll_announce_channels:
+#- '#desertbus'
