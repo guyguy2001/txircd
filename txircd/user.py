@@ -21,7 +21,7 @@ class IRCUser(IRCBase):
 		self.nick = None
 		self.ident = None
 		if host is None:
-			self.realHost = ip
+			self.realHost = ipAddressToShow(ip)
 		else:
 			self.realHost = host
 		self.ip = ip
