@@ -43,7 +43,8 @@ class Accounts(ModuleData):
 			("burst", 5, self.startBurst) ]
 	
 	def serverCommands(self) -> List[Tuple[str, int, Command]]:
-		return [ ("CREATEACCOUNT", 1, CreateAccountCommand(self)),
+		return [ ("ACCOUNTINFO", 1, AccountInfoCommand(self)),
+			("CREATEACCOUNT", 1, CreateAccountCommand(self)),
 			("DELETEACCOUNT", 1, DeleteAccountCommand(self)),
 			("UPDATEACCOUNTNAME", 1, UpdateAccountNameCommand(self)),
 			("UPDATEACCOUNTPASS", 1, UpdateAccountPassCommand(self)),
@@ -58,8 +59,6 @@ class Accounts(ModuleData):
 			self.ircd.storage["services"] = {}
 		if "journal" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["journal"] = []
-		if "serverupdates" not in self.ircd.storage["services"]:
-			self.ircd.storage["services"]["serverupdates"] = {}
 		if "accounts" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["accounts"] = {}
 			self.ircd.storage["services"]["accounts"]["data"] = {}
@@ -86,6 +85,99 @@ class Accounts(ModuleData):
 	def setStorageReferences(self) -> None:
 		self.servicesData = self.ircd.storage["services"]
 		self.accountData = self.servicesData["accounts"]
+	
+	def registerAccountFromInfo(self, accountInfo: Dict[str, Any], updateConflictingIfTied: bool, fromServer: "IRCServer") -> bool:
+		"""
+		Registers the given account if it has the minimum required data.
+		If the account already exists, replaces that account if the timestamp is less.
+		In the case of a tie, non-conflicting data (nickname list) is updated. Conflicting data is also updated if updateConflictingIfTied is true.
+		This function is meant to accommodate server commands, so fromServer must be passed.
+		"""
+		if "username" not in accountInfo or "password" not in accountInfo or "nick" not in accountInfo: # We need to do some basic sanity checks. This data is required.
+			return False
+		nearestFromServer = fromServer
+		while nearestFromServer.nextClosest != self.ircd.serverID:
+			nearestFromServer = self.ircd.servers[nearestFromServer.nextClosest]
+		accountName = accountInfo["username"]
+		lowerAccountName = ircLower(accountName)
+		accountNicks = accountInfo["nick"]
+		accountTime = accountInfo["registered"]
+		conflictNicks = []
+		shouldRegisterAccount = True
+		
+		if "nick" not in self.accountData["index"]:
+			self.accountData["index"]["nick"] = {}
+		
+		for nickData in accountNicks:
+			if nickData[0] == accountName:
+				break
+		else: # Account name must be in nickname list for basic account consistency
+			return False
+		otherAccountData = None
+		if lowerAccountName in self.accountData["data"]:
+			otherAccountData = self.accountData["data"][lowerAccountName]
+			if accountTime > otherAccountData["registered"]:
+				shouldRegisterAccount = False
+			if accountTime < otherAccountData["registered"]:
+				self.deleteAccount(accountName, nearestFromServer)
+		for nickData in accountNicks:
+			if ircLower(nickData[0]) in self.accountData["index"]["nick"]:
+				conflictNicks.append(nickData)
+		if conflictNicks:
+			for nickData in conflictNicks:
+				lowerNick = ircLower(nickData[0])
+				otherLowerAccountName = self.accountData["index"]["nick"][lowerNick]
+				otherNickData = None
+				for otherAccountNickData in self.accountData["data"][otherLowerAccountName]["nick"]:
+					if ircLower(otherAccountNickData[0]) == lowerNick:
+						otherNickData = otherAccountNickData
+						break
+				else:
+					continue
+				nickIsAccount = (lowerNick == lowerAccountName)
+				otherNickIsAccount = (lowerNick == otherLowerAccountName)
+				if nickData[1] == otherNickData[1]:
+					if nickIsAccount and otherNickIsAccount:
+						continue # We'll handle merging accounts as part of registering this one
+					if nickIsAccount:
+						self.deleteAccount(otherLowerAccountName, nearestFromServer)
+					elif otherNickIsAccount:
+						return False
+					else:
+						accountNicks.remove(nickData)
+						self.removeAltNick(otherLowerAccountName, otherNickData[0], nearestFromServer)
+				elif nickData[1] < otherNickData[1]:
+					if otherNickIsAccount:
+						self.deleteAccount(otherLowerAccountName, nearestFromServer)
+					else:
+						self.removeAltNick(otherLowerAccountName, otherNickData[0], nearestFromServer)
+				else:
+					if nickIsAccount:
+						return False
+					accountNicks.remove(nickData)
+		if not shouldRegisterAccount:
+			return False
+		if otherAccountData is None:
+			self.accountData["data"][lowerAccountName] = accountInfo
+			self.ircd.runActionStandard("accountsetupindices", accountName)
+			return True
+		self.ircd.runActionStandard("accountremoveindices", accountName)
+		existingNicks = {}
+		for otherNickData in otherAccountData["nick"]:
+			existingNicks[ircLower(otherNickData[0])] = otherNickData[1]
+		for nickData in accountNicks:
+			lowerNick = ircLower(nickData[0])
+			if lowerNick in existingNicks:
+				if nickData[1] < existingNicks[lowerNick]:
+					for otherNickData in otherAccountData["nick"]:
+						if ircLower(otherNickData[0]) == lowerNick:
+							otherNickData[1] = nickData[1]
+							break
+		if updateConflictingIfTied:
+			accountInfo["nick"] = otherAccountData["nick"]
+			self.servicesData["data"][lowerAccountName] = accountInfo
+		self.ircd.runActionStandard("accountsetupindices", accountName)
+		return True
 	
 	def createAccount(self, username: str, password: str, passwordHashedMethod: str, email: str, user: Optional["IRCUser"], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
@@ -160,7 +252,6 @@ class Accounts(ModuleData):
 		if user and user.uuid[:3] == self.ircd.serverID:
 			user.setMetadata("account", username)
 		
-		self._serverUpdateTime(registrationTime)
 		self.ircd.runActionStandard("accountcreated", username)
 		return True, None, None
 	
@@ -271,7 +362,6 @@ class Accounts(ModuleData):
 		for user in self.ircd.users.values():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
 				user.setMetadata("account", None)
-		self._serverUpdateTime(deleteTime)
 		self.ircd.runActionStandard("handledeleteaccount", username)
 		return True, None, None
 	
@@ -311,7 +401,6 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", newAccountName)
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, timestampStringFromTime(registerTime), newAccountName))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
-		self._serverUpdateTime(updateTime)
 		if not fromServer:
 			for user in self.ircd.users.values():
 				if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerOldAccountName:
@@ -346,7 +435,6 @@ class Accounts(ModuleData):
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTPASS", accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod, prefix=self.ircd.serverID)
-		self._serverUpdateTime(updateTime)
 		return True, None, None
 	
 	def setEmail(self, accountName: str, email: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
@@ -372,7 +460,6 @@ class Accounts(ModuleData):
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTEMAIL", accountName, timestampStringFromTime(registerTime), email))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), email, prefix=self.ircd.serverID)
-		self._serverUpdateTime(updateTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
@@ -403,7 +490,6 @@ class Accounts(ModuleData):
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, timestampStringFromTime(registerTime), newNick))
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTime(registerTime), newNick, prefix=self.ircd.serverID)
-		self._serverUpdateTime(addTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
@@ -433,7 +519,6 @@ class Accounts(ModuleData):
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.servicesData["journal"].append((removeTime, "REMOVEACCOUNTNICK", accountName, oldNick))
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTime(registerTime), oldNick, prefix=self.ircd.serverID)
-		self._serverUpdateTime(removeTime)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
 	
@@ -583,15 +668,31 @@ class Accounts(ModuleData):
 		for account in removeAccounts:
 			del self.accountData["deleted"][account]
 	
-	def _serverUpdateTime(self, time: datetime) -> None:
-		for server in self.ircd.servers.values():
-			self.servicesData["serverupdates"][server.serverID] = time
-	
 	def startBurst(self, server: "IRCServer") -> None:
-		lastSyncTime = datetime.utcfromtimestamp(0)
-		if server.serverID in self.servicesData["serverupdates"]:
-			lastSyncTime = self.servicesData["serverupdates"][server.serverID]
-		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, timestampStringFromTime(lastSyncTime), prefix=self.ircd.serverID)
+		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, prefix=self.ircd.serverID)
+
+@implementer(ICommand)
+class AccountInfoCommand(Command):
+	def __init__(self, module):
+		self.module = module
+		self.ircd = module.ircd
+	
+	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
+		if len(params) != 1:
+			return None
+		accountInfo = None
+		try:
+			accountInfo = deserializeAccount(params[0])
+		except ValueError:
+			return None
+		return {
+			"accountinfo": accountInfo
+		}
+	
+	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
+		accountInfo = data["accountInfo"]
+		self.module.registerAccountFromInfo(accountInfo, self.ircd.serverID < server.serverID, server)
+		return True
 
 @implementer(ICommand)
 class CreateAccountCommand(Command):
@@ -1003,16 +1104,10 @@ class AccountBurstInitCommand(Command):
 		self.ircd = module.ircd
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
-		if len(params) != 2:
-			return None
-		lastSyncTime = None
-		try:
-			lastSyncTime = datetime.utcfromtimestamp(float(params[1]))
-		except (TypeError, ValueError):
+		if len(params) != 1:
 			return None
 		return {
-			"version": params[0],
-			"synctime": lastSyncTime
+			"version": params[0]
 		}
 	
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
@@ -1022,7 +1117,6 @@ class AccountBurstInitCommand(Command):
 		for journalData in self.module.servicesData["journal"]:
 			if journalData[0] >= lastSyncTime:
 				server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2:], prefix=self.ircd.serverID)
-		self.module.servicesData["serverupdates"][server.serverID] = now()
 		self.ircd.runActionStandard("afteraccountburst", server)
 		return True
 
