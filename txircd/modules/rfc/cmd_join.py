@@ -52,6 +52,9 @@ class JoinChannel(Command):
 		user.startErrorBatch("JoinCmd")
 		removeIndices = []
 		for index, chanName in enumerate(joiningChannels):
+			if not chanName:
+				user.sendBatchedError("JoinCmd", irc.ERR_BADCHANMASK, "*", "Bad channel mask")
+				removeIndices.append(index)
 			if chanName[0] != "#":
 				user.sendBatchedError("JoinCmd", irc.ERR_BADCHANMASK, chanName, "Bad channel mask")
 				removeIndices.append(index)
