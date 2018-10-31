@@ -259,38 +259,37 @@ class BanMode(ModuleData, Mode):
 					if actionModeType == ModeType.Status:
 						if self.banmaskHasMatchingExtban(banmask):
 							validParams.append(fullBanmask)
-							continue
-						if "!" not in banmask:
+						elif "!" not in banmask:
 							fullBanmask = "{}!*@*".format(fullBanmask)
 						elif "@" not in banmask:
 							fullBanmask = "{}@*".format(fullBanmask)
 						validParams.append(fullBanmask)
-						continue
-					actionParam = None
-					if ":" in actionExtban:
-						actionExtban, actionParam = actionExtban.split(":", 1)
-					actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkUnset(channel, actionParam)
-					for actionParam in actionParamList:
-						updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
-						if self.banmaskHasMatchingExtban(banmask):
+					else:
+						actionParam = None
+						if ":" in actionExtban:
+							actionExtban, actionParam = actionExtban.split(":", 1)
+						actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkUnset(channel, actionParam)
+						for actionParam in actionParamList:
+							updatedBanmask = "{}:{};{}".format(actionExtban, actionParam, banmask)
+							if self.banmaskHasMatchingExtban(banmask):
+								validParams.append(updatedBanmask)
+								continue
+							if "!" not in banmask:
+								updatedBanmask = "{}!*@*".format(updatedBanmask)
+							elif "@" not in banmask:
+								updatedBanmask = "{}@*".format(updatedBanmask)
 							validParams.append(updatedBanmask)
-							continue
-						if "!" not in banmask:
-							updatedBanmask = "{}!*@*".format(updatedBanmask)
-						elif "@" not in banmask:
-							updatedBanmask = "{}@*".format(updatedBanmask)
-						validParams.append(updatedBanmask)
 				else:
 					validParams.append(fullBanmask) # If the mode module was unloaded, just let it out of the system
-				continue
-			if self.banmaskHasMatchingExtban(banmask):
-				validParams.append(fullBanmask)
-				continue # Just allow this; the other checks will be managed by checking whether the parameter is actually set on the channel
-			# If there's no matching extban, make sure the ident and host are given
-			if "!" not in banmask:
-				fullBanmask = "{}!*@*".format(fullBanmask)
-			elif "@" not in banmask:
-				fullBanmask = "{}@*".format(fullBanmask)
+			else:
+				if self.banmaskHasMatchingExtban(banmask):
+					validParams.append(fullBanmask)
+					continue # Just allow this; the other checks will be managed by checking whether the parameter is actually set on the channel
+				# If there's no matching extban, make sure the ident and host are given
+				if "!" not in banmask:
+					fullBanmask = "{}!*@*".format(fullBanmask)
+				elif "@" not in banmask:
+					fullBanmask = "{}@*".format(fullBanmask)
 			
 			# Make ban unsetting case-insensitive
 			lowerBanmask = ircLower(fullBanmask)
