@@ -149,7 +149,7 @@ class ChannelRegister(ModuleData, Mode):
 			return
 		for channelName in self.channelData["index"]["regname"][accountName]:
 			if channelName in self.ircd.channels:
-				self.ircd.channels[channelName].setModes((False, "r", None), self.ircd.serverID)
+				self.ircd.channels[channelName].setModes([(False, "r", None)], self.ircd.serverID)
 			else:
 				del self.channelData["data"][channelName]
 		del self.channelData["index"]["regname"][accountName]
