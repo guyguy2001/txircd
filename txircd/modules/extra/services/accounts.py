@@ -735,12 +735,8 @@ class CreateAccountCommand(Command):
 					self.ircd.log.debug("Ignoring request from server {server.serverID} to create account {name} due to timestamp mismatch (resolved with nickname time)", name=accountName, server=server)
 					return True
 				if len(self.module.accountData["data"][lowerAccountName]["nick"]) == len(accountInfo["nick"]):
-					# We're getting really, really desperate to resolve this conflict now
-					# Random will be different between servers, so we use server ID here
-					# Yes, this operation is defined for strings
-					if server.serverID > self.ircd.serverID:
-						self.ircd.log.debug("Ignoring request from server {server.serverID} to create account {name} due to timestamp mismatch (resolved with last resort)", name=accountName, server=server)
-						return True
+					# This is pretty likely the same account as what we have, so we'll let it through without deleting anything.
+					return True
 			self.module.deleteAccount(accountName, server)
 		
 		createResult = None
