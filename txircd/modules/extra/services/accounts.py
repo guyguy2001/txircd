@@ -1113,10 +1113,8 @@ class AccountBurstInitCommand(Command):
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if data["version"] != accountFormatVersion:
 			return False
-		lastSyncTime = data["synctime"]
 		for journalData in self.module.servicesData["journal"]:
-			if journalData[0] >= lastSyncTime:
-				server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2:], prefix=self.ircd.serverID)
+			server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2:], prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("afteraccountburst", server)
 		return True
 
