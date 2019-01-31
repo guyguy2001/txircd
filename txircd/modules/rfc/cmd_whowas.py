@@ -102,7 +102,7 @@ class WhowasCommand(ModuleData, Command):
 			user.sendMessage(irc.RPL_WHOWASUSER, entryNick, entry["ident"], entry["host"], "*", entry["gecos"])
 			if self.ircd.runActionUntilValue("userhasoperpermission", user, "whowas-host", users=[user]):
 				user.sendMessage(irc.RPL_WHOWASIP, entryNick, "was connecting from {}@{} {}".format(entry["ident"], entry["realhost"], entry["ip"]))
-			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], str(datetime.utcfromtimestamp(entry["when"])))
+			user.sendMessage(irc.RPL_WHOISSERVER, entryNick, entry["server"], str(entry["when"]))
 		user.sendMessage(irc.RPL_ENDOFWHOWAS, nick, "End of WHOWAS")
 		return True
 
