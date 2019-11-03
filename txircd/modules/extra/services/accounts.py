@@ -661,7 +661,7 @@ class AccountInfoCommand(Command):
 		}
 	
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
-		accountInfo = data["accountInfo"]
+		accountInfo = data["accountinfo"]
 		self.module.registerAccountFromInfo(accountInfo, self.ircd.serverID < server.serverID, server)
 		return True
 
