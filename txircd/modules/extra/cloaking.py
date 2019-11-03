@@ -63,7 +63,7 @@ class HostCloaking(ModuleData, Mode):
 		ipHash = ip.packed
 		hashedParts = []
 		for beginProportion in range(4, 0, -1):
-			hashedParts.append(sha256(cloakSaltBytes + ipHash[:len(ipHash)*(beginProportion/8)]).hexdigest()[:4])
+			hashedParts.append(sha256(cloakSaltBytes + ipHash[:int(len(ipHash)*(beginProportion/8))]).hexdigest()[:4])
 		return "{}.IP".format(".".join(hashedParts))
 
 hostCloaking = HostCloaking()
