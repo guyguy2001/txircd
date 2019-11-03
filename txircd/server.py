@@ -110,9 +110,14 @@ class IRCServer(IRCBase):
 			allUsers = list(self.ircd.users.values())
 			notifyUserBatches = set()
 			notifyUsersQuitting = {}
+			
+			localServerNextNode = self
+			while localServerNextNode.nextClosest != self.ircd.serverID:
+				localServerNextNode = self.ircd.servers[localServerNextNode.nextClosest]
+			
 			for user in allUsers:
 				if user.uuid[:3] == self.serverID:
-					notifyUsersForUser = user.disconnectDeferNotify(netsplitQuitMsg, self)
+					notifyUsersForUser = user.disconnectDeferNotify(netsplitQuitMsg, localServerNextNode)
 					notifyUserBatches.update(notifyUsersForUser)
 					notifyUsersQuitting[user] = notifyUsersForUser
 			for user in notifyUserBatches:
