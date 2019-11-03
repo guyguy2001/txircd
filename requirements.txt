@@ -1,4 +1,4 @@
-twisted[tls]==17.9.0
-pyyaml==3.12
-pbkdf2
-validate_email
+twisted[tls]==19.7.0
+pyyaml==5.1.2
+pbkdf2==1.3
+validate_email==1.3
