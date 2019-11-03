@@ -368,7 +368,6 @@ class Accounts(ModuleData):
 		"""
 		lowerOldAccountName = ircLower(oldAccountName)
 		
-		self.cleanOldDeleted()
 		if lowerOldAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
 		
@@ -410,7 +409,6 @@ class Accounts(ModuleData):
 		If it's not, the password must be hashed with that hash method, and the hash method module must be loaded.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
-		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
@@ -436,7 +434,6 @@ class Accounts(ModuleData):
 		Sets the email address for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
-		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
@@ -461,7 +458,6 @@ class Accounts(ModuleData):
 		Adds a nickname to an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
-		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
@@ -490,7 +486,6 @@ class Accounts(ModuleData):
 		Removes a nickname from an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
-		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
@@ -518,7 +513,6 @@ class Accounts(ModuleData):
 		Sets metadata for an account.
 		Returns (True, None, None) if successful or (False, ERRCODE, error message) if not.
 		"""
-		self.cleanOldDeleted()
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist"
@@ -645,26 +639,12 @@ class Accounts(ModuleData):
 				self.loggedInUsers[value] = WeakSet()
 			self.loggedInUsers[value].add(user)
 	
-	def cleanOldDeleted(self) -> None:
-		"""
-		Cleans up old deleted account info.
-		"""
-		oneDay = timedelta(days=1)
-		expireOlderThan = now() - oneDay
-		removeAccounts = []
-		for account, deleteData in self.accountData["deleted"].items():
-			deleteTime = deleteData["deleted"]
-			if deleteTime < expireOlderThan:
-				removeAccounts.append(account)
-		for account in removeAccounts:
-			del self.accountData["deleted"][account]
-	
 	def startBurst(self, server: "IRCServer") -> None:
 		server.sendMessage("ACCOUNTBURSTINIT", accountFormatVersion, prefix=self.ircd.serverID)
 
 @implementer(ICommand)
 class AccountInfoCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -687,7 +667,7 @@ class AccountInfoCommand(Command):
 
 @implementer(ICommand)
 class CreateAccountCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -744,7 +724,7 @@ class CreateAccountCommand(Command):
 
 @implementer(ICommand)
 class DeleteAccountCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -782,7 +762,7 @@ class DeleteAccountCommand(Command):
 
 @implementer(ICommand)
 class UpdateAccountNameCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -811,7 +791,6 @@ class UpdateAccountNameCommand(Command):
 		existingName = data["oldname"]
 		lowerExistingName = ircLower(existingName)
 		if lowerExistingName not in self.module.accountData["data"][lowerExistingName]:
-			self.module.cleanOldDeleted()
 			if lowerExistingName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to change account name for account {name} due to account being deleted", name=existingName, server=server)
 				return True
@@ -830,7 +809,7 @@ class UpdateAccountNameCommand(Command):
 
 @implementer(ICommand)
 class UpdateAccountPassCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -860,7 +839,6 @@ class UpdateAccountPassCommand(Command):
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
-			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to change password for account {name} due to account being deleted", name=accountName, server=server)
 				return True
@@ -878,7 +856,7 @@ class UpdateAccountPassCommand(Command):
 
 @implementer(ICommand)
 class UpdateAccountEmailCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -907,7 +885,6 @@ class UpdateAccountEmailCommand(Command):
 		accountName = data["username"]
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.module.accountData["data"]:
-			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to change email for account {name} due to account being deleted", name=accountName, server=server)
 				return True
@@ -925,7 +902,7 @@ class UpdateAccountEmailCommand(Command):
 
 @implementer(ICommand)
 class AddAccountNickCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -955,7 +932,6 @@ class AddAccountNickCommand(Command):
 		lowerAccountName = ircLower(accountName)
 		newNick = data["addnick"]
 		if lowerAccountName not in self.module.accountData["data"]:
-			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to add nickname {nick} to account {name} due to account being deleted", name=accountName, nick=newNick, server=server)
 				return True
@@ -973,7 +949,7 @@ class AddAccountNickCommand(Command):
 
 @implementer(ICommand)
 class RemoveAccountNickCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -1003,7 +979,6 @@ class RemoveAccountNickCommand(Command):
 		lowerAccountName = ircLower(accountName)
 		removingNick = data["removenick"]
 		if lowerAccountName not in self.module.accountData["data"]:
-			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to remove nickname {nick} from account {name} due to account being deleted", name=accountName, nick=removingNick, server=server)
 				return True
@@ -1024,7 +999,7 @@ class RemoveAccountNickCommand(Command):
 
 @implementer(ICommand)
 class SetAccountMetadataCommand(Command):
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
@@ -1066,7 +1041,6 @@ class SetAccountMetadataCommand(Command):
 		if "value" in data:
 			settingValue = data["value"]
 		if lowerAccountName not in self.module.accountData["data"]:
-			self.module.cleanOldDeleted()
 			if lowerAccountName in self.module.accountData["deleted"]:
 				self.ircd.log.debug("Ignoring request from server {server.serverID} to set metadata key {key} on account {name} due to account being deleted", name=accountName, key=settingKey, server=server)
 				return True
@@ -1086,7 +1060,7 @@ class SetAccountMetadataCommand(Command):
 class AccountBurstInitCommand(Command):
 	burstQueuePriority = 1
 	
-	def __init__(self, module):
+	def __init__(self, module: Accounts):
 		self.module = module
 		self.ircd = module.ircd
 	
