@@ -116,6 +116,7 @@ class ChannelRegister(ModuleData, Mode):
 			self.channelData["index"]["regname"][parameter].append(channel.name)
 			self.registeredChannels[channel.name] = channel
 		else:
+			parameter = self.channelData["data"][channel.name]["regname"]
 			del self.channelData["data"][channel.name]
 			self.channelData["index"]["regname"][parameter].remove(channel.name)
 			del self.registeredChannels[channel.name]
