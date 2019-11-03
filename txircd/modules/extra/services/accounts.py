@@ -57,8 +57,6 @@ class Accounts(ModuleData):
 	def load(self) -> None:
 		if "services" not in self.ircd.storage:
 			self.ircd.storage["services"] = {}
-		if "journal" not in self.ircd.storage["services"]:
-			self.ircd.storage["services"]["journal"] = []
 		if "accounts" not in self.ircd.storage["services"]:
 			self.ircd.storage["services"]["accounts"] = {}
 			self.ircd.storage["services"]["accounts"]["data"] = {}
@@ -247,7 +245,6 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", username)
 		
 		serializedAccountInfo = serializeAccount(newAccountInfo)
-		self.servicesData["journal"].append((registrationTime, "CREATEACCOUNT", serializedAccountInfo))
 		self.ircd.broadcastToServers(fromServer, "CREATEACCOUNT", timestampStringFromTime(registrationTime), serializedAccountInfo, prefix=self.ircd.serverID)
 		if user and user.uuid[:3] == self.ircd.serverID:
 			user.setMetadata("account", username)
@@ -356,8 +353,7 @@ class Accounts(ModuleData):
 		
 		deleteTime = now()
 		del self.accountData["data"][lowerUsername]
-		self.accountData["deleted"][lowerUsername] = deleteTime
-		self.servicesData["journal"].append((deleteTime, "DELETEACCOUNT", username, timestampStringFromTime(createTime)))
+		self.accountData["deleted"][lowerUsername] = { "deleted": deleteTime, "created": createTime }
 		self.ircd.broadcastToServers(fromServer, "DELETEACCOUNT", timestampStringFromTime(deleteTime), username, timestampStringFromTime(createTime), prefix=self.ircd.serverID)
 		for user in self.ircd.users.values():
 			if user.metadataKeyExists("account") and ircLower(user.metadataValue("account")) == lowerUsername:
@@ -399,7 +395,6 @@ class Accounts(ModuleData):
 		accountInfo["username"] = newAccountName
 		self.accountData["data"][lowerNewAccountName] = accountInfo
 		self.ircd.runActionStandard("accountsetupindices", newAccountName)
-		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTNAME", oldAccountName, timestampStringFromTime(registerTime), newAccountName))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
 		if not fromServer:
 			for user in self.ircd.users.values():
@@ -433,7 +428,6 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
 		updateTime = now()
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTPASS", accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod, prefix=self.ircd.serverID)
 		return True, None, None
 	
@@ -458,7 +452,6 @@ class Accounts(ModuleData):
 			del self.accountData["data"][lowerAccountName]["email"]
 		updateTime = now()
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((updateTime, "UPDATEACCOUNTEMAIL", accountName, timestampStringFromTime(registerTime), email))
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), email, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -488,7 +481,6 @@ class Accounts(ModuleData):
 		addTime = now()
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, addTime))
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((addTime, "ADDACCOUNTNICK", accountName, timestampStringFromTime(registerTime), newNick))
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTime(registerTime), newNick, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -517,7 +509,6 @@ class Accounts(ModuleData):
 				break
 		removeTime = now()
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((removeTime, "REMOVEACCOUNTNICK", accountName, oldNick))
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTime(registerTime), oldNick, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True, None, None
@@ -543,7 +534,6 @@ class Accounts(ModuleData):
 			self.accountData["data"][lowerAccountName]["metadata"][key] = value
 		setTime = now()
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
-		self.servicesData["journal"].append((setTime, "SETACCOUNTMETADATA", accountName, key, value))
 		if value is None:
 			self.ircd.broadcastToServers(fromServer, "SETACCOUNTMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
 		else:
@@ -659,10 +649,11 @@ class Accounts(ModuleData):
 		"""
 		Cleans up old deleted account info.
 		"""
-		oneHour = timedelta(hours=1)
-		expireOlderThan = now() - oneHour
+		oneDay = timedelta(days=1)
+		expireOlderThan = now() - oneDay
 		removeAccounts = []
-		for account, deleteTime in self.accountData["deleted"].items():
+		for account, deleteData in self.accountData["deleted"].items():
+			deleteTime = deleteData["deleted"]
 			if deleteTime < expireOlderThan:
 				removeAccounts.append(account)
 		for account in removeAccounts:
@@ -1109,8 +1100,10 @@ class AccountBurstInitCommand(Command):
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		if data["version"] != accountFormatVersion:
 			return False
-		for journalData in self.module.servicesData["journal"]:
-			server.sendMessage(journalData[1], timestampStringFromTime(journalData[0]), *journalData[2:], prefix=self.ircd.serverID)
+		for account in self.module.accountData["data"].values():
+			server.sendMessage("ACCOUNTINFO", serializeAccount(account), prefix=self.ircd.serverID)
+		for accountName, deleteData in self.module.accountData["deleted"].values():
+			server.sendMessage("DELETEACCOUNT", timestampStringFromTime(deleteData["deleted"]), accountName, timestampStringFromTime(deleteData["created"]))
 		self.ircd.runActionStandard("afteraccountburst", server)
 		return True
 
