@@ -48,7 +48,7 @@ class HostCloaking(ModuleData, Mode):
 
 	def applyHostCloak(self, host: str, ip: Union["IPv4Address", "IPv6Address"]) -> str:
 		# Find the last segments of the hostname.
-		index = len(host[::-1].split(".", 3)[-1]) # Get the length of all segments except the last
+		index = len(host[::-1].split(".", 3)[-1]) # Get the length of all segments except the last up to three
 		# Cloak the first part of the host and leave the last segments alone.
 		hostHashText = "{}{}".format(self.ircd.config.get("cloaking_salt", ""), host[:index])
 		hostHashBytes = hostHashText.encode("utf-8")
