@@ -173,7 +173,7 @@ class Accounts(ModuleData):
 							break
 		if updateConflictingIfTied:
 			accountInfo["nick"] = otherAccountData["nick"]
-			self.servicesData["data"][lowerAccountName] = accountInfo
+			self.accountData["data"][lowerAccountName] = accountInfo
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True
 	
