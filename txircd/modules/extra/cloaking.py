@@ -62,7 +62,7 @@ class HostCloaking(ModuleData, Mode):
 		cloakSaltBytes = self.ircd.config.get("cloaking_salt", "").encode("utf-8")
 		ipHash = ip.packed
 		hashedParts = []
-		for beginProportion in range(8, 0, -1):
+		for beginProportion in range(4, 0, -1):
 			hashedParts.append(sha256(cloakSaltBytes + ipHash[:len(ipHash)*(beginProportion/8)]).hexdigest()[:4])
 		return "{}.IP".format(".".join(hashedParts))
 
