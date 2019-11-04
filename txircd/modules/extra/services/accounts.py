@@ -171,7 +171,7 @@ class Accounts(ModuleData):
 						if ircLower(otherNickData[0]) == lowerNick:
 							otherNickData[1] = nickData[1]
 							break
-		if updateConflictingIfTied:
+		if accountInfo["updated"] > otherAccountData["updated"] or updateConflictingIfTied:
 			accountInfo["nick"] = otherAccountData["nick"]
 			self.accountData["data"][lowerAccountName] = accountInfo
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -233,10 +233,10 @@ class Accounts(ModuleData):
 		newAccountInfo["nick"] = [(username, registrationTime)]
 		if email:
 			newAccountInfo["email"] = email
-		if "registered" not in newAccountInfo:
-			newAccountInfo["registered"] = registrationTime
+		newAccountInfo["registered"] = registrationTime
 		newAccountInfo["settings"] = {}
 		newAccountInfo["metadata"] = {}
+		newAccountInfo["updated"] = registrationTime
 		
 		self.accountData["data"][lowerUsername] = newAccountInfo
 		if lowerUsername in self.accountData["deleted"]:
@@ -392,6 +392,7 @@ class Accounts(ModuleData):
 		accountInfo["oldnames"].append((oldAccountName, updateTime))
 		oldAccountName = accountInfo["username"]
 		accountInfo["username"] = newAccountName
+		accountInfo["updated"] = updateTime
 		self.accountData["data"][lowerNewAccountName] = accountInfo
 		self.ircd.runActionStandard("accountsetupindices", newAccountName)
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTNAME", timestampStringFromTime(updateTime), oldAccountName, timestampStringFromTimestamp(registerTime), newAccountName, prefix=self.ircd.serverID)
@@ -425,6 +426,7 @@ class Accounts(ModuleData):
 		self.accountData["data"][lowerAccountName]["password"] = hashedPassword
 		self.accountData["data"][lowerAccountName]["password-hash"] = hashMethod
 		updateTime = now()
+		self.accountData["data"][lowerAccountName]["updated"] = updateTime
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTPASS", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), hashedPassword, hashMethod, prefix=self.ircd.serverID)
 		return True, None, None
@@ -448,6 +450,7 @@ class Accounts(ModuleData):
 		elif "email" in self.accountData["data"][lowerAccountName]:
 			del self.accountData["data"][lowerAccountName]["email"]
 		updateTime = now()
+		self.accountData["data"][lowerAccountName]["updated"] = updateTime
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.ircd.broadcastToServers(fromServer, "UPDATEACCOUNTEMAIL", timestampStringFromTime(updateTime), accountName, timestampStringFromTime(registerTime), email, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -476,6 +479,7 @@ class Accounts(ModuleData):
 		
 		addTime = now()
 		self.accountData["data"][lowerAccountName]["nick"].append((newNick, addTime))
+		self.accountData["data"][lowerAccountName]["updated"] = addTime
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.ircd.broadcastToServers(fromServer, "ADDACCOUNTNICK", timestampStringFromTime(addTime), accountName, timestampStringFromTime(registerTime), newNick, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -503,6 +507,7 @@ class Accounts(ModuleData):
 				del self.accountData["data"][lowerAccountName]["nick"][index]
 				break
 		removeTime = now()
+		self.accountData["data"][lowerAccountName]["updated"] = removeTime
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		self.ircd.broadcastToServers(fromServer, "REMOVEACCOUNTNICK", timestampStringFromTime(removeTime), accountName, timestampStringFromTime(registerTime), oldNick, prefix=self.ircd.serverID)
 		self.ircd.runActionStandard("accountsetupindices", accountName)
@@ -527,6 +532,7 @@ class Accounts(ModuleData):
 		else:
 			self.accountData["data"][lowerAccountName]["metadata"][key] = value
 		setTime = now()
+		self.accountData["data"][lowerAccountName]["updated"] = setTime
 		registerTime = self.accountData["data"][lowerAccountName]["registered"]
 		if value is None:
 			self.ircd.broadcastToServers(fromServer, "SETACCOUNTMETADATA", timestampStringFromTime(setTime), accountName, timestampStringFromTime(registerTime), key, prefix=self.ircd.serverID)
