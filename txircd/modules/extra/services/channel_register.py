@@ -2,7 +2,7 @@ from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
-from txircd.utils import CaseInsensitiveDictionary, ModeType, now
+from txircd.utils import CaseInsensitiveDictionary, ModeType, ircLower, now
 from zope.interface import implementer
 from typing import Callable, List, Optional, Tuple, Union
 
@@ -69,6 +69,13 @@ class ChannelRegister(ModuleData, Mode):
 	
 	def checkSettingUserAccount(self, channel: "IRCChannel", user: "IRCUser", adding: bool, parameter: str) -> Optional[bool]:
 		if adding:
+			if "r" not in channel.modes:
+				return None
+			oldOwnerAccount = channel.modes["r"]
+			if ircLower(parameter) != ircLower(oldOwnerAccount) and user.metadataValue("account") != oldOwnerAccount:
+				user.sendMessage(irc.ERR_SERVICES, "CHANNEL", "TRANSFER", "WRONGACCOUNT")
+				user.sendMessage("NOTICE", "You can't transfer a channel you don't own to someone else.")
+				return False
 			return None
 		parameter = channel.modes["r"]
 		if user.metadataValue("account") == parameter:
