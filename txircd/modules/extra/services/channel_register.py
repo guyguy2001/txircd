@@ -101,7 +101,7 @@ class ChannelRegister(ModuleData, Mode):
 			if channel.name in self.channelData["data"]:
 				channelInfo = self.channelData["data"][channel.name]
 				oldOwnerAccount = channelInfo["regname"]
-				del self.channelData["index"]["regname"][oldOwnerAccount]
+				self.channelData["index"]["regname"][oldOwnerAccount].remove(channel.name)
 			else:
 				channelInfo = { "regtime": now() }
 				self.channelData["data"][channel.name] = channelInfo
