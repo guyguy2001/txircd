@@ -1,10 +1,11 @@
 from twisted.plugin import IPlugin
 from twisted.words.protocols import irc
 from txircd.channel import IRCChannel
+from txircd.config import ConfigValidationError
 from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import CaseInsensitiveDictionary, ModeType, ircLower, now
 from zope.interface import implementer
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 irc.ERR_SERVICES = "955" # Custom numeric; 955 <TYPE> <SUBTYPE> <ERROR>
 
@@ -45,6 +46,13 @@ class ChannelRegister(ModuleData, Mode):
 		if self.ircd.startupTime is not None:
 			self.setUpRegisteredChannels()
 	
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
+		if "channel_register_limit" in config:
+			if config["channel_register_limit"] is not None and not isinstance(config["channel_register_limit"], int):
+				raise ConfigValidationError("channel_register_limit", "must be a number or null")
+		else:
+			config["channel_register_limit"] = 10
+	
 	def setUpRegisteredChannels(self) -> None:
 		for channelName, channelInfo in self.channelData["data"].items():
 			if channelName in self.ircd.channels:
@@ -69,6 +77,10 @@ class ChannelRegister(ModuleData, Mode):
 	
 	def checkSettingUserAccount(self, channel: "IRCChannel", user: "IRCUser", adding: bool, parameter: str) -> Optional[bool]:
 		if adding:
+			if self.ircd.config["channel_register_limit"] and parameter in self.channelData["index"]["regname"] and len(self.channelData["index"]["regname"][parameter]) > self.ircd.config["channel_register_limit"]:
+				user.sendMessage(irc.ERR_SERVICES, "CHANNEL", "REGISTER", "MAXREACHED")
+				user.sendMessage("NOTICE", "You've already registered the maximum number of channels.")
+				return False
 			if "r" not in channel.modes:
 				return None
 			oldOwnerAccount = channel.modes["r"]
@@ -89,7 +101,6 @@ class ChannelRegister(ModuleData, Mode):
 		if result is None:
 			return None
 		if result:
-			# TODO: Implement cap on number of channels registered by one account
 			param = self.ircd.runActionUntilValue("accountfromnick", param)
 			if not param:
 				return None
