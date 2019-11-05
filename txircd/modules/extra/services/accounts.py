@@ -465,6 +465,9 @@ class Accounts(ModuleData):
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
 		
+		if not isValidNick(newNick):
+			return False, "BADNICK", "The nickname being grouped is not valid."
+
 		lowerNewNick = ircLower(newNick)
 		if lowerNewNick in self.accountData["index"]["nick"]:
 			if self.accountData["index"]["nick"][lowerNewNick] == lowerAccountName:
