@@ -78,7 +78,7 @@ class ChannelRegister(ModuleData, Mode):
 	def checkSettingUserAccount(self, channel: "IRCChannel", user: "IRCUser", adding: bool, parameter: str) -> Optional[bool]:
 		if adding:
 			if self.ircd.config["channel_register_limit"] and parameter in self.channelData["index"]["regname"] and len(self.channelData["index"]["regname"][parameter]) > self.ircd.config["channel_register_limit"]:
-				user.sendMessage(irc.ERR_SERVICES, "CHANNEL", "REGISTER", "MAXREACHED")
+				user.sendMessage(irc.ERR_SERVICES, "CHANNEL", "REGISTER", "LIMITREACHED")
 				user.sendMessage("NOTICE", "You've already registered the maximum number of channels.")
 				return False
 			if "r" not in channel.modes:
