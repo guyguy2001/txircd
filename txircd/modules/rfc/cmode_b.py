@@ -211,6 +211,10 @@ class BanMode(ModuleData, Mode):
 					actionExtban, actionParam = actionExtban.split(":", 1)
 					if not actionParam:
 						continue
+				matchNegated = False
+				if actionExtban[0] == "~":
+					matchNegated = True
+					actionExtban = actionExtban[1:]
 				if actionExtban not in self.ircd.channelModeTypes:
 					continue
 				actionModeType = self.ircd.channelModeTypes[actionExtban]
@@ -218,7 +222,9 @@ class BanMode(ModuleData, Mode):
 					continue
 				if actionParam and actionModeType in (ModeType.NoParam, ModeType.Status):
 					continue
-				if not actionParam and actionModeType in (ModeType.ParamOnUnset, ModeType.Param):
+				if not actionParam and actionModeType in ModeType.ParamOnUnset:
+					continue
+				if not matchNegated and not actionParam and actionModeType in ModeType.Param:
 					continue
 				if actionModeType != ModeType.Status: # Don't check the parameters for status modes, but do the rest of the processing
 					actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkSet(channel, actionParam)
