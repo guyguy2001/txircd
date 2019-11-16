@@ -1085,7 +1085,7 @@ class AccountBurstInitCommand(Command):
 			return False
 		for account in self.module.accountData["data"].values():
 			server.sendMessage("ACCOUNTINFO", serializeAccount(account), prefix=self.ircd.serverID)
-		for accountName, deleteData in self.module.accountData["deleted"].values():
+		for accountName, deleteData in self.module.accountData["deleted"].items():
 			server.sendMessage("DELETEACCOUNT", timestampStringFromTime(deleteData["deleted"]), accountName, timestampStringFromTime(deleteData["created"]))
 		self.ircd.runActionStandard("afteraccountburst", server)
 		return True
