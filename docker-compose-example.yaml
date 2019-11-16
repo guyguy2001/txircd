@@ -1,0 +1,20 @@
+version: '3'
+services:
+  txircd:
+    image: heufneutje/txircd:latest # create an issue at https://github.com/Heufneutje/txircd/issues if this image stops working
+    container_name: txircd
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - 6667:6667 # default client port
+      - 6697:6697 # default client secure port
+      - 7000:7000 # default server port
+    volumes:
+      - ./conf:/app/conf
+      - ./txircd.yaml:/app/txircd.yaml
+      - ./data.db:/app/data.db
+      - ./serverkey.pem:/app/serverkey.pem
+      - ./servercert.pem:/app/servercert.pem
+      - ./serverchain.pem:/app/serverchain.pem
+    restart: unless-stopped

@@ -1,0 +1,10 @@
+conf/
+docs/
+setup-utils/
+Dockerfile
+LICENSE
+*.md
+*.db
+*.pyc
+*.yaml
+*.pem
