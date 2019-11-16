@@ -1,4 +1,4 @@
-txircd
+txircd [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/heufneutje/txircd.svg)](https://hub.docker.com/r/heufneutje/txircd)
 ======
 
 txircd is a modular IRC daemon written in Python using the Twisted library.
