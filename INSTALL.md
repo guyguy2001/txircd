@@ -21,3 +21,15 @@ This command sets up symlinks to the current directory. You only need to run thi
 or run it in the foreground:  
 `twistd -n txircd`  
 (If you're running in a virtualenv, start txircd with the twistd in your virtualenv.)
+
+Docker instructions
+-------------------
+
+1. Copy `txircd-example.yaml` to `txircd.yaml`, and edit the configuration. Do the same for included files in the `conf/` directory.
+
+2. Copy `docker-compose-example.yaml` to `docker-compose.yaml` and edit in the config files you created above.
+
+3. Run txircd:  
+`docker-compose up -d txircd`
+
+Public images are available at https://hub.docker.com/r/heufneutje/txircd.
