@@ -275,6 +275,9 @@ def stripFormatting(message: str) -> str:
 
 
 def ipAddressToShow(ipAddr: Union["IPv4Address", "IPv6Address"]) -> str:
+	"""
+	Determines a display version of an IP address object.
+	"""
 	ip = ipAddr.compressed
 	if ip[0] == ":":
 		return "0{}".format(ip)
