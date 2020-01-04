@@ -40,14 +40,6 @@ modules:
 # (extended-join), but it's recommended to leave it enabled.
 - ExtendedJoin
 
-# StartTLS: Provides STARTTLS. This module isn't enabled by default because it
-# requires some setup to function (see below). It's an optional extension in
-# 3.1 (tls). We recommend enabling all of IRCv3 if you can do the setup for it,
-# but this is one case where enabling it might be more work than the resulting
-# worth, especially since so few clients support STARTTLS (but then not
-# enabling this just continues the chicken/egg problem there).
-#- StartTLS
-
 # Monitor: Provides a better way for users to track the online state of other
 # users than the old method of continuously querying with ISON. It has some
 # optional but hightly recommended setup (see below). It's a base extension in
@@ -93,23 +85,6 @@ modules:
 # in 3.2 (userhost-in-names), and we recommend enabling it.
 - UserhostInNames
 
-
-# StartTLS Configuration
-# Configurating StartTLS simply requires setting up a cert and key to use for
-# securing connections for STARTTLS users.
-
-# starttls_key
-# This is a file containing the private key for the STARTTLS connections to
-# your server. The file must be in PEM format. Relative paths are from the base
-# txircd directory. If not specified, the default is server.pem.
-#starttls_key: server.pem
-
-# starttls_cert
-# This is a file containing the certificate for the STARTTLS connections to
-# your server. The file must be in PEM format. Relative paths are from the base
-# txircd directory. If not specified, the default is whatever the value of
-# starttls_key is.
-#starttls_cert: server.pem
 
 # Monitor Configuration
 # This configuration simply involves specifying the maximum number of nicknames
