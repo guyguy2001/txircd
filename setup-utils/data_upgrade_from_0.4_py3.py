@@ -32,13 +32,14 @@ for key, value in data.items():
 	storage[key] = value
 
 # SECTION: Upgrade whowas time format and add real host and IP keys
-whowasEntries = storage["whowas"]
-for whowasEntryList in whowasEntries.values():
-	for whowasEntry in whowasEntryList:
-		when = whowasEntry["when"]
-		whowasEntry["when"] = datetime.utcfromtimestamp(when)
-		whowasEntry["realhost"] = whowasEntry["host"]
-		whowasEntry["ip"] = "0.0.0.0"
+if "whowas" in storage:
+	whowasEntries = storage["whowas"]
+	for whowasEntryList in whowasEntries.values():
+		for whowasEntry in whowasEntryList:
+			when = whowasEntry["when"]
+			whowasEntry["when"] = datetime.utcfromtimestamp(when)
+			whowasEntry["realhost"] = whowasEntry["host"]
+			whowasEntry["ip"] = "0.0.0.0"
 
 # SHUTDOWN: Close data.db and clean up yaml file
 storage.close()
