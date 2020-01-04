@@ -4,7 +4,7 @@ from txircd.module_interface import IModuleData, ModuleData
 from txircd.utils import ipAddressToShow
 from zope.interface import implementer
 from ipaddress import ip_address
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 @implementer(IPlugin, IModuleData)
 class ConnectionLimit(ModuleData):
@@ -15,7 +15,8 @@ class ConnectionLimit(ModuleData):
 		return [ ("userconnect", 100, self.handleLocalConnect),
 		         ("remoteregister", 100, self.handleRemoteConnect),
 		         ("quit", 100, self.handleDisconnect),
-		         ("remotequit", 100, self.handleDisconnect) ]
+		         ("remotequit", 100, self.handleDisconnect),
+		         ("changeipaddress", 100, self.handleIPAddressChange) ]
 
 	def load(self) -> None:
 		for user in self.ircd.users.values():
@@ -46,10 +47,11 @@ class ConnectionLimit(ModuleData):
 
 	def handleDisconnect(self, user: "IRCUser", *params: Any) -> None:
 		ip = ipAddressToShow(user.ip)
-		if ip in self.peerConnections:
-			self.peerConnections[ip] -= 1
-			if self.peerConnections[ip] < 1:
-				del self.peerConnections[ip]
+		self.removeConnection(ip)
+	
+	def handleIPAddressChange(self, user: "IRCUser", oldIP: Union["IPv4Address", "IPv6Address"]) -> None:
+		self.removeConnection(ipAddressToShow(oldIP))
+		self.addToConnections(ipAddressToShow(user.ip))
 
 	def addToConnections(self, ip: str) -> bool:
 		if ip in self.ircd.config.get("connlimit_whitelist", []):
@@ -59,5 +61,11 @@ class ConnectionLimit(ModuleData):
 		else:
 			self.peerConnections[ip] = 1
 		return True
+	
+	def removeConnection(self, ip: str) -> None:
+		if ip in self.peerConnections:
+			self.peerConnections[ip] -= 1
+			if self.peerConnections[ip] < 1:
+				del self.peerConnections[ip]
 
 connLimit = ConnectionLimit()

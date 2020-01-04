@@ -513,6 +513,17 @@ class IRCUser(IRCBase):
 		if self.isRegistered():
 			self.ircd.runActionStandard("changegecos", self, oldGecos, fromServer, users=[self])
 	
+	def changeIP(self, ip: Union["IPv4Address", "IPv6Address"]) -> None:
+		"""
+		Changes a user's IP address.
+		This must be done before registration is complete.
+		"""
+		if self.isRegistered():
+			return
+		oldIP = self.ip
+		self.ip = ip
+		self.ircd.runActionStandard("changeipaddress", self, oldIP, users=[self])
+	
 	def metadataKeyExists(self, key: str) -> bool:
 		"""
 		Checks whether the specified key exists in the user's metadata.
