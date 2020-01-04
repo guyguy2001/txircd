@@ -43,4 +43,4 @@ if "whowas" in storage:
 
 # SHUTDOWN: Close data.db and clean up yaml file
 storage.close()
-os.unlink("{}.yaml".format(args.datafile))
+os.unlink("{}.json".format(args.datafile))
