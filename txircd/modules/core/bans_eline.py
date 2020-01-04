@@ -104,6 +104,7 @@ class UserELine(Command):
 class ServerAddELine(Command):
 	def __init__(self, module):
 		self.module = module
+		self.burstQueuePriority = module.burstQueuePriority
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
@@ -115,6 +116,7 @@ class ServerAddELine(Command):
 class ServerDelELine(Command):
 	def __init__(self, module):
 		self.module = module
+		self.burstQueuePriority = module.burstQueuePriority
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)

@@ -129,6 +129,7 @@ class UserGLine(Command):
 class ServerAddGLine(Command):
 	def __init__(self, module):
 		self.module = module
+		self.burstQueuePriority = module.burstQueuePriority
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Any]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerAddParams(server, params, prefix, tags)
@@ -149,6 +150,7 @@ class ServerAddGLine(Command):
 class ServerDelGLine(Command):
 	def __init__(self, module):
 		self.module = module
+		self.burstQueuePriority = module.burstQueuePriority
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.handleServerDelParams(server, params, prefix, tags)
