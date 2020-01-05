@@ -31,6 +31,8 @@ class IRCServer(IRCBase):
 			return
 		handlers = self.ircd.serverCommands[command]
 		data = None
+		affectedUsers = []
+		affectedChannels = []
 		for handler in handlers:
 			if self.bursted is False and handler[0].burstQueuePriority is not None:
 				if command not in self._burstQueueCommands:
@@ -53,6 +55,8 @@ class IRCServer(IRCBase):
 				continue
 			data = handler[0].parseParams(self, params, prefix, tags)
 			if data is not None:
+				affectedUsers = handler[0].affectedUsers(self, data)
+				affectedChannels = handler[0].affectedChannels(self, data)
 				break
 		if data is None:
 			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't parse! (prefix: {prefix}; params: {params!r}; tags: {tags!r}", command=command, params=params, prefix=prefix, tags=tags, server=self)
@@ -65,7 +69,7 @@ class IRCServer(IRCBase):
 			self.ircd.log.error("Received command {command} from server {server.serverID} that we couldn't handle! (prefix: {prefix}; params: {params!r}; tags: {tags!r}", command=command, params=params, prefix=prefix, tags=tags, server=self)
 			self.disconnect("Couldn't process command {} from {} with prefix '{}' and parameters {!r}".format(command, self.serverID, prefix, params)) # Also abort connection if we can't process a command
 			return
-		self.ircd.runComboActionStandard((("servercommandextra-{}".format(command), (self, data)), ("servercommandextra", (self, command, data))))
+		self.ircd.runComboActionStandard((("servercommandextra-{}".format(command), (self, data)), ("servercommandextra", (self, command, data))), users=affectedUsers, channels=affectedChannels)
 	
 	def endBurst(self) -> None:
 		"""
