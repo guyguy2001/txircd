@@ -4,6 +4,7 @@ from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now, isoTime
 from zope.interface import implementer
 from datetime import timedelta
+from typing import Any, Dict, List, Optional
 
 @implementer(IPlugin, IModuleData, IMode)
 class ChanHistory(ModuleData, Mode):
@@ -11,6 +12,8 @@ class ChanHistory(ModuleData, Mode):
 	affectedActions = {
 		"commandextra-PRIVMSG": 1,
 		"commandextra-NOTICE": 1,
+		"servercommandextra-PRIVMSG": 1,
+		"servercommandextra-NOTICE": 1,
 		"join": 1
 	}
 
@@ -24,7 +27,7 @@ class ChanHistory(ModuleData, Mode):
 			("modeactioncheck-channel-H-servercommandextra-NOTICE", 1, self.channelHasMode),
 			("modeactioncheck-channel-H-join", 1, self.channelHasMode) ]
 
-	def verifyConfig(self, config):
+	def verifyConfig(self, config: Dict[str, Any]) -> None:
 		if "chanhistory_maxlines" in config:
 			if not isinstance(config["chanhistory_maxlines"], int) or config["chanhistory_maxlines"] < 0:
 				raise ConfigValidationError("chanhistory_maxlines", "invalid number")
@@ -32,12 +35,13 @@ class ChanHistory(ModuleData, Mode):
 				config["chanhistory_maxlines"] = 100
 				self.ircd.logConfigValidationWarning("chanhistory_maxlines", "value is too large", 100)
 
-	def channelHasMode(self, channel, user, data):
+	def channelHasMode(self, channel: "IRCChannel", *params) -> Optional[bool]:
+		# We don't care about the action params here, so we have an unused *params
 		if "H" in channel.modes:
 			return channel.modes["H"]
 		return None
 
-	def checkSet(self, channel, param):
+	def checkSet(self, channel: "IRCChannel", param: str) -> Optional[List[str]]:
 		if param.count(":") != 1:
 			return None
 		lines, seconds = param.split(":")
@@ -52,7 +56,7 @@ class ChanHistory(ModuleData, Mode):
 			param = "{}:{}".format(self.ircd.config.get("chanhistory_maxlines", 50), seconds)
 		return [param]
 
-	def apply(self, actionName, channel, param, *params):
+	def apply(self, actionName: str, channel: "IRCChannel", param: str, *params) -> None:
 		modeParam = param.split(":")
 		maxLines = int(modeParam[0])
 		seconds = int(modeParam[1])
