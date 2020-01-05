@@ -82,7 +82,7 @@ class ChanHistory(ModuleData, Mode):
 			actionChannel, user, fromServer = params
 			user.sendMessage("NOTICE", "*** Replaying up to {} lines of history for {}{}...".format(maxLines, channel.name, " spanning up to {} seconds".format(seconds) if seconds > 0 else ""))
 			hasServerTime = "capabilities" in user.cache and "server-time" in user.cache["capabilities"]
-			user.createMessageBatch("ChannelHistory", "chathistory", channel.name)
+			user.createMessageBatch("ChannelHistory", "chathistory", [channel.name])
 			for messageData in channel.cache["history"]:
 				if seconds == 0 or now() - timedelta(seconds=seconds) < messageData[0]:
 					messageArgs = {
