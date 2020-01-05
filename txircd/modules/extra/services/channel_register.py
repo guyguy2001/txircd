@@ -125,7 +125,7 @@ class ChannelRegister(ModuleData, Mode):
 				modeType = self.ircd.channelModeTypes[mode]
 				if modeType == ModeType.List:
 					for oneParamData in paramData:
-						modes.add([mode] + list(oneParamData))
+						modes.add((mode,) + oneParamData)
 				else:
 					modes.add((mode, paramData))
 			channelInfo["modes"] = modes
