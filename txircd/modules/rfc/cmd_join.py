@@ -26,7 +26,7 @@ class JoinCommand(ModuleData):
 		conditionalTags = {}
 		self.ircd.runActionStandard("sendingusertags", user, conditionalTags)
 		for destUser in messageUsers:
-			tags = user.filterConditionalTags(conditionalTags)
+			tags = destUser.filterConditionalTags(conditionalTags)
 			if batchName is None:
 				destUser.sendMessage("JOIN", to=channel.name, prefix=userPrefix, tags=tags)
 			else:
