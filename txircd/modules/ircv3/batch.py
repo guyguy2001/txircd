@@ -40,7 +40,7 @@ class Batch(ModuleData):
 			uniqueReferenceTagParts.append(random.choice(string.ascii_letters + string.digits))
 		uniqueReferenceTag = "".join(uniqueReferenceTagParts)
 		user.cache["currentBatch"] = uniqueReferenceTag
-		user.sendMessage("BATCH", "+{}".format(uniqueReferenceTag), batchType, *batchParameters)
+		user.sendMessage("BATCH", "+{}".format(uniqueReferenceTag), batchType, *batchParameters, to=None)
 	
 	def addBatchTag(self, user: "IRCUser", command: str, to: str, tags: Dict[str, Optional[str]]) -> None:
 		if "currentBatch" in user.cache:
