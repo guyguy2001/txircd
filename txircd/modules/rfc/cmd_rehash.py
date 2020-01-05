@@ -65,7 +65,9 @@ class UserRehash(Command):
 		try:
 			self.ircd.rehash()
 		except ConfigError as e:
-			user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, "Rehash failed: {}".format(e))
+			message = "Rehash failed: {}".format(e)
+			for messageLine in message.split("\n"):
+				user.sendMessage(irc.RPL_REHASHING, self.ircd.config.fileName, messageLine)
 
 @implementer(ICommand)
 class ServerRehash(Command):
