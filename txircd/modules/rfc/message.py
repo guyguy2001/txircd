@@ -225,6 +225,16 @@ class ServerPrivmsg(Command):
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.serverParseParams(server, params, prefix, tags)
 	
+	def affectedUsers(self, server: "IRCServer", data: Dict[Any, Any]) -> List["IRCUser"]:
+		if "touser" in data:
+			return [data["touser"]]
+		return []
+	
+	def affectedChannels(self, server: "IRCServer", data: Dict[Any, Any]) -> List["IRCChannel"]:
+		if "tochan" in data:
+			return [data["tochan"]]
+		return []
+	
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.serverExecute("PRIVMSG", server, data)
 
@@ -235,6 +245,16 @@ class ServerNotice(Command):
 	
 	def parseParams(self, server: "IRCServer", params: List[str], prefix: str, tags: Dict[str, Optional[str]]) -> Optional[Dict[Any, Any]]:
 		return self.module.serverParseParams(server, params, prefix, tags)
+	
+	def affectedUsers(self, server: "IRCServer", data: Dict[Any, Any]) -> List["IRCUser"]:
+		if "touser" in data:
+			return [data["touser"]]
+		return []
+	
+	def affectedChannels(self, server: "IRCServer", data: Dict[Any, Any]) -> List["IRCChannel"]:
+		if "tochan" in data:
+			return [data["tochan"]]
+		return []
 	
 	def execute(self, server: "IRCServer", data: Dict[Any, Any]) -> bool:
 		return self.module.serverExecute("NOTICE", server, data)
