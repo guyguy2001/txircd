@@ -184,7 +184,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("accountsetupindices", accountName)
 		return True
 	
-	def createAccount(self, username: str, password: str, passwordHashedMethod: str, email: str, user: Optional["IRCUser"], fromServer: "IRCServer" = None, registrationTime: Optional[datetime] = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
+	def createAccount(self, username: str, password: str, passwordHashedMethod: Optional[str], email: str, user: Optional["IRCUser"], fromServer: "IRCServer" = None, registrationTime: Optional[datetime] = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Creates a new services account.
 		Requires a username and password to be entered.
@@ -411,7 +411,7 @@ class Accounts(ModuleData):
 		self.ircd.runActionStandard("handleaccountchangename", oldAccountName, newAccountName)
 		return True, None, None
 	
-	def setPassword(self, accountName: str, password: str, hashMethod: str, fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
+	def setPassword(self, accountName: str, password: str, hashMethod: Optional[str], fromServer: "IRCServer" = None) -> Union[Tuple[bool, Optional[str], Optional[str]], Tuple[None, "Deferred", None]]:
 		"""
 		Set the password for an account.
 		For plain passwords, the hashMethod is None.
@@ -421,6 +421,8 @@ class Accounts(ModuleData):
 		lowerAccountName = ircLower(accountName)
 		if lowerAccountName not in self.accountData["data"]:
 			return False, "BADACCOUNT", "The account does not exist."
+		if hashMethod is None and len(password) < self.ircd.config["account_password_minimum_length"]:
+			return False, "BADPASS", "Password is not at least {} characters long.".format(self.ircd.config["account_password_minimum_length"])
 		
 		if hashMethod is None:
 			hashMethod = self.ircd.config["account_password_hash"]

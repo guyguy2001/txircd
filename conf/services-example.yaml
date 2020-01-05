@@ -41,6 +41,10 @@ modules:
 # account.
 - AccountGroup
 
+# AccountSetPass: Allows users to change passwords associated with their
+# accounts.
+- AccountSetPass
+
 # AccountEmail: Allows users to change the email address associated with their
 # account.
 - AccountEmail
@@ -239,6 +243,12 @@ server_bots:
         - Allows you to change the email address associated with your account.
         - "Syntax: SETEMAIL <email-address>"
         execute: ACCOUNTEMAIL $1
+      SETPASS:
+        help: Change your account password
+        detailed_help:
+        - Allows you to change the password for your account.
+        - "Syntax: SETPASS <newpassword>"
+        execute: ACCOUNTSETPASS $1
   ChanServ:
     ident: ChanServ
     host: services.example.com
