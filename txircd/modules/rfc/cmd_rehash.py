@@ -103,7 +103,9 @@ class ServerRehash(Command):
 			self.ircd.rehash()
 		except ConfigError as e:
 			if user:
-				self.ircd.servers[user.uuid[:3]].sendMessage("REHASHNOTICE", user.uuid, self.ircd.config.fileName, "Rehash failed: {}".format(e), prefix=self.ircd.serverID)
+				message = "Rehash failed: {}".format(e)
+				for messageLine in message.split("\n"):
+					self.ircd.servers[user.uuid[:3]].sendMessage("REHASHNOTICE", user.uuid, self.ircd.config.fileName, messageLine, prefix=self.ircd.serverID)
 		return True
 
 @implementer(ICommand)
