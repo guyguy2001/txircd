@@ -35,7 +35,7 @@ class ChanHistory(ModuleData, Mode):
 				config["chanhistory_maxlines"] = 100
 				self.ircd.logConfigValidationWarning("chanhistory_maxlines", "value is too large", 100)
 
-	def channelHasMode(self, channel: "IRCChannel", *params) -> Union[None, False, str]:
+	def channelHasMode(self, channel: "IRCChannel", *params) -> Union[None, bool, str]:
 		# We don't care about the action params here, so we have an unused *params
 		if "H" in channel.modes:
 			return channel.modes["H"]
