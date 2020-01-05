@@ -4,7 +4,7 @@ from txircd.module_interface import IMode, IModuleData, Mode, ModuleData
 from txircd.utils import ModeType, now, isoTime
 from zope.interface import implementer
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 @implementer(IPlugin, IModuleData, IMode)
 class ChanHistory(ModuleData, Mode):
@@ -35,7 +35,7 @@ class ChanHistory(ModuleData, Mode):
 				config["chanhistory_maxlines"] = 100
 				self.ircd.logConfigValidationWarning("chanhistory_maxlines", "value is too large", 100)
 
-	def channelHasMode(self, channel: "IRCChannel", *params) -> Optional[bool]:
+	def channelHasMode(self, channel: "IRCChannel", *params) -> Union[None, False, str]:
 		# We don't care about the action params here, so we have an unused *params
 		if "H" in channel.modes:
 			return channel.modes["H"]
