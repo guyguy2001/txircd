@@ -220,6 +220,7 @@ modules:
 # This module requires that you set up the directory to which the log files get
 # written. If not specified, the current directory is used.
 #channel_log_directory: logs/
+
 # You may also set up which channels get logged. If a channel name matches any
 # of the masks specified, the channel will be logged. Otherwise, the channel is
 # not logged. If not specified or the list is empty, all channels are logged.
