@@ -167,10 +167,15 @@ class Accounts(ModuleData):
 			lowerNick = ircLower(nickData[0])
 			if lowerNick in existingNicks:
 				if nickData[1] < existingNicks[lowerNick]:
-					for otherNickData in otherAccountData["nick"]:
+					changeNickIndex = None
+					for nickIndex, otherNickData in enumerate(otherAccountData["nick"]):
 						if ircLower(otherNickData[0]) == lowerNick:
-							otherNickData[1] = nickData[1]
+							changeNickIndex = nickIndex
 							break
+					if changeNickIndex is not None:
+						otherNick = otherAccountData["nick"][changeNickIndex][0]
+						del otherAccountData["nick"][changeNickIndex]
+						otherAccountData["nick"].append((otherNick, nickData[1]))
 		if accountInfo["updated"] > otherAccountData["updated"] or updateConflictingIfTied:
 			accountInfo["nick"] = otherAccountData["nick"]
 			self.accountData["data"][lowerAccountName] = accountInfo
