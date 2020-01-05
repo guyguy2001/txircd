@@ -43,10 +43,6 @@ modules:
 # messages can be sent to a channel by a user.
 #- ChannelFlood
 
-# ChannelHistory: Provides a channel mode (+H) to provide a joining user with
-# the last messages of a channel within a given timespan.
-#- ChannelHistory
-
 # ChannelLog: Allows server-side logging of channel messages. Useful if you'd
 # like to provide a public log of all channels on your server.
 #- ChannelLog
@@ -209,12 +205,6 @@ modules:
 # on connect. You can specify modes with parameters the way you normally
 # would--by separating them with spaces.
 #client_umodes_on_connect: x
-
-# ChannelHistory Configuration
-# This module requires a maximum number of lines that are to be kept in history
-# to be specified, to avoid taking up too many system resources. The default
-# value is 50 and the hard cap is 100.
-#chanhistory_maxlines: 50
 
 # ChannelLog Configuration
 # This module requires that you set up the directory to which the log files get
