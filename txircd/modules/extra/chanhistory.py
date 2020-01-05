@@ -90,7 +90,7 @@ class ChanHistory(ModuleData, Mode):
 						"to": channel.name
 					}
 					if hasServerTime:
-						messageArgs["tags"] = { "server-time": isoTime(messageData[0]) }
+						messageArgs["tags"] = { "time": isoTime(messageData[0]) }
 					user.sendMessageInBatch("ChannelHistory", messageData[1], messageData[3], **messageArgs)
 			user.sendBatch("ChannelHistory")
 			user.sendMessage("NOTICE", "*** End of {} channel history.".format(channel.name))
