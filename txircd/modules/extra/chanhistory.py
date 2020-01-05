@@ -85,7 +85,13 @@ class ChanHistory(ModuleData, Mode):
 			user.createMessageBatch("ChannelHistory", "chathistory", channel.name)
 			for messageData in channel.cache["history"]:
 				if seconds == 0 or now() - timedelta(seconds=seconds) < messageData[0]:
-					user.sendMessageInBatch("ChannelHistory", messageData[1], messageData[3], prefix=messageData[2], to=channel.name, tags={ "server-time": isoTime(messageData[0]) } if hasServerTime else None)
+					messageArgs = {
+						"prefix": messageData[2],
+						"to": channel.name
+					}
+					if hasServerTime:
+						messageArgs["tags"] = { "server-time": isoTime(messageData[0]) }
+					user.sendMessageInBatch("ChannelHistory", messageData[1], messageData[3], **messageArgs)
 			user.sendBatch("ChannelHistory")
 			user.sendMessage("NOTICE", "*** End of {} channel history.".format(channel.name))
 
