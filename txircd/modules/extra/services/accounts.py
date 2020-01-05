@@ -176,6 +176,8 @@ class Accounts(ModuleData):
 						otherNick = otherAccountData["nick"][changeNickIndex][0]
 						del otherAccountData["nick"][changeNickIndex]
 						otherAccountData["nick"].append((otherNick, nickData[1]))
+			else:
+				otherAccountData["nick"].append(nickData)
 		if accountInfo["updated"] > otherAccountData["updated"] or updateConflictingIfTied:
 			accountInfo["nick"] = otherAccountData["nick"]
 			self.accountData["data"][lowerAccountName] = accountInfo
