@@ -222,9 +222,9 @@ class BanMode(ModuleData, Mode):
 					continue
 				if actionParam and actionModeType in (ModeType.NoParam, ModeType.Status):
 					continue
-				if not actionParam and actionModeType in ModeType.ParamOnUnset:
+				if not actionParam and actionModeType == ModeType.ParamOnUnset:
 					continue
-				if not matchNegated and not actionParam and actionModeType in ModeType.Param:
+				if not matchNegated and not actionParam and actionModeType == ModeType.Param:
 					continue
 				if actionModeType != ModeType.Status: # Don't check the parameters for status modes, but do the rest of the processing
 					actionParamList = self.ircd.channelModes[actionModeType][actionExtban].checkSet(channel, actionParam)
