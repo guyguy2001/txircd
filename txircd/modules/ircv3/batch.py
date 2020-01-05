@@ -51,6 +51,6 @@ class Batch(ModuleData):
 			return
 		uniqueReferenceTag = user.cache["currentBatch"]
 		del user.cache["currentBatch"]
-		user.sendMessage("BATCH", "-{}".format(uniqueReferenceTag))
+		user.sendMessage("BATCH", "-{}".format(uniqueReferenceTag), to=None)
 
 batch = Batch()
