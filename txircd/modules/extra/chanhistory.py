@@ -18,7 +18,11 @@ class ChanHistory(ModuleData, Mode):
 		return [ ("H", ModeType.Param, self) ]
 
 	def actions(self):
-		return [ ("modeactioncheck-channel-H-commandextra-PRIVMSG", 1, self.channelHasMode) ]
+		return [ ("modeactioncheck-channel-H-commandextra-PRIVMSG", 1, self.channelHasMode),
+			("modeactioncheck-channel-H-commandextra-NOTICE", 1, self.channelHasMode),
+			("modeactioncheck-channel-H-servercommandextra-PRIVMSG", 1, self.channelHasMode),
+			("modeactioncheck-channel-H-servercommandextra-NOTICE", 1, self.channelHasMode),
+			("modeactioncheck-channel-H-join", 1, self.channelHasMode) ]
 
 	def verifyConfig(self, config):
 		if "chanhistory_maxlines" in config:
@@ -59,6 +63,15 @@ class ChanHistory(ModuleData, Mode):
 			if "history" not in channel.cache:
 				channel.cache["history"] = []
 			channel.cache["history"].append((now(), "PRIVMSG" if actionName == "commandextra-PRIVMSG" else "NOTICE", user.hostmask(), data["targetchans"][channel]))
+			if len(channel.cache["history"]) > maxLines:
+				channel.cache["history"] = channel.cache["history"][-maxLines:]
+		elif actionName == "servercommandextra-PRIVMSG" or actionName == "servercommandextra-NOTICE":
+			fromServer, data = params
+			if "tochan" not in data or channel != data["tochan"]:
+				return
+			if "history" not in channel.cache:
+				channel.cache["history"] = []
+			channel.cache["history"].append((now(), "PRIVMSG" if actionName == "servercommandextra-PRIVMSG" else "NOTICE", data["from"].hostmask(), data["message"]))
 			if len(channel.cache["history"]) > maxLines:
 				channel.cache["history"] = channel.cache["history"][-maxLines:]
 		elif actionName == "join" and "history" in channel.cache:
