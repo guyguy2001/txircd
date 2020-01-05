@@ -1175,7 +1175,7 @@ class IRCd(Service):
 	def _shouldStopAction(self, actionName: str, parameters: List[Any], keywords: Dict[str, Any]) -> bool:
 		if "allowDisconnected" in keywords and keywords["allowDisconnected"]:
 			return False
-		if "users" in keywords:
+		if "users" in keywords and keywords["users"]:
 			# Stop an action if all users have disconnected
 			for user in keywords["users"]:
 				if user.uuid in self.users:
