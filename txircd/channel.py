@@ -246,7 +246,10 @@ class IRCChannel(object):
 				adding = False
 				continue
 			if mode not in self.ircd.channelModeTypes:
-				user.sendMessage(irc.ERR_UNKNOWNMODE, mode, "is unknown mode char to me")
+				if mode == ":":
+					user.sendMessage(irc.ERR_UNKNOWNMODE, "+:", "is unknown mode char to me")
+				else:
+					user.sendMessage(irc.ERR_UNKNOWNMODE, mode, "is unknown mode char to me")
 				continue
 			modeType = self.ircd.channelModeTypes[mode]
 			param = None
