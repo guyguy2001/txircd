@@ -35,7 +35,7 @@ class AccountEmail(ModuleData, Command):
 		if "email" in data:
 			emailAddr = data["email"]
 		else:
-			emailAddr = None
+			emailAddr = ""
 		emailChangeResult = self.ircd.runActionUntilValue("accountchangeemail", accountName, emailAddr)
 		if not emailChangeResult:
 			user.sendMessage(irc.ERR_SERVICES, "ACCOUNT", "EMAIL", "NOACCOUNT")
