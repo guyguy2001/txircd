@@ -999,6 +999,9 @@ class LocalUser(IRCUser):
 		self.ircd.runActionStandard("localregister", self, users=[self])
 		self.ircd.userNicks[self.nick] = self
 	
+	def _startDNSResolving(self, timeout: int) -> None:
+		pass # DNS resolution shouldn't occur for fake clients
+	
 	def register(self, holdName: str) -> None:
 		pass
 	
