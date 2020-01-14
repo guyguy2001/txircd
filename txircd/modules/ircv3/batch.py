@@ -1,6 +1,7 @@
 from twisted.plugin import IPlugin
 from txircd.module_interface import IModuleData, ModuleData
 from zope.interface import implements
+from txircd.ircbase import IRCBase
 import random, string
 
 class Batch(ModuleData):
@@ -32,15 +33,15 @@ class Batch(ModuleData):
 	def addCapability(self, user, capList):
 		capList.append("batch")
 	
-	def startBatch(self, user, batchName, batchType, batchParameters):
+	def startBatch(self, user, batchName, batchType, *batchParameters):
 		if "capabilities" not in user.cache or "batch" not in user.cache["capabilities"]:
 			return
 		uniqueReferenceTagParts = [ random.choice(string.ascii_letters) ]
 		for i in range(2, 10):
 			uniqueReferenceTagParts.append(random.choice(string.ascii_letters + string.digits))
 		uniqueReferenceTag = "".join(uniqueReferenceTagParts)
+		IRCBase.sendMessage(user, "BATCH", "+{}".format(uniqueReferenceTag), batchType, *batchParameters)
 		user.cache["currentBatch"] = uniqueReferenceTag
-		user.sendMessage("BATCH", "+{}".format(uniqueReferenceTag), batchType, *batchParameters)
 	
 	def addBatchTag(self, user, command, args, kw):
 		if "currentBatch" in user.cache:
@@ -49,11 +50,11 @@ class Batch(ModuleData):
 			else:
 				kw["tags"] = { "batch": user.cache["currentBatch"] }
 	
-	def endBatch(self, user, batchName, batchType, batchParameters):
+	def endBatch(self, user, batchName, batchType, *batchParameters):
 		if "currentBatch" not in user.cache:
 			return
 		uniqueReferenceTag = user.cache["currentBatch"]
 		del user.cache["currentBatch"]
-		user.sendMessage("BATCH", "-{}".format(uniqueReferenceTag))
+		IRCBase.sendMessage(user, "BATCH", "-{}".format(uniqueReferenceTag))
 
 batch = Batch()

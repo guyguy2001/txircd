@@ -183,7 +183,7 @@ class IRCUser(IRCBase):
 			if not self.ircd.runActionFlagTrue("commandunknown", self, command, params, {}):
 				self.sendMessage(irc.ERR_UNKNOWNCOMMAND, command, "Unknown command")
 	
-	def createMessageBatch(self, batchName, batchType, batchParameters = None):
+	def createMessageBatch(self, batchName, batchType, *batchParameters):
 		"""
 		Start a new message batch with the given batch name, type, and list of parameters.
 		If a batch with the given name already exists, that batch will be overwritten.
@@ -206,10 +206,10 @@ class IRCUser(IRCBase):
 			return
 		batchType = self._messageBatches[batchName]["type"]
 		batchParameters = self._messageBatches[batchName]["parameters"]
-		self.ircd.runActionStandard("startbatchsend", self, batchName, batchType, batchParameters)
+		self.ircd.runActionStandard("startbatchsend", self, batchName, batchType, *batchParameters)
 		for messageData in self._messageBatches[batchName]["messages"]:
 			self.sendMessage(messageData[0], *messageData[1], **messageData[2])
-		self.ircd.runActionStandard("endbatchsend", self, batchName, batchType, batchParameters)
+		self.ircd.runActionStandard("endbatchsend", self, batchName, batchType, *batchParameters)
 	
 	def startErrorBatch(self, batchName):
 		"""
